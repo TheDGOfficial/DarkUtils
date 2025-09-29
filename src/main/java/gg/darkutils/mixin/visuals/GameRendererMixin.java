@@ -1,4 +1,4 @@
-package gg.darkutils.mixin;
+package gg.darkutils.mixin.visuals;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.client.render.GameRenderer;

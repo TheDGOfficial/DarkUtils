@@ -1,4 +1,4 @@
-package gg.darkutils.mixin;
+package gg.darkutils.mixin.misc;
 
 import gg.darkutils.feat.dungeons.AutoCloseSecretChests;
 import gg.darkutils.utils.ChatUtils;

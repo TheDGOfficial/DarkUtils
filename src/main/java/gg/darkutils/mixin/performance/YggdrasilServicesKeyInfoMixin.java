@@ -1,4 +1,4 @@
-package gg.darkutils.mixin;
+package gg.darkutils.mixin.performance;
 
 import com.mojang.authlib.yggdrasil.YggdrasilServicesKeyInfo;
 import gg.darkutils.config.DarkUtilsConfig;

@@ -1,4 +1,4 @@
-package gg.darkutils.mixin;
+package gg.darkutils.mixin.performance;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.feat.performance.ArmorStandOptimizer;
