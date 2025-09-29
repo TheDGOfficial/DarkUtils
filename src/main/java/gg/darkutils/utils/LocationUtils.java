@@ -7,6 +7,8 @@ import org.jetbrains.annotations.Nullable;
 
 public final class LocationUtils {
     @Nullable
+    private static String serverName;
+    @Nullable
     private static String mode;
 
     private LocationUtils() {
@@ -18,8 +20,15 @@ public final class LocationUtils {
     public static final void init() {
         HypixelModAPI.getInstance().subscribeToEventPacket(ClientboundLocationPacket.class);
 
-        HypixelModAPI.getInstance().createHandler(ClientboundLocationPacket.class, packet -> LocationUtils.mode = packet.getMode().orElse(null));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> LocationUtils.mode = null);
+        HypixelModAPI.getInstance().createHandler(ClientboundLocationPacket.class, packet -> {
+            LocationUtils.serverName = packet.getServerName();
+            LocationUtils.mode = packet.getMode().orElse(null);
+        });
+
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            LocationUtils.serverName = null;
+            LocationUtils.mode = null;
+        });
     }
 
     public static final boolean isInDungeons() {
@@ -27,6 +36,6 @@ public final class LocationUtils {
     }
 
     public static final boolean isInHypixel() {
-        return null != LocationUtils.mode;
+        return null != LocationUtils.serverName;
     }
 }
