@@ -53,7 +53,7 @@ public final class ChatUtils {
         var root = Text.literal("");
 
         for (var i = 0; i < length; ++i) {
-            final var t = 1 == length ? 0.0f : i / (length - 1.0f);
+            final var t = 1 == length ? 0.0F : i / (length - 1.0F);
             final var color = ChatUtils.interpolate(start, end, t);
 
             root = root.append(Text.literal(String.valueOf(text.charAt(i)))
