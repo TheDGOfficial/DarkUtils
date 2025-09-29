@@ -47,7 +47,7 @@ Optional Dependencies:
 ## Hide Effects HUD
  Hides the annoying Effects HUD in the top right of the screen.
 ## Hide Effects In Inventory
- Additionally hides effects in left and right sides of the screen as well.
+ Additionally hides effects in left and right sides of the inventory as well.
 ## Transparent Scoreboard
  Makes the Scoreboard fully transparent for better visuals.
 ## Transparent Nametags
