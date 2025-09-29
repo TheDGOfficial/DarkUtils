@@ -11,10 +11,10 @@ import org.jetbrains.annotations.NotNull;
  * Note that this still not the most performant solution if the types are wrapper classes of primitives.
  * Use the primitive variants, e.g. {@link Pair.Int}
  *
- * @param first The first value.
+ * @param first  The first value.
  * @param second The second value.
- * @param <A> The type of the first value.
- * @param <B> The type of the second value.
+ * @param <A>    The type of the first value.
+ * @param <B>    The type of the second value.
  */
 public record Pair<A, B>(@NotNull A first, @NotNull B second) {
     /**
@@ -22,7 +22,7 @@ public record Pair<A, B>(@NotNull A first, @NotNull B second) {
      * <p>
      * See {@link Pair}.
      *
-     * @param first The first int.
+     * @param first  The first int.
      * @param second The second int.
      */
     public record Int(int first, int second) {

@@ -27,7 +27,6 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
@@ -112,6 +111,45 @@ public final class DarkUtils implements ClientModInitializer {
         return "unknown";
     }
 
+    @NotNull
+    private static final Pair<String, String> cutInHalf(@NotNull final String text) {
+        final var mid = text.length() >> 1;
+
+        return new Pair<>(text.substring(0, mid), text.substring(mid));
+    }
+
+    private static final void queueWelcomeMessageIfEnabled() {
+        TickUtils.awaitLocalPlayer(player -> {
+            if (!DarkUtilsConfig.INSTANCE.welcomeMessage) {
+                return;
+            }
+
+            final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
+
+            final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
+            final var footer = ChatUtils.fill('▬', true);
+
+            final var text = Text
+                    .literal(header.first())
+                    .setStyle(Style.EMPTY.withColor(headerFooterColor).withBold(true))
+                    .append(" ")
+                    .append(ChatUtils.gradient("#54daf4", "#545eb6", DarkUtils.class.getSimpleName()))
+                    .append(" ")
+                    .append(Text.literal(header.second()).setStyle(Style.EMPTY.withColor(headerFooterColor).withBold(true)))
+                    .append("\n")
+                    .append("\n")
+                    .append(ChatUtils.gradient("#54daf4", "#545eb6", ChatUtils.center("Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', true)))
+                    .append("\n")
+                    .append("\n")
+                    .append(ChatUtils.button("#54daf4", "#545eb6", "Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID, true, true))
+                    .append("\n")
+                    .append("\n")
+                    .append(Text.literal(footer).setStyle(Style.EMPTY.withColor(headerFooterColor).withBold(true)));
+
+            player.sendMessage(text, false);
+        });
+    }
+
     /**
      * This entrypoint is suitable for setting up client-specific logic, such as rendering.
      */
@@ -147,44 +185,5 @@ public final class DarkUtils implements ClientModInitializer {
 
         // Send welcome message once player joins a world/server/realm
         DarkUtils.queueWelcomeMessageIfEnabled();
-    }
-
-    @NotNull
-    private static final Pair<String, String> cutInHalf(@NotNull final String text) {
-        final var mid = text.length() >> 1;
-
-        return new Pair<>(text.substring(0, mid), text.substring(mid));
-    }
-
-    private static final void queueWelcomeMessageIfEnabled() {
-        TickUtils.awaitLocalPlayer(player -> {
-            if (!DarkUtilsConfig.INSTANCE.welcomeMessage) {
-                return;
-            }
-
-            final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
-
-            final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
-            final var footer = ChatUtils.fill('▬', true);
-
-            final var text = Text
-                    .literal(header.first())
-                    .setStyle(Style.EMPTY.withColor(headerFooterColor).withBold(true))
-                    .append(" ")
-                    .append(ChatUtils.gradient("#54daf4", "#545eb6", DarkUtils.class.getSimpleName()))
-                    .append(" ")
-                    .append(Text.literal(header.second()).setStyle(Style.EMPTY.withColor(headerFooterColor).withBold(true)))
-                    .append("\n")
-                    .append("\n")
-                    .append(ChatUtils.gradient("#54daf4", "#545eb6", ChatUtils.center("Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', true)))
-                    .append("\n")
-                    .append("\n")
-                    .append(ChatUtils.button("#54daf4", "#545eb6", "Open Settings", "Click to open mod settings!", "/" + DarkUtils.MOD_ID, true, true))
-                    .append("\n")
-                    .append("\n")
-                    .append(Text.literal(footer).setStyle(Style.EMPTY.withColor(headerFooterColor).withBold(true)));
-
-            player.sendMessage(text, false);
-        });
     }
 }

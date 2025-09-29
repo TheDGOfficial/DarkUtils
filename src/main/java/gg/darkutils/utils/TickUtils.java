@@ -67,8 +67,8 @@ public final class TickUtils {
 
     /**
      * Awaits the local player joining a world/realm/server then runs the given action passing the player as argument.
-     * If the player is initially available, the task will run instantly on the caller thread. Otherwise, it will be ran on the Render thread when player
-     * starts existing. (e.g. joining a world/realm/server)
+     * If the player is initially available, the task will run instantly on the caller thread.
+     * Otherwise, it will run on the Render thread when player starts existing. (e.g. joining a world/realm/server)
      *
      * @param action The action.
      */

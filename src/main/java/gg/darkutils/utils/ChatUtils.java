@@ -1,6 +1,5 @@
 package gg.darkutils.utils;
 
-import gg.darkutils.DarkUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.*;

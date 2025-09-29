@@ -14,8 +14,8 @@ public enum OpenGLVersionOverride {
     GL4_5(4, 5),
     GL4_6(4, 6);
 
-    private int major;
-    private int minor;
+    private final int major;
+    private final int minor;
 
     private OpenGLVersionOverride(final int major, final int minor) {
         this.major = major;
