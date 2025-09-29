@@ -1,6 +1,7 @@
 package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.mixin.accessors.MinecraftClientAccessor;
 import gg.darkutils.utils.ChatUtils;
 import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
@@ -105,25 +106,23 @@ public final class AutoFishingRod {
     }
 
     private static final void hook(@NotNull final MinecraftClient client) {
-        final var player = client.player;
-        final var interactionManager = client.interactionManager;
-
-        if (AutoFishingRod.hooking || null == player || null == interactionManager) {
+        if (AutoFishingRod.hooking || null == client.player) {
             return;
         }
 
         AutoFishingRod.hooking = true;
-        AutoFishingRod.hookAndReThrow(player, interactionManager);
+        AutoFishingRod.hookAndReThrow();
     }
 
-    private static final void hookAndReThrow(@NotNull final ClientPlayerEntity player, @NotNull final ClientPlayerInteractionManager interactionManager) {
-        AutoFishingRod.useRod(player, interactionManager, () -> AutoFishingRod.useRod(player, interactionManager, AutoFishingRod::resetState));
+    private static final void hookAndReThrow() {
+        AutoFishingRod.useRod(() -> AutoFishingRod.useRod(AutoFishingRod::resetState));
     }
 
-    private static final void useRod(@NotNull final ClientPlayerEntity player, @NotNull final ClientPlayerInteractionManager interactionManager, @NotNull final Runnable continuation) {
+    private static final void useRod(@NotNull final Runnable continuation) {
         TickUtils.queueTickTask(() -> {
-            if (null == MinecraftClient.getInstance().currentScreen && interactionManager.interactItem(player, Hand.MAIN_HAND).isAccepted()) {
-                player.swingHand(Hand.MAIN_HAND);
+            final var mc = MinecraftClient.getInstance();
+            if (null == mc.currentScreen) {
+                ((MinecraftClientAccessor) mc).callDoItemUse();
                 continuation.run();
             }
         }, AutoFishingRod.SECURE_RANDOM.nextBoolean() ? 4 : 5);

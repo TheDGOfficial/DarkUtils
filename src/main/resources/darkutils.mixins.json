@@ -25,7 +25,8 @@
     "performance.CrashMemoryReserveMixin",
     "visuals.StatusEffectsDisplayMixin",
     "visuals.HeartTypeMixin",
-    "visuals.EntityRenderDispatcherMixin"
+    "visuals.EntityRenderDispatcherMixin",
+    "accessors.MinecraftClientAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

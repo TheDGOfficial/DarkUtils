@@ -52,22 +52,24 @@ public final class GhostBlockKey {
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (DarkUtilsConfig.INSTANCE.ghostBlockKey && keyBinding.isPressed()) {
-                // What the player is currently looking at
-                final var hit = client.crosshairTarget;
+            if (DarkUtilsConfig.INSTANCE.ghostBlockKey) {
+                while (keyBinding.wasPressed()) {
+                    // What the player is currently looking at
+                    final var hit = client.crosshairTarget;
 
-                if (hit instanceof final BlockHitResult blockHit) {
-                    final var pos = blockHit.getBlockPos();
-                    final var state = client.world.getBlockState(pos);
-                    final var targetBlock = state.getBlock();
+                    if (hit instanceof final BlockHitResult blockHit) {
+                        final var pos = blockHit.getBlockPos();
+                        final var state = client.world.getBlockState(pos);
+                        final var targetBlock = state.getBlock();
 
-                    // Do not ghost blacklisted blocks
-                    if (state.isIn(BlockTags.BUTTONS) || GhostBlockKey.BLACKLIST.contains(targetBlock)) {
-                        return;
+                        // Do not ghost blacklisted blocks
+                        if (state.isIn(BlockTags.BUTTONS) || GhostBlockKey.BLACKLIST.contains(targetBlock)) {
+                            return;
+                        }
+
+                        // Replace block with air *client side only*
+                        client.world.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
                     }
-
-                    // Replace block with air *client side only*
-                    client.world.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
                 }
             }
         });
