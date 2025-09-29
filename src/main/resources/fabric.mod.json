@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "darkutils",
+  "version": "${version}",
+  "name": "DarkUtils",
+  "description": "Some features from DarkAddons for Modern versions of Minecraft and extras.",
+  "authors": [
+    "TheDark_Gamer"
+  ],
+  "contact": {
+    "homepage": "https://github.com/TheDGOfficial/DarkUtils",
+    "sources": "https://github.com/TheDGOfficial/DarkUtils",
+    "issues": "https://github.com/TheDGOfficial/DarkUtils"
+  },
+  "license": "GPL-3.0",
+  "icon": "assets/darkutils/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "gg.darkutils.DarkUtils"
+    ],
+    "modmenu": [
+      "gg.darkutils.config.DarkUtilsModMenu"
+    ]
+  },
+  "mixins": [
+    {
+      "config": "darkutils.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.17.2",
+    "minecraft": "~1.21.8",
+    "java": ">=21",
+    "fabric-api": ">=0.133.4+1.21.8",
+    "cloth-config": ">=19.0.147",
+    "hypixel-mod-api": ">=1.0.1"
+  }
+}
