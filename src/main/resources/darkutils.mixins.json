@@ -6,9 +6,9 @@
   "mixins": [
     "misc.EntityRendererMixin",
     "visuals.InGameHudMixin",
-    "performance.MinecraftClientMixin",
+    "misc.MinecraftClientMixin",
     "qol.MouseMixin",
-    "bugfixes.WindowMixin",
+    "misc.WindowMixin",
     "visuals.PlayerListHudMixin",
     "performance.YggdrasilServicesKeyInfoMixin",
     "qol.ClientPlayerEntityMixin",

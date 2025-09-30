@@ -1,4 +1,4 @@
-package gg.darkutils.mixin.bugfixes;
+package gg.darkutils.mixin.misc;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;

@@ -1,7 +1,9 @@
-package gg.darkutils.mixin.performance;
+package gg.darkutils.mixin.misc;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.feat.qol.AutoClicker;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.KeyBinding;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -31,5 +33,20 @@ final class MinecraftClientMixin {
             // vanilla game only sets priority to max for processors with 4 or more cores, but it is best to have max priority no matter the core count.
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         }
+    }
+
+    @Inject(method = "handleInputEvents", at = @At("HEAD"))
+    private final void darkutils$resetState(@NotNull final CallbackInfo ci) {
+        AutoClicker.resetState();
+    }
+
+    @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;wasPressed()Z"))
+    private final boolean darkutils$wasPressed$modifyReturnValueIfApplicable(@NotNull final KeyBinding keyBinding) {
+        return AutoClicker.wasPressed(keyBinding);
+    }
+
+    @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
+    private final boolean darkutils$isPressed$modifyReturnValueIfApplicable(@NotNull final KeyBinding keyBinding) {
+        return AutoClicker.isPressed(keyBinding);
     }
 }

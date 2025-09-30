@@ -115,17 +115,28 @@ public final class AutoFishingRod {
     }
 
     private static final void hookAndReThrow() {
-        AutoFishingRod.useRod(() -> AutoFishingRod.useRod(AutoFishingRod::resetState));
+        AutoFishingRod.useRod(() -> {
+            if (DarkUtilsConfig.INSTANCE.autoFishingRecast) {
+                AutoFishingRod.useRod(AutoFishingRod::resetState);
+            } else {
+                AutoFishingRod.resetState();
+            }
+        });
     }
 
     private static final void useRod(@NotNull final Runnable continuation) {
+        final var min = DarkUtilsConfig.INSTANCE.autoFishingStartingDelay;
+        final var max = DarkUtilsConfig.INSTANCE.autoFishingMaximumDelay;
+
+        final var delay = AutoFishingRod.SECURE_RANDOM.nextInt(Math.max(1, max - min + 1)) + min;
+
         TickUtils.queueTickTask(() -> {
             final var mc = MinecraftClient.getInstance();
-            if (null == mc.currentScreen) {
+            if (DarkUtilsConfig.INSTANCE.autoFishingWorkThroughMenus || null == mc.currentScreen) {
                 ((MinecraftClientAccessor) mc).callDoItemUse();
                 continuation.run();
             }
-        }, AutoFishingRod.SECURE_RANDOM.nextBoolean() ? 4 : 5);
+        }, delay);
     }
 
     private static final void resetState() {

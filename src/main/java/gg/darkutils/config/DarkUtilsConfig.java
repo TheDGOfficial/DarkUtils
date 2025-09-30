@@ -22,11 +22,16 @@ public final class DarkUtilsConfig {
 
     // === Quality of Life ===
     public boolean autoFishing;
+    public boolean autoFishingRecast;
+    public boolean autoFishingWorkThroughMenus;
+    public int autoFishingStartingDelay = 4;
+    public int autoFishingMaximumDelay = 5;
     public boolean neverResetCursorPosition;
     public boolean alwaysSprint;
     public boolean ghostBlockKey;
     public boolean autoTip;
     public boolean welcomeMessage;
+    public boolean autoClicker;
 
     // === Foraging ===
     public boolean treeGiftConfirmation;

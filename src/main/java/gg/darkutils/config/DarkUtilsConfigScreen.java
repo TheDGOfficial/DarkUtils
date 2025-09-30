@@ -54,6 +54,18 @@ public final class DarkUtilsConfigScreen {
                 "Automatically fishes for you in Hypixel SkyBlock. Does not kill the fished mobs (Recommended to treasure or trophy fish if you are going to leave it unattended). Requires Skyblock Menu->Settings->Personal->Fishing Settings->Fishing Status Holograms and Fishing Timer to be enabled.",
                 config.autoFishing, newValue -> config.autoFishing = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Fishing Recast",
+                "After pulling the rod to get the catch, additionally recasts the rod for the next catch. Does nothing if auto fishing is not enabled.",
+                config.autoFishingRecast, newValue -> config.autoFishingRecast = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Fishing Work Through Menus",
+                "Makes it so pulling and recasting the rod works even if you have menus open. Does nothing if auto fishing is not enabled.",
+                config.autoFishingWorkThroughMenus, newValue -> config.autoFishingWorkThroughMenus = newValue);
+
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, qol, "Auto Fishing Minimum Delay", "Minimum delay in ticks before pulling or casting the rod. 1 ticks equals to 50 milliseconds real time. Affects nothing if auto fishing isn't enabled.", config.autoFishingStartingDelay, newValue -> config.autoFishingStartingDelay = newValue, 4, 0, 10);
+
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, qol, "Auto Fishing Maximum Delay", "Max delay in ticks before pulling or casting the rod. 1 ticks equals to 50 milliseconds real time. Affects nothing if auto fishing isn't enabled.", config.autoFishingMaximumDelay, newValue -> config.autoFishingMaximumDelay = newValue, 5, 0, 10);
+
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Never Reset Cursor Position",
                 "Prevents mouse cursor position from resetting to the middle of the screen when opening menus and containers, remembering the last position.",
                 config.neverResetCursorPosition, newValue -> config.neverResetCursorPosition = newValue);
@@ -73,6 +85,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Welcome Message",
                 "Sends a cool welcome message about the mod with a button to open the settings menu quickly or learn more about the mod.",
                 config.welcomeMessage, newValue -> config.welcomeMessage = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker",
+                "Stop carpal tunnel by automatically sending clicks when you are holding down the mouse buttons when holding swords. Right-clicks are only sent for Hyperion/Astraea while left clicks work on all sword types.",
+                config.autoClicker, newValue -> config.autoClicker = newValue);
 
         // === Foraging ===
         final var foraging = builder.getOrCreateCategory(Text.of("Foraging"));
