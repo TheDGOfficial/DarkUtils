@@ -21,7 +21,7 @@ final class YggdrasilServicesKeyInfoMixin {
      */
     @Unique
     private static final @NotNull Set<String> warnedServers =
-            Collections.newSetFromMap(new ConcurrentHashMap<>(1));
+            ConcurrentHashMap.newKeySet(1);
 
     private YggdrasilServicesKeyInfoMixin() {
         super();
