@@ -17,7 +17,7 @@ import java.util.Set;
 
 public final class GhostBlockKey {
     /**
-     * Blacklist of blocks that should *not* be ghosted
+     * Blacklist of blocks that should *not* be ghosted.
      */
     @NotNull
     private static final Set<Block> BLACKLIST = Set.of(

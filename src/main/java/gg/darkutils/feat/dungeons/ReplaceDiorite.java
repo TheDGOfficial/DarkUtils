@@ -16,13 +16,13 @@ import java.util.HashSet;
 public final class ReplaceDiorite {
     private static final BlockState @NotNull [] glassStates = new BlockState[16];
     /**
-     * 7448 total block positions
+     * 7448 total block positions.
      */
     @NotNull
     private static final HashMap<BlockPos, Integer> posToColor =
             HashMap.newHashMap(7_448);
     /**
-     * 4 chunks total
+     * 4 chunks total.
      */
     @NotNull
     private static final HashMap<Long, HashSet<BlockPos>> chunkToPositions =

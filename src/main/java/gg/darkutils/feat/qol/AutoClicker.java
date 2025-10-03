@@ -17,6 +17,44 @@ public final class AutoClicker {
         throw new UnsupportedOperationException("static-only class");
     }
 
+    public static final void resetState() {
+        for (final var key : AutoClicker.Key.values()) {
+            key.state = true;
+        }
+    }
+
+    public static final boolean isPressed(@NotNull final KeyBinding keyBinding) {
+        final var actual = keyBinding.isPressed();
+
+        if (!DarkUtilsConfig.INSTANCE.autoClicker || !actual) {
+            return actual;
+        }
+
+        for (final var key : AutoClicker.Key.values()) {
+            if (key.key == keyBinding) {
+                return key.isPressed(true);
+            }
+        }
+
+        return true;
+    }
+
+    public static final boolean wasPressed(@NotNull final KeyBinding keyBinding) {
+        final var actual = keyBinding.wasPressed();
+
+        if (!DarkUtilsConfig.INSTANCE.autoClicker) {
+            return actual;
+        }
+
+        for (final var key : AutoClicker.Key.values()) {
+            if (key.key == keyBinding) {
+                return key.wasPressed(actual);
+            }
+        }
+
+        return actual;
+    }
+
     private enum Key {
         LEFT(MinecraftClient.getInstance().options.attackKey),
         RIGHT(MinecraftClient.getInstance().options.useKey);
@@ -69,43 +107,5 @@ public final class AutoClicker {
             }
             return actual;
         }
-    }
-
-    public static final void resetState() {
-        for (final var key : AutoClicker.Key.values()) {
-            key.state = true;
-        }
-    }
-
-    public static final boolean isPressed(@NotNull final KeyBinding keyBinding) {
-        final var actual = keyBinding.isPressed();
-
-        if (!DarkUtilsConfig.INSTANCE.autoClicker || !actual) {
-            return actual;
-        }
-
-        for (final var key : AutoClicker.Key.values()) {
-            if (key.key == keyBinding) {
-                return key.isPressed(true);
-            }
-        }
-
-        return true;
-    }
-
-    public static final boolean wasPressed(@NotNull final KeyBinding keyBinding) {
-        final var actual = keyBinding.wasPressed();
-
-        if (!DarkUtilsConfig.INSTANCE.autoClicker) {
-            return actual;
-        }
-
-        for (final var key : AutoClicker.Key.values()) {
-            if (key.key == keyBinding) {
-                return key.wasPressed(actual);
-            }
-        }
-
-        return actual;
     }
 }

@@ -28,78 +28,6 @@ public final class TickUtils {
     }
 
     // ============================================================
-    // Task system
-    // ============================================================
-
-    private static final class Task {
-        private final @NotNull Runnable action;
-        private final int initialTicks;
-        private final boolean repeats;
-        private final @Nullable BooleanSupplier condition;
-        private int ticks;
-
-        /**
-         * Condition-based constructor.
-         */
-        private Task(@NotNull final BooleanSupplier condition, @NotNull final Runnable action) {
-            super();
-
-            this.condition = condition;
-            this.action = action;
-            this.initialTicks = -1;
-            this.ticks = -1;
-            this.repeats = false;
-        }
-
-        /**
-         * Time-based constructor.
-         */
-        private Task(@NotNull final Runnable action, final int initialTicks, final boolean repeats) {
-            super();
-
-            if (0 >= initialTicks) {
-                throw new IllegalArgumentException("Task interval must be greater than zero");
-            }
-
-            this.condition = null;
-            this.action = action;
-            this.initialTicks = initialTicks;
-            this.ticks = initialTicks;
-            this.repeats = repeats;
-        }
-
-        /**
-         * Ticks the task, running it if it should.
-         *
-         * @return true If the task should be removed.
-         */
-        private final boolean tick() {
-            if (null != this.condition) {
-                if (this.condition.getAsBoolean()) {
-                    this.action.run();
-                    return true; // remove once condition passes
-                }
-
-                return false; // keep until condition is true
-            }
-
-            if (1 >= this.ticks) {
-                this.action.run();
-
-                if (this.repeats) {
-                    this.ticks = this.initialTicks;
-                    return false; // keep repeating
-                }
-
-                return true; // one-shot, remove
-            }
-
-            this.ticks--;
-            return false;
-        }
-    }
-
-    // ============================================================
     // Processing
     // ============================================================
 
@@ -175,6 +103,78 @@ public final class TickUtils {
             task.run();
         } else {
             TickUtils.tasks.add(new TickUtils.Task(task, delay, false));
+        }
+    }
+
+    // ============================================================
+    // Task system
+    // ============================================================
+
+    private static final class Task {
+        private final @NotNull Runnable action;
+        private final int initialTicks;
+        private final boolean repeats;
+        private final @Nullable BooleanSupplier condition;
+        private int ticks;
+
+        /**
+         * Condition-based constructor.
+         */
+        private Task(@NotNull final BooleanSupplier condition, @NotNull final Runnable action) {
+            super();
+
+            this.condition = condition;
+            this.action = action;
+            this.initialTicks = -1;
+            this.ticks = -1;
+            this.repeats = false;
+        }
+
+        /**
+         * Time-based constructor.
+         */
+        private Task(@NotNull final Runnable action, final int initialTicks, final boolean repeats) {
+            super();
+
+            if (0 >= initialTicks) {
+                throw new IllegalArgumentException("Task interval must be greater than zero");
+            }
+
+            this.condition = null;
+            this.action = action;
+            this.initialTicks = initialTicks;
+            this.ticks = initialTicks;
+            this.repeats = repeats;
+        }
+
+        /**
+         * Ticks the task, running it if it should.
+         *
+         * @return true If the task should be removed.
+         */
+        private final boolean tick() {
+            if (null != this.condition) {
+                if (this.condition.getAsBoolean()) {
+                    this.action.run();
+                    return true; // remove once condition passes
+                }
+
+                return false; // keep until condition is true
+            }
+
+            if (1 >= this.ticks) {
+                this.action.run();
+
+                if (this.repeats) {
+                    this.ticks = this.initialTicks;
+                    return false; // keep repeating
+                }
+
+                return true; // one-shot, remove
+            }
+
+            this.ticks--;
+            return false;
         }
     }
 }
