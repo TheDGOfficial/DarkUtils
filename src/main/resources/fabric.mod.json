@@ -10,7 +10,7 @@
   "contact": {
     "homepage": "https://github.com/TheDGOfficial/DarkUtils",
     "sources": "https://github.com/TheDGOfficial/DarkUtils",
-    "issues": "https://github.com/TheDGOfficial/DarkUtils"
+    "issues": "https://github.com/TheDGOfficial/DarkUtils/issues"
   },
   "license": "GPL-3.0",
   "icon": "assets/darkutils/icon.png",
