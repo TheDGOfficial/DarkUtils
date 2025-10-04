@@ -328,7 +328,6 @@ public final class AlignmentTaskSolver {
                     }
                     break;
                 }
-                DarkUtils.logError(AlignmentTaskSolver.class, "Unknown tracked value with id {}", id);
             }
 
             if (null == rotationVarInt) {

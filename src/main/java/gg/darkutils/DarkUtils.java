@@ -75,7 +75,7 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final void notifyUserOfError(@NotNull final String message) {
-        TickUtils.awaitLocalPlayer(player -> player.sendMessage(Text.literal(message + " - please check logs for further information.").setStyle(Style.EMPTY).withColor(Colors.RED), false));
+        TickUtils.awaitLocalPlayer(player -> player.sendMessage(Text.literal(message + " - please check logs for further information.").setStyle(Style.EMPTY).withColor(Colors.LIGHT_RED), false));
     }
 
     @NotNull
