@@ -74,7 +74,7 @@ public final class AlignmentTaskSolver {
         throw new UnsupportedOperationException("static-only class");
     }
 
-    private static final void sanityCheckBoxes(final @NotNull List<? extends BlockPos> boxes) {
+    private static final void sanityCheckBoxes(final @NotNull List<BlockPos> boxes) {
         final var expectedBoxes = List.of(new BlockPos(-2, 124, 79), new BlockPos(-2, 124, 78), new BlockPos(-2, 124, 77), new BlockPos(-2, 124, 76), new BlockPos(-2, 124, 75), new BlockPos(-2, 123, 79), new BlockPos(-2, 123, 78), new BlockPos(-2, 123, 77), new BlockPos(-2, 123, 76), new BlockPos(-2, 123, 75), new BlockPos(-2, 122, 79), new BlockPos(-2, 122, 78), new BlockPos(-2, 122, 77), new BlockPos(-2, 122, 76), new BlockPos(-2, 122, 75), new BlockPos(-2, 121, 79), new BlockPos(-2, 121, 78), new BlockPos(-2, 121, 77), new BlockPos(-2, 121, 76), new BlockPos(-2, 121, 75), new BlockPos(-2, 120, 79), new BlockPos(-2, 120, 78), new BlockPos(-2, 120, 77), new BlockPos(-2, 120, 76), new BlockPos(-2, 120, 75));
 
         if (boxes.size() != expectedBoxes.size()) {
