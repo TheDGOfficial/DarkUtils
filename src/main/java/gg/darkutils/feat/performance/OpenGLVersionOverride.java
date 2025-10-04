@@ -43,7 +43,7 @@ public enum OpenGLVersionOverride {
         if (newVersion == oldVersion) {
             DarkUtils.info(OpenGLVersionOverride.class, "Not overriding vanilla requested OpenGL {} version of {}", major ? "major" : "minor", oldVersion);
         } else {
-            final var baseMessage = DarkUtils.class.getSimpleName() + ": Forcing the game to request OpenGL " + (major ? "major" : "minor") + " version " + newVersion + " instead of " + oldVersion + " during Window context creation.";
+            final var baseMessage = "Forcing the game to request OpenGL " + (major ? "major" : "minor") + " version " + newVersion + " instead of " + oldVersion + " during Window context creation.";
 
             if (newVersion > oldVersion) {
                 DarkUtils.info(OpenGLVersionOverride.class, baseMessage);

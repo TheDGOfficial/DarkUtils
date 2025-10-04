@@ -126,7 +126,7 @@ public final class DarkUtils implements ClientModInitializer {
 
     @NotNull
     private static final String addPrefixToLogEntry(@NotNull final Class<?> source, @NotNull final String message) {
-        return '[' + DarkUtils.class.getSimpleName() + ']' + (DarkUtils.class == source ? "" : ": " + source.getSimpleName()) + ": " + message;
+        return '[' + DarkUtils.class.getSimpleName() + "]: " + (DarkUtils.class == source ? "" : '[' + source.getSimpleName() + "]: ") + message;
     }
 
     private static final void init(@NotNull final Runnable @NotNull ... initializers) {
