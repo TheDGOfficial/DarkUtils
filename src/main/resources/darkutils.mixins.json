@@ -14,7 +14,7 @@
     "qol.ClientPlayerEntityMixin",
     "visuals.ChatHudMixin",
     "bugfixes.InactivityFpsLimiterMixin",
-    "visuals.GameRendererMixin",
+    "misc.GameRendererMixin",
     "visuals.LightmapTextureManagerMixin",
     "visuals.InGameOverlayRendererMixin",
     "visuals.LightningEntityRendererMixin",
@@ -26,7 +26,8 @@
     "visuals.StatusEffectsDisplayMixin",
     "visuals.HeartTypeMixin",
     "visuals.EntityRenderDispatcherMixin",
-    "accessors.MinecraftClientAccessor"
+    "accessors.MinecraftClientAccessor",
+    "misc.NetworkThreadUtilsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

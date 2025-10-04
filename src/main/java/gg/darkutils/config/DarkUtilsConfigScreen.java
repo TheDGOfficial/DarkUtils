@@ -118,6 +118,18 @@ public final class DarkUtilsConfigScreen {
                 "Replaces diorite in the crushers in Storm phase with stained glass of the pad color.",
                 config.replaceDiorite, newValue -> config.replaceDiorite = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Arrow Alignment Device Solver",
+                "Solves the arrow alignment device in Goldor phase.",
+                config.arrowAlignmentDeviceSolver, newValue -> config.arrowAlignmentDeviceSolver = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Arrow Alignment Device Solver Predev",
+                "Makes the solver work even if Phase 3 did not start yet, enable if you are Healer and do predev.",
+                config.arrowAlignmentDeviceSolverPredev, newValue -> config.arrowAlignmentDeviceSolverPredev = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Arrow Alignment Device Solver Block Incorrect Clicks",
+                "Blocks incorrect clicks after the arrow has been rotated enough times. Compatible with AutoClicker so you can finish it fast with it.",
+                config.arrowAlignmentDeviceSolverBlockIncorrectClicks, newValue -> config.arrowAlignmentDeviceSolverBlockIncorrectClicks = newValue);
+
         // === Visual Tweaks ===
         final var visual = builder.getOrCreateCategory(Text.of("Visual Tweaks"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Hide Effects HUD",

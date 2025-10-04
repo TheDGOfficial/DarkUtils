@@ -42,6 +42,9 @@ public final class DarkUtilsConfig {
     public boolean soloCrushTimer;
     public boolean autoCloseSecretChests;
     public boolean replaceDiorite;
+    public boolean arrowAlignmentDeviceSolver;
+    public boolean arrowAlignmentDeviceSolverPredev;
+    public boolean arrowAlignmentDeviceSolverBlockIncorrectClicks;
 
     // === Visual Tweaks ===
     public boolean hideEffectsHud;
@@ -87,7 +90,7 @@ public final class DarkUtilsConfig {
             try (final var reader = Files.newBufferedReader(DarkUtilsConfig.FILE.toPath(), StandardCharsets.UTF_8)) {
                 return DarkUtilsConfig.GSON.fromJson(reader, DarkUtilsConfig.class);
             } catch (final IOException e) {
-                DarkUtils.LOGGER.error("Unable to load config", e);
+                DarkUtils.logError(DarkUtilsConfig.class, "Unable to load config", e);
             }
         }
         return new DarkUtilsConfig();
@@ -97,7 +100,7 @@ public final class DarkUtilsConfig {
         try (final var writer = Files.newBufferedWriter(DarkUtilsConfig.FILE.toPath(), StandardCharsets.UTF_8)) {
             DarkUtilsConfig.GSON.toJson(DarkUtilsConfig.INSTANCE, writer);
         } catch (final IOException e) {
-            DarkUtils.LOGGER.error("Unable to save config", e);
+            DarkUtils.logError(DarkUtilsConfig.class, "Unable to save config", e);
         }
     }
 }

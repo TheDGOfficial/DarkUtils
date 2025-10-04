@@ -6,10 +6,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.config.DarkUtilsConfigScreen;
-import gg.darkutils.feat.dungeons.DialogueSkipTimer;
-import gg.darkutils.feat.dungeons.DungeonTimer;
-import gg.darkutils.feat.dungeons.ReplaceDiorite;
-import gg.darkutils.feat.dungeons.SoloCrushTimer;
+import gg.darkutils.feat.dungeons.*;
 import gg.darkutils.feat.foraging.TreeGiftFeatures;
 import gg.darkutils.feat.foraging.TreeGiftsPerHour;
 import gg.darkutils.feat.performance.ArmorStandOptimizer;
@@ -29,9 +26,12 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Colors;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.MessageFormatter;
 
 import java.util.Locale;
 
@@ -49,12 +49,46 @@ public final class DarkUtils implements ClientModInitializer {
         super();
     }
 
+    public static final void logError(@NotNull final Class<?> source, @NotNull final String message) {
+        DarkUtils.logError(source, message, null, (Object[]) null);
+    }
+
+    public static final void logError(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Object @Nullable ... args) {
+        DarkUtils.logError(source, message, null, args);
+    }
+
+    public static final void logError(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Throwable error) {
+        DarkUtils.logError(source, message, error, (Object[]) null);
+    }
+
+    public static final void logError(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
+        final var finalMessage = DarkUtils.addPrefixToLogEntry(source, message);
+        final var formattedMessage = null == args || 0 == args.length ? finalMessage : MessageFormatter.arrayFormat(finalMessage, args).getMessage();
+
+        if (null == error) {
+            DarkUtils.LOGGER.error(formattedMessage);
+        } else {
+            DarkUtils.LOGGER.error(formattedMessage, error);
+        }
+
+        DarkUtils.notifyUserOfError(formattedMessage);
+    }
+
+    private static final void notifyUserOfError(@NotNull final String message) {
+        TickUtils.awaitLocalPlayer(player -> player.sendMessage(Text.literal(message + " - please check logs for further information.").setStyle(Style.EMPTY).withColor(Colors.RED), false));
+    }
+
+    @NotNull
+    private static final String addPrefixToLogEntry(@NotNull final Class<?> source, @NotNull final String message) {
+        return DarkUtils.class.getSimpleName() + (DarkUtils.class == source ? "" : ": " + source.getSimpleName()) + ": " + message;
+    }
+
     private static final void init(@NotNull final Runnable @NotNull ... initializers) {
         for (final var initializer : initializers) {
             try {
                 initializer.run();
             } catch (final Throwable error) {
-                DarkUtils.LOGGER.error(DarkUtils.MOD_ID + ": Error initializing feature", error);
+                DarkUtils.logError(DarkUtils.class, "Error initializing feature", error);
             }
         }
     }
@@ -180,7 +214,8 @@ public final class DarkUtils implements ClientModInitializer {
                 SoloCrushTimer::init,
                 GhostBlockKey::init,
                 ReplaceDiorite::init,
-                AutoTip::init
+                AutoTip::init,
+                AlignmentTaskSolver::init
         );
 
         // Send welcome message once player joins a world/server/realm
