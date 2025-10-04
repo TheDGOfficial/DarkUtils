@@ -2,6 +2,7 @@ package gg.darkutils.config;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
+import gg.darkutils.utils.LogLevel;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
@@ -245,7 +246,8 @@ public final class DarkUtilsConfigScreen {
                     case OpenGLVersionOverride.GL4_4 -> "OpenGL 4.4";
                     case OpenGLVersionOverride.GL4_5 -> "OpenGL 4.5";
                     case OpenGLVersionOverride.GL4_6 -> "OpenGL 4.6";
-                    default -> throw new IllegalStateException("Unexpected value: " + openGLVersionOverride);
+                    default ->
+                            throw new IllegalStateException("Unexpected " + OpenGLVersionOverride.class.getSimpleName() + " value: " + openGLVersionOverride.name());
                 }))
                 .build());
 
@@ -258,6 +260,22 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix Inactivity FPS Limiter",
                 "Fixes inactivity FPS limiter defaulting to 10 FPS limit before the first input is received.",
                 config.fixInactivityFpsLimiter, newValue -> config.fixInactivityFpsLimiter = newValue);
+
+        // === Development ===
+        final var development = builder.getOrCreateCategory(Text.of("Development"));
+        development.addEntry(entryBuilder
+                .startEnumSelector(Text.of("Ingame Log Level"), LogLevel.class, config.ingameLogLevel)
+                .setDefaultValue(LogLevel.WARN)
+                .setSaveConsumer(newValue -> config.ingameLogLevel = newValue)
+                .setTooltip(Text.of("Allows you to change at what threshold log messages should also be printed to in-game chat for development. Do not change unless instructed or know what you are doing."))
+                .setEnumNameProvider(logLevel -> Text.of(switch (logLevel) {
+                    case LogLevel.INFO -> "Info";
+                    case LogLevel.WARN -> "Warning";
+                    case LogLevel.ERROR -> "Error";
+                    default ->
+                            throw new IllegalStateException("Unexpected " + LogLevel.class.getSimpleName() + " value: " + logLevel.name());
+                }))
+                .build());
 
         return builder.build();
     }

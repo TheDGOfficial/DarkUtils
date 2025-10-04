@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
+import gg.darkutils.utils.LogLevel;
 import net.fabricmc.loader.api.FabricLoader;
 import org.jetbrains.annotations.NotNull;
 
@@ -81,6 +82,10 @@ public final class DarkUtilsConfig {
     public boolean fixGuiScaleAfterFullscreen;
     public boolean fixInactivityFpsLimiter;
 
+    // === Development ===
+    @NotNull
+    public LogLevel ingameLogLevel = LogLevel.WARN;
+
     private DarkUtilsConfig() {
         super();
     }
@@ -90,7 +95,7 @@ public final class DarkUtilsConfig {
             try (final var reader = Files.newBufferedReader(DarkUtilsConfig.FILE.toPath(), StandardCharsets.UTF_8)) {
                 return DarkUtilsConfig.GSON.fromJson(reader, DarkUtilsConfig.class);
             } catch (final IOException e) {
-                DarkUtils.logError(DarkUtilsConfig.class, "Unable to load config", e);
+                DarkUtils.error(DarkUtilsConfig.class, "Unable to load config", e);
             }
         }
         return new DarkUtilsConfig();
@@ -100,7 +105,7 @@ public final class DarkUtilsConfig {
         try (final var writer = Files.newBufferedWriter(DarkUtilsConfig.FILE.toPath(), StandardCharsets.UTF_8)) {
             DarkUtilsConfig.GSON.toJson(DarkUtilsConfig.INSTANCE, writer);
         } catch (final IOException e) {
-            DarkUtils.logError(DarkUtilsConfig.class, "Unable to save config", e);
+            DarkUtils.error(DarkUtilsConfig.class, "Unable to save config", e);
         }
     }
 }

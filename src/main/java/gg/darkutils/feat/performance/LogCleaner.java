@@ -45,13 +45,13 @@ public final class LogCleaner {
 
                 try {
                     Files.delete(gzipFile.toPath());
-                    DarkUtils.LOGGER.info(DarkUtils.MOD_ID + ": {}: Deleted log file: {}", LogCleaner.class.getSimpleName(), gzipFile.getName());
+                    DarkUtils.info(LogCleaner.class, "Deleted log file: {}", gzipFile.getName());
                 } catch (final IOException ioException) {
-                    DarkUtils.logError(LogCleaner.class, "Failed to delete log file: " + gzipFile.getName(), ioException);
+                    DarkUtils.error(LogCleaner.class, "Failed to delete log file: " + gzipFile.getName(), ioException);
                 }
             }
         } else {
-            DarkUtils.LOGGER.info(DarkUtils.MOD_ID + ": {}: Nothing to delete, only {} log files.", LogCleaner.class.getSimpleName(), gzipFiles.length);
+            DarkUtils.info(LogCleaner.class, "Nothing to delete, only {} log files.", gzipFiles.length);
         }
     }
 }

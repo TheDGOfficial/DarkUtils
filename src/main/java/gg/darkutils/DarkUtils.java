@@ -14,10 +14,7 @@ import gg.darkutils.feat.performance.LogCleaner;
 import gg.darkutils.feat.qol.AutoFishingRod;
 import gg.darkutils.feat.qol.AutoTip;
 import gg.darkutils.feat.qol.GhostBlockKey;
-import gg.darkutils.utils.ChatUtils;
-import gg.darkutils.utils.LocationUtils;
-import gg.darkutils.utils.Pair;
-import gg.darkutils.utils.TickUtils;
+import gg.darkutils.utils.*;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -43,44 +40,93 @@ public final class DarkUtils implements ClientModInitializer {
      * It is considered best practice to use your mod id as the logger's name.
      * That way, it's clear which mod wrote info, warnings, and errors.
      */
-    public static final @NotNull Logger LOGGER = LoggerFactory.getLogger(DarkUtils.MOD_ID);
+    private static final @NotNull Logger LOGGER = LoggerFactory.getLogger(DarkUtils.MOD_ID);
 
     public DarkUtils() {
         super();
     }
 
-    public static final void logError(@NotNull final Class<?> source, @NotNull final String message) {
-        DarkUtils.logError(source, message, null, (Object[]) null);
+    public static final void info(@NotNull final Class<?> source, @NotNull final String message) {
+        DarkUtils.info(source, message, (Object[]) null);
     }
 
-    public static final void logError(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Object @Nullable ... args) {
-        DarkUtils.logError(source, message, null, args);
+    public static final void info(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Object @Nullable ... args) {
+        DarkUtils.log(source, LogLevel.INFO, message, null, args);
     }
 
-    public static final void logError(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Throwable error) {
-        DarkUtils.logError(source, message, error, (Object[]) null);
+    public static final void warn(@NotNull final Class<?> source, @NotNull final String message) {
+        DarkUtils.warn(source, message, (Object[]) null);
     }
 
-    public static final void logError(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
+    public static final void warn(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Object @Nullable ... args) {
+        DarkUtils.log(source, LogLevel.WARN, message, null, args);
+    }
+
+    public static final void error(@NotNull final Class<?> source, @NotNull final String message) {
+        DarkUtils.error(source, message, null, (Object[]) null);
+    }
+
+    public static final void error(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Object @Nullable ... args) {
+        DarkUtils.error(source, message, null, args);
+    }
+
+    public static final void error(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Throwable error) {
+        DarkUtils.error(source, message, error, (Object[]) null);
+    }
+
+    public static final void error(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
+        DarkUtils.log(source, LogLevel.ERROR, message, error, args);
+    }
+
+    private static final void log(@NotNull final Class<?> source, @NotNull final LogLevel level, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
         final var finalMessage = DarkUtils.addPrefixToLogEntry(source, message);
         final var formattedMessage = null == args || 0 == args.length ? finalMessage : MessageFormatter.arrayFormat(finalMessage, args).getMessage();
 
         if (null == error) {
-            DarkUtils.LOGGER.error(formattedMessage);
+            switch (level) {
+                case INFO -> DarkUtils.LOGGER.info(formattedMessage);
+                case WARN -> DarkUtils.LOGGER.warn(formattedMessage);
+                case ERROR -> DarkUtils.LOGGER.error(formattedMessage);
+                default -> throw new IllegalStateException("Unexpected log level: " + level.name());
+            }
         } else {
+            if (LogLevel.ERROR != level) {
+                throw new IllegalArgumentException("tried to log an error at a log level of " + level.name());
+            }
             DarkUtils.LOGGER.error(formattedMessage, error);
         }
 
-        DarkUtils.notifyUserOfError(formattedMessage);
+        DarkUtils.logInGame(level, formattedMessage);
     }
 
-    private static final void notifyUserOfError(@NotNull final String message) {
-        TickUtils.awaitLocalPlayer(player -> player.sendMessage(Text.literal(message + " - please check logs for further information.").setStyle(Style.EMPTY).withColor(Colors.LIGHT_RED), false));
+    private static final void logInGame(@NotNull final LogLevel level, @NotNull final String message) {
+        if (level.ordinal() < DarkUtilsConfig.INSTANCE.ingameLogLevel.ordinal()) {
+            // Too low of a verbosity to log in-game (user preference) -
+            // by default only WARN and above are logged in-game.
+            return;
+        }
+
+        // If logging before player joins a world/server/realm (e.g. in main menu),
+        // we need to wait till player joins one so they can read chat.
+        TickUtils.awaitLocalPlayer(player -> {
+            final var text = Text.literal(message);
+            var style = Style.EMPTY;
+
+            style = style.withColor(switch (level) {
+                case INFO -> Colors.LIGHT_GRAY;
+                case WARN -> Colors.LIGHT_YELLOW;
+                case ERROR -> Colors.LIGHT_RED;
+            });
+
+            text.setStyle(style);
+
+            player.sendMessage(text, false);
+        });
     }
 
     @NotNull
     private static final String addPrefixToLogEntry(@NotNull final Class<?> source, @NotNull final String message) {
-        return DarkUtils.class.getSimpleName() + (DarkUtils.class == source ? "" : ": " + source.getSimpleName()) + ": " + message;
+        return '[' + DarkUtils.class.getSimpleName() + ']' + (DarkUtils.class == source ? "" : ": " + source.getSimpleName()) + ": " + message;
     }
 
     private static final void init(@NotNull final Runnable @NotNull ... initializers) {
@@ -88,7 +134,7 @@ public final class DarkUtils implements ClientModInitializer {
             try {
                 initializer.run();
             } catch (final Throwable error) {
-                DarkUtils.logError(DarkUtils.class, "Error initializing feature", error);
+                DarkUtils.error(DarkUtils.class, "Error initializing feature", error);
             }
         }
     }

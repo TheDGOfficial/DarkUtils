@@ -324,7 +324,7 @@ public final class AlignmentTaskSolver {
                     if (val instanceof final Integer i) {
                         rotationVarInt = i;
                     } else {
-                        DarkUtils.logError(AlignmentTaskSolver.class, "Tracked value has wrong type {}", null == val ? "null" : val.getClass().getName());
+                        DarkUtils.error(AlignmentTaskSolver.class, "Tracked value has wrong type {}", null == val ? "null" : val.getClass().getName());
                     }
                     break;
                 }

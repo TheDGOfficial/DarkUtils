@@ -41,14 +41,14 @@ public enum OpenGLVersionOverride {
 
     private static final int logGLVersionChange(final int oldVersion, final int newVersion, final boolean major) {
         if (newVersion == oldVersion) {
-            DarkUtils.LOGGER.info("Not overriding vanilla requested OpenGL {} version of {}", major ? "major" : "minor", oldVersion);
+            DarkUtils.info(OpenGLVersionOverride.class, "Not overriding vanilla requested OpenGL {} version of {}", major ? "major" : "minor", oldVersion);
         } else {
             final var baseMessage = DarkUtils.class.getSimpleName() + ": Forcing the game to request OpenGL " + (major ? "major" : "minor") + " version " + newVersion + " instead of " + oldVersion + " during Window context creation.";
 
             if (newVersion > oldVersion) {
-                DarkUtils.LOGGER.info(baseMessage);
+                DarkUtils.info(OpenGLVersionOverride.class, baseMessage);
             } else {
-                DarkUtils.LOGGER.warn("{} Downgrading OpenGL version is strictly discouraged.", baseMessage);
+                DarkUtils.warn(OpenGLVersionOverride.class, "{} Downgrading OpenGL version is strictly discouraged.", baseMessage);
             }
         }
 
