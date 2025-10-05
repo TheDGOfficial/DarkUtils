@@ -240,7 +240,7 @@ public final class AlignmentTaskSolver {
                 continue;
             }
             final int pending = AlignmentTaskSolver.pendingClicks.getOrDefault(space.framePos, 0);
-            AlignmentTaskSolver.showNametagAtFrame(space.framePos, 0 < pending ? Integer.toString(neededClicks - pending) : Integer.toString(neededClicks), 0 < pending && 0 == neededClicks - pending ? Formatting.GREEN : Formatting.RED);
+            AlignmentTaskSolver.showNametagAtFrame(space.framePos, Integer.toString(0 < pending ? neededClicks - pending : neededClicks), 0 < pending && 0 == neededClicks - pending ? Formatting.GREEN : Formatting.RED);
         }
     }
 
