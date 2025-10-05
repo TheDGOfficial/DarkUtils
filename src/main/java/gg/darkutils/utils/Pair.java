@@ -25,6 +25,6 @@ public record Pair<A, B>(@NotNull A first, @NotNull B second) {
      * @param first  The first int.
      * @param second The second int.
      */
-    public record Int(int first, int second) {
+    private record Int(int first, int second) {
     }
 }

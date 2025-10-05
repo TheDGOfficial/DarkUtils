@@ -21,13 +21,7 @@ import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public final class AlignmentTaskSolver {
     private static final @NotNull BlockPos topLeft = new BlockPos(-2, 124, 79);
@@ -491,6 +485,11 @@ public final class AlignmentTaskSolver {
     private record GridMove(@NotNull AlignmentTaskSolver.Point point, int directionNum) {
     }
 
-    private record Point(int x, int y) {
+    private record Point(int x, int y) implements Comparable<Point> {
+        @Override
+        public final int compareTo(@NotNull final AlignmentTaskSolver.Point o) {
+            final var cmp = Integer.compare(this.x, o.x);
+            return 0 == cmp ? Integer.compare(this.y, o.y) : cmp;
+        }
     }
 }

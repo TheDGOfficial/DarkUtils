@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
 
 import java.util.Locale;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
 public final class DarkUtils implements ClientModInitializer {
     public static final @NotNull String MOD_ID = "darkutils";
@@ -74,7 +76,7 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.error(source, message, error, (Object[]) null);
     }
 
-    public static final void error(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
+    private static final void error(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
         DarkUtils.log(source, LogLevel.ERROR, message, error, args);
     }
 
@@ -83,11 +85,14 @@ public final class DarkUtils implements ClientModInitializer {
         final var formattedMessage = null == args || 0 == args.length ? finalMessage : MessageFormatter.arrayFormat(finalMessage, args).getMessage();
 
         if (null == error) {
-            switch (level) {
-                case INFO -> DarkUtils.LOGGER.info(formattedMessage);
-                case WARN -> DarkUtils.LOGGER.warn(formattedMessage);
-                case ERROR -> DarkUtils.LOGGER.error(formattedMessage);
-                default -> throw new IllegalStateException("Unexpected log level: " + level.name());
+            final Pair<BooleanSupplier, Consumer<String>> loggingFunction = switch (level) {
+                case INFO -> new Pair<>(DarkUtils.LOGGER::isInfoEnabled, DarkUtils.LOGGER::info);
+                case WARN -> new Pair<>(DarkUtils.LOGGER::isWarnEnabled, DarkUtils.LOGGER::warn);
+                case ERROR -> new Pair<>(DarkUtils.LOGGER::isErrorEnabled, DarkUtils.LOGGER::error);
+            };
+
+            if (loggingFunction.first().getAsBoolean()) {
+                loggingFunction.second().accept(formattedMessage);
             }
         } else {
             if (LogLevel.ERROR != level) {
