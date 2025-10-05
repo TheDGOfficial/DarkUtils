@@ -485,7 +485,7 @@ public final class AlignmentTaskSolver {
     private record GridMove(@NotNull AlignmentTaskSolver.Point point, int directionNum) {
     }
 
-    private record Point(int x, int y) implements Comparable<Point> {
+    private record Point(int x, int y) implements Comparable<AlignmentTaskSolver.Point> {
         @Override
         public final int compareTo(@NotNull final AlignmentTaskSolver.Point o) {
             final var cmp = Integer.compare(this.x, o.x);
