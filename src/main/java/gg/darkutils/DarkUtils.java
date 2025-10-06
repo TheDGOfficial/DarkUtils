@@ -34,6 +34,7 @@ import org.slf4j.helpers.MessageFormatter;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public final class DarkUtils implements ClientModInitializer {
     public static final @NotNull String MOD_ID = "darkutils";
@@ -135,12 +136,100 @@ public final class DarkUtils implements ClientModInitializer {
         return '[' + DarkUtils.class.getSimpleName() + "]: " + (DarkUtils.class == source ? "" : '[' + source.getSimpleName() + "]: ") + message;
     }
 
+    @NotNull
+    private static final Throwable getRootError(@NotNull Throwable error, @NotNull final Predicate<Throwable> predicate) {
+        Throwable parent;
+
+        while (null != (parent = error.getCause())) {
+            // We don't want the exceptions with no stack trace. Additionally, test for the predicate requested.
+            if (0 == parent.getStackTrace().length || !predicate.test(parent)) {
+                return error;
+            }
+
+            error = parent;
+        }
+
+        return error;
+    }
+
     private static final void init(@NotNull final Runnable @NotNull ... initializers) {
         for (final var initializer : initializers) {
             try {
                 initializer.run();
             } catch (final Throwable error) {
-                DarkUtils.error(DarkUtils.class, "Error initializing feature", error);
+                // Detect which feature failed and where
+                final Predicate<String> isOurModule = (@NotNull final String clsName) -> clsName.contains("darkutils");
+
+                final var rootError = DarkUtils.getRootError(error, (@NotNull final Throwable err) -> {
+                    for (final var ste : err.getStackTrace()) {
+                        if (!isOurModule.test(ste.getClassName())) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+
+                final var stack = error.getStackTrace();
+
+                var className = "?";
+                var methodName = "?";
+                var fileName = "SourceFile.java";
+                var lineNumber = 0;
+
+                // find our first DarkUtils class that isn't a lambda or synthetic bridge
+                for (int i = 1, len = stack.length; i <= len; ++i) {
+                    final var stackTraceElement = stack[i - 1];
+
+                    fileName = stackTraceElement.getFileName();
+                    lineNumber = stackTraceElement.getLineNumber();
+                    className = stackTraceElement.getClassName();
+                    methodName = stackTraceElement.getMethodName();
+
+                    if (isOurModule.test(className) && 1 != lineNumber && !className.contains("$$Lambda$")) { // line number 1 is usually used for synthetic accessor methods, $$Lambda$ stack trace elements will have "Unknown Source", so skip those
+                        break;
+                    }
+                }
+
+                // if we didn’t find anything meaningful, fallback to top-of-stack
+                if (!isOurModule.test(className) && 1 <= stack.length) {
+                    final var topOfStack = stack[0];
+
+                    fileName = topOfStack.getFileName();
+                    lineNumber = topOfStack.getLineNumber();
+
+                    methodName = topOfStack.getMethodName();
+                }
+
+                // derive "feature name" from the call stack:
+                // look *below* DarkUtils.init in the stack, the next user frame is the feature init
+                var featureName = "UnknownFeature";
+                for (int i = 0, len = stack.length; i < len; ++i) {
+                    final var ste = stack[i];
+                    if (ste.getClassName().contains("DarkUtils") && "init".equals(ste.getMethodName())) {
+                        if (0 < i) {
+                            final var below = stack[i - 1];
+                            featureName = below.getClassName().substring(below.getClassName().lastIndexOf('.') + 1);
+                        }
+                        break;
+                    }
+                }
+
+                var details = "";
+                final var msg = error.getMessage();
+                if (null != msg && !msg.isEmpty()) {
+                    details = " Details: " + msg;
+                }
+
+                DarkUtils.error(
+                        DarkUtils.class,
+                        "Encountered " + error.getClass().getSimpleName()
+                                + " at " + fileName
+                                + " in method " + methodName
+                                + " (line " + lineNumber + ")"
+                                + " while initializing feature " + featureName + '.'
+                                + details,
+                        rootError
+                );
             }
         }
     }

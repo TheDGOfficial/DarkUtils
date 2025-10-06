@@ -71,10 +71,26 @@ public interface EventRegistry {
             throw new IllegalArgumentException("second parameter must not be manually passed");
         }
 
+        // Infer event type from the compiler-generated synthetic array
         final var eventType = doNotPassThisParameter.getClass().getComponentType();
 
-        if (Event.class == eventType) {
-            throw new IllegalStateException("type inference failed");
+        if (null == eventType) {
+            throw new IllegalStateException("failed to infer event type (component type is null)");
+        }
+
+        if (Object.class == eventType || Event.class == eventType || NonCancellableEvent.class == eventType || CancellableEvent.class == eventType) {
+            throw new IllegalStateException("type inference failed for unexpected type " + eventType.getName());
+        }
+
+        if (!Event.class.isAssignableFrom(eventType)) {
+            throw new IllegalArgumentException("listener method has wrong parameter with type " + eventType.getName());
+        }
+
+        // Force static initializer to run so that the event can be registered before we try to add a listener for it
+        try {
+            Class.forName(eventType.getName(), true, eventType.getClassLoader());
+        } catch (final ClassNotFoundException e) {
+            throw new IllegalStateException("failed to force initialization for event class " + eventType.getName(), e);
         }
 
         this.getEventHandler((Class<T>) eventType).addListener(listener);
