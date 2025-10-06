@@ -2,6 +2,7 @@ package gg.darkutils.events.base;
 
 import gg.darkutils.events.base.impl.BasicEventRegistry;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Defines a {@link EventRegistry}.
@@ -65,7 +66,7 @@ public interface EventRegistry {
      * @param <T>                    The type of the event.
      */
     @SuppressWarnings("unchecked")
-    default <T extends Event> void addListener(@NotNull final EventListener<T> listener, @NotNull final T... doNotPassThisParameter) {
+    default <T extends Event> void addListener(@NotNull final EventListener<T> listener, @Nullable final T... doNotPassThisParameter) {
         if (null == doNotPassThisParameter || 0 != doNotPassThisParameter.length) {
             throw new IllegalArgumentException("second parameter must not be manually passed");
         }
