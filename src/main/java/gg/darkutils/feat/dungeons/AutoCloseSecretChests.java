@@ -1,8 +1,9 @@
 package gg.darkutils.feat.dungeons;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.events.ScreenOpenEvent;
+import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
-import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.text.TranslatableTextContent;
 import org.jetbrains.annotations.NotNull;
@@ -14,22 +15,26 @@ public final class AutoCloseSecretChests {
         throw new UnsupportedOperationException("static-only class");
     }
 
-    public static final boolean shouldCancelOpen(@NotNull final OpenScreenS2CPacket packet) {
+    public static final void init() {
+        EventRegistry.centralRegistry().addListener(AutoCloseSecretChests::onScreenOpen);
+    }
+
+    private static final void onScreenOpen(@NotNull final ScreenOpenEvent event) {
         if (!DarkUtilsConfig.INSTANCE.autoCloseSecretChests || !LocationUtils.isInDungeons()) {
-            return false;
+            return;
         }
 
-        final var handlerType = packet.getScreenHandlerType();
+        final var handlerType = event.screenHandlerType();
 
         if (ScreenHandlerType.GENERIC_9X3 == handlerType || ScreenHandlerType.GENERIC_9X6 == handlerType) {
-            final var name = packet.getName();
+            final var name = event.name();
             if (name.getContent() instanceof final TranslatableTextContent translatable) {
                 final var key = translatable.getKey();
 
-                return "container.chest".equals(key) || "container.chestDouble".equals(key);
+                if ("container.chest".equals(key) || "container.chestDouble".equals(key)) {
+                    event.cancellationState().cancel();
+                }
             }
         }
-
-        return false;
     }
 }

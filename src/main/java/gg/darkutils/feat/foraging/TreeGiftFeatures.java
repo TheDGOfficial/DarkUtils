@@ -1,17 +1,18 @@
 package gg.darkutils.feat.foraging;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.events.TreeGiftObtainedEvent;
+import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.ChatUtils;
 import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
 public final class TreeGiftFeatures {
     private static boolean endMessageReceived;
-    private static @NotNull TreeGiftFeatures.MobSpawned mobSpawned = TreeGiftFeatures.MobSpawned.NONE;
+    private static @NotNull TreeMobSpawned treeMobSpawned = TreeMobSpawned.NONE;
 
     private TreeGiftFeatures() {
         super();
@@ -31,7 +32,7 @@ public final class TreeGiftFeatures {
         if (!DarkUtilsConfig.INSTANCE.treeGiftConfirmation && !DarkUtilsConfig.INSTANCE.treeGiftsPerHour) {
             // Reset state to prevent bugs when feature is turned off
             TreeGiftFeatures.endMessageReceived = false;
-            TreeGiftFeatures.mobSpawned = TreeGiftFeatures.MobSpawned.NONE;
+            TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.NONE;
 
             return;
         }
@@ -41,26 +42,26 @@ public final class TreeGiftFeatures {
             case "                                 TREE GIFT" -> {
                 if (ChatUtils.hasFormatting(message, Formatting.DARK_GREEN, true)) {
                     TreeGiftFeatures.endMessageReceived = false;
-                    TreeGiftFeatures.mobSpawned = TreeGiftFeatures.MobSpawned.NONE;
+                    TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.NONE;
                     TickUtils.awaitCondition(
                             () -> TreeGiftFeatures.endMessageReceived,
-                            () -> TreeGiftFeatures.onTreeGift(MinecraftClient.getInstance())
+                            () -> EventRegistry.centralRegistry().triggerEvent(new TreeGiftObtainedEvent(TreeGiftFeatures.treeMobSpawned))
                     );
                 }
             }
             case "                     A Phanflare fell from the Tree!" -> {
                 if (ChatUtils.hasFormatting(message, Formatting.GRAY, false)) {
-                    TreeGiftFeatures.mobSpawned = TreeGiftFeatures.MobSpawned.PHANFLARE;
+                    TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.PHANFLARE;
                 }
             }
             case "                     A Phanpyre fell from the Tree!" -> {
                 if (ChatUtils.hasFormatting(message, Formatting.GRAY, false)) {
-                    TreeGiftFeatures.mobSpawned = TreeGiftFeatures.MobSpawned.PHANPYRE;
+                    TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.PHANPYRE;
                 }
             }
             case "                     A Dreadwing fell from the Tree!" -> {
                 if (ChatUtils.hasFormatting(message, Formatting.GRAY, false)) {
-                    TreeGiftFeatures.mobSpawned = TreeGiftFeatures.MobSpawned.DREADWING;
+                    TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.DREADWING;
                 }
             }
             case "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬" -> {
@@ -72,22 +73,5 @@ public final class TreeGiftFeatures {
                 // no-op
             }
         }
-    }
-
-    private static final void onTreeGift(@NotNull final MinecraftClient client) {
-        if (DarkUtilsConfig.INSTANCE.treeGiftConfirmation) {
-            TreeGiftConfirmation.onTreeGift(client, TreeGiftFeatures.mobSpawned);
-        }
-
-        if (DarkUtilsConfig.INSTANCE.treeGiftsPerHour) {
-            TreeGiftsPerHour.onTreeGift();
-        }
-    }
-
-    enum MobSpawned {
-        NONE,
-        PHANFLARE,
-        PHANPYRE,
-        DREADWING
     }
 }

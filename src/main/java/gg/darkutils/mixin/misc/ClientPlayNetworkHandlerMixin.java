@@ -1,6 +1,7 @@
 package gg.darkutils.mixin.misc;
 
-import gg.darkutils.feat.dungeons.AutoCloseSecretChests;
+import gg.darkutils.events.ScreenOpenEvent;
+import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.ChatUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -36,7 +37,7 @@ final class ClientPlayNetworkHandlerMixin {
             cancellable = true
     )
     private final void darkutils$cancelOpenScreenIfEnabled(@NotNull final OpenScreenS2CPacket packet, @NotNull final CallbackInfo ci) {
-        if (AutoCloseSecretChests.shouldCancelOpen(packet)) {
+        if (EventRegistry.centralRegistry().triggerEvent(new ScreenOpenEvent(packet.getScreenHandlerType(), packet.getName())).isCancelled()) {
             final var client = MinecraftClient.getInstance();
             if (null != client && null != client.getNetworkHandler()) {
                 // syncId from the OpenScreenS2CPacket tells server which container to close

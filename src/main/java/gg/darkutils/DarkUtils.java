@@ -7,6 +7,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.config.DarkUtilsConfigScreen;
 import gg.darkutils.feat.dungeons.*;
+import gg.darkutils.feat.foraging.TreeGiftConfirmation;
 import gg.darkutils.feat.foraging.TreeGiftFeatures;
 import gg.darkutils.feat.foraging.TreeGiftsPerHour;
 import gg.darkutils.feat.performance.ArmorStandOptimizer;
@@ -259,8 +260,10 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.init(
                 ArmorStandOptimizer::init,
                 AutoFishingRod::init,
+                TreeGiftConfirmation::init,
                 TreeGiftsPerHour::init,
                 LogCleaner::init,
+                AutoCloseSecretChests::init,
                 DialogueSkipTimer::init,
                 SoloCrushTimer::init,
                 GhostBlockKey::init,

@@ -2,6 +2,8 @@ package gg.darkutils.feat.foraging;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.events.TreeGiftObtainedEvent;
+import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.RenderUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
@@ -48,6 +50,7 @@ public final class TreeGiftsPerHour {
     }
 
     public static final void init() {
+        EventRegistry.centralRegistry().<TreeGiftObtainedEvent>addListener(event -> TreeGiftsPerHour.onTreeGift());
         HudElementRegistry.addLast(Identifier.of(DarkUtils.MOD_ID, "tree_gifts_per_hour"), (context, tickCounter) -> TreeGiftsPerHour.renderTreeGifts(context));
     }
 
@@ -90,7 +93,7 @@ public final class TreeGiftsPerHour {
         );
     }
 
-    static final void onTreeGift() {
+    private static final void onTreeGift() {
         if (!DarkUtilsConfig.INSTANCE.treeGiftsPerHour) {
             // Prevent leaking samples if feature is turned off after using it
             TreeGiftsPerHour.reset();
