@@ -7,6 +7,16 @@ import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Triggers after a screen has been opened but not yet displayed to the user.
+ * <p>
+ * Cancelling will make the screen act as if it was never opened, including
+ * sending an automatic close packet.
+ *
+ * @param cancellationState The cancellation state holder.
+ * @param screenHandlerType Screen handler type.
+ * @param name Name of the screen.
+ */
 public record ScreenOpenEvent(@NotNull CancellationState cancellationState,
                               @NotNull ScreenHandlerType<?> screenHandlerType,
                               @NotNull Text name) implements CancellableEvent {

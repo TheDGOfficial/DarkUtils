@@ -25,7 +25,7 @@ public interface EventRegistry {
      * You should call this method from your event class's static initializer block
      * to ensure it's always registered before listeners are added for it.
      * <p>
-     * A default {@link EventHandler} suitable for this  will be created and used.
+     * A default {@link EventHandler} suitable for this {@link EventRegistry} will be created and used.
      *
      * @param event The event class.
      * @param <T>   The type of the event class.

@@ -11,15 +11,30 @@ import java.util.concurrent.ConcurrentHashMap;
  * A basic {@link EventRegistry}.
  */
 public final class BasicEventRegistry implements EventRegistry {
+    /**
+     * Singleton instance.
+     */
     @NotNull
     private static final BasicEventRegistry INSTANCE = new BasicEventRegistry();
+
+    /**
+     * Holds the map of known events to their handlers in a thread-safe manner.
+     */
     @NotNull
     private final ConcurrentHashMap<Class<? extends Event>, EventHandler<? extends Event>> knownEvents = new ConcurrentHashMap<>();
 
+    /**
+     * Creates the singleton {@link BasicEventRegistry} instance.
+     */
     private BasicEventRegistry() {
         super();
     }
 
+    /**
+     * Gets the singleton {@link BasicEventRegistry} instance.
+     *
+     * @return The singleton {@link BasicEventRegistry} instance.
+     */
     @NotNull
     public static final BasicEventRegistry getInstance() {
         return BasicEventRegistry.INSTANCE;

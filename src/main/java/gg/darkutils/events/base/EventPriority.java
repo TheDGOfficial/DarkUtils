@@ -45,9 +45,9 @@ public enum EventPriority {
     }
 
     /**
-     * Returns an integer suitable for comparing  values.
+     * Returns an integer suitable for comparing {@link EventPriority} values.
      *
-     * @return An integer suitable for comparing  values.
+     * @return An integer suitable for comparing {@link EventPriority} values.
      */
     public final int getValue() {
         return this.value;

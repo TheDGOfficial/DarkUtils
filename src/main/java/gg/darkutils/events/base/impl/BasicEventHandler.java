@@ -28,12 +28,15 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     private final CopyOnWriteArrayList<EventListener<T>> listeners = new CopyOnWriteArrayList<>();
 
     /**
-     * Creates a new .
+     * Creates a new {@link BasicEventHandler}.
      */
     BasicEventHandler() {
         super();
     }
 
+    /**
+     * Sorts listeners based on their {@link EventPriority}.
+     */
     private final void sortListeners() {
         this.listeners.sort(BasicEventHandler.eventListenerPriorityComparator);
     }

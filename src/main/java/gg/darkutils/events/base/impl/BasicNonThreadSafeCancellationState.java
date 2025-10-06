@@ -15,29 +15,17 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
     private boolean cancelled;
 
     /**
-     * Creates a fresh  defaulting to not cancelled.
+     * Creates a fresh {@link BasicNonThreadSafeCancellationState} defaulting to not cancelled.
      */
     public BasicNonThreadSafeCancellationState() {
         super();
     }
 
-    /**
-     * Returns whether the state is cancelled or not.
-     *
-     * @return True if the state is cancelled, false otherwise.
-     */
     @Override
     public final boolean isCancelled() {
         return this.cancelled;
     }
 
-    /**
-     * Sets the cancellation state.
-     * <p>
-     * See {@link EventListener} for the behaviour of uncancelling.
-     *
-     * @param cancelled True to cancel, false to uncancel.
-     */
     @Override
     public final void setCancelled(final boolean cancelled) {
         this.cancelled = cancelled;
