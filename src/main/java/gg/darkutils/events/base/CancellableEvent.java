@@ -8,10 +8,10 @@ import org.jetbrains.annotations.NotNull;
 @FunctionalInterface
 public non-sealed interface CancellableEvent extends Event {
     /**
-     * Gets the {@link CancellationState} which can be used to cancel the {@link Event}.
+     * Returns the {@link CancellationState} which can be used to cancel the {@link Event}.
      *
      * @return The {@link CancellationState} which can be used to cancel the {@link Event}.
      */
     @NotNull
-    CancellationState getCancellationState();
+    CancellationState cancellationState();
 }

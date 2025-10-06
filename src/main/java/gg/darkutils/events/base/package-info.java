@@ -14,7 +14,7 @@
  *         EventRegistry.centralRegistry().registerEvent(MyEvent.class);
  *     }
  * }
- * }
+ *}
  *
  * <b>Registering a listener</b><br>
  * Register listeners for events using {@link gg.darkutils.events.base.EventRegistry#addListener(gg.darkutils.events.base.EventListener, gg.darkutils.events.base.Event[])}:
@@ -29,14 +29,14 @@
  *     var param1 = event.param1();
  *     var param2 = event.param2();
  * }
- * }
+ *}
  * Remember to invoke your {@code init()} method from your mod or feature entrypoint.
  * <p>
  * <b>Triggering an event</b><br>
  * You can trigger an event anywhere using:
  * {@snippet :
  * EventRegistry.centralRegistry().triggerEvent(new MyEvent(new MyEventParam1(), new MyEventParam2()));
- * }
+ *}
  *
  * <b>Working with cancellable events</b><br>
  * To define a cancellable event, implement {@link gg.darkutils.events.base.CancellableEvent}
@@ -53,22 +53,16 @@
  *     public MyCancellableEvent(@NotNull MyEventParam1 param1, @NotNull MyEventParam2 param2) {
  *         this(CancellationState.ofFresh(), param1, param2);
  *     }
- *
- *     @Override
- *     @NotNull
- *     public CancellationState getCancellationState() {
- *         return this.cancellationState;
- *     }
  * }
- * }
- *
+ *}
+ * <p>
  * Listeners for cancellable events work the same way, except they may cancel the event:
  * {@snippet :
  * private void onMyEvent(@NotNull MyCancellableEvent event) {
  *     event.getCancellationState().cancel();
  * }
- * }
- *
+ *}
+ * <p>
  * Triggering cancellable events allows checking the result:
  * {@snippet :
  * if (!EventRegistry.centralRegistry()
@@ -76,7 +70,7 @@
  *         .isCancelled()) {
  *     // Event was not cancelled
  * }
- * }
+ *}
  *
  * <b>Advanced usage</b><br>
  * For advanced cases, you can implement your own

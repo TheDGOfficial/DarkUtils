@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @param cancellationState The cancellation state holder.
  * @param screenHandlerType Screen handler type.
- * @param name Name of the screen.
+ * @param name              Name of the screen.
  */
 public record ScreenOpenEvent(@NotNull CancellationState cancellationState,
                               @NotNull ScreenHandlerType<?> screenHandlerType,
@@ -26,11 +26,5 @@ public record ScreenOpenEvent(@NotNull CancellationState cancellationState,
 
     public ScreenOpenEvent(@NotNull final ScreenHandlerType<?> screenHandlerType, @NotNull final Text name) {
         this(CancellationState.ofFresh(), screenHandlerType, name);
-    }
-
-    @Override
-    @NotNull
-    public final CancellationState getCancellationState() {
-        return this.cancellationState;
     }
 }

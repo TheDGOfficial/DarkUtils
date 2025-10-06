@@ -391,7 +391,7 @@ public final class AlignmentTaskSolver {
                 case WEST -> 5;
                 case SOUTH -> 3;
                 case NORTH -> 7;
-                default -> 0;
+                case UP, DOWN -> 0;
             };
 
             moves.add(new AlignmentTaskSolver.GridMove(current, rotation));

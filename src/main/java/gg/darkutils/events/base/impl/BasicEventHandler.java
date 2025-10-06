@@ -63,7 +63,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     @NotNull
     public final CancellationState triggerEvent(@NotNull final T event) {
         for (final var listener : this.listeners) {
-            final var cancelled = event instanceof final CancellableEvent cancellableEvent && cancellableEvent.getCancellationState().isCancelled();
+            final var cancelled = event instanceof final CancellableEvent cancellableEvent && cancellableEvent.cancellationState().isCancelled();
 
             if (cancelled && !listener.receiveCancelled()) {
                 continue;
@@ -77,6 +77,6 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             }
         }
 
-        return event instanceof final CancellableEvent cancellableEvent ? cancellableEvent.getCancellationState() : CancellationState.ofNotCancellable();
+        return event instanceof final CancellableEvent cancellableEvent ? cancellableEvent.cancellationState() : CancellationState.ofNotCancellable();
     }
 }

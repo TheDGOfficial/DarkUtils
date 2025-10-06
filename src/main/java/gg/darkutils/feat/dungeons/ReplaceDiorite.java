@@ -115,11 +115,10 @@ public final class ReplaceDiorite {
 
             for (final var pos : entry.getValue()) {
                 final var state = chunk.getBlockState(pos);
-                final var block = state.getBlock();
 
-                if (Blocks.DIORITE == block || Blocks.POLISHED_DIORITE == block
-                        || Blocks.GRANITE == block || Blocks.POLISHED_GRANITE == block
-                        || Blocks.ANDESITE == block || Blocks.POLISHED_ANDESITE == block) {
+                if (state.isOf(Blocks.DIORITE) || state.isOf(Blocks.POLISHED_DIORITE)
+                        || state.isOf(Blocks.GRANITE) || state.isOf(Blocks.POLISHED_GRANITE)
+                        || state.isOf(Blocks.ANDESITE) || state.isOf(Blocks.POLISHED_ANDESITE)) {
                     ReplaceDiorite.setGlass(world, pos);
                 }
             }

@@ -59,10 +59,10 @@ public interface EventRegistry {
     /**
      * Adds the given listener to be run for the compiler inferred event type.
      *
-     * @param listener The listener.
+     * @param listener               The listener.
      * @param doNotPassThisParameter Do not pass this parameter, it is automatically
      *                               passed by the compiler and used for type inference.
-     * @param <T> The type of the event.
+     * @param <T>                    The type of the event.
      */
     @SuppressWarnings("unchecked")
     default <T extends Event> void addListener(@NotNull final EventListener<T> listener, @NotNull final T... doNotPassThisParameter) {

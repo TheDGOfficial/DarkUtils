@@ -1,6 +1,9 @@
 package gg.darkutils.events.base.impl;
 
-import gg.darkutils.events.base.*;
+import gg.darkutils.events.base.CancellationState;
+import gg.darkutils.events.base.Event;
+import gg.darkutils.events.base.EventHandler;
+import gg.darkutils.events.base.NonThreadSafeCancellationState;
 
 /**
  * A basic {@link CancellationState} with a simple mutable primitive boolean field.

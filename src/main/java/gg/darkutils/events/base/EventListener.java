@@ -2,7 +2,9 @@ package gg.darkutils.events.base;
 
 import gg.darkutils.events.base.impl.BasicEventListener;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -38,8 +40,25 @@ public interface EventListener<T extends Event> extends Consumer<T> {
      *
      * @param event The event.
      */
+    void onEvent(@NotNull final T event);
+
+    /**
+     * Triggers this event listener.
+     * <p>
+     * Use instead {@link EventListener#onEvent(Event)} for clarity unless
+     * compatibility with an API that expects {@link Consumer} is required.
+     * <p>
+     * As the {@link Consumer#accept(Object)} allows null parameters, a runtime
+     * check will be performed to ensure the given event is not null.
+     *
+     * @param event
+     */
     @Override
-    void accept(@NotNull final T event);
+    default void accept(@Nullable final T event) {
+        Objects.requireNonNull(event, "event");
+
+        this.onEvent(event);
+    }
 
     /**
      * Priority of this listener. Higher priorities are invoked earlier.

@@ -63,7 +63,7 @@ public final class AutoFishingRod {
 
     private static final boolean isNotHoldingRod(@Nullable final ClientPlayerEntity player) {
         return null == player
-                || player.getMainHandStack().getItem() != Items.FISHING_ROD;
+                || !player.getMainHandStack().isOf(Items.FISHING_ROD);
     }
 
     @Nullable
