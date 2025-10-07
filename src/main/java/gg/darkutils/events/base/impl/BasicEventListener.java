@@ -16,8 +16,4 @@ import org.jetbrains.annotations.NotNull;
  */
 public record BasicEventListener<T extends Event>(@NotNull EventListener<T> listener, @NotNull EventPriority priority,
                                                   boolean receiveCancelled) implements DelegatingEventListener<T> {
-    @Override
-    public final void onEvent(@NotNull final T event) {
-        this.listener.accept(event);
-    }
 }

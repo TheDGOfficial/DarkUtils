@@ -92,8 +92,8 @@ public final class DarkUtilsConfig {
 
     private static final @NotNull DarkUtilsConfig load() {
         if (DarkUtilsConfig.FILE.exists()) {
-            try (final var reader = Files.newBufferedReader(DarkUtilsConfig.FILE.toPath(), StandardCharsets.UTF_8)) {
-                return DarkUtilsConfig.GSON.fromJson(reader, DarkUtilsConfig.class);
+            try {
+                return DarkUtilsConfig.GSON.fromJson(Files.readString(DarkUtilsConfig.FILE.toPath(), StandardCharsets.UTF_8), DarkUtilsConfig.class);
             } catch (final IOException e) {
                 DarkUtils.error(DarkUtilsConfig.class, "Unable to load config", e);
             }
@@ -102,8 +102,8 @@ public final class DarkUtilsConfig {
     }
 
     static final void save() {
-        try (final var writer = Files.newBufferedWriter(DarkUtilsConfig.FILE.toPath(), StandardCharsets.UTF_8)) {
-            DarkUtilsConfig.GSON.toJson(DarkUtilsConfig.INSTANCE, writer);
+        try {
+            Files.writeString(DarkUtilsConfig.FILE.toPath(), DarkUtilsConfig.GSON.toJson(DarkUtilsConfig.INSTANCE), StandardCharsets.UTF_8);
         } catch (final IOException e) {
             DarkUtils.error(DarkUtilsConfig.class, "Unable to save config", e);
         }

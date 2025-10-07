@@ -16,4 +16,9 @@ public interface DelegatingEventListener<T extends Event> extends EventListener<
      */
     @NotNull
     EventListener<T> listener();
+
+    @Override
+    default void onEvent(@NotNull final T event) {
+        this.listener().onEvent(event);
+    }
 }

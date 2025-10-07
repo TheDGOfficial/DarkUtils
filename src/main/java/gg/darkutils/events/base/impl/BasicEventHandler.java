@@ -70,7 +70,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             }
 
             try {
-                listener.accept(event);
+                listener.onEvent(event);
             } catch (final Throwable error) {
                 final var actualListener = listener instanceof final DelegatingEventListener<T> delegatingEventListener ? delegatingEventListener.listener() : listener;
                 DarkUtils.error(BasicEventHandler.class, "Error when executing listener " + actualListener.getClass().getName() + " with priority " + actualListener.priority().name() + " for event " + event.getClass().getName(), error);

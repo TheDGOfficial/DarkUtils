@@ -30,7 +30,7 @@ public final class AutoClicker {
             return actual;
         }
 
-        for (final var key : AutoClicker.Key.values()) {
+        for (final var key : AutoClicker.Key.VALUES) {
             if (key.key == keyBinding) {
                 return key.isPressed(true);
             }
@@ -46,7 +46,7 @@ public final class AutoClicker {
             return actual;
         }
 
-        for (final var key : AutoClicker.Key.values()) {
+        for (final var key : AutoClicker.Key.VALUES) {
             if (key.key == keyBinding) {
                 return key.wasPressed(actual);
             }
@@ -58,6 +58,8 @@ public final class AutoClicker {
     private enum Key {
         LEFT(MinecraftClient.getInstance().options.attackKey),
         RIGHT(MinecraftClient.getInstance().options.useKey);
+
+        private static final AutoClicker.Key @NotNull [] VALUES = AutoClicker.Key.values();
 
         @NotNull
         private final KeyBinding key;

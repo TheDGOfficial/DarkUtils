@@ -56,15 +56,15 @@ final class WindowMixin {
             final var wayland = this.isWayland();
 
             if (!wayland && 480 > this.framebufferHeight) {
-                this.fixFramebufferHeight(true);
+                this.darkutils$fixFramebufferHeight(true);
             } else if (wayland && !this.fullscreen && 480 < this.framebufferHeight) {
-                this.fixFramebufferHeight(false);
+                this.darkutils$fixFramebufferHeight(false);
             }
         }
     }
 
     @Unique
-    private final void fixFramebufferHeight(final boolean setPosSupportedOnPlatform) {
+    private final void darkutils$fixFramebufferHeight(final boolean setPosSupportedOnPlatform) {
         this.framebufferHeight = 480;
 
         GLFW.glfwSetWindowSize(this.handle, this.framebufferWidth, this.framebufferHeight);
