@@ -251,6 +251,10 @@ public final class DarkUtilsConfigScreen {
                 }))
                 .build());
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Use Virtual Threads for Texture Downloading",
+                "Makes Minecraft use Java's new (Lightweight) Virtual Threads over Platform (OS) Threads. Normally, Minecraft uses a Cached Thread Pool which ends up creating hundreds of texture downloading threads in texture-heavy game-modes like Hypixel SkyBlock where items have a player skull model. Those hundreds of texture downloading threads all have their separate stack, and there is a limit to how many platform threads you can create in the OS level at which point it will crash. Virtual Threads are a lightweight new technology replacement that only creates threads when tasks are blocked and this also made texture loading speedier during tests due to creating a new (platform/OS) thread not being a free operation.",
+                config.useVirtualThreadsForTextureDownloading, newValue -> config.useVirtualThreadsForTextureDownloading = newValue);
+
         // === Bugfixes ===
         final var bugfixes = builder.getOrCreateCategory(Text.of("Bugfixes"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix GUI Scale After Toggling Fullscreen Off",

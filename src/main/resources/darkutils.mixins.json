@@ -27,7 +27,8 @@
     "visuals.HeartTypeMixin",
     "visuals.EntityRenderDispatcherMixin",
     "accessors.MinecraftClientAccessor",
-    "misc.NetworkThreadUtilsMixin"
+    "misc.NetworkThreadUtilsMixin",
+    "performance.UtilMixin"
   ],
   "injectors": {
     "defaultRequire": 1

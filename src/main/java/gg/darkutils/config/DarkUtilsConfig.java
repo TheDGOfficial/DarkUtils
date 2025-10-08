@@ -77,6 +77,7 @@ public final class DarkUtilsConfig {
     public boolean noMemoryReserve;
     @NotNull
     public OpenGLVersionOverride openGLVersionOverride = OpenGLVersionOverride.NO_OVERRIDE;
+    public boolean useVirtualThreadsForTextureDownloading;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;
