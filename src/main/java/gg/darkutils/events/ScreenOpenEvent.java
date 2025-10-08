@@ -26,12 +26,12 @@ public record ScreenOpenEvent(@NotNull CancellationState cancellationState,
 
     /**
      * Creates a new {@link ScreenOpenEvent} suitable for triggering the event.
-     * A new {@link CancellationState#ofFresh()} will be created with non-cancelled state by default.
+     * A cached {@link CancellationState#ofCached()} will be used with non-cancelled state by default.
      *
      * @param screenHandlerType The screen handler type.
      * @param name              The name of the screen.
      */
     public ScreenOpenEvent(@NotNull final ScreenHandlerType<?> screenHandlerType, @NotNull final Text name) {
-        this(CancellationState.ofFresh(), screenHandlerType, name);
+        this(CancellationState.ofCached(), screenHandlerType, name);
     }
 }

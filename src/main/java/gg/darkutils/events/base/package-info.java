@@ -51,7 +51,7 @@
  *     }
  *
  *     public MyCancellableEvent(@NotNull MyEventParam1 param1, @NotNull MyEventParam2 param2) {
- *         this(CancellationState.ofFresh(), param1, param2);
+ *         this(CancellationState.ofCached(), param1, param2);
  *     }
  * }
  *}
