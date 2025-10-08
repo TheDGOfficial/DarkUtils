@@ -1,6 +1,7 @@
 package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.item.ItemStack;
@@ -18,7 +19,7 @@ public final class AutoClicker {
     }
 
     public static final void resetState() {
-        for (final var key : AutoClicker.Key.values()) {
+        for (final var key : AutoClicker.Key.VALUES) {
             key.state = true;
         }
     }
@@ -93,6 +94,11 @@ public final class AutoClicker {
             return mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isIn(BlockTags.BUTTONS);
         }
 
+        private static final boolean isLookingAtALever() {
+            final var mc = MinecraftClient.getInstance();
+            return mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.LEVER);
+        }
+
         private final boolean isPressed(final boolean actual) {
             return (AutoClicker.Key.RIGHT == this ? !AutoClicker.Key.isHoldingRCMWeapon() : !AutoClicker.Key.isHoldingASword()) && actual;
         }
@@ -104,7 +110,7 @@ public final class AutoClicker {
 
                 if (held) {
                     this.state = false;
-                    return !right || !AutoClicker.Key.isLookingAtAButton();
+                    return !right || !AutoClicker.Key.isLookingAtAButton() && (DarkUtilsConfig.INSTANCE.autoClickerWorkInLevers || !AutoClicker.Key.isLookingAtALever());
                 }
             }
             return actual;

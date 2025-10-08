@@ -91,6 +91,10 @@ public final class DarkUtilsConfigScreen {
                 "Stop carpal tunnel by automatically sending clicks when you are holding down the mouse buttons when holding swords. Right-clicks are only sent for Hyperion/Astraea while left clicks work on all sword types.",
                 config.autoClicker, newValue -> config.autoClicker = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker Work In Levers",
+                "Makes Auto Clicker work even if you are looking at a lever. It will cause the lever to flick (activate and de-activate) multiple times. This is fine for 2 levers at the gates, but you likely want to keep this disabled if you do lever flick device in Section 2 as healer.",
+                config.autoClickerWorkInLevers, newValue -> config.autoClickerWorkInLevers = newValue);
+
         // === Foraging ===
         final var foraging = builder.getOrCreateCategory(Text.of("Foraging"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, foraging, "Tree Gift Confirmation",

@@ -33,6 +33,7 @@ public final class DarkUtilsConfig {
     public boolean autoTip;
     public boolean welcomeMessage;
     public boolean autoClicker;
+    public boolean autoClickerWorkInLevers;
 
     // === Foraging ===
     public boolean treeGiftConfirmation;
