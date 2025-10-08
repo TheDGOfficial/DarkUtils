@@ -19,6 +19,6 @@ final class ArmorStandEntityRendererMixin {
 
     @Redirect(method = "hasLabel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/decoration/ArmorStandEntity;isCustomNameVisible()Z"))
     private final boolean darkutils$skipRenderingLabelIfEnabled(@NotNull final ArmorStandEntity armorStand) {
-        return (!DarkUtilsConfig.INSTANCE.armorStandOptimizer || ArmorStandOptimizer.checkRender(armorStand)) && armorStand.isCustomNameVisible();
+        return armorStand.isCustomNameVisible() && (!DarkUtilsConfig.INSTANCE.armorStandOptimizer || ArmorStandOptimizer.checkRender(armorStand));
     }
 }
