@@ -33,6 +33,8 @@ public final class AlignmentTaskSolver {
     private static final @NotNull HashMap<BlockPos, Integer> clicks = new HashMap<>();
     private static final @NotNull HashMap<BlockPos, Integer> pendingClicks = new HashMap<>();
 
+    private static final @NotNull Direction[] directions = AlignmentTaskSolver.getDirections().toArray(new Direction[0]);
+
     static {
         // Sort the box
         final var temp = new ArrayList<BlockPos>();
@@ -375,7 +377,7 @@ public final class AlignmentTaskSolver {
             final var diffY = current.y - next.y;
 
             Direction dir = null;
-            for (final var direction : AlignmentTaskSolver.getDirections()) {
+            for (final var direction : AlignmentTaskSolver.directions) {
                 if (direction.getVector().getX() == diffX && direction.getVector().getZ() == diffY) {
                     dir = direction;
                     break;
@@ -432,7 +434,7 @@ public final class AlignmentTaskSolver {
         queue.addLast(start);
         gridCopy[start.y][start.x] = start;
 
-        final var dirs = AlignmentTaskSolver.getDirections();
+        final var dirs = AlignmentTaskSolver.directions;
 
         while (!queue.isEmpty()) {
             final var currPos = queue.removeFirst();
