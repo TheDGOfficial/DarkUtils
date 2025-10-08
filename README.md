@@ -96,6 +96,8 @@ Optional Dependencies:
  Removes a 10 MB safety memory reserve in vanilla code. The game normally allocates 10 MB at startup and frees it when you run out of memory to make headroom to display a out of memory screen. However, if you never run out of memory, this 10 MB is wasted. This feature always frees the memory reserve so it can be utilized by other apps or the Operating System for File System Caches. Unused memory is wasted memory!
 ## Open GL Version Override
  Overrides OpenGL Version hinted to the GLFW during Window context initialization to a higher value than the default of OpenGL 3.3. This does not magically make Minecraft take advantage of features from OpenGL 4.6 specification, but it does ensure forward compatibility and a stricter standard, which might or might not change anything at all.
+## Use Virtual Threads for Texture Downloading
+Makes Minecraft use Java's new (Lightweight) Virtual Threads over Platform (OS) Threads. Normally, Minecraft uses a Cached Thread Pool which ends up creating hundreds of texture downloading threads in texture-heavy game-modes like Hypixel SkyBlock where items have a player skull model. Those hundreds of texture downloading threads all have their separate stack, and there is a limit to how many platform threads you can create in the OS level at which point it will crash. Virtual Threads are a lightweight new technology replacement that only creates threads when tasks are blocked and this also made texture loading speedier during tests due to creating a new (platform/OS) thread not being a free operation.
 
 # Bugfixes
 ## Fix GUI Scale After Toggling Out Fullscreen
