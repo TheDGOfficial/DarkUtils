@@ -18,7 +18,7 @@ public sealed interface CancellationState permits NonThreadSafeCancellationState
      * However, this is usually fine as per the contract of {@link EventHandler#triggerEvent(Event)}, which calls
      * all listeners sequentially in the caller thread, so it won't be mutated by multiple threads in parallel.
      *
-     * @return A fresh {@link CancellationState}, defaulting to not cancelled.
+     * @return A cached {@link CancellationState}, defaulting to not cancelled.
      */
     static CancellationState ofCached() {
         return NonThreadSafeCancellationState.ofCached();
