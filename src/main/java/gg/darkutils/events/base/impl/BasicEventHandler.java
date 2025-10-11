@@ -28,10 +28,17 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     private final CopyOnWriteArrayList<EventListener<T>> listeners = new CopyOnWriteArrayList<>();
 
     /**
+     * Whether this event handler is for a {@link CancellableEvent} or not.
+     */
+    private final boolean cancellableEvent;
+
+    /**
      * Creates a new {@link BasicEventHandler}.
      */
-    BasicEventHandler() {
+    BasicEventHandler(@NotNull final Class<T> eventClass) {
         super();
+
+        this.cancellableEvent = CancellableEvent.class.isAssignableFrom(eventClass);
     }
 
     /**
@@ -62,11 +69,18 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     @Override
     @NotNull
     public final CancellationState triggerEvent(@NotNull final T event) {
-        final var cancellableEvent = event instanceof final CancellableEvent cEvent ? cEvent : null;
-        final var cancellable = null != cancellableEvent;
+        if (this.cancellableEvent) {
+            return this.triggerCancellableEvent(event, ((CancellableEvent) event).cancellationState());
+        }
 
+        this.triggerNonCancellableEvent(event);
+        return CancellationState.ofNotCancellable();
+    }
+
+    @NotNull
+    private final CancellationState triggerCancellableEvent(@NotNull final T event, @NotNull final CancellationState cancellationState) {
         for (final var listener : this.listeners) {
-            final var cancelled = cancellable && cancellableEvent.cancellationState().isCancelled();
+            final var cancelled = cancellationState.isCancelled();
 
             if (cancelled && !listener.receiveCancelled()) {
                 continue;
@@ -75,11 +89,30 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             try {
                 listener.onEvent(event);
             } catch (final Throwable error) {
-                final var actualListener = listener instanceof final DelegatingEventListener<T> delegatingEventListener ? delegatingEventListener.listener() : listener;
-                DarkUtils.error(BasicEventHandler.class, "Error when executing listener " + actualListener.getClass().getName() + " with priority " + actualListener.priority().name() + " for event " + event.getClass().getName(), error);
+                this.handleListenerError(listener, event, error);
             }
         }
 
-        return cancellable ? cancellableEvent.cancellationState() : CancellationState.ofNotCancellable();
+        return cancellationState;
+    }
+
+    private final void triggerNonCancellableEvent(@NotNull final T event) {
+        for (final var listener : this.listeners) {
+            try {
+                listener.onEvent(event);
+            } catch (final Throwable error) {
+                this.handleListenerError(listener, event, error);
+            }
+        }
+    }
+
+    private final void handleListenerError(@NotNull final EventListener<T> listener, @NotNull final T event, @NotNull final Throwable error) {
+        final var actualListener = listener instanceof final DelegatingEventListener<T> delegatingEventListener
+                ? delegatingEventListener.listener()
+                : listener;
+        DarkUtils.error(BasicEventHandler.class,
+                "Error when executing listener " + actualListener.getClass().getName() +
+                        " with priority " + actualListener.priority().name() +
+                        " for event " + event.getClass().getName(), error);
     }
 }

@@ -42,7 +42,7 @@ public final class BasicEventRegistry implements EventRegistry {
 
     @Override
     public final <T extends Event> void registerEvent(@NotNull final Class<T> event) {
-        this.registerEvent(event, new BasicEventHandler<>());
+        this.registerEvent(event, new BasicEventHandler<>(event));
     }
 
     @Override
