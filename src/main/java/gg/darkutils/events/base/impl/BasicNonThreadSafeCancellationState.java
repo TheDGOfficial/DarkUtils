@@ -34,7 +34,7 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
     @NotNull
     public static final BasicNonThreadSafeCancellationState getCachedInstanceForCurrentThread() {
         final var cached = BasicNonThreadSafeCancellationState.INSTANCE.get();
-        cached.uncancel();
+        cached.reset();
 
         return cached;
     }

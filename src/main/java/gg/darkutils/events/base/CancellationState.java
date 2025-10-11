@@ -60,4 +60,14 @@ public sealed interface CancellationState permits NonThreadSafeCancellationState
     default void uncancel() {
         this.setCancelled(false);
     }
+
+    /**
+     * Resets this {@link CancellationState} by marking it as not cancelled.
+     * <p>
+     * Does the same thing as {@link CancellationState#uncancel()} but more explicit
+     * for resetting the state name-wise.
+     */
+    default void reset() {
+        this.setCancelled(false);
+    }
 }
