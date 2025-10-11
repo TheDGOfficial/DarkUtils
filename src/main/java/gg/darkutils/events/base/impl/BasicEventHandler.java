@@ -62,7 +62,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     @Override
     @NotNull
     public final CancellationState triggerEvent(@NotNull final T event) {
-        final var cancellableEvent = event instanceof final CancellableEvent cancellableEvent ? cancellableEvent : null;
+        final var cancellableEvent = event instanceof final CancellableEvent cEvent ? cEvent : null;
         final var cancellable = null != cancellableEvent;
 
         for (final var listener : this.listeners) {
