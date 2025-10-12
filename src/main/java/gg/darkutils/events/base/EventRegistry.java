@@ -4,6 +4,8 @@ import gg.darkutils.events.base.impl.BasicEventRegistry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * Defines a {@link EventRegistry}.
  */
@@ -88,9 +90,9 @@ public interface EventRegistry {
 
         // Force static initializer to run so that the event can be registered before we try to add a listener for it
         try {
-            Class.forName(eventType.getName(), true, eventType.getClassLoader());
-        } catch (final ClassNotFoundException e) {
-            throw new IllegalStateException("failed to force initialization for event class " + eventType.getName(), e);
+            MethodHandles.lookup().ensureInitialized(eventType);
+        } catch (final Throwable error) {
+            throw new IllegalStateException("failed to force initialization for event class " + eventType.getName(), error);
         }
 
         this.getEventHandler((Class<T>) eventType).addListener(listener);
