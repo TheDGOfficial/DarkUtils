@@ -21,7 +21,13 @@ import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
 
 public final class AlignmentTaskSolver {
     private static final @NotNull BlockPos topLeft = new BlockPos(-2, 124, 79);

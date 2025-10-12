@@ -6,7 +6,12 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.config.DarkUtilsConfigScreen;
-import gg.darkutils.feat.dungeons.*;
+import gg.darkutils.feat.dungeons.AlignmentTaskSolver;
+import gg.darkutils.feat.dungeons.AutoCloseSecretChests;
+import gg.darkutils.feat.dungeons.DialogueSkipTimer;
+import gg.darkutils.feat.dungeons.DungeonTimer;
+import gg.darkutils.feat.dungeons.ReplaceDiorite;
+import gg.darkutils.feat.dungeons.SoloCrushTimer;
 import gg.darkutils.feat.foraging.TreeGiftConfirmation;
 import gg.darkutils.feat.foraging.TreeGiftFeatures;
 import gg.darkutils.feat.foraging.TreeGiftsPerHour;
@@ -15,7 +20,11 @@ import gg.darkutils.feat.performance.LogCleaner;
 import gg.darkutils.feat.qol.AutoFishingRod;
 import gg.darkutils.feat.qol.AutoTip;
 import gg.darkutils.feat.qol.GhostBlockKey;
-import gg.darkutils.utils.*;
+import gg.darkutils.utils.ChatUtils;
+import gg.darkutils.utils.LocationUtils;
+import gg.darkutils.utils.LogLevel;
+import gg.darkutils.utils.Pair;
+import gg.darkutils.utils.TickUtils;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -158,7 +167,7 @@ public final class DarkUtils implements ClientModInitializer {
                 initializer.run();
             } catch (final Throwable error) {
                 // Detect which feature failed and where
-                final Predicate<String> isOurModule = (@NotNull final String clsName) -> clsName.contains("darkutils");
+                final Predicate<String> isOurModule = (@NotNull final String clsName) -> clsName.contains(DarkUtils.MOD_ID);
 
                 final var rootError = DarkUtils.getRootError(error, (@NotNull final Throwable err) -> {
                     for (final var ste : err.getStackTrace()) {
@@ -304,19 +313,22 @@ public final class DarkUtils implements ClientModInitializer {
             final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
             final var footer = ChatUtils.fill('▬', true);
 
+            final var gradientStart = "#54daf4";
+            final var gradientEnd = "#545eb6";
+
             final var text = Text
                     .literal(header.first())
                     .setStyle(Style.EMPTY.withColor(headerFooterColor).withBold(true))
                     .append(" ")
-                    .append(ChatUtils.gradient("#54daf4", "#545eb6", DarkUtils.class.getSimpleName()))
+                    .append(ChatUtils.gradient(gradientStart, gradientEnd, DarkUtils.class.getSimpleName()))
                     .append(" ")
                     .append(Text.literal(header.second()).setStyle(Style.EMPTY.withColor(headerFooterColor).withBold(true)))
                     .append("\n")
                     .append("\n")
-                    .append(ChatUtils.gradient("#54daf4", "#545eb6", ChatUtils.center("Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', true)))
+                    .append(ChatUtils.gradient(gradientStart, gradientEnd, ChatUtils.center("Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', true)))
                     .append("\n")
                     .append("\n")
-                    .append(ChatUtils.button("#54daf4", "#545eb6", "Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID, true, true))
+                    .append(ChatUtils.button(gradientStart, gradientEnd, "Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID, true, true))
                     .append("\n")
                     .append("\n")
                     .append(Text.literal(footer).setStyle(Style.EMPTY.withColor(headerFooterColor).withBold(true)));

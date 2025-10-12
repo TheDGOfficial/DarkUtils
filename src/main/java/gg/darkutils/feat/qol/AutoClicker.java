@@ -32,7 +32,7 @@ public final class AutoClicker {
         }
 
         for (final var key : AutoClicker.Key.VALUES) {
-            if (key.key == keyBinding) {
+            if (key.keyBinding == keyBinding) {
                 return key.isPressed(true);
             }
         }
@@ -48,7 +48,7 @@ public final class AutoClicker {
         }
 
         for (final var key : AutoClicker.Key.VALUES) {
-            if (key.key == keyBinding) {
+            if (key.keyBinding == keyBinding) {
                 return key.wasPressed(actual);
             }
         }
@@ -63,11 +63,11 @@ public final class AutoClicker {
         private static final AutoClicker.Key @NotNull [] VALUES = AutoClicker.Key.values();
 
         @NotNull
-        private final KeyBinding key;
+        private final KeyBinding keyBinding;
         private boolean state = true;
 
-        private Key(@NotNull final KeyBinding key) {
-            this.key = key;
+        private Key(@NotNull final KeyBinding keyBinding) {
+            this.keyBinding = keyBinding;
         }
 
         @NotNull
@@ -106,7 +106,7 @@ public final class AutoClicker {
         private final boolean wasPressed(final boolean actual) {
             final var right = AutoClicker.Key.RIGHT == this;
             if (!actual && this.state && (right ? AutoClicker.Key.isHoldingRCMWeapon() : AutoClicker.Key.isHoldingASword())) {
-                final var held = this.key.isPressed();
+                final var held = this.keyBinding.isPressed();
 
                 if (held) {
                     this.state = false;
