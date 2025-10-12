@@ -225,7 +225,7 @@ public final class DarkUtils implements ClientModInitializer {
                         "Encountered " + error.getClass().getSimpleName()
                                 + " at " + fileName
                                 + " in method " + methodName
-                                + " (line " + lineNumber + ")"
+                                + " (line " + lineNumber + ')'
                                 + " while initializing feature " + featureName + '.'
                                 + details,
                         rootError

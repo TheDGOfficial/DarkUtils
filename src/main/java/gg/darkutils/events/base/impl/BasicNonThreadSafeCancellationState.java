@@ -25,6 +25,17 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
      */
     @NotNull
     private static final ThreadLocal<BasicNonThreadSafeCancellationState> INSTANCE = ThreadLocal.withInitial(BasicNonThreadSafeCancellationState::new);
+    /**
+     * Keeps track of the cancellation state.
+     */
+    private boolean cancelled;
+
+    /**
+     * Creates a new {@link BasicNonThreadSafeCancellationState} defaulting to not cancelled.
+     */
+    public BasicNonThreadSafeCancellationState() {
+        super();
+    }
 
     /**
      * Gets the shared {@link BasicNonThreadSafeCancellationState} wrapped in a {@link ThreadLocal} for the current thread.
@@ -37,18 +48,6 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
         cached.reset();
 
         return cached;
-    }
-
-    /**
-     * Keeps track of the cancellation state.
-     */
-    private boolean cancelled;
-
-    /**
-     * Creates a new {@link BasicNonThreadSafeCancellationState} defaulting to not cancelled.
-     */
-    public BasicNonThreadSafeCancellationState() {
-        super();
     }
 
     @Override
