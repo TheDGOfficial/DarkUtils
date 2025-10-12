@@ -33,7 +33,7 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
     /**
      * Creates a new {@link BasicNonThreadSafeCancellationState} defaulting to not cancelled.
      */
-    public BasicNonThreadSafeCancellationState() {
+    private BasicNonThreadSafeCancellationState() {
         super();
     }
 

@@ -51,7 +51,7 @@ public interface EventListener<T extends Event> extends Consumer<T> {
      * As the {@link Consumer#accept(Object)} allows null parameters, a runtime
      * check will be performed to ensure the given event is not null.
      *
-     * @param event
+     * @param event The event.
      */
     @Override
     default void accept(@Nullable final T event) {

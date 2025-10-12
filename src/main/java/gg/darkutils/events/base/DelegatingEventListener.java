@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @param <T> The type of the event.
  */
+@FunctionalInterface
 public interface DelegatingEventListener<T extends Event> extends EventListener<T> {
     /**
      * Returns the actual, underlying {@link EventListener}.

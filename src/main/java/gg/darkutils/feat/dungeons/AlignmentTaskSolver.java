@@ -39,7 +39,7 @@ public final class AlignmentTaskSolver {
     private static final @NotNull HashMap<BlockPos, Integer> clicks = new HashMap<>();
     private static final @NotNull HashMap<BlockPos, Integer> pendingClicks = new HashMap<>();
 
-    private static final @NotNull Direction[] directions = AlignmentTaskSolver.getDirections().toArray(new Direction[0]);
+    private static final @NotNull Direction @NotNull [] directions = AlignmentTaskSolver.getDirections().toArray(new Direction[0]);
 
     static {
         // Sort the box
@@ -440,11 +440,9 @@ public final class AlignmentTaskSolver {
         queue.addLast(start);
         gridCopy[start.y][start.x] = start;
 
-        final var dirs = AlignmentTaskSolver.directions;
-
         while (!queue.isEmpty()) {
             final var currPos = queue.removeFirst();
-            for (final var dir : dirs) {
+            for (final var dir : AlignmentTaskSolver.directions) {
                 final var nextPos = AlignmentTaskSolver.move(grid, gridCopy, currPos, dir);
                 if (null != nextPos) {
                     queue.addLast(nextPos);
