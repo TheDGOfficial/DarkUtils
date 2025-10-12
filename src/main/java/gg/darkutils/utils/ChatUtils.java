@@ -58,7 +58,7 @@ public final class ChatUtils {
         var root = Text.literal("");
 
         for (var i = 0; i < length; ++i) {
-            final var t = 1 == length ? 0.0F : i / (length - 1.0F);
+            final var t = 1 == length ? 0.0D : i / (length - 1.0D);
             final var color = ChatUtils.interpolate(start, end, t);
 
             root = root.append(Text.literal(String.valueOf(text.charAt(i)))
@@ -196,7 +196,7 @@ public final class ChatUtils {
         return (int) Long.parseLong(hexAsLong, 16);
     }
 
-    private static final int interpolate(final int start, final int end, final float progress) {
+    private static final int interpolate(final int start, final int end, final double progress) {
         final var redStart = start >> 16 & 0xFF;
         final var greenStart = start >> 8 & 0xFF;
         final var blueStart = start & 0xFF;
