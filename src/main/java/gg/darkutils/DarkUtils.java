@@ -109,7 +109,9 @@ public final class DarkUtils implements ClientModInitializer {
             if (LogLevel.ERROR != level) {
                 throw new IllegalArgumentException("tried to log an error at a log level of " + level.name());
             }
-            DarkUtils.LOGGER.error(formattedMessage, error);
+            if (DarkUtils.LOGGER.isErrorEnabled()) {
+                DarkUtils.LOGGER.error(formattedMessage, error);
+            }
         }
 
         DarkUtils.logInGame(level, formattedMessage);
