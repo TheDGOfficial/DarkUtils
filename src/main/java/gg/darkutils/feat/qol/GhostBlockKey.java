@@ -59,16 +59,22 @@ public final class GhostBlockKey {
 
                     if (hit instanceof final BlockHitResult blockHit) {
                         final var pos = blockHit.getBlockPos();
-                        final var state = client.world.getBlockState(pos);
+                        final var world = client.world;
+
+                        if (null == world) {
+                            break;
+                        }
+
+                        final var state = world.getBlockState(pos);
                         final var targetBlock = state.getBlock();
 
                         // Do not ghost blacklisted blocks
                         if (state.isIn(BlockTags.BUTTONS) || GhostBlockKey.BLACKLIST.contains(targetBlock)) {
-                            return;
+                            break;
                         }
 
                         // Replace block with air *client side only*
-                        client.world.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
+                        world.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
                     }
                 }
             }

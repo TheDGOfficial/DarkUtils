@@ -2,7 +2,7 @@ package gg.darkutils.mixin.misc;
 
 import gg.darkutils.events.ScreenOpenEvent;
 import gg.darkutils.events.base.EventRegistry;
-import gg.darkutils.utils.ChatUtils;
+import gg.darkutils.utils.chat.ChatUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;

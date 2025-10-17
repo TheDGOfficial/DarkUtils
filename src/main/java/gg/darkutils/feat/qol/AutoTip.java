@@ -1,7 +1,7 @@
 package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.utils.ChatUtils;
+import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.LocationUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;

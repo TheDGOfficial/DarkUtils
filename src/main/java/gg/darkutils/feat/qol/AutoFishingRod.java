@@ -2,7 +2,7 @@ package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.mixin.accessors.MinecraftClientAccessor;
-import gg.darkutils.utils.ChatUtils;
+import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;

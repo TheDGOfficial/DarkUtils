@@ -367,7 +367,7 @@ public final class AlignmentTaskSolver {
 
     /* ----------------- Helper methods replacing Kotlin stdlib ----------------- */
 
-    private static final List<AlignmentTaskSolver.GridMove> convertPointMapToMoves(final ArrayList<AlignmentTaskSolver.Point> solution) {
+    private static final List<AlignmentTaskSolver.GridMove> convertPointMapToMoves(final List<AlignmentTaskSolver.Point> solution) {
         if (solution.isEmpty()) {
             return Collections.emptyList();
         }
@@ -425,8 +425,9 @@ public final class AlignmentTaskSolver {
     }
 
     private static final @NotNull List<Direction> getDirections() {
-        final var dirs = new ArrayList<Direction>();
-        for (final var direction : Direction.values()) {
+        final var directions = Direction.values();
+        final var dirs = new ArrayList<Direction>(directions.length);
+        for (final var direction : directions) {
             if (0 == direction.getVector().getY()) {
                 dirs.add(direction);
             }
@@ -434,7 +435,7 @@ public final class AlignmentTaskSolver {
         return dirs.reversed();
     }
 
-    private static final @NotNull ArrayList<AlignmentTaskSolver.Point> solve(final int[][] grid, final @NotNull AlignmentTaskSolver.Point start, final @NotNull AlignmentTaskSolver.Point end) {
+    private static final @NotNull List<AlignmentTaskSolver.Point> solve(final int[][] grid, final @NotNull AlignmentTaskSolver.Point start, final @NotNull AlignmentTaskSolver.Point end) {
         final var queue = new ArrayDeque<AlignmentTaskSolver.Point>();
         final var gridCopy = new AlignmentTaskSolver.Point[grid.length][grid[0].length];
         queue.addLast(start);
@@ -461,7 +462,7 @@ public final class AlignmentTaskSolver {
                 }
             }
         }
-        return new ArrayList<>();
+        return Collections.emptyList();
     }
 
     private static final @Nullable AlignmentTaskSolver.Point move(final int @NotNull [][] grid, final AlignmentTaskSolver.Point[][] gridCopy, final AlignmentTaskSolver.Point currPos, final Direction dir) {

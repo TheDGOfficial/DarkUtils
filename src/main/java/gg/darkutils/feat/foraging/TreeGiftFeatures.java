@@ -3,7 +3,7 @@ package gg.darkutils.feat.foraging;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.TreeGiftObtainedEvent;
 import gg.darkutils.events.base.EventRegistry;
-import gg.darkutils.utils.ChatUtils;
+import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.text.Text;

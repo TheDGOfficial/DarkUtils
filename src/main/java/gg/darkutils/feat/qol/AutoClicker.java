@@ -72,7 +72,8 @@ public final class AutoClicker {
 
         @NotNull
         private static final ItemStack getItemStackInHand() {
-            return MinecraftClient.getInstance().player.getStackInHand(Hand.MAIN_HAND);
+            final var player = MinecraftClient.getInstance().player;
+            return null == player ? ItemStack.EMPTY : player.getStackInHand(Hand.MAIN_HAND);
         }
 
         private static final boolean isHoldingASword() {
@@ -91,12 +92,14 @@ public final class AutoClicker {
 
         private static final boolean isLookingAtAButton() {
             final var mc = MinecraftClient.getInstance();
-            return mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isIn(BlockTags.BUTTONS);
+            final var world = mc.world;
+            return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && world.getBlockState(blockHitResult.getBlockPos()).isIn(BlockTags.BUTTONS);
         }
 
         private static final boolean isLookingAtALever() {
             final var mc = MinecraftClient.getInstance();
-            return mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.LEVER);
+            final var world = mc.world;
+            return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.LEVER);
         }
 
         private final boolean isPressed(final boolean actual) {

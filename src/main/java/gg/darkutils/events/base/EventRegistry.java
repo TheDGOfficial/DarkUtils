@@ -91,6 +91,8 @@ public interface EventRegistry {
         // Force static initializer to run so that the event can be registered before we try to add a listener for it
         try {
             MethodHandles.lookup().ensureInitialized(eventType);
+        } catch (final IllegalAccessException iae) {
+            throw new IllegalStateException("event class " + eventType.getName() + " is not accessible by event registry", iae);
         } catch (final Throwable error) {
             throw new IllegalStateException("failed to force initialization for event class " + eventType.getName(), error);
         }

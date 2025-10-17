@@ -1,5 +1,7 @@
-package gg.darkutils.utils;
+package gg.darkutils.utils.chat;
 
+import gg.darkutils.utils.MathUtils;
+import gg.darkutils.utils.RoundingMode;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.ClickEvent;
@@ -15,6 +17,13 @@ import java.util.ArrayDeque;
 import java.util.concurrent.TimeUnit;
 
 public final class ChatUtils {
+    /**
+     * Represents new line character suitable to be used in chat to switch to a new line.
+     * This does not depend on any operating system and thus platform-agnostic (implementation detail in Minecraft chat handling).
+     */
+    @NotNull
+    public static final String NEW_LINE = "\n";
+
     private static final @NotNull ArrayDeque<String> sendMessageQueue = new ArrayDeque<>(1);
     public static long lastSentMessageOrCommandAt;
 
@@ -193,7 +202,7 @@ public final class ChatUtils {
             hexAsLong = hexAsLong.substring(1);
         }
 
-        return (int) Long.parseLong(hexAsLong, 16);
+        return Integer.parseInt(hexAsLong, 16);
     }
 
     private static final int interpolate(final int start, final int end, final double progress) {
@@ -204,9 +213,12 @@ public final class ChatUtils {
         final var greenEnd = end >> 8 & 0xFF;
         final var blueEnd = end & 0xFF;
 
-        final var red = (int) (redStart + (redEnd - redStart) * progress);
-        final var green = (int) (greenStart + (greenEnd - greenStart) * progress);
-        final var blue = (int) (blueStart + (blueEnd - blueStart) * progress);
+        // We want the non-decimal part of number to stay the same if decimal part is half
+        final var roundingMode = RoundingMode.HALF_DOWN;
+
+        final var red = MathUtils.round(redStart + (redEnd - redStart) * progress, roundingMode);
+        final var green = MathUtils.round(greenStart + (greenEnd - greenStart) * progress, roundingMode);
+        final var blue = MathUtils.round(blueStart + (blueEnd - blueStart) * progress, roundingMode);
 
         return red << 16 | green << 8 | blue;
     }

@@ -4,7 +4,9 @@ import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.TreeGiftObtainedEvent;
 import gg.darkutils.events.base.EventRegistry;
+import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RenderUtils;
+import gg.darkutils.utils.RoundingMode;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -82,7 +84,7 @@ public final class TreeGiftsPerHour {
             return;
         }
 
-        final var text = "Tree Gifts/Hour: " + (int) perHour;
+        final var text = "Tree Gifts/Hour: " + MathUtils.round(perHour, RoundingMode.HALF_DOWN);
 
         RenderUtils.renderText(
                 context,

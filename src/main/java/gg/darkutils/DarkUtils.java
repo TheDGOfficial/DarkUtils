@@ -20,11 +20,14 @@ import gg.darkutils.feat.performance.LogCleaner;
 import gg.darkutils.feat.qol.AutoFishingRod;
 import gg.darkutils.feat.qol.AutoTip;
 import gg.darkutils.feat.qol.GhostBlockKey;
-import gg.darkutils.utils.ChatUtils;
+import gg.darkutils.utils.chat.ButtonData;
+import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
 import gg.darkutils.utils.TickUtils;
+import gg.darkutils.utils.chat.SimpleStyle;
+import gg.darkutils.utils.chat.TextBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -34,6 +37,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
+import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -311,6 +315,7 @@ public final class DarkUtils implements ClientModInitializer {
             }
 
             final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
+            final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(Formatting.BOLD));
 
             final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
             final var footer = ChatUtils.fill('▬', true);
@@ -318,22 +323,28 @@ public final class DarkUtils implements ClientModInitializer {
             final var gradientStart = "#54daf4";
             final var gradientEnd = "#545eb6";
 
-            final var text = Text
-                    .literal(header.first())
-                    .setStyle(Style.EMPTY.withColor(headerFooterColor).withBold(true))
-                    .append(" ")
-                    .append(ChatUtils.gradient(gradientStart, gradientEnd, DarkUtils.class.getSimpleName()))
-                    .append(" ")
-                    .append(Text.literal(header.second()).setStyle(Style.EMPTY.withColor(headerFooterColor).withBold(true)))
-                    .append("\n")
-                    .append("\n")
-                    .append(ChatUtils.gradient(gradientStart, gradientEnd, ChatUtils.center("Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', true)))
-                    .append("\n")
-                    .append("\n")
-                    .append(ChatUtils.button(gradientStart, gradientEnd, "Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID, true, true))
-                    .append("\n")
-                    .append("\n")
-                    .append(Text.literal(footer).setStyle(Style.EMPTY.withColor(headerFooterColor).withBold(true)));
+            final var text = TextBuilder
+                    .withInitial(header.first(), headerFooterStyle)
+                    .appendSpace()
+                    .appendGradientText(gradientStart, gradientEnd, DarkUtils.class.getSimpleName(), SimpleStyle.inherited())
+                    .appendSpace()
+                    .append(header.second(), headerFooterStyle)
+                    .appendNewLine()
+                    .appendNewLine()
+                    .appendGradientText(gradientStart, gradientEnd, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', SimpleStyle
+                            .centered()
+                            .also(SimpleStyle.formatted(Formatting.BOLD))
+                    )
+                    .appendNewLine()
+                    .appendNewLine()
+                    .appendGradientButton(gradientStart, gradientEnd, new ButtonData("Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID), SimpleStyle
+                            .centered()
+                            .also(SimpleStyle.formatted(Formatting.BOLD))
+                    )
+                    .appendNewLine()
+                    .appendNewLine()
+                    .append(footer, headerFooterStyle)
+                    .build();
 
             player.sendMessage(text, false);
         });

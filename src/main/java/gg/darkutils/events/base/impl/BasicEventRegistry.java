@@ -21,7 +21,7 @@ public final class BasicEventRegistry implements EventRegistry {
      * Holds the map of known events to their handlers in a thread-safe manner.
      */
     @NotNull
-    private final ConcurrentHashMap<Class<? extends Event>, EventHandler<? extends Event>> knownEvents = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<? extends Event>, EventHandler<? extends Event>> knownEvents = new ConcurrentHashMap<>(2);
 
     /**
      * Creates the singleton {@link BasicEventRegistry} instance.

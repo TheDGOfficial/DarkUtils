@@ -37,8 +37,16 @@ public final class Helpers {
     private static final void notify(@NotNull final SoundEvent sound, @NotNull final String text) {
         final var client = MinecraftClient.getInstance();
 
-        client.player.playSound(sound, 1.0F, 1.0F);
+        Helpers.playSound(sound, 1.0F, 1.0F);
         client.inGameHud.setTitle(Text.of(text));
         client.inGameHud.setTitleTicks(0, 20, 0);
+    }
+
+    private static final void playSound(@NotNull final SoundEvent sound, final float volume, final float pitch) {
+        final var player = MinecraftClient.getInstance().player;
+
+        if (null != player) {
+            player.playSound(sound, volume, pitch);
+        }
     }
 }
