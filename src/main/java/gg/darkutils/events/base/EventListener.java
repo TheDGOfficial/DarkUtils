@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 /**
  * Listener for an {@link Event}.
  * <p>
- * Single abstract method accept(T) keeps this a functional interface while allowing
+ * Single abstract method onEvent(T) keeps this a functional interface while allowing
  * default methods for priority and receiveCancelled behaviour.
  * <p>
  * See {@link EventListener#create(EventListener, EventPriority, boolean)} to create a
