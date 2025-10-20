@@ -1,7 +1,6 @@
 package gg.darkutils.utils.chat;
 
 import net.minecraft.text.Style;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -23,8 +22,8 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         return new ColoredStyle(rgb);
     }
 
-    static @NotNull FormattedStyle formatted(final @NotNull Formatting formatting) {
-        return new FormattedStyle(Objects.requireNonNull(formatting, "formatting"));
+    static @NotNull FormattedStyle formatted(final @NotNull BasicFormatting basicFormatting) {
+        return new FormattedStyle(Objects.requireNonNull(basicFormatting, "basicFormatting"));
     }
 
     static @NotNull SimpleStyle.CenteredStyle centered() {
@@ -103,14 +102,14 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         }
     }
 
-    record FormattedStyle(@NotNull Formatting formatting) implements SimpleStyle {
+    record FormattedStyle(@NotNull BasicFormatting basicFormatting) implements SimpleStyle {
         public FormattedStyle {
-            Objects.requireNonNull(formatting, "formatting");
+            Objects.requireNonNull(basicFormatting, "basicFormatting");
         }
 
         @Override
         public final @NotNull Style applyStyle(final @NotNull Style style) {
-            return style.withFormatting(formatting);
+            return style.withFormatting(basicFormatting.toFormatting());
         }
     }
 

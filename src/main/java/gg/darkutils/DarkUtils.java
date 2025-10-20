@@ -20,14 +20,11 @@ import gg.darkutils.feat.performance.LogCleaner;
 import gg.darkutils.feat.qol.AutoFishingRod;
 import gg.darkutils.feat.qol.AutoTip;
 import gg.darkutils.feat.qol.GhostBlockKey;
-import gg.darkutils.utils.chat.ButtonData;
-import gg.darkutils.utils.chat.ChatUtils;
+import gg.darkutils.utils.chat.*;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
 import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.chat.SimpleStyle;
-import gg.darkutils.utils.chat.TextBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -315,7 +312,7 @@ public final class DarkUtils implements ClientModInitializer {
             }
 
             final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
-            final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(Formatting.BOLD));
+            final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(BasicFormatting.BOLD));
 
             final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
             final var footer = ChatUtils.fill('▬', true);
@@ -333,13 +330,13 @@ public final class DarkUtils implements ClientModInitializer {
                     .appendNewLine()
                     .appendGradientText(gradientStart, gradientEnd, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', SimpleStyle
                             .centered()
-                            .also(SimpleStyle.formatted(Formatting.BOLD))
+                            .also(SimpleStyle.formatted(BasicFormatting.BOLD))
                     )
                     .appendNewLine()
                     .appendNewLine()
                     .appendGradientButton(gradientStart, gradientEnd, new ButtonData("Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID), SimpleStyle
                             .centered()
-                            .also(SimpleStyle.formatted(Formatting.BOLD))
+                            .also(SimpleStyle.formatted(BasicFormatting.BOLD))
                     )
                     .appendNewLine()
                     .appendNewLine()
