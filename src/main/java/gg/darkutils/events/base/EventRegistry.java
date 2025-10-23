@@ -28,6 +28,8 @@ public interface EventRegistry {
      * You should call this method from your event class's static initializer block
      * to ensure it's always registered before listeners are added for it.
      * <p>
+     * If the event is already registered, an {@link IllegalStateException} will be thrown.
+     * <p>
      * A default {@link EventHandler} suitable for this {@link EventRegistry} will be created and used.
      *
      * @param event The event class.
@@ -42,6 +44,8 @@ public interface EventRegistry {
      * <p>
      * You should call this method from your event class's static initializer block
      * to ensure it's always registered before listeners are added for it.
+     * <p>
+     * If the event is already registered, an {@link IllegalStateException} will be thrown.
      *
      * @param event   The event class.
      * @param handler The custom {@link EventHandler}.

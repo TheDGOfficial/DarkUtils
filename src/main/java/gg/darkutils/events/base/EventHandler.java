@@ -24,6 +24,8 @@ public interface EventHandler<T extends Event> {
      * Adds an {@link EventListener} to listen for the event this handler is handling.
      * The listener list will be copied for thread-safety and sorted by {@link EventPriority}
      * as part of this modification to the list of listeners.
+     * <p>
+     * If the listener is already registered, an {@link IllegalStateException} will be thrown.
      *
      * @param listener An {@link EventListener} to add to the list of listeners.
      */
@@ -33,6 +35,9 @@ public interface EventHandler<T extends Event> {
      * Adds an {@link EventListener} to listen for the event this handler is handling.
      * The listener list will be copied for thread-safety and sorted by {@link EventPriority}
      * as part of this modification to the list of listeners.
+     * <p>
+     * If the listener is not a registered listener or already removed, an {@link IllegalStateException} will be
+     * thrown.
      *
      * @param listener         An {@link EventListener} to add to the list of listeners.
      * @param priority         The priority of the {@link EventListener}, determining the order it will run,
