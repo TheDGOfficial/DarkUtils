@@ -34,6 +34,8 @@ public final class DarkUtilsConfig {
     public boolean welcomeMessage;
     public boolean autoClicker;
     public boolean autoClickerWorkInLevers;
+    public boolean disableCellsAlignment;
+    public boolean preventUselessBlockHit;
     public boolean disableCommandConfirmation;
 
     // === Foraging ===
@@ -80,6 +82,7 @@ public final class DarkUtilsConfig {
     @NotNull
     public OpenGLVersionOverride openGLVersionOverride = OpenGLVersionOverride.NO_OVERRIDE;
     public boolean useVirtualThreadsForTextureDownloading;
+    public boolean disableGlowing;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;

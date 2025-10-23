@@ -95,6 +95,14 @@ public final class DarkUtilsConfigScreen {
                 "Makes Auto Clicker work even if you are looking at a lever. It will cause the lever to flick (activate and de-activate) multiple times. This is fine for 2 levers at the gates, but you likely want to keep this disabled if you do lever flick device in Section 2 as healer.",
                 config.autoClickerWorkInLevers, newValue -> config.autoClickerWorkInLevers = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Disable Cells Alignment",
+                "Disables using the Cells Alignment ability of the Gyrokinetic Wand when you are holding it and right-click. The click will still go through if it would interact with an entity or block instead of using the item.",
+                config.disableCellsAlignment, newValue -> config.disableCellsAlignment = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Prevent Useless Block Hit",
+                "Prevents useless block hit that emulates 1.8 behaviour on 1.8 servers that allow joining from 1.21 to slow you down when you right click with a sword that does not have a right click ability by simply not allowing you to right click with them unless the click would interact with a block or entity.",
+                config.preventUselessBlockHit, newValue -> config.preventUselessBlockHit = newValue);
+
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Disable Command Confirmation",
                 "Disables the \"Confirm Command Execution\" menu for invalid or unrecognized commands. Useful in servers that do not register or send all commands they handle or that have dynamic commands. This does not disable the confirmation screen if it was going to execute an elevated command.",
                 config.disableCommandConfirmation, newValue -> config.disableCommandConfirmation = newValue);
@@ -262,6 +270,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Use Virtual Threads for Texture Downloading",
                 "Makes Minecraft use Java's new (Lightweight) Virtual Threads over Platform (OS) Threads. Normally, Minecraft uses a Cached Thread Pool which ends up creating hundreds of texture downloading threads in texture-heavy game-modes like Hypixel SkyBlock where items have a player skull model. Those hundreds of texture downloading threads all have their separate stack, and there is a limit to how many platform threads you can create in the OS level at which point it will crash. Virtual Threads are a lightweight new technology replacement that only creates threads when tasks are blocked and this also made texture loading speedier during tests due to creating a new (platform/OS) thread not being a free operation.",
                 config.useVirtualThreadsForTextureDownloading, newValue -> config.useVirtualThreadsForTextureDownloading = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable Glowing",
+                "Disables glowing of players, dropped items and frogs, which reduce FPS a lot if your graphics card is not capable. Glowed entities are rendered behind walls, so no culling of them which reduces performance. Only enable if you do not care about: seeing your teammates glow with Hypixel rank color (e.g. green for VIP, blue for MVP+) in Dungeons, dropped items glowing with their rarity color (e.g. orange for legendary items), and frogs in galatea glow white.",
+                config.disableGlowing, newValue -> config.disableGlowing = newValue);
 
         // === Bugfixes ===
         final var bugfixes = builder.getOrCreateCategory(Text.of("Bugfixes"));

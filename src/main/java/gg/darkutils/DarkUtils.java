@@ -19,7 +19,9 @@ import gg.darkutils.feat.performance.ArmorStandOptimizer;
 import gg.darkutils.feat.performance.LogCleaner;
 import gg.darkutils.feat.qol.AutoFishingRod;
 import gg.darkutils.feat.qol.AutoTip;
+import gg.darkutils.feat.qol.DisableCellsAlignment;
 import gg.darkutils.feat.qol.GhostBlockKey;
+import gg.darkutils.feat.qol.PreventUselessBlockHit;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
@@ -38,7 +40,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -384,7 +385,9 @@ public final class DarkUtils implements ClientModInitializer {
                 GhostBlockKey::init,
                 ReplaceDiorite::init,
                 AutoTip::init,
-                AlignmentTaskSolver::init
+                AlignmentTaskSolver::init,
+                DisableCellsAlignment::init,
+                PreventUselessBlockHit::init
         );
 
         // Send welcome message once player joins a world/server/realm

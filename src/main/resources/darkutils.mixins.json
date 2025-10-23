@@ -31,7 +31,10 @@
     "visuals.EntityRenderDispatcherMixin",
     "accessors.MinecraftClientAccessor",
     "misc.NetworkThreadUtilsMixin",
-    "performance.UtilMixin"
+    "performance.UtilMixin",
+    "qol.ClientPlayerInteractionManagerMixin",
+    "performance.LivingEntityMixin",
+    "performance.EntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1
