@@ -18,12 +18,12 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         return SimpleStyle.InheritedStyle.INSTANCE;
     }
 
-    static @NotNull ColoredStyle colored(final int rgb) {
-        return new ColoredStyle(rgb);
+    static @NotNull SimpleStyle.ColoredStyle colored(final int rgb) {
+        return new SimpleStyle.ColoredStyle(rgb);
     }
 
-    static @NotNull FormattedStyle formatted(final @NotNull BasicFormatting basicFormatting) {
-        return new FormattedStyle(Objects.requireNonNull(basicFormatting, "basicFormatting"));
+    static @NotNull SimpleStyle.FormattedStyle formatted(final @NotNull BasicFormatting basicFormatting) {
+        return new SimpleStyle.FormattedStyle(Objects.requireNonNull(basicFormatting, "basicFormatting"));
     }
 
     static @NotNull SimpleStyle.CenteredStyle centered() {
@@ -88,7 +88,7 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
                 finalStyle = style.applyStyle(finalStyle);
             }
         } else {
-            finalStyle = this.applyStyle(finalStyle);
+            return this.applyStyle(finalStyle);
         }
         return finalStyle;
     }
@@ -98,7 +98,7 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
     record ColoredStyle(int rgb) implements SimpleStyle {
         @Override
         public final @NotNull Style applyStyle(final @NotNull Style style) {
-            return style.withColor(rgb);
+            return style.withColor(this.rgb);
         }
     }
 
@@ -109,7 +109,7 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
 
         @Override
         public final @NotNull Style applyStyle(final @NotNull Style style) {
-            return style.withFormatting(basicFormatting.toFormatting());
+            return style.withFormatting(this.basicFormatting.toFormatting());
         }
     }
 
@@ -151,6 +151,7 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
 
     /**
      * A composite of multiple distinct {@link SimpleStyle}s.
+     *
      * @param styles The styles.
      */
     record CompositeStyle(@NotNull List<@NotNull SimpleStyle> styles) implements SimpleStyle {

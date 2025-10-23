@@ -1,8 +1,8 @@
 package gg.darkutils.feat.dungeons;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.Helpers;
+import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.text.Text;

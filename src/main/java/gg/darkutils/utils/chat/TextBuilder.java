@@ -42,7 +42,7 @@ public final class TextBuilder {
     }
 
     @NotNull
-    public final TextBuilder append(@NotNull final String text) {
+    private final TextBuilder append(@NotNull final String text) {
         this.text.append(text);
         return this;
     }
