@@ -22,6 +22,7 @@ import gg.darkutils.feat.qol.AutoTip;
 import gg.darkutils.feat.qol.DisableCellsAlignment;
 import gg.darkutils.feat.qol.GhostBlockKey;
 import gg.darkutils.feat.qol.PreventUselessBlockHit;
+import gg.darkutils.feat.qol.RejoinCooldownDisplay;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
@@ -387,7 +388,8 @@ public final class DarkUtils implements ClientModInitializer {
                 AutoTip::init,
                 AlignmentTaskSolver::init,
                 DisableCellsAlignment::init,
-                PreventUselessBlockHit::init
+                PreventUselessBlockHit::init,
+                RejoinCooldownDisplay::init
         );
 
         // Send welcome message once player joins a world/server/realm

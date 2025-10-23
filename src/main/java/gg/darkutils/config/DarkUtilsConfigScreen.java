@@ -107,6 +107,10 @@ public final class DarkUtilsConfigScreen {
                 "Disables the \"Confirm Command Execution\" menu for invalid or unrecognized commands. Useful in servers that do not register or send all commands they handle or that have dynamic commands. This does not disable the confirmation screen if it was going to execute an elevated command.",
                 config.disableCommandConfirmation, newValue -> config.disableCommandConfirmation = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Rejoin Cooldown Display",
+                "Shows time you have to wait before being able to rejoin SkyBlock once you get kicked while joining a server. It's usually 1 minute.",
+                config.rejoinCooldownDisplay, newValue -> config.rejoinCooldownDisplay = newValue);
+
         // === Foraging ===
         final var foraging = builder.getOrCreateCategory(Text.of("Foraging"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, foraging, "Tree Gift Confirmation",

@@ -16,6 +16,10 @@ public final class RenderUtils {
      */
     public static final int CHAT_ALIGNED_X = 2;
     /**
+     * Middle aligned x position, calculating based on current window size.
+     */
+    public static final @NotNull IntSupplier MIDDLE_ALIGNED_X = RenderUtils::getMiddleOfScreenXCoords;
+    /**
      * Middle aligned y position, calculating based on current window size.
      */
     public static final @NotNull IntSupplier MIDDLE_ALIGNED_Y = RenderUtils::getMiddleOfScreenYCoords;
@@ -24,6 +28,11 @@ public final class RenderUtils {
         super();
 
         throw new UnsupportedOperationException("static utility class");
+    }
+
+    private static final int getMiddleOfScreenXCoords() {
+        final var client = MinecraftClient.getInstance();
+        return client.getWindow().getScaledWidth() >> 1;
     }
 
     private static final int getMiddleOfScreenYCoords() {
@@ -37,6 +46,10 @@ public final class RenderUtils {
     }
 
     public static final void renderText(@NotNull final DrawContext context, @NotNull final String text, final int x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
-        context.drawText(MinecraftClient.getInstance().textRenderer, Text.of(text).asOrderedText(), x, y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
+        RenderUtils.renderText(context, text, () -> x, y, color);
+    }
+
+    public static final void renderText(@NotNull final DrawContext context, @NotNull final String text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
+        context.drawText(MinecraftClient.getInstance().textRenderer, Text.of(text).asOrderedText(), x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 }

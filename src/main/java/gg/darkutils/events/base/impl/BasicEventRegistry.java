@@ -1,11 +1,12 @@
 package gg.darkutils.events.base.impl;
 
-import com.google.common.collect.ImmutableMap;
 import gg.darkutils.events.base.Event;
 import gg.darkutils.events.base.EventHandler;
 import gg.darkutils.events.base.EventRegistry;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -22,7 +23,7 @@ public final class BasicEventRegistry implements EventRegistry {
      * Holds the map of known events to their handlers in a thread-safe manner (immutable map copy each time one is registered).
      */
     @NotNull
-    private final AtomicReference<ImmutableMap<Class<? extends Event>, EventHandler<? extends Event>>> knownEvents = new AtomicReference<>(ImmutableMap.of());
+    private final AtomicReference<Map<Class<? extends Event>, EventHandler<? extends Event>>> knownEvents = new AtomicReference<>(Map.of());
 
     /**
      * Creates the singleton {@link BasicEventRegistry} instance.
@@ -53,10 +54,9 @@ public final class BasicEventRegistry implements EventRegistry {
                 throw new IllegalStateException("event " + event.getName() + " is already registered");
             }
 
-            final var builder = ImmutableMap.<Class<? extends Event>, EventHandler<? extends Event>>builder();
-            builder.putAll(oldMap);
-            builder.put(event, handler);
-            return builder.build();
+            final var newMap = new HashMap<>(oldMap);
+            newMap.put(event, handler);
+            return Map.copyOf(newMap);
         });
     }
 

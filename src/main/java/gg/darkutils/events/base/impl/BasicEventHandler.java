@@ -1,6 +1,5 @@
 package gg.darkutils.events.base.impl;
 
-import com.google.common.collect.ImmutableList;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
@@ -11,7 +10,9 @@ import gg.darkutils.events.base.EventListener;
 import gg.darkutils.events.base.EventPriority;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -34,7 +35,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
      * Holds all listeners of the event we are handling in a thread-safe manner (immutable list copy each time one added or removed).
      */
     @NotNull
-    private final AtomicReference<ImmutableList<EventListener<T>>> listeners = new AtomicReference<>(ImmutableList.of());
+    private final AtomicReference<List<EventListener<T>>> listeners = new AtomicReference<>(List.of());
 
     /**
      * Creates a new {@link BasicEventHandler}.
@@ -51,7 +52,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     private final void sortListeners() {
         this.listeners.updateAndGet(listeners -> listeners.parallelStream()
                 .sorted(BasicEventHandler.eventListenerPriorityComparator)
-                .collect(ImmutableList.toImmutableList()));
+                .toList());
     }
 
     @Override
@@ -65,10 +66,11 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
         if (this.listeners.get().contains(listener)) {
             throw new IllegalStateException("listener is already registered");
         }
-        this.listeners.updateAndGet(listeners -> ImmutableList.<EventListener<T>>builder()
-                .addAll(listeners)
-                .add(listener)
-                .build());
+        this.listeners.updateAndGet(listeners -> {
+            final var newList = new ArrayList<>(listeners);
+            newList.add(listener);
+            return List.copyOf(newList);
+        });
         this.sortListeners();
     }
 
@@ -79,7 +81,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
         }
         this.listeners.updateAndGet(listeners -> listeners.parallelStream()
                 .filter(eventListener -> eventListener != listener)
-                .collect(ImmutableList.toImmutableList()));
+                .toList());
         this.sortListeners();
     }
 
@@ -96,14 +98,15 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
 
     @NotNull
     private final CancellationState triggerCancellableEvent(@NotNull final T event, @NotNull final CancellationState cancellationState) {
-        // Using forEach instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
-        // This because Guava ImmutableList overrides forEach to not use an enhanced for loop under the hood but rather an indexed loop.
-        // We could use a for loop that uses index manually, but lambda creation is optimized by JIT out and does not currently appear in profilers.
-        this.listeners.get().forEach(listener -> {
+        // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
+        final var localListeners = this.listeners.get();
+        for (int i = 0, len = localListeners.size(); len > i; ++i) {
+            final var listener = localListeners.get(i);
+
             final var cancelled = cancellationState.isCancelled();
 
             if (cancelled && !listener.receiveCancelled()) {
-                return;
+                continue;
             }
 
             try {
@@ -111,22 +114,22 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             } catch (final Throwable error) {
                 this.handleListenerError(listener, event, error);
             }
-        });
+        }
 
         return cancellationState;
     }
 
     private final void triggerNonCancellableEvent(@NotNull final T event) {
-        // Using forEach instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
-        // This because Guava ImmutableList overrides forEach to not use an enhanced for loop under the hood but rather an indexed loop.
-        // We could use a for loop that uses index manually, but lambda creation is optimized by JIT out and does not currently appear in profilers.
-        this.listeners.get().forEach(listener -> {
+        // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
+        final var localListeners = this.listeners.get();
+        for (int i = 0, len = localListeners.size(); len > i; ++i) {
+            final var listener = localListeners.get(i);
             try {
                 listener.onEvent(event);
             } catch (final Throwable error) {
                 this.handleListenerError(listener, event, error);
             }
-        });
+        }
     }
 
     private final void handleListenerError(@NotNull final EventListener<T> listener, @NotNull final T event, @NotNull final Throwable error) {

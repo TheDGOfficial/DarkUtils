@@ -37,6 +37,7 @@ public final class DarkUtilsConfig {
     public boolean disableCellsAlignment;
     public boolean preventUselessBlockHit;
     public boolean disableCommandConfirmation;
+    public boolean rejoinCooldownDisplay;
 
     // === Foraging ===
     public boolean treeGiftConfirmation;

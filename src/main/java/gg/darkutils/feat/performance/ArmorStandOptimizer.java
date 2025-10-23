@@ -1,7 +1,8 @@
 package gg.darkutils.feat.performance;
 
-import com.google.common.collect.Ordering;
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.events.EntityRenderEvent;
+import gg.darkutils.events.base.EventRegistry;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -30,6 +31,9 @@ public final class ArmorStandOptimizer {
     public static final void init() {
         // Run refresh every client tick
         ClientTickEvents.END_CLIENT_TICK.register(client -> ArmorStandOptimizer.refreshArmorStands());
+
+        // Render cancellation logic
+        EventRegistry.centralRegistry().addListener(ArmorStandOptimizer::onEntityRender);
     }
 
     private static final void refreshArmorStands() {
@@ -76,15 +80,18 @@ public final class ArmorStandOptimizer {
         ArmorStandOptimizer.reusableStands.clear();
     }
 
-    public static final boolean checkRender(@NotNull final ArmorStandEntity entity) {
-        return ArmorStandOptimizer.armorStandRenderSet.contains(entity);
+    private static final void onEntityRender(@NotNull final EntityRenderEvent event) {
+        if (DarkUtilsConfig.INSTANCE.armorStandOptimizer && event.entity() instanceof final ArmorStandEntity armorStand && !ArmorStandOptimizer.armorStandRenderSet.contains(armorStand)) {
+            event.cancellationState().cancel();
+        }
     }
 
     /**
      * Performs partial selection using QuickSelect.
      */
     private static final void selectClosest(@NotNull final ObjectArrayList<ArmorStandEntity> list, final int closestCount, @NotNull final Comparator<Entity> comparator) {
-        int left = 0, right = list.size() - 1;
+        var left = 0;
+        var right = list.size() - 1;
         while (left <= right) {
             final var pivotIndex = ArmorStandOptimizer.partition(list, left, right, comparator);
             if (pivotIndex == closestCount) {

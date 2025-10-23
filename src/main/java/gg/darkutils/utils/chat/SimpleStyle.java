@@ -31,7 +31,9 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
     }
 
     default boolean isCentered() {
-        return this instanceof SimpleStyle.CenteredStyle || this instanceof final SimpleStyle.CompositeStyle compositeStyle && compositeStyle.styles().contains(SimpleStyle.CenteredStyle.INSTANCE);
+        return this instanceof SimpleStyle.CenteredStyle || this instanceof SimpleStyle.CompositeStyle(
+                final var styles
+        ) && styles.contains(SimpleStyle.CenteredStyle.INSTANCE);
     }
 
     default boolean isInheritedStyle() {
@@ -53,14 +55,14 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
 
         // Flatten both styles into a list
         final var list = new ObjectArrayList<SimpleStyle>();
-        if (this instanceof final SimpleStyle.CompositeStyle composite) {
-            list.addAll(composite.styles());
+        if (this instanceof SimpleStyle.CompositeStyle(final var styles)) {
+            list.addAll(styles);
         } else {
             list.add(this);
         }
 
-        if (other instanceof final SimpleStyle.CompositeStyle composite) {
-            list.addAll(composite.styles());
+        if (other instanceof SimpleStyle.CompositeStyle(final var styles)) {
+            list.addAll(styles);
         } else {
             list.add(other);
         }
@@ -83,8 +85,8 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
      */
     default @NotNull Style toStyle() {
         var finalStyle = Style.EMPTY;
-        if (this instanceof final SimpleStyle.CompositeStyle composite) {
-            for (final var style : composite.styles()) {
+        if (this instanceof SimpleStyle.CompositeStyle(final var styles)) {
+            for (final var style : styles) {
                 finalStyle = style.applyStyle(finalStyle);
             }
         } else {

@@ -14,13 +14,13 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayDeque;
 import java.util.concurrent.TimeUnit;
 
 public final class TreeGiftsPerHour {
     private static final int SAMPLE_SIZE = 5;
-    private static final @NotNull ArrayDeque<Long> giftTimes = new ArrayDeque<>(TreeGiftsPerHour.SAMPLE_SIZE);
-
+    private static final long @NotNull [] giftTimes = new long[TreeGiftsPerHour.SAMPLE_SIZE];
+    private static int giftCount; // how many valid entries
+    private static int giftIndex; // next index to write
     private static long lastGiftTime;
 
     private TreeGiftsPerHour() {
@@ -31,18 +31,27 @@ public final class TreeGiftsPerHour {
 
     private static final void reset() {
         TreeGiftsPerHour.lastGiftTime = 0L;
-        TreeGiftsPerHour.giftTimes.clear();
+        TreeGiftsPerHour.giftCount = 0;
+        TreeGiftsPerHour.giftIndex = 0;
+    }
+
+    private static final void addGiftDuration(final long durationNanos) {
+        TreeGiftsPerHour.giftTimes[TreeGiftsPerHour.giftIndex] = durationNanos;
+        TreeGiftsPerHour.giftIndex = (TreeGiftsPerHour.giftIndex + 1) % TreeGiftsPerHour.SAMPLE_SIZE;
+        if (TreeGiftsPerHour.SAMPLE_SIZE > TreeGiftsPerHour.giftCount) {
+            ++TreeGiftsPerHour.giftCount;
+        }
     }
 
     private static final double getAvgGiftTimeMillis() {
-        if (TreeGiftsPerHour.giftTimes.isEmpty()) {
+        if (0 == TreeGiftsPerHour.giftCount) {
             return 0.0;
         }
         var sumNanos = 0L;
-        for (final long duration : TreeGiftsPerHour.giftTimes) {
-            sumNanos += duration;
+        for (var i = 0; TreeGiftsPerHour.giftCount > i; ++i) {
+            sumNanos += TreeGiftsPerHour.giftTimes[(TreeGiftsPerHour.giftIndex + TreeGiftsPerHour.SAMPLE_SIZE - TreeGiftsPerHour.giftCount + i) % TreeGiftsPerHour.SAMPLE_SIZE];
         }
-        final var avgNanos = (double) sumNanos / TreeGiftsPerHour.giftTimes.size();
+        final var avgNanos = (double) sumNanos / TreeGiftsPerHour.giftCount;
         return avgNanos / TimeUnit.MILLISECONDS.toNanos(1L);
     }
 
@@ -106,10 +115,7 @@ public final class TreeGiftsPerHour {
 
         if (0L != TreeGiftsPerHour.lastGiftTime) {
             final var durationNanos = now - TreeGiftsPerHour.lastGiftTime;
-            if (TreeGiftsPerHour.SAMPLE_SIZE <= TreeGiftsPerHour.giftTimes.size()) {
-                TreeGiftsPerHour.giftTimes.removeFirst();
-            }
-            TreeGiftsPerHour.giftTimes.addLast(durationNanos);
+            TreeGiftsPerHour.addGiftDuration(durationNanos);
         }
 
         // Update for next interval

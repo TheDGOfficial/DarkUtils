@@ -1,13 +1,13 @@
 package gg.darkutils.mixin.misc;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.feat.performance.ArmorStandOptimizer;
+import gg.darkutils.events.EntityRenderEvent;
+import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
@@ -27,8 +27,7 @@ final class EntityRendererMixin<T extends Entity> {
 
     @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
     private final void darkutils$skipRenderingArmorStandIfEnabled(@NotNull final T entity, @NotNull final Frustum frustum, final double x, final double y, final double z, @NotNull final CallbackInfoReturnable<Boolean> cir) {
-        // Only affect ArmorStandEntities
-        if (DarkUtilsConfig.INSTANCE.armorStandOptimizer && entity instanceof final ArmorStandEntity armorStand && !ArmorStandOptimizer.checkRender(armorStand)) {
+        if (EventRegistry.centralRegistry().triggerEvent(new EntityRenderEvent(entity)).isCancelled()) {
             cir.setReturnValue(false);
         }
     }

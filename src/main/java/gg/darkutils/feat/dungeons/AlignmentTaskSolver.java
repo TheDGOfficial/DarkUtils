@@ -1,6 +1,5 @@
 package gg.darkutils.feat.dungeons;
 
-import com.google.common.collect.ImmutableList;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.LocationUtils;
@@ -33,7 +32,7 @@ public final class AlignmentTaskSolver {
     private static final @NotNull BlockPos topLeft = new BlockPos(-2, 124, 79);
     private static final @NotNull BlockPos bottomRight = new BlockPos(-2, 120, 75);
 
-    private static final @NotNull ImmutableList<BlockPos> box;
+    private static final @NotNull List<BlockPos> box;
     private static final @NotNull ObjectLinkedOpenHashSet<AlignmentTaskSolver.MazeSpace> grid = new ObjectLinkedOpenHashSet<>();
     private static final @NotNull Object2IntOpenHashMap<AlignmentTaskSolver.Point> directionSet = new Object2IntOpenHashMap<>();
     private static final @NotNull Object2IntOpenHashMap<BlockPos> clicks = new Object2IntOpenHashMap<>();
@@ -59,7 +58,7 @@ public final class AlignmentTaskSolver {
             return first.getY() > second.getY() ? -1 : 0;
         });
 
-        box = ImmutableList.copyOf(temp);
+        box = List.copyOf(temp);
 
         AlignmentTaskSolver.sanityCheckBoxes(AlignmentTaskSolver.box);
 
