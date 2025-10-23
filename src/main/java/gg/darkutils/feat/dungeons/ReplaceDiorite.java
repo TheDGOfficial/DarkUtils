@@ -1,6 +1,9 @@
 package gg.darkutils.feat.dungeons;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -10,23 +13,20 @@ import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.HashSet;
-
 public final class ReplaceDiorite {
     private static final BlockState @NotNull [] glassStates = new BlockState[16];
     /**
      * 7448 total block positions.
      */
     @NotNull
-    private static final HashMap<BlockPos, Integer> posToColor =
-            HashMap.newHashMap(7_448);
+    private static final Object2IntOpenHashMap<BlockPos> posToColor =
+            new Object2IntOpenHashMap<>(7_448);
     /**
      * 4 chunks total.
      */
     @NotNull
-    private static final HashMap<Long, HashSet<BlockPos>> chunkToPositions =
-            HashMap.newHashMap(4);
+    private static final Long2ObjectOpenHashMap<ObjectOpenHashSet<BlockPos>> chunkToPositions =
+            new Long2ObjectOpenHashMap<>(4);
 
     static {
         for (final var color : DyeColor.values()) {
@@ -81,7 +81,7 @@ public final class ReplaceDiorite {
                     ReplaceDiorite.posToColor.put(pos, color);
 
                     final var key = (long) (x >> 4) << 32 | (long) z >> 4 & 0xFFFF_FFFFL;
-                    ReplaceDiorite.chunkToPositions.computeIfAbsent(key, l -> HashSet.newHashSet(1_862)).add(pos);
+                    ReplaceDiorite.chunkToPositions.computeIfAbsent(key, l -> new ObjectOpenHashSet<>(1_862)).add(pos);
                 }
             }
         }
@@ -102,8 +102,8 @@ public final class ReplaceDiorite {
     }
 
     private static final void replaceDiorite(@NotNull final ClientWorld world) {
-        for (final var entry : ReplaceDiorite.chunkToPositions.entrySet()) {
-            final var key = entry.getKey();
+        for (final var entry : ReplaceDiorite.chunkToPositions.long2ObjectEntrySet()) {
+            final var key = entry.getLongKey();
             final var chunkX = (int) (key >> 32);
             final var chunkZ = (int) (key & 0xFFFF_FFFFL);
 
@@ -126,8 +126,8 @@ public final class ReplaceDiorite {
     }
 
     private static final void setGlass(@NotNull final ClientWorld world, @NotNull final BlockPos pos) {
-        final var color = ReplaceDiorite.posToColor.get(pos);
-        if (null != color) {
+        final var color = ReplaceDiorite.posToColor.getOrDefault(pos, -1);
+        if (-1 != color) {
             world.setBlockState(pos, ReplaceDiorite.glassStates[color], 3);
         }
     }

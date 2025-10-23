@@ -1,9 +1,9 @@
 package gg.darkutils.utils.chat;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.text.Style;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -52,7 +52,7 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         }
 
         // Flatten both styles into a list
-        final var list = new ArrayList<SimpleStyle>();
+        final var list = new ObjectArrayList<SimpleStyle>();
         if (this instanceof final SimpleStyle.CompositeStyle composite) {
             list.addAll(composite.styles());
         } else {

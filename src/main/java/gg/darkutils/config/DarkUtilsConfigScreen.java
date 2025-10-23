@@ -95,6 +95,10 @@ public final class DarkUtilsConfigScreen {
                 "Makes Auto Clicker work even if you are looking at a lever. It will cause the lever to flick (activate and de-activate) multiple times. This is fine for 2 levers at the gates, but you likely want to keep this disabled if you do lever flick device in Section 2 as healer.",
                 config.autoClickerWorkInLevers, newValue -> config.autoClickerWorkInLevers = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Disable Command Confirmation",
+                "Disables the \"Confirm Command Execution\" menu for invalid or unrecognized commands. Useful in servers that do not register or send all commands they handle or that have dynamic commands. This does not disable the confirmation screen if it was going to execute an elevated command.",
+                config.disableCommandConfirmation, newValue -> config.disableCommandConfirmation = newValue);
+
         // === Foraging ===
         final var foraging = builder.getOrCreateCategory(Text.of("Foraging"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, foraging, "Tree Gift Confirmation",

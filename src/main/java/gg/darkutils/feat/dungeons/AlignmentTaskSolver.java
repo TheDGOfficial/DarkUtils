@@ -1,9 +1,14 @@
 package gg.darkutils.feat.dungeons;
 
+import com.google.common.collect.ImmutableList;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.TickUtils;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -21,29 +26,24 @@ import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
 
 public final class AlignmentTaskSolver {
     private static final @NotNull BlockPos topLeft = new BlockPos(-2, 124, 79);
     private static final @NotNull BlockPos bottomRight = new BlockPos(-2, 120, 75);
 
-    private static final @NotNull List<BlockPos> box;
-    private static final @NotNull LinkedHashSet<AlignmentTaskSolver.MazeSpace> grid = new LinkedHashSet<>();
-    private static final @NotNull HashMap<AlignmentTaskSolver.Point, Integer> directionSet = new HashMap<>();
-    private static final @NotNull HashMap<BlockPos, Integer> clicks = new HashMap<>();
-    private static final @NotNull HashMap<BlockPos, Integer> pendingClicks = new HashMap<>();
+    private static final @NotNull ImmutableList<BlockPos> box;
+    private static final @NotNull ObjectLinkedOpenHashSet<AlignmentTaskSolver.MazeSpace> grid = new ObjectLinkedOpenHashSet<>();
+    private static final @NotNull Object2IntOpenHashMap<AlignmentTaskSolver.Point> directionSet = new Object2IntOpenHashMap<>();
+    private static final @NotNull Object2IntOpenHashMap<BlockPos> clicks = new Object2IntOpenHashMap<>();
+    private static final @NotNull Object2IntOpenHashMap<BlockPos> pendingClicks = new Object2IntOpenHashMap<>();
 
     private static final @NotNull Direction @NotNull [] directions = AlignmentTaskSolver.getDirections().toArray(new Direction[0]);
 
     static {
         // Sort the box
-        final var temp = new ArrayList<BlockPos>();
+        final var temp = new ObjectArrayList<BlockPos>();
 
         for (final var pos : BlockPos.iterate(AlignmentTaskSolver.topLeft, AlignmentTaskSolver.bottomRight)) {
             temp.add(pos.toImmutable());
@@ -59,7 +59,7 @@ public final class AlignmentTaskSolver {
             return first.getY() > second.getY() ? -1 : 0;
         });
 
-        box = Collections.unmodifiableList(temp);
+        box = ImmutableList.copyOf(temp);
 
         AlignmentTaskSolver.sanityCheckBoxes(AlignmentTaskSolver.box);
 
@@ -122,7 +122,7 @@ public final class AlignmentTaskSolver {
         final var z = MinecraftClient.getInstance().player.getZ();
         if (25.0D * 25.0D >= AlignmentTaskSolver.topLeft.getSquaredDistanceFromCenter(x, y, z)) {
             if (25 > AlignmentTaskSolver.grid.size()) {
-                final var frames = new ArrayList<ItemFrameEntity>();
+                final var frames = new ObjectArrayList<ItemFrameEntity>();
                 if (null != MinecraftClient.getInstance().world) {
                     for (final var entity : MinecraftClient.getInstance().world.getEntities()) {
                         if (entity instanceof final ItemFrameEntity frame && AlignmentTaskSolver.box.contains(frame.getBlockPos())) {
@@ -151,8 +151,8 @@ public final class AlignmentTaskSolver {
                     }
                 }
             } else if (AlignmentTaskSolver.directionSet.isEmpty()) {
-                final var startPositions = new ArrayList<AlignmentTaskSolver.MazeSpace>();
-                final var endPositions = new ArrayList<AlignmentTaskSolver.MazeSpace>();
+                final var startPositions = new ObjectArrayList<AlignmentTaskSolver.MazeSpace>();
+                final var endPositions = new ObjectArrayList<AlignmentTaskSolver.MazeSpace>();
                 for (final var space : AlignmentTaskSolver.grid) {
                     if (AlignmentTaskSolver.SpaceType.STARTER == space.type) {
                         startPositions.add(space);
@@ -237,11 +237,11 @@ public final class AlignmentTaskSolver {
             if (AlignmentTaskSolver.SpaceType.PATH != space.type || null == space.framePos) {
                 continue;
             }
-            final var neededClicks = AlignmentTaskSolver.clicks.get(space.framePos);
-            if (null == neededClicks || 0 == neededClicks) {
+            final var neededClicks = AlignmentTaskSolver.clicks.getOrDefault(space.framePos, 0);
+            if (0 == neededClicks) {
                 continue;
             }
-            final int pending = AlignmentTaskSolver.pendingClicks.getOrDefault(space.framePos, 0);
+            final var pending = AlignmentTaskSolver.pendingClicks.getOrDefault(space.framePos, 0);
             AlignmentTaskSolver.showNametagAtFrame(space.framePos, Integer.toString(0 < pending ? neededClicks - pending : neededClicks), 0 < pending && 0 == neededClicks - pending ? Formatting.GREEN : Formatting.RED);
         }
     }
@@ -279,11 +279,11 @@ public final class AlignmentTaskSolver {
                 && e instanceof final ItemFrameEntity entity) {
             final var pos = entity.getBlockPos();
 
-            final var clickCount = AlignmentTaskSolver.clicks.get(pos);
+            final var clickCount = AlignmentTaskSolver.clicks.getInt(pos);
             final var pending = AlignmentTaskSolver.pendingClicks.getOrDefault(pos, 0);
 
             if (DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolverBlockIncorrectClicks) {
-                if (Objects.equals(clickCount, pending)) {
+                if (clickCount == pending) {
                     allowPacket = false;
                 } else {
                     if (null != MinecraftClient.getInstance().world) {
@@ -311,9 +311,9 @@ public final class AlignmentTaskSolver {
                 && null != MinecraftClient.getInstance().world
                 && MinecraftClient.getInstance().world.getEntityById(packet.id()) instanceof final ItemFrameEntity entity) {
             final var pos = entity.getBlockPos();
-            final var pending = AlignmentTaskSolver.pendingClicks.get(pos);
+            final var pending = AlignmentTaskSolver.pendingClicks.getOrDefault(pos, -1);
 
-            if (null == pending) {
+            if (-1 == pending) {
                 return;
             }
 
@@ -357,9 +357,9 @@ public final class AlignmentTaskSolver {
             }
 
             final var turns = AlignmentTaskSolver.getTurnsNeeded(newRot, AlignmentTaskSolver.directionSet.getOrDefault(space.coords, 0));
-            final var currentClicks = AlignmentTaskSolver.clicks.get(pos);
+            final var currentClicks = AlignmentTaskSolver.clicks.getOrDefault(pos, -1);
 
-            if (null == currentClicks || turns != currentClicks) {
+            if (-1 == currentClicks || turns != currentClicks) {
                 AlignmentTaskSolver.clicks.put(pos, turns);
             }
         }
@@ -373,9 +373,9 @@ public final class AlignmentTaskSolver {
         }
 
         // Reverse copy
-        final var reversed = new ArrayList<>(solution).reversed();
+        final var reversed = new ObjectArrayList<>(solution).reversed();
 
-        final var moves = new ArrayList<AlignmentTaskSolver.GridMove>();
+        final var moves = new ObjectArrayList<AlignmentTaskSolver.GridMove>();
         for (int i = 0, len = reversed.size(); i < len - 1; ++i) {
             final var current = reversed.get(i);
             final var next = reversed.get(i + 1);
@@ -426,7 +426,7 @@ public final class AlignmentTaskSolver {
 
     private static final @NotNull List<Direction> getDirections() {
         final var directions = Direction.values();
-        final var dirs = new ArrayList<Direction>(directions.length);
+        final var dirs = new ObjectArrayList<Direction>(directions.length);
         for (final var direction : directions) {
             if (0 == direction.getVector().getY()) {
                 dirs.add(direction);
@@ -436,20 +436,20 @@ public final class AlignmentTaskSolver {
     }
 
     private static final @NotNull List<AlignmentTaskSolver.Point> solve(final int[][] grid, final @NotNull AlignmentTaskSolver.Point start, final @NotNull AlignmentTaskSolver.Point end) {
-        final var queue = new ArrayDeque<AlignmentTaskSolver.Point>();
+        final var queue = new ObjectArrayFIFOQueue<AlignmentTaskSolver.Point>();
         final var gridCopy = new AlignmentTaskSolver.Point[grid.length][grid[0].length];
-        queue.addLast(start);
+        queue.enqueue(start);
         gridCopy[start.y][start.x] = start;
 
         while (!queue.isEmpty()) {
-            final var currPos = queue.removeFirst();
+            final var currPos = queue.dequeue();
             for (final var dir : AlignmentTaskSolver.directions) {
                 final var nextPos = AlignmentTaskSolver.move(grid, gridCopy, currPos, dir);
                 if (null != nextPos) {
-                    queue.addLast(nextPos);
+                    queue.enqueue(nextPos);
                     gridCopy[nextPos.y][nextPos.x] = new AlignmentTaskSolver.Point(currPos.x, currPos.y);
                     if (end.x() == nextPos.x && end.y() == nextPos.y) {
-                        final var steps = new ArrayList<AlignmentTaskSolver.Point>();
+                        final var steps = new ObjectArrayList<AlignmentTaskSolver.Point>();
                         steps.add(nextPos);
                         steps.add(currPos);
                         var tmp = currPos;

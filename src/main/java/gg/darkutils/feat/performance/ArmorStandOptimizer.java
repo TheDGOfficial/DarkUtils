@@ -2,19 +2,24 @@ package gg.darkutils.feat.performance;
 
 import com.google.common.collect.Ordering;
 import gg.darkutils.config.DarkUtilsConfig;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.Random;
 
 public final class ArmorStandOptimizer {
-    private static final @NotNull HashSet<ArmorStandEntity> armorStandRenderSet = HashSet.newHashSet(128);
-    private static final @NotNull ArrayList<ArmorStandEntity> reusableStands = new ArrayList<>(128);
+    private static final @NotNull ObjectOpenHashSet<ArmorStandEntity> armorStandRenderSet = new ObjectOpenHashSet<>(128);
+    private static final @NotNull ObjectArrayList<ArmorStandEntity> reusableStands = new ObjectArrayList<>(128);
+    private static final @NotNull Comparator<Entity> distanceComparator = Comparator.comparingDouble(
+            entity -> MinecraftClient.getInstance().player.squaredDistanceTo(entity)
+    );
+    private static final @NotNull Random RANDOM = new Random();
 
     private ArmorStandOptimizer() {
         super();
@@ -61,11 +66,11 @@ public final class ArmorStandOptimizer {
         if (ArmorStandOptimizer.reusableStands.size() <= limit) {
             ArmorStandOptimizer.armorStandRenderSet.addAll(ArmorStandOptimizer.reusableStands);
         } else {
-            final var closest = Ordering
-                    .from(Comparator.<Entity>comparingDouble(player::squaredDistanceTo))
-                    .leastOf(ArmorStandOptimizer.reusableStands, limit);
-
-            ArmorStandOptimizer.armorStandRenderSet.addAll(closest);
+            // Partial selection: closest `limit` stands will be in the first `limit` positions
+            ArmorStandOptimizer.selectClosest(ArmorStandOptimizer.reusableStands, limit, ArmorStandOptimizer.distanceComparator);
+            for (var i = 0; limit > i; ++i) {
+                ArmorStandOptimizer.armorStandRenderSet.add(ArmorStandOptimizer.reusableStands.get(i));
+            }
         }
 
         ArmorStandOptimizer.reusableStands.clear();
@@ -73,5 +78,41 @@ public final class ArmorStandOptimizer {
 
     public static final boolean checkRender(@NotNull final ArmorStandEntity entity) {
         return ArmorStandOptimizer.armorStandRenderSet.contains(entity);
+    }
+
+    /**
+     * Performs partial selection using QuickSelect.
+     */
+    private static final void selectClosest(@NotNull final ObjectArrayList<ArmorStandEntity> list, final int closestCount, @NotNull final Comparator<Entity> comparator) {
+        int left = 0, right = list.size() - 1;
+        while (left <= right) {
+            final var pivotIndex = ArmorStandOptimizer.partition(list, left, right, comparator);
+            if (pivotIndex == closestCount) {
+                return;
+            }
+            if (pivotIndex < closestCount) {
+                left = pivotIndex + 1;
+            } else {
+                right = pivotIndex - 1;
+            }
+        }
+    }
+
+    private static final int partition(@NotNull final ObjectArrayList<ArmorStandEntity> list, final int left, final int right, @NotNull final Comparator<Entity> comparator) {
+        // Random pivot to avoid worst-case
+        final var pivotIdx = left + ArmorStandOptimizer.RANDOM.nextInt(right - left + 1);
+        final var pivot = list.get(pivotIdx);
+        list.set(pivotIdx, list.get(right));
+        list.set(right, pivot);
+
+        var i = left;
+        for (var j = left; j < right; ++j) {
+            if (0 > comparator.compare(list.get(j), pivot)) {
+                list.set(j, list.set(i, list.get(j)));
+                ++i;
+            }
+        }
+        list.set(right, list.set(i, pivot));
+        return i;
     }
 }

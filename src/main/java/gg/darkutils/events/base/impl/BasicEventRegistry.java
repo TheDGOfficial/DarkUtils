@@ -1,11 +1,12 @@
 package gg.darkutils.events.base.impl;
 
+import com.google.common.collect.ImmutableMap;
 import gg.darkutils.events.base.Event;
 import gg.darkutils.events.base.EventHandler;
 import gg.darkutils.events.base.EventRegistry;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A basic {@link EventRegistry}.
@@ -18,10 +19,10 @@ public final class BasicEventRegistry implements EventRegistry {
     private static final BasicEventRegistry INSTANCE = new BasicEventRegistry();
 
     /**
-     * Holds the map of known events to their handlers in a thread-safe manner.
+     * Holds the map of known events to their handlers in a thread-safe manner (immutable map copy each time one is registered).
      */
     @NotNull
-    private final ConcurrentHashMap<Class<? extends Event>, EventHandler<? extends Event>> knownEvents = new ConcurrentHashMap<>(2);
+    private final AtomicReference<ImmutableMap<Class<? extends Event>, EventHandler<? extends Event>>> knownEvents = new AtomicReference<>(ImmutableMap.of());
 
     /**
      * Creates the singleton {@link BasicEventRegistry} instance.
@@ -47,14 +48,23 @@ public final class BasicEventRegistry implements EventRegistry {
 
     @Override
     public final <T extends Event> void registerEvent(@NotNull final Class<T> event, @NotNull final EventHandler<T> handler) {
-        this.knownEvents.put(event, handler);
+        this.knownEvents.updateAndGet(oldMap -> {
+            if (oldMap.containsKey(event)) {
+                throw new IllegalStateException("event " + event.getName() + " is already registered");
+            }
+
+            final var builder = ImmutableMap.<Class<? extends Event>, EventHandler<? extends Event>>builder();
+            builder.putAll(oldMap);
+            builder.put(event, handler);
+            return builder.build();
+        });
     }
 
     @Override
     @SuppressWarnings("unchecked")
     @NotNull
     public final <T extends Event> EventHandler<T> getEventHandler(@NotNull final Class<T> event) {
-        final var eventHandler = this.knownEvents.get(event);
+        final var eventHandler = this.knownEvents.get().get(event);
 
         if (null == eventHandler) {
             throw new IllegalStateException("event " + event.getName() + " is not a known registered event for the requested registry, ensure its registered in the static initializer block properly in your event class!");
