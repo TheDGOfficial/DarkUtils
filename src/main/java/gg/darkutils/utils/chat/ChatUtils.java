@@ -1,5 +1,8 @@
 package gg.darkutils.utils.chat;
 
+import gg.darkutils.events.SentCommandEvent;
+import gg.darkutils.events.SentMessageEvent;
+import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RoundingMode;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -25,7 +28,7 @@ public final class ChatUtils {
     public static final String NEW_LINE = "\n";
 
     private static final @NotNull ArrayDeque<String> sendMessageQueue = new ArrayDeque<>(1);
-    public static long lastSentMessageOrCommandAt;
+    private static long lastSentMessageOrCommandAt;
 
     private ChatUtils() {
         super();
@@ -33,8 +36,19 @@ public final class ChatUtils {
         throw new UnsupportedOperationException("static utility class");
     }
 
+    private static final void onMessage(@NotNull final SentMessageEvent event) {
+        ChatUtils.lastSentMessageOrCommandAt = System.nanoTime();
+    }
+
+    private static final void onCommand(@NotNull final SentCommandEvent event) {
+        ChatUtils.lastSentMessageOrCommandAt = System.nanoTime();
+    }
+
     public static final void init() {
         ClientTickEvents.END_CLIENT_TICK.register(ChatUtils::onTick);
+
+        EventRegistry.centralRegistry().addListener(ChatUtils::onMessage);
+        EventRegistry.centralRegistry().addListener(ChatUtils::onCommand);
     }
 
     private static final void onTick(@NotNull final MinecraftClient client) {

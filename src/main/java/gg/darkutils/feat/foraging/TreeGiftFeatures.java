@@ -1,7 +1,7 @@
 package gg.darkutils.feat.foraging;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.events.TreeGiftObtainedEvent;
+import gg.darkutils.events.ObtainTreeGiftEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.ChatUtils;
@@ -45,7 +45,7 @@ public final class TreeGiftFeatures {
                     TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.NONE;
                     TickUtils.awaitCondition(
                             () -> TreeGiftFeatures.endMessageReceived,
-                            () -> EventRegistry.centralRegistry().triggerEvent(new TreeGiftObtainedEvent(TreeGiftFeatures.treeMobSpawned))
+                            () -> EventRegistry.centralRegistry().triggerEvent(new ObtainTreeGiftEvent(TreeGiftFeatures.treeMobSpawned))
                     );
                 }
             }

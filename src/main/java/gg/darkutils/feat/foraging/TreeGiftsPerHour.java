@@ -2,7 +2,7 @@ package gg.darkutils.feat.foraging;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.events.TreeGiftObtainedEvent;
+import gg.darkutils.events.ObtainTreeGiftEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RenderUtils;
@@ -61,7 +61,7 @@ public final class TreeGiftsPerHour {
     }
 
     public static final void init() {
-        EventRegistry.centralRegistry().<TreeGiftObtainedEvent>addListener(event -> TreeGiftsPerHour.onTreeGift());
+        EventRegistry.centralRegistry().<ObtainTreeGiftEvent>addListener(event -> TreeGiftsPerHour.onTreeGift());
         HudElementRegistry.addLast(Identifier.of(DarkUtils.MOD_ID, "tree_gifts_per_hour"), (context, tickCounter) -> TreeGiftsPerHour.renderTreeGifts(context));
     }
 

@@ -1,7 +1,7 @@
 package gg.darkutils.feat.dungeons;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.events.ScreenOpenEvent;
+import gg.darkutils.events.OpenScreenEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
 import net.minecraft.screen.ScreenHandlerType;
@@ -16,10 +16,10 @@ public final class AutoCloseSecretChests {
     }
 
     public static final void init() {
-        EventRegistry.centralRegistry().addListener(AutoCloseSecretChests::onScreenOpen);
+        EventRegistry.centralRegistry().addListener(AutoCloseSecretChests::onOpenScreen);
     }
 
-    private static final void onScreenOpen(@NotNull final ScreenOpenEvent event) {
+    private static final void onOpenScreen(@NotNull final OpenScreenEvent event) {
         if (!DarkUtilsConfig.INSTANCE.autoCloseSecretChests || !LocationUtils.isInDungeons()) {
             return;
         }

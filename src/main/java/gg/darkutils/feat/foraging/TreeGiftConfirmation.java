@@ -1,7 +1,7 @@
 package gg.darkutils.feat.foraging;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.events.TreeGiftObtainedEvent;
+import gg.darkutils.events.ObtainTreeGiftEvent;
 import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.sound.SoundEvents;
@@ -21,7 +21,7 @@ public final class TreeGiftConfirmation {
         EventRegistry.centralRegistry().addListener(TreeGiftConfirmation::onTreeGift);
     }
 
-    private static final void onTreeGift(@NotNull final TreeGiftObtainedEvent event) {
+    private static final void onTreeGift(@NotNull final ObtainTreeGiftEvent event) {
         if (!DarkUtilsConfig.INSTANCE.treeGiftConfirmation) {
             return;
         }

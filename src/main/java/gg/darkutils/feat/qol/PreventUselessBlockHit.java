@@ -1,7 +1,7 @@
 package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.events.ItemUseEvent;
+import gg.darkutils.events.UseItemEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.ItemUtils;
 import net.minecraft.registry.tag.ItemTags;
@@ -15,10 +15,10 @@ public final class PreventUselessBlockHit {
     }
 
     public static final void init() {
-        EventRegistry.centralRegistry().addListener(PreventUselessBlockHit::onItemUse);
+        EventRegistry.centralRegistry().addListener(PreventUselessBlockHit::onUseItem);
     }
 
-    private static final void onItemUse(@NotNull final ItemUseEvent event) {
+    private static final void onUseItem(@NotNull final UseItemEvent event) {
         if (!DarkUtilsConfig.INSTANCE.preventUselessBlockHit) {
             return;
         }

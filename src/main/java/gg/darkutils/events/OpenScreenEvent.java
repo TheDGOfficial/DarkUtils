@@ -17,21 +17,21 @@ import org.jetbrains.annotations.NotNull;
  * @param screenHandlerType Screen handler type.
  * @param name              Name of the screen.
  */
-public record ScreenOpenEvent(@NotNull CancellationState cancellationState,
+public record OpenScreenEvent(@NotNull CancellationState cancellationState,
                               @NotNull ScreenHandlerType<?> screenHandlerType,
                               @NotNull Text name) implements CancellableEvent {
     static {
-        EventRegistry.centralRegistry().registerEvent(ScreenOpenEvent.class);
+        EventRegistry.centralRegistry().registerEvent(OpenScreenEvent.class);
     }
 
     /**
-     * Creates a new {@link ScreenOpenEvent} suitable for triggering the event.
+     * Creates a new {@link OpenScreenEvent} suitable for triggering the event.
      * A cached {@link CancellationState#ofCached()} will be used with non-cancelled state by default.
      *
      * @param screenHandlerType The screen handler type.
      * @param name              The name of the screen.
      */
-    public ScreenOpenEvent(@NotNull final ScreenHandlerType<?> screenHandlerType, @NotNull final Text name) {
+    public OpenScreenEvent(@NotNull final ScreenHandlerType<?> screenHandlerType, @NotNull final Text name) {
         this(CancellationState.ofCached(), screenHandlerType, name);
     }
 }

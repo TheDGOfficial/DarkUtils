@@ -14,19 +14,19 @@ import org.jetbrains.annotations.NotNull;
  * @param cancellationState The cancellation state holder.
  * @param entity            The entity.
  */
-public record EntityRenderEvent(@NotNull CancellationState cancellationState,
+public record RenderEntityEvent(@NotNull CancellationState cancellationState,
                                 @NotNull Entity entity) implements CancellableEvent {
     static {
-        EventRegistry.centralRegistry().registerEvent(EntityRenderEvent.class);
+        EventRegistry.centralRegistry().registerEvent(RenderEntityEvent.class);
     }
 
     /**
-     * Creates a new {@link EntityRenderEvent} suitable for triggering the event.
+     * Creates a new {@link RenderEntityEvent} suitable for triggering the event.
      * A cached {@link CancellationState#ofCached()} will be used with non-cancelled state by default.
      *
      * @param entity The entity.
      */
-    public EntityRenderEvent(@NotNull final Entity entity) {
+    public RenderEntityEvent(@NotNull final Entity entity) {
         this(CancellationState.ofCached(), entity);
     }
 }

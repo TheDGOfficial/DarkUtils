@@ -1,7 +1,7 @@
 package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.events.ItemUseEvent;
+import gg.darkutils.events.UseItemEvent;
 import gg.darkutils.events.base.EventListener;
 import gg.darkutils.events.base.EventPriority;
 import gg.darkutils.events.base.EventRegistry;
@@ -16,10 +16,10 @@ public final class DisableCellsAlignment {
     }
 
     public static final void init() {
-        EventRegistry.centralRegistry().addListener(EventListener.create(DisableCellsAlignment::onItemUse, EventPriority.ABOVE_NORMAL, false));
+        EventRegistry.centralRegistry().addListener(EventListener.create(DisableCellsAlignment::onUseItem, EventPriority.ABOVE_NORMAL, false));
     }
 
-    private static final void onItemUse(@NotNull final ItemUseEvent event) {
+    private static final void onUseItem(@NotNull final UseItemEvent event) {
         if (!DarkUtilsConfig.INSTANCE.disableCellsAlignment) {
             return;
         }

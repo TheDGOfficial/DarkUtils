@@ -3,6 +3,8 @@ package gg.darkutils.mixin.misc;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.events.InteractEntityEvent;
+import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.feat.dungeons.AlignmentTaskSolver;
 import gg.darkutils.feat.qol.AutoClicker;
 import net.minecraft.client.MinecraftClient;
@@ -61,6 +63,6 @@ final class MinecraftClientMixin {
 
     @WrapOperation(method = "doItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;interactEntityAtLocation(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/util/hit/EntityHitResult;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"))
     private final @NotNull ActionResult darkutils$onEntityInteract(@NotNull final ClientPlayerInteractionManager instance, @NotNull final PlayerEntity player, @NotNull final Entity entity, @NotNull final EntityHitResult hitResult, @NotNull final Hand hand, @NotNull final Operation<ActionResult> original) {
-        return AlignmentTaskSolver.onPacketSend(entity) ? original.call(instance, player, entity, hitResult, hand) : ActionResult.CONSUME;
+        return EventRegistry.centralRegistry().triggerEvent(new InteractEntityEvent(entity)).isCancelled() ? ActionResult.CONSUME : original.call(instance, player, entity, hitResult, hand);
     }
 }

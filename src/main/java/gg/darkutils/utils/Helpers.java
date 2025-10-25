@@ -1,9 +1,12 @@
 package gg.darkutils.utils;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.block.Blocks;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.hit.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 
 public final class Helpers {
@@ -11,6 +14,18 @@ public final class Helpers {
         super();
 
         throw new UnsupportedOperationException("static utility class");
+    }
+
+    public static final boolean isLookingAtAButton() {
+        final var mc = MinecraftClient.getInstance();
+        final var world = mc.world;
+        return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && world.getBlockState(blockHitResult.getBlockPos()).isIn(BlockTags.BUTTONS);
+    }
+
+    public static final boolean isLookingAtALever() {
+        final var mc = MinecraftClient.getInstance();
+        final var world = mc.world;
+        return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.LEVER);
     }
 
     public static final void displayCountdownTitles(@NotNull final String color, @NotNull final String finalText, final int seconds) {

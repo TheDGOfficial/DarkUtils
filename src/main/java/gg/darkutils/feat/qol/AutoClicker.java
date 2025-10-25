@@ -1,14 +1,12 @@
 package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import net.minecraft.block.Blocks;
+import gg.darkutils.utils.Helpers;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 
 public final class AutoClicker {
@@ -90,18 +88,6 @@ public final class AutoClicker {
             return false;
         }
 
-        private static final boolean isLookingAtAButton() {
-            final var mc = MinecraftClient.getInstance();
-            final var world = mc.world;
-            return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && world.getBlockState(blockHitResult.getBlockPos()).isIn(BlockTags.BUTTONS);
-        }
-
-        private static final boolean isLookingAtALever() {
-            final var mc = MinecraftClient.getInstance();
-            final var world = mc.world;
-            return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.LEVER);
-        }
-
         private final boolean isPressed(final boolean actual) {
             return (AutoClicker.Key.RIGHT == this ? !AutoClicker.Key.isHoldingRCMWeapon() : !AutoClicker.Key.isHoldingASword()) && actual;
         }
@@ -113,7 +99,7 @@ public final class AutoClicker {
 
                 if (held) {
                     this.state = false;
-                    return !right || !AutoClicker.Key.isLookingAtAButton() && (DarkUtilsConfig.INSTANCE.autoClickerWorkInLevers || !AutoClicker.Key.isLookingAtALever());
+                    return !right || !Helpers.isLookingAtAButton() && (DarkUtilsConfig.INSTANCE.autoClickerWorkInLevers || !Helpers.isLookingAtALever());
                 }
             }
             return actual;

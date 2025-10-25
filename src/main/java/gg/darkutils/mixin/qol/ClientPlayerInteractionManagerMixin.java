@@ -1,7 +1,8 @@
 package gg.darkutils.mixin.qol;
 
-import gg.darkutils.events.ItemUseEvent;
+import gg.darkutils.events.UseItemEvent;
 import gg.darkutils.events.base.EventRegistry;
+import gg.darkutils.utils.Helpers;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.player.PlayerEntity;
@@ -35,7 +36,7 @@ final class ClientPlayerInteractionManagerMixin {
 
         final var stack = player.getStackInHand(hand);
 
-        if (EventRegistry.centralRegistry().triggerEvent(new ItemUseEvent(stack)).isCancelled()) {
+        if (EventRegistry.centralRegistry().triggerEvent(new UseItemEvent(stack)).isCancelled()) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }
@@ -48,13 +49,11 @@ final class ClientPlayerInteractionManagerMixin {
         final var stack = player.getStackInHand(hand);
 
         // Treat looking at a regular block the same as clicking in air, so cancelling is allowed.
-        // When looking at a block entity such as beacon, chest, lever, command block, etc., we don't want to cancel the click.
-
-        // If player.shouldCancelInteraction() returns true, which it does when sneaking, those blocks won't be interacted with if the click goes through,
-        // so treat it the same as clicking in air, cancelling being allowed.
+        // When looking at a block entity such as beacon, chest, command block, etc., we don't want to cancel the click.
 
         // This ensures we only cancel the item use itself and do not prevent interacting with block entities, such as opening a chest while holding the item.
-        if ((player.shouldCancelInteraction() || !player.getWorld().getBlockState(blockHitResult.getBlockPos()).hasBlockEntity()) && EventRegistry.centralRegistry().triggerEvent(new ItemUseEvent(stack)).isCancelled()) {
+        // Additionally, we do not cancel if looking at a button or lever. Those are not classified as block entities but still have interactions.
+        if (!player.getWorld().getBlockState(blockHitResult.getBlockPos()).hasBlockEntity() && !Helpers.isLookingAtAButton() && !Helpers.isLookingAtALever() && EventRegistry.centralRegistry().triggerEvent(new UseItemEvent(stack)).isCancelled()) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }

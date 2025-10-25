@@ -1,9 +1,10 @@
 package gg.darkutils.mixin.misc;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.events.ScreenOpenEvent;
+import gg.darkutils.events.SentCommandEvent;
+import gg.darkutils.events.SentMessageEvent;
+import gg.darkutils.events.OpenScreenEvent;
 import gg.darkutils.events.base.EventRegistry;
-import gg.darkutils.utils.chat.ChatUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -29,12 +30,12 @@ final class ClientPlayNetworkHandlerMixin {
 
     @Inject(method = "sendChatMessage", at = @At("HEAD"))
     private final void darkutils$onMessage(@NotNull final String content, @NotNull final CallbackInfo ci) {
-        ChatUtils.lastSentMessageOrCommandAt = System.nanoTime();
+        EventRegistry.centralRegistry().triggerEvent(new SentMessageEvent(content));
     }
 
     @Inject(method = "sendChatCommand", at = @At("HEAD"))
     private final void darkutils$onCommand(@NotNull final String command, @NotNull final CallbackInfo ci) {
-        ChatUtils.lastSentMessageOrCommandAt = System.nanoTime();
+        EventRegistry.centralRegistry().triggerEvent(new SentCommandEvent(command));
     }
 
     @Inject(
@@ -43,7 +44,7 @@ final class ClientPlayNetworkHandlerMixin {
             cancellable = true
     )
     private final void darkutils$cancelOpenScreenIfEnabled(@NotNull final OpenScreenS2CPacket packet, @NotNull final CallbackInfo ci) {
-        if (EventRegistry.centralRegistry().triggerEvent(new ScreenOpenEvent(packet.getScreenHandlerType(), packet.getName())).isCancelled()) {
+        if (EventRegistry.centralRegistry().triggerEvent(new OpenScreenEvent(packet.getScreenHandlerType(), packet.getName())).isCancelled()) {
             final var client = MinecraftClient.getInstance();
             if (null != client && null != client.getNetworkHandler()) {
                 // syncId from the OpenScreenS2CPacket tells server which container to close

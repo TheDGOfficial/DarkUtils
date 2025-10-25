@@ -11,9 +11,9 @@ import org.jetbrains.annotations.NotNull;
  * @param treeMobSpawned The mob spawned as the result of this Tree Gift,
  *                       can be {@link TreeMobSpawned#NONE} to indicate none spawned.
  */
-public record TreeGiftObtainedEvent(
+public record ObtainTreeGiftEvent(
         @NotNull TreeMobSpawned treeMobSpawned) implements NonCancellableEvent {
     static {
-        EventRegistry.centralRegistry().registerEvent(TreeGiftObtainedEvent.class);
+        EventRegistry.centralRegistry().registerEvent(ObtainTreeGiftEvent.class);
     }
 }

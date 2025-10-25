@@ -14,19 +14,19 @@ import org.jetbrains.annotations.NotNull;
  * @param cancellationState The cancellation state holder.
  * @param itemStack         The item that is going to be used if not cancelled.
  */
-public record ItemUseEvent(@NotNull CancellationState cancellationState,
+public record UseItemEvent(@NotNull CancellationState cancellationState,
                            @NotNull ItemStack itemStack) implements CancellableEvent {
     static {
-        EventRegistry.centralRegistry().registerEvent(ItemUseEvent.class);
+        EventRegistry.centralRegistry().registerEvent(UseItemEvent.class);
     }
 
     /**
-     * Creates a new {@link ItemUseEvent} suitable for triggering the event.
+     * Creates a new {@link UseItemEvent} suitable for triggering the event.
      * A cached {@link CancellationState#ofCached()} will be used with non-cancelled state by default.
      *
      * @param itemStack The item that is going to be used if not cancelled.
      */
-    public ItemUseEvent(@NotNull final ItemStack itemStack) {
+    public UseItemEvent(@NotNull final ItemStack itemStack) {
         this(CancellationState.ofCached(), itemStack);
     }
 }

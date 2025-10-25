@@ -1,7 +1,7 @@
 package gg.darkutils.mixin.misc;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.events.EntityRenderEvent;
+import gg.darkutils.events.RenderEntityEvent;
 import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.Frustum;
@@ -27,7 +27,7 @@ final class EntityRendererMixin<T extends Entity> {
 
     @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
     private final void darkutils$skipRenderingArmorStandIfEnabled(@NotNull final T entity, @NotNull final Frustum frustum, final double x, final double y, final double z, @NotNull final CallbackInfoReturnable<Boolean> cir) {
-        if (EventRegistry.centralRegistry().triggerEvent(new EntityRenderEvent(entity)).isCancelled()) {
+        if (EventRegistry.centralRegistry().triggerEvent(new RenderEntityEvent(entity)).isCancelled()) {
             cir.setReturnValue(false);
         }
     }

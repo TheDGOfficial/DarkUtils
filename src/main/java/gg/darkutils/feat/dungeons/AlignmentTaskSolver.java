@@ -2,6 +2,10 @@ package gg.darkutils.feat.dungeons;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.events.InteractEntityEvent;
+import gg.darkutils.events.ReceiveMainThreadPacketEvent;
+import gg.darkutils.events.RenderWorldEvent;
+import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.TickUtils;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -15,7 +19,6 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -220,6 +223,10 @@ public final class AlignmentTaskSolver {
 
     public static final void init() {
         ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, world) -> AlignmentTaskSolver.onWorldUnload());
+
+        EventRegistry.centralRegistry().addListener(AlignmentTaskSolver::onRenderWorld);
+        EventRegistry.centralRegistry().addListener(AlignmentTaskSolver::onInteractEntity);
+        EventRegistry.centralRegistry().addListener(AlignmentTaskSolver::onPacketReceive);
     }
 
     private static final void onWorldUnload() {
@@ -228,7 +235,7 @@ public final class AlignmentTaskSolver {
         AlignmentTaskSolver.pendingClicks.clear();
     }
 
-    public static final void onRenderWorld() {
+    private static final void onRenderWorld(@NotNull final RenderWorldEvent event) {
         if (!AlignmentTaskSolver.isInPhase3()) {
             return;
         }
@@ -269,8 +276,8 @@ public final class AlignmentTaskSolver {
         stack.set(DataComponentTypes.CUSTOM_NAME, name);
     }
 
-    public static final boolean onPacketSend(final @NotNull Entity e) {
-        var allowPacket = true;
+    private static final void onInteractEntity(final @NotNull InteractEntityEvent event) {
+        final var e = event.entity();
 
         if (!AlignmentTaskSolver.directionSet.isEmpty()
                 && DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver
@@ -283,26 +290,26 @@ public final class AlignmentTaskSolver {
 
             if (DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolverBlockIncorrectClicks) {
                 if (clickCount == pending) {
-                    allowPacket = false;
+                    event.cancellationState().cancel();
                 } else {
                     if (null != MinecraftClient.getInstance().world) {
                         final var behind = pos.offset(entity.getHorizontalFacing().getOpposite());
                         if (MinecraftClient.getInstance().world.getBlockState(behind).isOf(Blocks.SEA_LANTERN)) {
-                            allowPacket = false;
+                            event.cancellationState().cancel();
                         }
                     }
                 }
             }
 
-            if (allowPacket) {
+            if (!event.cancellationState().isCancelled()) {
                 AlignmentTaskSolver.pendingClicks.put(pos, pending + 1);
             }
         }
-
-        return allowPacket;
     }
 
-    public static final void onPacketReceive(final @NotNull Packet<?> p) {
+    private static final void onPacketReceive(final @NotNull ReceiveMainThreadPacketEvent event) {
+        final var p = event.packet();
+
         if (!AlignmentTaskSolver.directionSet.isEmpty()
                 && DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver
                 && AlignmentTaskSolver.isSolverActive()
