@@ -1,8 +1,8 @@
 package gg.darkutils.utils;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,17 +16,11 @@ public final class ItemUtils {
         throw new UnsupportedOperationException("static utility class");
     }
 
-    private static final @NotNull List<String> getLoreLines(@NotNull final ItemStack stack) {
+    private static final @NotNull List<Text> getLoreLines(@NotNull final ItemStack stack) {
         final var lore = stack.getComponents().get(DataComponentTypes.LORE);
 
         if (null != lore) {
-            final var lines = new ObjectArrayList<String>();
-
-            for (final var line : lore.lines()) {
-                lines.add(line.getString());
-            }
-
-            return Collections.unmodifiableList(lines);
+            return lore.lines();
         }
 
         return Collections.emptyList();
@@ -35,8 +29,10 @@ public final class ItemUtils {
     @Nullable
     private static final String getRightClickAbility(@NotNull final ItemStack stack) {
         for (final var line : ItemUtils.getLoreLines(stack)) {
-            if (line.contains("Ability: ") && line.endsWith("RIGHT CLICK")) {
-                return line;
+            final var plain = line.getString();
+
+            if (plain.contains("Ability: ") && plain.endsWith("RIGHT CLICK")) {
+                return plain;
             }
         }
 

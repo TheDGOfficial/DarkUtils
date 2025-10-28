@@ -5,7 +5,7 @@ import gg.darkutils.events.base.EventHandler;
 import gg.darkutils.events.base.EventRegistry;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -54,7 +54,7 @@ public final class BasicEventRegistry implements EventRegistry {
                 throw new IllegalStateException("event " + event.getName() + " is already registered");
             }
 
-            final var newMap = new HashMap<>(oldMap);
+            final var newMap = new IdentityHashMap<>(oldMap);
             newMap.put(event, handler);
             return Map.copyOf(newMap);
         });

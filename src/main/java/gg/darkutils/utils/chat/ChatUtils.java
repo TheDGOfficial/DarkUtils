@@ -16,7 +16,7 @@ import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayDeque;
+import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import java.util.concurrent.TimeUnit;
 
 public final class ChatUtils {
@@ -27,7 +27,7 @@ public final class ChatUtils {
     @NotNull
     public static final String NEW_LINE = "\n";
 
-    private static final @NotNull ArrayDeque<String> sendMessageQueue = new ArrayDeque<>(1);
+    private static final @NotNull ObjectArrayFIFOQueue<String> sendMessageQueue = new ObjectArrayFIFOQueue<>(1);
     private static long lastSentMessageOrCommandAt;
 
     private ChatUtils() {
@@ -55,7 +55,7 @@ public final class ChatUtils {
         final var player = client.player;
 
         if (null != player && (0L == ChatUtils.lastSentMessageOrCommandAt || System.nanoTime() - ChatUtils.lastSentMessageOrCommandAt > TimeUnit.MILLISECONDS.toNanos(250L))) {
-            final var messageOrCommand = ChatUtils.sendMessageQueue.pollFirst();
+            final var messageOrCommand = ChatUtils.sendMessageQueue.isEmpty() ? null : ChatUtils.sendMessageQueue.dequeue();
             if (null != messageOrCommand && !messageOrCommand.isEmpty()) {
                 player.networkHandler.sendChatMessage(messageOrCommand);
             }
@@ -63,7 +63,7 @@ public final class ChatUtils {
     }
 
     public static final void queueUserSentMessageOrCommand(@NotNull final String messageOrCommand) {
-        ChatUtils.sendMessageQueue.add(messageOrCommand);
+        ChatUtils.sendMessageQueue.enqueue(messageOrCommand);
     }
 
     public static final boolean hasFormatting(final Text text, @NotNull final Formatting color, final boolean bold) {

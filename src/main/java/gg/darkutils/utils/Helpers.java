@@ -28,6 +28,22 @@ public final class Helpers {
         return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.LEVER);
     }
 
+    public static final boolean isLookingAtACraftingTable() {
+        final var mc = MinecraftClient.getInstance();
+        final var world = mc.world;
+        return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.CRAFTING_TABLE);
+    }
+
+    public static final boolean isLookingAtAMushroom() {
+        final var mc = MinecraftClient.getInstance();
+        final var world = mc.world;
+        if (null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult)  {
+            final var state = mc.world.getBlockState(blockHitResult.getBlockPos());
+            return state.isOf(Blocks.RED_MUSHROOM) || state.isOf(Blocks.BROWN_MUSHROOM);
+        }
+        return false;
+    }
+
     public static final void displayCountdownTitles(@NotNull final String color, @NotNull final String finalText, final int seconds) {
         // Show the first number immediately
         Helpers.notify(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, color + seconds);

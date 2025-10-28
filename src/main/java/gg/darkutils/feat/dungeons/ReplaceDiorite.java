@@ -3,12 +3,14 @@ package gg.darkutils.feat.dungeons;
 import gg.darkutils.config.DarkUtilsConfig;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterators;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
@@ -104,10 +106,8 @@ public final class ReplaceDiorite {
     private static final void replaceDiorite(@NotNull final ClientWorld world) {
         for (final var entry : ReplaceDiorite.chunkToPositions.long2ObjectEntrySet()) {
             final var key = entry.getLongKey();
-            final var chunkX = (int) (key >> 32);
-            final var chunkZ = (int) (key & 0xFFFF_FFFFL);
 
-            final var chunk = world.getChunk(chunkX, chunkZ);
+            final var chunk = world.getChunk((int) (key >> 32), (int) (key & 0xFFFF_FFFFL), ChunkStatus.FULL, false);
 
             if (null == chunk) {
                 continue; // skip unloaded
@@ -116,9 +116,7 @@ public final class ReplaceDiorite {
             for (final var pos : entry.getValue()) {
                 final var state = chunk.getBlockState(pos);
 
-                if (state.isOf(Blocks.DIORITE) || state.isOf(Blocks.POLISHED_DIORITE)
-                        || state.isOf(Blocks.GRANITE) || state.isOf(Blocks.POLISHED_GRANITE)
-                        || state.isOf(Blocks.ANDESITE) || state.isOf(Blocks.POLISHED_ANDESITE)) {
+                if (state.isOf(Blocks.DIORITE) || state.isOf(Blocks.POLISHED_DIORITE)) {
                     ReplaceDiorite.setGlass(world, pos);
                 }
             }

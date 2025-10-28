@@ -10,7 +10,7 @@ import gg.darkutils.events.base.EventListener;
 import gg.darkutils.events.base.EventPriority;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -67,7 +67,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             throw new IllegalStateException("listener is already registered");
         }
         this.listeners.updateAndGet(listeners -> {
-            final var newList = new ArrayList<>(listeners);
+            final var newList = new ReferenceArrayList<>(listeners);
             newList.add(listener);
             return List.copyOf(newList);
         });

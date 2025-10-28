@@ -52,8 +52,9 @@ final class ClientPlayerInteractionManagerMixin {
         // When looking at a block entity such as beacon, chest, command block, etc., we don't want to cancel the click.
 
         // This ensures we only cancel the item use itself and do not prevent interacting with block entities, such as opening a chest while holding the item.
-        // Additionally, we do not cancel if looking at a button or lever. Those are not classified as block entities but still have interactions.
-        if (!player.getWorld().getBlockState(blockHitResult.getBlockPos()).hasBlockEntity() && !Helpers.isLookingAtAButton() && !Helpers.isLookingAtALever() && EventRegistry.centralRegistry().triggerEvent(new UseItemEvent(stack)).isCancelled()) {
+        // Additionally, we do not cancel if looking at a button, lever or crafting table. Those are not classified as block entities but still have interactions.
+        // As a final exclusion, we do not cancel when looking at a mushroom. There is a 1x1 room where you get teleported under the room for a secret chest in Hypixel SkyBlock Dungeons when you right-click to a mushroom.
+        if (!player.getWorld().getBlockState(blockHitResult.getBlockPos()).hasBlockEntity() && !Helpers.isLookingAtAButton() && !Helpers.isLookingAtALever() && !Helpers.isLookingAtACraftingTable() && !Helpers.isLookingAtAMushroom() && EventRegistry.centralRegistry().triggerEvent(new UseItemEvent(stack)).isCancelled()) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }

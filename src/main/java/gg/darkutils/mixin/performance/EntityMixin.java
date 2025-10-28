@@ -17,10 +17,10 @@ public final class EntityMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "isGlowing", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "isGlowing", at = @At("HEAD"), cancellable = true)
     public final void darkutils$isGlowing$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
         final var entity = (Entity) (Object) this;
-        if (cir.getReturnValueZ() && DarkUtilsConfig.INSTANCE.disableGlowing && entity instanceof ItemEntity) {
+        if (DarkUtilsConfig.INSTANCE.disableGlowing && entity instanceof ItemEntity) {
             cir.setReturnValue(false);
         }
     }

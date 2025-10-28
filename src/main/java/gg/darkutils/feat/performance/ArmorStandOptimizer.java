@@ -3,8 +3,8 @@ package gg.darkutils.feat.performance;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.RenderEntityEvent;
 import gg.darkutils.events.base.EventRegistry;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -16,8 +16,8 @@ import java.util.Comparator;
 import java.util.Random;
 
 public final class ArmorStandOptimizer {
-    private static final @NotNull ObjectOpenHashSet<ArmorStandEntity> armorStandRenderSet = new ObjectOpenHashSet<>(128);
-    private static final @NotNull ObjectArrayList<ArmorStandEntity> reusableStands = new ObjectArrayList<>(128);
+    private static final @NotNull ReferenceOpenHashSet<ArmorStandEntity> armorStandRenderSet = new ReferenceOpenHashSet<>(128);
+    private static final @NotNull ReferenceArrayList<ArmorStandEntity> reusableStands = new ReferenceArrayList<>(128);
     private static final @NotNull Random RANDOM = new Random();
 
     private ArmorStandOptimizer() {
@@ -87,7 +87,7 @@ public final class ArmorStandOptimizer {
     /**
      * Performs partial selection using QuickSelect.
      */
-    private static final void selectClosest(@NotNull final ObjectArrayList<ArmorStandEntity> list, final int closestCount, @NotNull final ClientPlayerEntity player) {
+    private static final void selectClosest(@NotNull final ReferenceArrayList<ArmorStandEntity> list, final int closestCount, @NotNull final ClientPlayerEntity player) {
         var left = 0;
         var right = list.size() - 1;
         while (left <= right) {
@@ -103,7 +103,7 @@ public final class ArmorStandOptimizer {
         }
     }
 
-    private static final int partition(@NotNull final ObjectArrayList<ArmorStandEntity> list, final int left, final int right, @NotNull final ClientPlayerEntity player) {
+    private static final int partition(@NotNull final ReferenceArrayList<ArmorStandEntity> list, final int left, final int right, @NotNull final ClientPlayerEntity player) {
         // Random pivot to avoid worst-case
         final var pivotIdx = left + ArmorStandOptimizer.RANDOM.nextInt(right - left + 1);
         final var pivot = list.get(pivotIdx);
@@ -112,8 +112,8 @@ public final class ArmorStandOptimizer {
 
         final var pivotDist = player.squaredDistanceTo(pivot);
         var i = left;
-        for (var j = left; j < right; ++j) {
-            if (player.squaredDistanceTo(list.get(j)) < pivotDist) {
+        for (var j = left; right > j; ++j) {
+            if (pivotDist > player.squaredDistanceTo(list.get(j))) {
                 list.set(j, list.set(i, list.get(j)));
                 ++i;
             }
