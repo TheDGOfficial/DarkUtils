@@ -126,7 +126,9 @@ public final class AutoFishingRod {
         final var min = DarkUtilsConfig.INSTANCE.autoFishingStartingDelay;
         final var max = DarkUtilsConfig.INSTANCE.autoFishingMaximumDelay;
 
-        final var delay = AutoFishingRod.SECURE_RANDOM.nextInt(Math.max(1, max - min + 1)) + min;
+        final var delay = (max > min)
+                ? AutoFishingRod.SECURE_RANDOM.nextInt(min, max + 1)
+                : min;
 
         TickUtils.queueTickTask(() -> {
             final var mc = MinecraftClient.getInstance();

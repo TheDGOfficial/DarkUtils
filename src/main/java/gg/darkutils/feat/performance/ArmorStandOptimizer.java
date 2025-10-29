@@ -105,7 +105,7 @@ public final class ArmorStandOptimizer {
 
     private static final int partition(@NotNull final ReferenceArrayList<ArmorStandEntity> list, final int left, final int right, @NotNull final ClientPlayerEntity player) {
         // Random pivot to avoid worst-case
-        final var pivotIdx = left + ArmorStandOptimizer.RANDOM.nextInt(right - left + 1);
+        final var pivotIdx = ArmorStandOptimizer.RANDOM.nextInt(left, right + 1);
         final var pivot = list.get(pivotIdx);
         list.set(pivotIdx, list.get(right));
         list.set(right, pivot);
