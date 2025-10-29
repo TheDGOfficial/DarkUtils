@@ -4,9 +4,6 @@ import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.Helpers;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.tag.ItemTags;
-import net.minecraft.util.Hand;
 import org.jetbrains.annotations.NotNull;
 
 public final class AutoClicker {
@@ -68,33 +65,13 @@ public final class AutoClicker {
             this.keyBinding = keyBinding;
         }
 
-        @NotNull
-        private static final ItemStack getItemStackInHand() {
-            final var player = MinecraftClient.getInstance().player;
-            return null == player ? ItemStack.EMPTY : player.getStackInHand(Hand.MAIN_HAND);
-        }
-
-        private static final boolean isHoldingASword() {
-            return AutoClicker.Key.getItemStackInHand()
-                    .isIn(ItemTags.SWORDS);
-        }
-
-        private static final boolean isHoldingRCMWeapon() {
-            final var customName = AutoClicker.Key.getItemStackInHand().getCustomName();
-            if (null != customName) {
-                final var plain = customName.getString();
-                return plain.contains("Hyperion") || plain.contains("Astraea");
-            }
-            return false;
-        }
-
         private final boolean isPressed(final boolean actual) {
-            return (AutoClicker.Key.RIGHT == this ? !AutoClicker.Key.isHoldingRCMWeapon() : !AutoClicker.Key.isHoldingASword()) && actual;
+            return (AutoClicker.Key.RIGHT == this ? !Helpers.isHoldingRCMWeapon() : !Helpers.isHoldingASword()) && actual;
         }
 
         private final boolean wasPressed(final boolean actual) {
             final var right = AutoClicker.Key.RIGHT == this;
-            if (!actual && this.state && (right ? AutoClicker.Key.isHoldingRCMWeapon() : AutoClicker.Key.isHoldingASword())) {
+            if (!actual && this.state && (right ? Helpers.isHoldingRCMWeapon() : Helpers.isHoldingASword())) {
                 final var held = this.keyBinding.isPressed();
 
                 if (held) {
