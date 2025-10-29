@@ -5,6 +5,7 @@ import gg.darkutils.events.SentMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RoundingMode;
+import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.ClickEvent;
@@ -16,7 +17,6 @@ import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import java.util.concurrent.TimeUnit;
 
 public final class ChatUtils {

@@ -8,9 +8,9 @@ import gg.darkutils.events.base.Event;
 import gg.darkutils.events.base.EventHandler;
 import gg.darkutils.events.base.EventListener;
 import gg.darkutils.events.base.EventPriority;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import org.jetbrains.annotations.NotNull;
 
-import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;

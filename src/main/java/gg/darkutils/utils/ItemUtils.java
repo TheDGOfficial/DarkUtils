@@ -19,11 +19,7 @@ public final class ItemUtils {
     private static final @NotNull List<Text> getLoreLines(@NotNull final ItemStack stack) {
         final var lore = stack.getComponents().get(DataComponentTypes.LORE);
 
-        if (null != lore) {
-            return lore.lines();
-        }
-
-        return Collections.emptyList();
+        return null == lore ? Collections.emptyList() : lore.lines();
     }
 
     @Nullable

@@ -5,7 +5,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.InteractEntityEvent;
 import gg.darkutils.events.base.EventRegistry;
-import gg.darkutils.feat.dungeons.AlignmentTaskSolver;
 import gg.darkutils.feat.qol.AutoClicker;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerInteractionManager;

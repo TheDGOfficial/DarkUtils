@@ -1,15 +1,15 @@
 package gg.darkutils.utils;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.block.Blocks;
-import net.minecraft.item.Items;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
+import net.minecraft.item.Items;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,7 +41,7 @@ public final class Helpers {
     public static final boolean isLookingAtAMushroom() {
         final var mc = MinecraftClient.getInstance();
         final var world = mc.world;
-        if (null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult)  {
+        if (null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult) {
             final var state = mc.world.getBlockState(blockHitResult.getBlockPos());
             return state.isOf(Blocks.RED_MUSHROOM) || state.isOf(Blocks.BROWN_MUSHROOM);
         }

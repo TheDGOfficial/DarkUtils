@@ -126,7 +126,7 @@ public final class AutoFishingRod {
         final var min = DarkUtilsConfig.INSTANCE.autoFishingStartingDelay;
         final var max = DarkUtilsConfig.INSTANCE.autoFishingMaximumDelay;
 
-        final var delay = (max > min)
+        final var delay = max > min
                 ? AutoFishingRod.SECURE_RANDOM.nextInt(min, max + 1)
                 : min;
 

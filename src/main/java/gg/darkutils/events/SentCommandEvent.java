@@ -1,7 +1,7 @@
 package gg.darkutils.events;
 
-import gg.darkutils.events.base.NonCancellableEvent;
 import gg.darkutils.events.base.EventRegistry;
+import gg.darkutils.events.base.NonCancellableEvent;
 import org.jetbrains.annotations.NotNull;
 
 /**
