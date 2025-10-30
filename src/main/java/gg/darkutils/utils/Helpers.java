@@ -3,7 +3,6 @@ package gg.darkutils.utils;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.sound.SoundEvent;
@@ -48,10 +47,10 @@ public final class Helpers {
         return false;
     }
 
-    public static final boolean isLookingAtARedstoneBlockWithSkull() {
+    public static final boolean isLookingAtARedstoneBlock() {
         final var mc = MinecraftClient.getInstance();
         final var world = mc.world;
-        return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.REDSTONE_BLOCK) && Helpers.isHoldingAPlayerSkull();
+        return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.REDSTONE_BLOCK);
     }
 
     @NotNull
@@ -63,10 +62,6 @@ public final class Helpers {
     public static final boolean isHoldingASword() {
         return Helpers.getItemStackInHand()
                 .isIn(ItemTags.SWORDS);
-    }
-
-    private static final boolean isHoldingAPlayerSkull() {
-        return Helpers.getItemStackInHand().isOf(Items.PLAYER_HEAD);
     }
 
     public static final boolean isHoldingRCMWeapon() {
