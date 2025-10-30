@@ -21,14 +21,18 @@ public final class AutoTip {
     }
 
     public static final void init() {
-        ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> overlay || !AutoTip.shouldHideMessage(message));
+        ClientReceiveMessageEvents.ALLOW_GAME.register(AutoTip::shouldAllowMessage);
         ClientTickEvents.END_CLIENT_TICK.register(client -> AutoTip.onTick());
     }
 
-    private static final boolean shouldHideMessage(@NotNull final Text message) {
+    private static final boolean shouldAllowMessage(@NotNull final Text message, final boolean overlay) {
+        if (overlay) {
+            return true;
+        }
+
         final var plain = message.getString();
 
-        return DarkUtilsConfig.INSTANCE.autoTip && ("You already tipped everyone that has boosters active, so there isn't anybody to be tipped right now!".equals(plain) || "No one has a network booster active right now! Try again later.".equals(plain)) && ChatUtils.hasFormatting(message, Formatting.RED, false);
+        return !DarkUtilsConfig.INSTANCE.autoTip || (!"You already tipped everyone that has boosters active, so there isn't anybody to be tipped right now!".equals(plain) && !"No one has a network booster active right now! Try again later.".equals(plain)) || !ChatUtils.hasFormatting(message, Formatting.RED, false);
     }
 
     private static final void onTick() {

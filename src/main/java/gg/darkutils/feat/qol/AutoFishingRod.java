@@ -39,7 +39,7 @@ public final class AutoFishingRod {
 
     public static final void init() {
         // Run tick method every client tick
-        ClientTickEvents.END_CLIENT_TICK.register(client -> AutoFishingRod.tick());
+        ClientTickEvents.END_CLIENT_TICK.register(AutoFishingRod::tick);
 
         // Reset cached armor stand + state when world changes
         ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, world) -> AutoFishingRod.resetState());
@@ -147,13 +147,12 @@ public final class AutoFishingRod {
         AutoFishingRod.hooking = false;
     }
 
-    private static final void tick() {
+    private static final void tick(@NotNull final MinecraftClient client) {
         if (!DarkUtilsConfig.INSTANCE.autoFishing) {
             AutoFishingRod.resetState();
             return;
         }
 
-        final var client = MinecraftClient.getInstance();
         final var player = client.player;
 
         if (null == client.world || null == player || AutoFishingRod.isNotHoldingRod(player) || AutoFishingRod.hooking) {

@@ -38,6 +38,7 @@ public final class DarkUtilsConfig {
     public boolean preventUselessBlockHit;
     public boolean disableCommandConfirmation;
     public boolean rejoinCooldownDisplay;
+    public boolean laggyServerDetector;
 
     // === Foraging ===
     public boolean treeGiftConfirmation;

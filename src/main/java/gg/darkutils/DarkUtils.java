@@ -21,8 +21,10 @@ import gg.darkutils.feat.qol.AutoFishingRod;
 import gg.darkutils.feat.qol.AutoTip;
 import gg.darkutils.feat.qol.DisableCellsAlignment;
 import gg.darkutils.feat.qol.GhostBlockKey;
+import gg.darkutils.feat.qol.LaggyServerDetector;
 import gg.darkutils.feat.qol.PreventUselessBlockHit;
 import gg.darkutils.feat.qol.RejoinCooldownDisplay;
+import gg.darkutils.feat.qol.ServerTPSCalculator;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
@@ -370,7 +372,8 @@ public final class DarkUtils implements ClientModInitializer {
         // Init feature dependencies, features will depend on those so they should be init before features
         DarkUtils.init(
                 TreeGiftFeatures::init,
-                DungeonTimer::init
+                DungeonTimer::init,
+                ServerTPSCalculator::init
         );
 
         // Init features
@@ -389,7 +392,8 @@ public final class DarkUtils implements ClientModInitializer {
                 AlignmentTaskSolver::init,
                 DisableCellsAlignment::init,
                 PreventUselessBlockHit::init,
-                RejoinCooldownDisplay::init
+                RejoinCooldownDisplay::init,
+                LaggyServerDetector::init
         );
 
         // Send welcome message once player joins a world/server/realm

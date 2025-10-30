@@ -26,20 +26,18 @@ public final class ArmorStandOptimizer {
 
     public static final void init() {
         // Run refresh every client tick
-        ClientTickEvents.END_CLIENT_TICK.register(client -> ArmorStandOptimizer.refreshArmorStands());
+        ClientTickEvents.END_CLIENT_TICK.register(ArmorStandOptimizer::refreshArmorStands);
 
         // Render cancellation logic
         EventRegistry.centralRegistry().addListener(ArmorStandOptimizer::onRenderEntity);
     }
 
-    private static final void refreshArmorStands() {
+    private static final void refreshArmorStands(@NotNull final MinecraftClient client) {
         if (!DarkUtilsConfig.INSTANCE.armorStandOptimizer) {
             ArmorStandOptimizer.reusableStands.clear();
             ArmorStandOptimizer.armorStandRenderSet.clear();
             return;
         }
-
-        final var client = MinecraftClient.getInstance();
 
         final var world = client.world;
         final var player = client.player;

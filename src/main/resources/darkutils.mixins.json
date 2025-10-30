@@ -34,7 +34,8 @@
     "performance.UtilMixin",
     "qol.ClientPlayerInteractionManagerMixin",
     "performance.LivingEntityMixin",
-    "performance.EntityMixin"
+    "performance.EntityMixin",
+    "misc.ClientConnectionMixin"
   ],
   "injectors": {
     "defaultRequire": 1

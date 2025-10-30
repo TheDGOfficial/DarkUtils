@@ -111,6 +111,10 @@ public final class DarkUtilsConfigScreen {
                 "Shows time you have to wait before being able to rejoin SkyBlock once you get kicked while joining a server. It's usually 1 minute.",
                 config.rejoinCooldownDisplay, newValue -> config.rejoinCooldownDisplay = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Laggy Server Detector",
+                "Shows 30 second TPS average 30 seconds after you change/join servers, telling you the expected gameplay quality of the server.",
+                config.laggyServerDetector, newValue -> config.laggyServerDetector = newValue);
+
         // === Foraging ===
         final var foraging = builder.getOrCreateCategory(Text.of("Foraging"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, foraging, "Tree Gift Confirmation",

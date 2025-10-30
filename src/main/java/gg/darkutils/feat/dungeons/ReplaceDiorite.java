@@ -11,6 +11,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -112,13 +113,16 @@ public final class ReplaceDiorite {
                 continue; // skip unloaded
             }
 
-            for (final var pos : entry.getValue()) {
-                final var state = chunk.getBlockState(pos);
+            // forEach avoids allocating a temporary Iterator object. The lambda call is a trivial inline for JIT to turn into invokespecial, while the Iterator always stays invokevirtual and the allocation of the Iterator object itself can't easily be optimized out due to it having a state.
+            entry.getValue().forEach((pos) -> ReplaceDiorite.setGlassIfDiorite(world, chunk, pos));
+        }
+    }
 
-                if (state.isOf(Blocks.DIORITE) || state.isOf(Blocks.POLISHED_DIORITE)) {
-                    ReplaceDiorite.setGlass(world, pos);
-                }
-            }
+    private static final void setGlassIfDiorite(@NotNull final ClientWorld world, @NotNull final Chunk chunk, @NotNull final BlockPos pos) {
+        final var state = chunk.getBlockState(pos);
+
+        if (state.isOf(Blocks.DIORITE) || state.isOf(Blocks.POLISHED_DIORITE)) {
+            ReplaceDiorite.setGlass(world, pos);
         }
     }
 
