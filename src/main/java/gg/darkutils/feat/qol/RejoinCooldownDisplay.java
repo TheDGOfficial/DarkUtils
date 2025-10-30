@@ -76,10 +76,9 @@ public final class RejoinCooldownDisplay {
         final var text = 0L == timeLeftSeconds ? "Try rejoining SkyBlock now!" : "Can rejoin SkyBlock in " + timeLeftSeconds + 's';
         final var color = 0L == timeLeftSeconds ? Formatting.GREEN : Formatting.RED;
 
-        RenderUtils.renderText(
+        RenderUtils.renderCenteredText(
                 context,
                 text,
-                RenderUtils.MIDDLE_ALIGNED_X,
                 RenderUtils.MIDDLE_ALIGNED_Y,
                 color
         );
