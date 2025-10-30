@@ -28,17 +28,13 @@ public final class RejoinCooldownDisplay {
     }
 
     public static final void init() {
-        ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
-            if (!overlay) {
-                RejoinCooldownDisplay.onChat(message);
-            }
-        });
+        ClientReceiveMessageEvents.GAME.register(RejoinCooldownDisplay::onChat);
 
         HudElementRegistry.addLast(Identifier.of(DarkUtils.MOD_ID, "rejoin_cooldown_display"), (context, tickCounter) -> RejoinCooldownDisplay.renderRejoinCooldownDisplay(context));
     }
 
-    private static final void onChat(@NotNull final Text message) {
-        if (!DarkUtilsConfig.INSTANCE.rejoinCooldownDisplay) {
+    private static final void onChat(@NotNull final Text message, final boolean overlay) {
+        if (overlay || !DarkUtilsConfig.INSTANCE.rejoinCooldownDisplay) {
             return;
         }
 

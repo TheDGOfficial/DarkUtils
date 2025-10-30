@@ -20,11 +20,7 @@ public final class SoloCrushTimer {
     }
 
     public static final void init() {
-        ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
-            if (!overlay) {
-                SoloCrushTimer.onChat(message);
-            }
-        });
+        ClientReceiveMessageEvents.GAME.register(SoloCrushTimer::onChat);
 
         ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, world) -> {
             SoloCrushTimer.firstLightningReceived = false;
@@ -32,8 +28,8 @@ public final class SoloCrushTimer {
         });
     }
 
-    private static final void onChat(@NotNull final Text message) {
-        if (!DarkUtilsConfig.INSTANCE.soloCrushTimer) {
+    private static final void onChat(@NotNull final Text message, final boolean overlay) {
+        if (overlay || !DarkUtilsConfig.INSTANCE.soloCrushTimer) {
             return;
         }
 

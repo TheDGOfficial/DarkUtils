@@ -21,8 +21,9 @@ final class NetworkThreadUtilsMixin {
     @ModifyArg(method = "forceMainThread(Lnet/minecraft/network/packet/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/thread/ThreadExecutor;executeSync(Ljava/lang/Runnable;)V"))
     private static final @NotNull Runnable darkutils$onPacketReceiveInMainThread(final @NotNull Runnable originalHandler, @Local(argsOnly = true) final @NotNull Packet<?> packet) {
         return () -> {
-            EventRegistry.centralRegistry().triggerEvent(new ReceiveMainThreadPacketEvent(packet));
-            originalHandler.run();
+            if (!EventRegistry.centralRegistry().triggerEvent(new ReceiveMainThreadPacketEvent(packet)).isCancelled()) {
+                originalHandler.run();
+            }
         };
     }
 }

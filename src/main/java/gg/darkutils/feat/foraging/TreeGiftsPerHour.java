@@ -61,7 +61,7 @@ public final class TreeGiftsPerHour {
     }
 
     public static final void init() {
-        EventRegistry.centralRegistry().<ObtainTreeGiftEvent>addListener(event -> TreeGiftsPerHour.onTreeGift());
+        EventRegistry.centralRegistry().addListener(TreeGiftsPerHour::onTreeGift);
         HudElementRegistry.addLast(Identifier.of(DarkUtils.MOD_ID, "tree_gifts_per_hour"), (context, tickCounter) -> TreeGiftsPerHour.renderTreeGifts(context));
     }
 
@@ -104,7 +104,7 @@ public final class TreeGiftsPerHour {
         );
     }
 
-    private static final void onTreeGift() {
+    private static final void onTreeGift(@NotNull final ObtainTreeGiftEvent event) {
         if (!DarkUtilsConfig.INSTANCE.treeGiftsPerHour) {
             // Prevent leaking samples if feature is turned off after using it
             TreeGiftsPerHour.reset();

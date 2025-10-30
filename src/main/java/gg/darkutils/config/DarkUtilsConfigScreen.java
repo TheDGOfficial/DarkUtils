@@ -283,6 +283,10 @@ public final class DarkUtilsConfigScreen {
                 "Disables glowing of players, dropped items and frogs, which reduce FPS a lot if your graphics card is not capable. Glowed entities are rendered behind walls, so no culling of them which reduces performance. Only enable if you do not care about: seeing your teammates glow with Hypixel rank color (e.g. green for VIP, blue for MVP+) in Dungeons, dropped items glowing with their rarity color (e.g. orange for legendary items), and frogs in galatea glow white.",
                 config.disableGlowing, newValue -> config.disableGlowing = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Sound Lag Fix",
+                "Skips playing duplicate sounds received on the same tick from misbehaving or lagging servers from causing lag in your system, preventing the audio engine from being overloaded/sound pool getting full. Only identical sounds are prevented so you can still hear everything perfectly.",
+                config.soundLagFix, newValue -> config.soundLagFix = newValue);
+
         // === Bugfixes ===
         final var bugfixes = builder.getOrCreateCategory(Text.of("Bugfixes"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix GUI Scale After Toggling Fullscreen Off",

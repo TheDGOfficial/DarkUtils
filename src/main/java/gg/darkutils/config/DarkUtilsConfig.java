@@ -85,6 +85,7 @@ public final class DarkUtilsConfig {
     public OpenGLVersionOverride openGLVersionOverride = OpenGLVersionOverride.NO_OVERRIDE;
     public boolean useVirtualThreadsForTextureDownloading;
     public boolean disableGlowing;
+    public boolean soundLagFix;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;

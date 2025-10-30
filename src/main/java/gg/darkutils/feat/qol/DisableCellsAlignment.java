@@ -16,7 +16,7 @@ public final class DisableCellsAlignment {
     }
 
     public static final void init() {
-        EventRegistry.centralRegistry().addListener(EventListener.create(DisableCellsAlignment::onUseItem, EventPriority.ABOVE_NORMAL, false));
+        EventRegistry.centralRegistry().addListener(DisableCellsAlignment::onUseItem, EventPriority.ABOVE_NORMAL, false);
     }
 
     private static final void onUseItem(@NotNull final UseItemEvent event) {

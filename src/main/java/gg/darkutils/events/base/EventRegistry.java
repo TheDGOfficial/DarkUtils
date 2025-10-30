@@ -67,6 +67,21 @@ public interface EventRegistry {
      * Adds the given listener to be run for the compiler inferred event type.
      *
      * @param listener               The listener.
+     * @param priority               The priority.
+     * @param receiveCancelled       Whether the listener should receive cancelled events or not.
+     * @param doNotPassThisParameter Do not pass this parameter, it is automatically
+     *                               passed by the compiler and used for type inference.
+     * @param <T>                    The type of the event.
+     */
+    @SuppressWarnings("unchecked")
+    default <T extends Event> void addListener(@NotNull final EventListener<T> listener, @NotNull EventPriority priority, final boolean receiveCancelled, @Nullable final T... doNotPassThisParameter) {
+        this.addListener(EventListener.create(listener, priority, receiveCancelled), doNotPassThisParameter); // Passing it here is OK
+    }
+
+    /**
+     * Adds the given listener to be run for the compiler inferred event type.
+     *
+     * @param listener               The listener.
      * @param doNotPassThisParameter Do not pass this parameter, it is automatically
      *                               passed by the compiler and used for type inference.
      * @param <T>                    The type of the event.

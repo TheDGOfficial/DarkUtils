@@ -17,6 +17,7 @@ import gg.darkutils.feat.foraging.TreeGiftFeatures;
 import gg.darkutils.feat.foraging.TreeGiftsPerHour;
 import gg.darkutils.feat.performance.ArmorStandOptimizer;
 import gg.darkutils.feat.performance.LogCleaner;
+import gg.darkutils.feat.performance.SoundLagFix;
 import gg.darkutils.feat.qol.AutoFishingRod;
 import gg.darkutils.feat.qol.AutoTip;
 import gg.darkutils.feat.qol.DisableCellsAlignment;
@@ -393,7 +394,8 @@ public final class DarkUtils implements ClientModInitializer {
                 DisableCellsAlignment::init,
                 PreventUselessBlockHit::init,
                 RejoinCooldownDisplay::init,
-                LaggyServerDetector::init
+                LaggyServerDetector::init,
+                SoundLagFix::init
         );
 
         // Send welcome message once player joins a world/server/realm

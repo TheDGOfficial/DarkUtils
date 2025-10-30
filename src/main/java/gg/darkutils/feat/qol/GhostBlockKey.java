@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.registry.tag.BlockTags;
@@ -16,6 +17,18 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Set;
 
 public final class GhostBlockKey {
+    /**
+     * The keybinding for the trigger.
+     */
+    private static final KeyBinding KEYBIND = KeyBindingHelper.registerKeyBinding(
+            new KeyBinding(
+                    "Create Ghost Block",
+                    InputUtil.Type.KEYSYM,
+                    GLFW.GLFW_KEY_G,
+                    DarkUtils.class.getSimpleName()
+            )
+    );
+
     /**
      * Blacklist of blocks that should *not* be ghosted.
      */
@@ -42,42 +55,43 @@ public final class GhostBlockKey {
     }
 
     public static final void init() {
-        final var keyBinding = KeyBindingHelper.registerKeyBinding(
-                new KeyBinding(
-                        "Create Ghost Block",
-                        InputUtil.Type.KEYSYM,
-                        GLFW.GLFW_KEY_G,
-                        DarkUtils.class.getSimpleName()
-                )
-        );
+        ClientTickEvents.END_CLIENT_TICK.register(GhostBlockKey::onTick);
+    }
 
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (DarkUtilsConfig.INSTANCE.ghostBlockKey) {
-                while (keyBinding.wasPressed()) {
-                    // What the player is currently looking at
-                    final var hit = client.crosshairTarget;
+    private static final void onTick(@NotNull final MinecraftClient client) {
+        if (!DarkUtilsConfig.INSTANCE.ghostBlockKey) {
+            return;
+        }
 
-                    if (hit instanceof final BlockHitResult blockHit) {
-                        final var pos = blockHit.getBlockPos();
-                        final var world = client.world;
+        while (GhostBlockKey.KEYBIND.wasPressed()) {
+            GhostBlockKey.tryCreateGhostBlock(client);
+        }
+    }
 
-                        if (null == world) {
-                            break;
-                        }
+    private static final void tryCreateGhostBlock(@NotNull final MinecraftClient client) {
+        // What the player is currently looking at
+        final var hit = client.crosshairTarget;
 
-                        final var state = world.getBlockState(pos);
-                        final var targetBlock = state.getBlock();
+        // Obviously we can't ghost block entities/players or thin air, so check for block hit result
+        if (hit instanceof final BlockHitResult blockHit) {
+            final var pos = blockHit.getBlockPos();
+            final var world = client.world;
 
-                        // Do not ghost blacklisted blocks
-                        if (state.isIn(BlockTags.BUTTONS) || GhostBlockKey.BLACKLIST.contains(targetBlock)) {
-                            break;
-                        }
-
-                        // Replace block with air *client side only*
-                        world.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
-                    }
-                }
+            // This should not happen but is a safe guard
+            if (null == world) {
+                return;
             }
-        });
+
+            final var state = world.getBlockState(pos);
+            final var targetBlock = state.getBlock();
+
+            // Do not ghost buttons or other hardcoded blacklisted blocks
+            if (state.isIn(BlockTags.BUTTONS) || GhostBlockKey.BLACKLIST.contains(targetBlock)) {
+                return;
+            }
+
+            // Replace block with air *client side only*
+            world.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
+        }
     }
 }

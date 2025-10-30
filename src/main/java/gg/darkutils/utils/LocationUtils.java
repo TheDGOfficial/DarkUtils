@@ -6,6 +6,9 @@ import net.hypixel.data.type.ServerType;
 import net.hypixel.modapi.HypixelModAPI;
 import net.hypixel.modapi.packet.impl.clientbound.event.ClientboundLocationPacket;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 
 public final class LocationUtils {
     @Nullable
@@ -24,17 +27,20 @@ public final class LocationUtils {
     public static final void init() {
         HypixelModAPI.getInstance().subscribeToEventPacket(ClientboundLocationPacket.class);
 
-        HypixelModAPI.getInstance().createHandler(ClientboundLocationPacket.class, packet -> {
-            LocationUtils.serverName = packet.getServerName();
-            LocationUtils.serverType = packet.getServerType().orElse(null);
-            LocationUtils.mode = packet.getMode().orElse(null);
-        });
+        HypixelModAPI.getInstance().createHandler(ClientboundLocationPacket.class, LocationUtils::onLocationUpdate);
+        ClientPlayConnectionEvents.DISCONNECT.register(LocationUtils::onDisconnect);
+    }
 
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            LocationUtils.serverName = null;
-            LocationUtils.serverType = null;
-            LocationUtils.mode = null;
-        });
+    private static final void onLocationUpdate(@NotNull final ClientboundLocationPacket packet) {
+        LocationUtils.serverName = packet.getServerName();
+        LocationUtils.serverType = packet.getServerType().orElse(null);
+        LocationUtils.mode = packet.getMode().orElse(null);
+    }
+
+    private static final void onDisconnect(@NotNull final ClientPlayNetworkHandler handler, @NotNull final MinecraftClient client) {
+        LocationUtils.serverName = null;
+        LocationUtils.serverType = null;
+        LocationUtils.mode = null;
     }
 
     public static final boolean isInDungeons() {

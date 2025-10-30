@@ -19,16 +19,15 @@ public final class DungeonTimer {
     }
 
     public static final void init() {
-        ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
-            if (!overlay) {
-                DungeonTimer.onChat(message);
-            }
-        });
-
+        ClientReceiveMessageEvents.GAME.register(DungeonTimer::onChat);
         ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, world) -> DungeonTimer.reset());
     }
 
-    private static final void onChat(@NotNull final Text message) {
+    private static final void onChat(@NotNull final Text message, final boolean overlay) {
+        if (overlay) {
+            return;
+        }
+
         final var plain = message.getString();
         final var bossMessage = plain.startsWith("[BOSS] ");
 

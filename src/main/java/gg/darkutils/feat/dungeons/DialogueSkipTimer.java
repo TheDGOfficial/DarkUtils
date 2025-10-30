@@ -16,15 +16,11 @@ public final class DialogueSkipTimer {
     }
 
     public static final void init() {
-        ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
-            if (!overlay) {
-                DialogueSkipTimer.onChat(message);
-            }
-        });
+        ClientReceiveMessageEvents.GAME.register(DialogueSkipTimer::onChat);
     }
 
-    private static final void onChat(@NotNull final Text message) {
-        if (!DarkUtilsConfig.INSTANCE.dialogueSkipTimer) {
+    private static final void onChat(@NotNull final Text message, final boolean overlay) {
+        if (overlay || !DarkUtilsConfig.INSTANCE.dialogueSkipTimer) {
             return;
         }
 

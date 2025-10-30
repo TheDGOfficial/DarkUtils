@@ -5,6 +5,7 @@ import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +23,7 @@ public final class AutoTip {
 
     public static final void init() {
         ClientReceiveMessageEvents.ALLOW_GAME.register(AutoTip::shouldAllowMessage);
-        ClientTickEvents.END_CLIENT_TICK.register(client -> AutoTip.onTick());
+        ClientTickEvents.END_CLIENT_TICK.register(AutoTip::onTick);
     }
 
     private static final boolean shouldAllowMessage(@NotNull final Text message, final boolean overlay) {
@@ -35,7 +36,7 @@ public final class AutoTip {
         return !DarkUtilsConfig.INSTANCE.autoTip || (!"You already tipped everyone that has boosters active, so there isn't anybody to be tipped right now!".equals(plain) && !"No one has a network booster active right now! Try again later.".equals(plain)) || !ChatUtils.hasFormatting(message, Formatting.RED, false);
     }
 
-    private static final void onTick() {
+    private static final void onTick(@NotNull final MinecraftClient client) {
         if (!DarkUtilsConfig.INSTANCE.autoTip || !LocationUtils.isInHypixel()) {
             return;
         }

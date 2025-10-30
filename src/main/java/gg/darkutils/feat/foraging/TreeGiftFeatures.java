@@ -21,15 +21,11 @@ public final class TreeGiftFeatures {
     }
 
     public static final void init() {
-        ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
-            if (!overlay) {
-                TreeGiftFeatures.onChat(message);
-            }
-        });
+        ClientReceiveMessageEvents.GAME.register(TreeGiftFeatures::onChat);
     }
 
-    private static final void onChat(@NotNull final Text message) {
-        if (!DarkUtilsConfig.INSTANCE.treeGiftConfirmation && !DarkUtilsConfig.INSTANCE.treeGiftsPerHour) {
+    private static final void onChat(@NotNull final Text message, final boolean overlay) {
+        if (overlay || (!DarkUtilsConfig.INSTANCE.treeGiftConfirmation && !DarkUtilsConfig.INSTANCE.treeGiftsPerHour)) {
             // Reset state to prevent bugs when feature is turned off
             TreeGiftFeatures.endMessageReceived = false;
             TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.NONE;
