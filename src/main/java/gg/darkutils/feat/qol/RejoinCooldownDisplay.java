@@ -4,6 +4,7 @@ import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.RenderUtils;
+import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
@@ -43,7 +44,7 @@ public final class RejoinCooldownDisplay {
 
         final var plain = message.getString();
 
-        if ("You were kicked while joining that server!".equals(plain) || "There was a problem joining SkyBlock, try again in a moment!".equals(plain)) {
+        if (("You were kicked while joining that server!".equals(plain) || "There was a problem joining SkyBlock, try again in a moment!".equals(plain)) && ChatUtils.hasFormatting(message, Formatting.RED, false)) {
             RejoinCooldownDisplay.kickCooldownEnd = System.currentTimeMillis() + RejoinCooldownDisplay.COOLDOWN_MS;
         }
     }

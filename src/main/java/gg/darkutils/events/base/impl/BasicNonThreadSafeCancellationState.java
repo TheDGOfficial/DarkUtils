@@ -50,13 +50,26 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
         return cached;
     }
 
+    private final void ensureOwnerThreadAccess() {
+        // Cheap way to check owner thread without having to store a reference to the Thread object that created this instance
+        // Will break if creating an instance without using the ThreadLocal, but the constructor is private so this is fine.
+        if (this != BasicNonThreadSafeCancellationState.INSTANCE.get()) {
+            // Safeguards against trying to access a CancellationState that belongs to another thread.
+            throw new IllegalStateException("Cancellation state accessed from the wrong thread " + Thread.currentThread().getName());
+        }
+    }
+
     @Override
     public final boolean isCancelled() {
+        this.ensureOwnerThreadAccess();
+
         return this.cancelled;
     }
 
     @Override
     public final void setCancelled(final boolean cancelled) {
+        this.ensureOwnerThreadAccess();
+
         this.cancelled = cancelled;
     }
 }

@@ -14,8 +14,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Random;
 
 public final class ArmorStandOptimizer {
-    private static final @NotNull ReferenceOpenHashSet<ArmorStandEntity> armorStandRenderSet = new ReferenceOpenHashSet<>(128);
-    private static final @NotNull ReferenceArrayList<ArmorStandEntity> reusableStands = new ReferenceArrayList<>(128);
+    private static final @NotNull ReferenceOpenHashSet<ArmorStandEntity> armorStandRenderSet = new ReferenceOpenHashSet<>(64);
+    private static final @NotNull ReferenceArrayList<ArmorStandEntity> reusableStands = new ReferenceArrayList<>(512);
     private static final @NotNull Random RANDOM = new Random();
 
     private ArmorStandOptimizer() {

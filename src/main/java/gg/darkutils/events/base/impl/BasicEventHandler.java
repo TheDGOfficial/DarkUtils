@@ -1,6 +1,7 @@
 package gg.darkutils.events.base.impl;
 
 import gg.darkutils.DarkUtils;
+import gg.darkutils.events.base.NonCancellableEvent;
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
 import gg.darkutils.events.base.DelegatingEventListener;
@@ -44,6 +45,11 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
         super();
 
         this.cancellableEvent = CancellableEvent.class.isAssignableFrom(eventClass);
+
+        if (this.cancellableEvent && NonCancellableEvent.class.isAssignableFrom(eventClass)) {
+            // Sanity check
+            throw new IllegalArgumentException("Event class " + eventClass.getName() + " implements both CancellableEvent and NonCancellableEvent");
+        }
     }
 
     /**
