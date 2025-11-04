@@ -1,8 +1,8 @@
 package gg.darkutils.events;
 
-import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
+import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.network.packet.Packet;
 import org.jetbrains.annotations.NotNull;
 

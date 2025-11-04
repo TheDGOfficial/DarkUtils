@@ -114,7 +114,7 @@ public final class ReplaceDiorite {
             }
 
             // forEach avoids allocating a temporary Iterator object. The lambda call is a trivial inline for JIT to turn into invokespecial, while the Iterator always stays invokevirtual and the allocation of the Iterator object itself can't easily be optimized out due to it having a state.
-            entry.getValue().forEach((pos) -> ReplaceDiorite.setGlassIfDiorite(world, chunk, pos));
+            entry.getValue().forEach(pos -> ReplaceDiorite.setGlassIfDiorite(world, chunk, pos));
         }
     }
 

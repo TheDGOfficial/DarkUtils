@@ -89,7 +89,7 @@ public final class TreeGiftsPerHour {
 
         final var perHour = TreeGiftsPerHour.getGiftsPerHour();
 
-        if (0.0 >= perHour) {
+        if (0.0 >= perHour || MathUtils.isNearEqual(Double.MAX_VALUE, perHour)) { // overflow protection
             return;
         }
 

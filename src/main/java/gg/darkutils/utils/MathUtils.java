@@ -13,8 +13,18 @@ public final class MathUtils {
 
     private MathUtils() {
         super();
-
         throw new UnsupportedOperationException("static utility class");
+    }
+
+    /**
+     * Checks whether two doubles are approximately equal within {@link MathUtils#EPSILON}.
+     *
+     * @param first  The first double.
+     * @param second The second double.
+     * @return {@code true} if the two doubles are within {@link MathUtils#EPSILON} of each other, {@code false} otherwise.
+     */
+    public static final boolean isNearEqual(final double first, final double second) {
+        return MathUtils.EPSILON > Math.abs(first - second);
     }
 
     /**
@@ -33,7 +43,7 @@ public final class MathUtils {
             case HALF_DOWN -> {
                 final var floor = Math.floor(number);
                 final var frac = number - floor;
-                yield MathUtils.EPSILON > Math.abs(frac - 0.5D) ? Math.floor(number) : Math.round(number);
+                yield MathUtils.isNearEqual(frac, 0.5D) ? Math.floor(number) : Math.round(number);
             }
         };
     }

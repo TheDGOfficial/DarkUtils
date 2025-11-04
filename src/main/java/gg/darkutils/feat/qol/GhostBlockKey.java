@@ -20,6 +20,7 @@ public final class GhostBlockKey {
     /**
      * The keybinding for the trigger.
      */
+    @NotNull
     private static final KeyBinding KEYBIND = KeyBindingHelper.registerKeyBinding(
             new KeyBinding(
                     "Create Ghost Block",
@@ -74,13 +75,14 @@ public final class GhostBlockKey {
 
         // Obviously we can't ghost block entities/players or thin air, so check for block hit result
         if (hit instanceof final BlockHitResult blockHit) {
-            final var pos = blockHit.getBlockPos();
             final var world = client.world;
 
-            // This should not happen but is a safe guard
+            // This should not happen but is a safeguard
             if (null == world) {
                 return;
             }
+
+            final var pos = blockHit.getBlockPos();
 
             final var state = world.getBlockState(pos);
             final var targetBlock = state.getBlock();

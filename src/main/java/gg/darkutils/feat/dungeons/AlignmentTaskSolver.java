@@ -155,10 +155,10 @@ public final class AlignmentTaskSolver {
                 final var startPositions = new ObjectArrayList<AlignmentTaskSolver.MazeSpace>();
                 final var endPositions = new ObjectArrayList<AlignmentTaskSolver.MazeSpace>();
                 for (final var space : AlignmentTaskSolver.grid) {
-                    if (AlignmentTaskSolver.SpaceType.STARTER == space.type) {
+                    if (AlignmentTaskSolver.SpaceType.STARTER == space.type()) {
                         startPositions.add(space);
                     }
-                    if (AlignmentTaskSolver.SpaceType.END == space.type) {
+                    if (AlignmentTaskSolver.SpaceType.END == space.type()) {
                         endPositions.add(space);
                     }
                 }
@@ -166,10 +166,10 @@ public final class AlignmentTaskSolver {
                 final var layout = AlignmentTaskSolver.getLayout();
                 for (final var start : startPositions) {
                     for (final var end : endPositions) {
-                        final var pointMap = AlignmentTaskSolver.solve(layout, start.coords, end.coords);
+                        final var pointMap = AlignmentTaskSolver.solve(layout, start.coords(), end.coords());
                         final var moves = AlignmentTaskSolver.convertPointMapToMoves(pointMap);
                         for (final var move : moves) {
-                            AlignmentTaskSolver.directionSet.put(move.point, move.directionNum);
+                            AlignmentTaskSolver.directionSet.put(move.point(), move.directionNum());
                         }
                     }
                 }
@@ -198,12 +198,12 @@ public final class AlignmentTaskSolver {
             return;
         }
         for (final var space : AlignmentTaskSolver.grid) {
-            if (AlignmentTaskSolver.SpaceType.PATH != space.type || null == space.framePos) {
+            if (AlignmentTaskSolver.SpaceType.PATH != space.type() || null == space.framePos()) {
                 continue;
             }
             ItemFrameEntity frame = null;
             for (final var entity : MinecraftClient.getInstance().world.getEntities()) {
-                if (entity instanceof final ItemFrameEntity frameEntity && space.framePos.equals(frameEntity.getBlockPos())) {
+                if (entity instanceof final ItemFrameEntity frameEntity && space.framePos().equals(frameEntity.getBlockPos())) {
                     frame = frameEntity;
                     break;
                 }
@@ -211,8 +211,8 @@ public final class AlignmentTaskSolver {
             if (null == frame) {
                 continue;
             }
-            final var neededClicks = AlignmentTaskSolver.getTurnsNeeded(frame.getRotation(), AlignmentTaskSolver.directionSet.getOrDefault(space.coords, 0));
-            AlignmentTaskSolver.clicks.put(space.framePos, neededClicks);
+            final var neededClicks = AlignmentTaskSolver.getTurnsNeeded(frame.getRotation(), AlignmentTaskSolver.directionSet.getOrDefault(space.coords(), 0));
+            AlignmentTaskSolver.clicks.put(space.framePos(), neededClicks);
         }
     }
 
@@ -239,15 +239,15 @@ public final class AlignmentTaskSolver {
             return;
         }
         for (final var space : AlignmentTaskSolver.grid) {
-            if (AlignmentTaskSolver.SpaceType.PATH != space.type || null == space.framePos) {
+            if (AlignmentTaskSolver.SpaceType.PATH != space.type() || null == space.framePos()) {
                 continue;
             }
-            final var neededClicks = AlignmentTaskSolver.clicks.getOrDefault(space.framePos, 0);
+            final var neededClicks = AlignmentTaskSolver.clicks.getOrDefault(space.framePos(), 0);
             if (0 == neededClicks) {
                 continue;
             }
-            final var pending = AlignmentTaskSolver.pendingClicks.getOrDefault(space.framePos, 0);
-            AlignmentTaskSolver.showNametagAtFrame(space.framePos, Integer.toString(0 < pending ? neededClicks - pending : neededClicks), 0 < pending && 0 == neededClicks - pending ? Formatting.GREEN : Formatting.RED);
+            final var pending = AlignmentTaskSolver.pendingClicks.getOrDefault(space.framePos(), 0);
+            AlignmentTaskSolver.showNametagAtFrame(space.framePos(), Integer.toString(0 < pending ? neededClicks - pending : neededClicks), 0 < pending && 0 == neededClicks - pending ? Formatting.GREEN : Formatting.RED);
         }
     }
 
@@ -351,7 +351,7 @@ public final class AlignmentTaskSolver {
             // Sync clicks
             AlignmentTaskSolver.MazeSpace space = null;
             for (final var gridSpace : AlignmentTaskSolver.grid) {
-                if (pos.equals(gridSpace.framePos)) {
+                if (pos.equals(gridSpace.framePos())) {
                     space = gridSpace;
                     break;
                 }
@@ -361,7 +361,7 @@ public final class AlignmentTaskSolver {
                 return;
             }
 
-            final var turns = AlignmentTaskSolver.getTurnsNeeded(newRot, AlignmentTaskSolver.directionSet.getOrDefault(space.coords, 0));
+            final var turns = AlignmentTaskSolver.getTurnsNeeded(newRot, AlignmentTaskSolver.directionSet.getOrDefault(space.coords(), 0));
             final var currentClicks = AlignmentTaskSolver.clicks.getOrDefault(pos, -1);
 
             if (-1 == currentClicks || turns != currentClicks) {
@@ -384,8 +384,8 @@ public final class AlignmentTaskSolver {
         for (int i = 0, len = reversed.size(); i < len - 1; ++i) {
             final var current = reversed.get(i);
             final var next = reversed.get(i + 1);
-            final var diffX = current.x - next.x;
-            final var diffY = current.y - next.y;
+            final var diffX = current.x() - next.x();
+            final var diffY = current.y() - next.y();
 
             Direction dir = null;
             for (final var direction : AlignmentTaskSolver.directions) {
@@ -418,12 +418,12 @@ public final class AlignmentTaskSolver {
             for (var col = 0; 4 >= col; ++col) {
                 AlignmentTaskSolver.MazeSpace found = null;
                 for (final var space : AlignmentTaskSolver.grid) {
-                    if (space.coords.x() == row && space.coords.y() == col) {
+                    if (space.coords().x() == row && space.coords().y() == col) {
                         found = space;
                         break;
                     }
                 }
-                arr[col][row] = null != found && null != found.framePos ? 0 : 1;
+                arr[col][row] = null != found && null != found.framePos() ? 0 : 1;
             }
         }
         return arr;
@@ -444,7 +444,7 @@ public final class AlignmentTaskSolver {
         final var queue = new ObjectArrayFIFOQueue<AlignmentTaskSolver.Point>();
         final var gridCopy = new AlignmentTaskSolver.Point[grid.length][grid[0].length];
         queue.enqueue(start);
-        gridCopy[start.y][start.x] = start;
+        gridCopy[start.y()][start.x()] = start;
 
         while (!queue.isEmpty()) {
             final var currPos = queue.dequeue();
@@ -452,14 +452,14 @@ public final class AlignmentTaskSolver {
                 final var nextPos = AlignmentTaskSolver.move(grid, gridCopy, currPos, dir);
                 if (null != nextPos) {
                     queue.enqueue(nextPos);
-                    gridCopy[nextPos.y][nextPos.x] = new AlignmentTaskSolver.Point(currPos.x, currPos.y);
-                    if (end.x() == nextPos.x && end.y() == nextPos.y) {
+                    gridCopy[nextPos.y()][nextPos.x()] = new AlignmentTaskSolver.Point(currPos.x(), currPos.y());
+                    if (end.x() == nextPos.x() && end.y() == nextPos.y()) {
                         final var steps = new ObjectArrayList<AlignmentTaskSolver.Point>();
                         steps.add(nextPos);
                         steps.add(currPos);
                         var tmp = currPos;
                         while (!tmp.equals(start)) {
-                            tmp = gridCopy[tmp.y][tmp.x];
+                            tmp = gridCopy[tmp.y()][tmp.x()];
                             steps.add(tmp);
                         }
                         return steps;
@@ -471,8 +471,8 @@ public final class AlignmentTaskSolver {
     }
 
     private static final @Nullable AlignmentTaskSolver.Point move(final int @NotNull [][] grid, final AlignmentTaskSolver.Point[][] gridCopy, final AlignmentTaskSolver.Point currPos, final Direction dir) {
-        final var x = currPos.x;
-        final var y = currPos.y;
+        final var x = currPos.x();
+        final var y = currPos.y();
         final var diffX = dir.getVector().getX();
         final var diffY = dir.getVector().getZ();
         final var i = 0 <= x + diffX && x + diffX < grid[0].length
@@ -500,8 +500,8 @@ public final class AlignmentTaskSolver {
     private record Point(int x, int y) implements Comparable<AlignmentTaskSolver.Point> {
         @Override
         public final int compareTo(@NotNull final AlignmentTaskSolver.Point o) {
-            final var cmp = Integer.compare(this.x, o.x);
-            return 0 == cmp ? Integer.compare(this.y, o.y) : cmp;
+            final var cmp = Integer.compare(this.x(), o.x());
+            return 0 == cmp ? Integer.compare(this.y(), o.y()) : cmp;
         }
     }
 }

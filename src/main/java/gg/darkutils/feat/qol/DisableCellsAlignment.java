@@ -2,7 +2,6 @@ package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.UseItemEvent;
-import gg.darkutils.events.base.EventListener;
 import gg.darkutils.events.base.EventPriority;
 import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.item.Items;
