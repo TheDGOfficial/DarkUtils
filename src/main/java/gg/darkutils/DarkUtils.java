@@ -7,6 +7,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.config.DarkUtilsConfigScreen;
 import gg.darkutils.feat.dungeons.AlignmentTaskSolver;
+import gg.darkutils.feat.dungeons.ArrowStackWaypoints;
 import gg.darkutils.feat.dungeons.AutoCloseSecretChests;
 import gg.darkutils.feat.dungeons.DialogueSkipTimer;
 import gg.darkutils.feat.dungeons.DungeonTimer;
@@ -397,7 +398,8 @@ public final class DarkUtils implements ClientModInitializer {
                 RejoinCooldownDisplay::init,
                 LaggyServerDetector::init,
                 SoundLagFix::init,
-                ThreadPriorityTweaker::init
+                ThreadPriorityTweaker::init,
+                ArrowStackWaypoints::init
         );
 
         // Send welcome message once player joins a world/server/realm

@@ -155,6 +155,10 @@ public final class DarkUtilsConfigScreen {
                 "Blocks incorrect clicks after the arrow has been rotated enough times. Compatible with AutoClicker so you can finish it fast with it.",
                 config.arrowAlignmentDeviceSolverBlockIncorrectClicks, newValue -> config.arrowAlignmentDeviceSolverBlockIncorrectClicks = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Arrow Stack Waypoints",
+                "Displays arrow stack waypoints in the Wither King dragon fight showing where to shoot your Last Breath arrows for optimal stacking.",
+                config.arrowStackWaypoints, newValue -> config.arrowStackWaypoints = newValue);
+
         // === Visual Tweaks ===
         final var visual = builder.getOrCreateCategory(Text.of("Visual Tweaks"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Hide Effects HUD",
