@@ -31,14 +31,14 @@ public final class BasicFinalCancellationState implements FinalCancellationState
 
         if (null == ownerThread) {
             throw new IllegalStateException(
-                    "FinalCancellationState has already been queried or escaped its owner thread's lifetime! " +
+                    "Final cancellation state has already been queried or escaped its owner thread's lifetime! " +
                             "isCancelled() can only be called once. Access attempted from thread: " + currentThread.getName()
             );
         }
 
         if (currentThread != ownerThread) {
             throw new IllegalStateException(
-                    "FinalCancellationState accessed from the wrong thread " + currentThread.getName() +
+                    "Final cancellation state accessed from the wrong thread " + currentThread.getName() +
                             ". Thread " + ownerThread.getName() + " owns this state."
             );
         }
@@ -50,13 +50,6 @@ public final class BasicFinalCancellationState implements FinalCancellationState
         this.owner.clear(); // only allow one call
 
         return this.cancelled;
-    }
-
-    @Override
-    public final void setCancelled(final boolean cancelled) {
-        throw new UnsupportedOperationException(
-                "Calling setCancelled() on " + FinalCancellationState.class.getSimpleName() + " is not supported"
-        );
     }
 }
 

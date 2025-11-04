@@ -1,5 +1,6 @@
 package gg.darkutils.utils.chat;
 
+import com.google.common.base.Suppliers;
 import gg.darkutils.events.SentCommandEvent;
 import gg.darkutils.events.SentMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
@@ -13,8 +14,6 @@ import net.minecraft.text.HoverEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.TimeUnit;
@@ -66,9 +65,18 @@ public final class ChatUtils {
         ChatUtils.sendMessageQueue.enqueue(messageOrCommand);
     }
 
-    public static final boolean hasFormatting(final Text text, @NotNull final Formatting color, final boolean bold) {
-        return !text.asOrderedText().accept((index, style, codePoint) -> style.isBold() != bold ||
-                null == style.getColor() || !style.getColor().equals(TextColor.fromFormatting(color)));
+    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final BasicColor color) {
+        return ChatUtils.hasFormatting(text, SimpleStyle.colored(color));
+    }
+
+    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final BasicColor color, @NotNull final BasicFormatting formatting) {
+        return ChatUtils.hasFormatting(text, SimpleStyle.colored(color).also(SimpleStyle.formatted(formatting)));
+    }
+
+    public static final boolean hasFormatting(final Text text, @NotNull final SimpleStyle color) {
+        final var colorStyle = Suppliers.memoize(color::toStyle); // TODO replace with JDK StableValue
+        return !text.asOrderedText().accept((index, style, codePoint) -> style.isBold() != colorStyle.get().isBold() ||
+                null == style.getColor() || !style.getColor().equals(colorStyle.get().getColor()));
     }
 
     @NotNull

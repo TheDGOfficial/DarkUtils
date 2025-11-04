@@ -5,4 +5,10 @@ package gg.darkutils.events.base;
  * correct thread. The implementation should verify all these constraints.
  */
 public non-sealed interface FinalCancellationState extends CancellationState {
+    @Override
+    public default void setCancelled(final boolean cancelled) {
+        throw new UnsupportedOperationException(
+                "Calling setCancelled() on a final cancellation state is not supported"
+        );
+    }
 }

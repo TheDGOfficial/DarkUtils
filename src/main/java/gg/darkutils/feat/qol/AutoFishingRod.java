@@ -3,6 +3,8 @@ package gg.darkutils.feat.qol;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.mixin.accessors.MinecraftClientAccessor;
 import gg.darkutils.utils.TickUtils;
+import gg.darkutils.utils.chat.BasicColor;
+import gg.darkutils.utils.chat.BasicFormatting;
 import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -13,7 +15,6 @@ import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.projectile.FishingBobberEntity;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,7 +59,7 @@ public final class AutoFishingRod {
     }
 
     private static final boolean isCountdownArmorStand(@Nullable final Text customName) {
-        return null != customName && AutoFishingRod.COUNTDOWN_MATCHER.reset(customName.getString()).matches() && ChatUtils.hasFormatting(customName, Formatting.YELLOW, true);
+        return null != customName && AutoFishingRod.COUNTDOWN_MATCHER.reset(customName.getString()).matches() && ChatUtils.hasFormatting(customName, BasicColor.YELLOW, BasicFormatting.BOLD);
     }
 
     private static final boolean isNotHoldingRod(@Nullable final ClientPlayerEntity player) {
@@ -162,7 +163,7 @@ public final class AutoFishingRod {
         final var armorStand = AutoFishingRod.getOrFindCountdownArmorStand(client);
         if (null != armorStand) {
             final var customName = armorStand.getCustomName();
-            if (null != customName && AutoFishingRod.READY.equals(customName.getString()) && ChatUtils.hasFormatting(customName, Formatting.RED, true)) {
+            if (null != customName && AutoFishingRod.READY.equals(customName.getString()) && ChatUtils.hasFormatting(customName, BasicColor.RED, BasicFormatting.BOLD)) {
                 AutoFishingRod.hook(client);
             }
         }

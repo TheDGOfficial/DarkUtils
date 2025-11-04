@@ -10,6 +10,7 @@ import gg.darkutils.utils.RoundingMode;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.item.Items;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -95,10 +96,17 @@ public final class TreeGiftsPerHour {
 
         final var text = "Tree Gifts/Hour: " + MathUtils.round(perHour, RoundingMode.HALF_DOWN);
 
+        RenderUtils.renderItem(
+                context,
+                Items.OAK_LOG,
+                RenderUtils.CHAT_ALIGNED_X,
+                RenderUtils.MIDDLE_ALIGNED_Y.getAsInt() - (RenderUtils.CHAT_ALIGNED_X << 1) // use chat's x offset to shift y a bit upwards so that it doesn't render under the text
+        );
+
         RenderUtils.renderText(
                 context,
                 text,
-                RenderUtils.CHAT_ALIGNED_X,
+                RenderUtils.CHAT_ALIGNED_X + RenderUtils.CHAT_ALIGNED_X * 10, // use chat's x offset to shift x a bit to the right so that there's a bit of a space after the rendered item before the text
                 RenderUtils.MIDDLE_ALIGNED_Y,
                 Formatting.DARK_GREEN
         );

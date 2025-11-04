@@ -18,6 +18,10 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         return SimpleStyle.InheritedStyle.INSTANCE;
     }
 
+    static @NotNull SimpleStyle.ColoredStyle colored(@NotNull final BasicColor color) {
+        return SimpleStyle.colored(color.toRgb());
+    }
+
     static @NotNull SimpleStyle.ColoredStyle colored(final int rgb) {
         return new SimpleStyle.ColoredStyle(rgb);
     }

@@ -1,18 +1,31 @@
 package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.events.ReceiveGameMessageEvent;
+import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
+import gg.darkutils.utils.chat.BasicColor;
 import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public final class AutoTip {
+    @NotNull
+    private static final Consumer<ReceiveGameMessageEvent> MESSAGE_ACTION = event -> {
+        if (event.isStyledWith(BasicColor.RED)) {
+            event.cancellationState().cancel();
+        }
+    };
+    @NotNull
+    private static final Map<String, Consumer<ReceiveGameMessageEvent>> MESSAGE_HANDLERS = Map.of(
+            "You already tipped everyone that has boosters active, so there isn't anybody to be tipped right now!", AutoTip.MESSAGE_ACTION,
+            "No one has a network booster active right now! Try again later.", AutoTip.MESSAGE_ACTION
+    );
     private static long lastTipAt;
 
     private AutoTip() {
@@ -22,18 +35,16 @@ public final class AutoTip {
     }
 
     public static final void init() {
-        ClientReceiveMessageEvents.ALLOW_GAME.register(AutoTip::shouldAllowMessage);
+        EventRegistry.centralRegistry().addListener(AutoTip::onChat);
         ClientTickEvents.END_CLIENT_TICK.register(AutoTip::onTick);
     }
 
-    private static final boolean shouldAllowMessage(@NotNull final Text message, final boolean overlay) {
-        if (overlay) {
-            return true;
+    private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
+        if (!DarkUtilsConfig.INSTANCE.autoTip) {
+            return;
         }
 
-        final var plain = message.getString();
-
-        return !DarkUtilsConfig.INSTANCE.autoTip || (!"You already tipped everyone that has boosters active, so there isn't anybody to be tipped right now!".equals(plain) && !"No one has a network booster active right now! Try again later.".equals(plain)) || !ChatUtils.hasFormatting(message, Formatting.RED, false);
+        event.match(AutoTip.MESSAGE_HANDLERS);
     }
 
     private static final void onTick(@NotNull final MinecraftClient client) {

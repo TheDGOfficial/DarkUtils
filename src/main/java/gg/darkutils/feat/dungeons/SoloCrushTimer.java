@@ -1,12 +1,11 @@
 package gg.darkutils.feat.dungeons;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.events.ReceiveGameMessageEvent;
+import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.Helpers;
-import gg.darkutils.utils.chat.ChatUtils;
+import gg.darkutils.utils.chat.BasicColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
-import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
 public final class SoloCrushTimer {
@@ -20,7 +19,7 @@ public final class SoloCrushTimer {
     }
 
     public static final void init() {
-        ClientReceiveMessageEvents.GAME.register(SoloCrushTimer::onChat);
+        EventRegistry.centralRegistry().addListener(SoloCrushTimer::onChat);
 
         ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, world) -> {
             SoloCrushTimer.firstLightningReceived = false;
@@ -28,12 +27,12 @@ public final class SoloCrushTimer {
         });
     }
 
-    private static final void onChat(@NotNull final Text message, final boolean overlay) {
-        if (overlay || !DarkUtilsConfig.INSTANCE.soloCrushTimer) {
+    private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
+        if (!DarkUtilsConfig.INSTANCE.soloCrushTimer) {
             return;
         }
 
-        if (!SoloCrushTimer.done && message.getString().contains("Storm's Giga Lightning hit you for ") && ChatUtils.hasFormatting(message, Formatting.GRAY, false)) {
+        if (!SoloCrushTimer.done && event.content().startsWith("Storm's Giga Lightning hit you for ") && event.isStyledWith(BasicColor.GRAY)) {
             if (SoloCrushTimer.firstLightningReceived) {
                 SoloCrushTimer.firstLightningReceived = false;
                 SoloCrushTimer.done = true;
