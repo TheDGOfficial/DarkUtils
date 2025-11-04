@@ -6,6 +6,8 @@ import gg.darkutils.events.base.EventHandler;
 import gg.darkutils.events.base.NonThreadSafeCancellationState;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.ref.WeakReference;
+
 /**
  * A basic {@link CancellationState} with a simple mutable primitive boolean field.
  * <p>
@@ -19,12 +21,16 @@ import org.jetbrains.annotations.NotNull;
  * However, this is usually fine as per the contract of {@link EventHandler#triggerEvent(Event)}, which calls
  * all listeners sequentially in the caller thread, so it won't be mutated by multiple threads in parallel.
  */
-public final class BasicNonThreadSafeCancellationState implements NonThreadSafeCancellationState {
+public final class BasicNonThreadSafeCancellationState implements NonThreadSafeCancellationState, AutoCloseable {
     /**
      * Holds the {@link ThreadLocal} of the shared {@link BasicNonThreadSafeCancellationState} instance.
      */
     @NotNull
     private static final ThreadLocal<BasicNonThreadSafeCancellationState> INSTANCE = ThreadLocal.withInitial(BasicNonThreadSafeCancellationState::new);
+    /**
+     * Holds the owner thread of this instance.
+     */
+    private @NotNull WeakReference<Thread> owner = new WeakReference<>(Thread.currentThread());
     /**
      * Keeps track of the cancellation state.
      */
@@ -51,11 +57,23 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
     }
 
     private final void ensureOwnerThreadAccess() {
-        // Cheap way to check owner thread without having to store a reference to the Thread object that created this instance
-        // Will break if creating an instance without using the ThreadLocal, but the constructor is private so this is fine.
-        if (this != BasicNonThreadSafeCancellationState.INSTANCE.get()) {
-            // Safeguards against trying to access a CancellationState that belongs to another thread.
-            throw new IllegalStateException("Cancellation state accessed from the wrong thread " + Thread.currentThread().getName());
+        final var currentThread = Thread.currentThread();
+        final var ownerThread = this.owner.get();
+
+        if (null == ownerThread) {
+            // The state has been closed (owner cleared) or the owner thread finished its work and got GCed
+            throw new IllegalStateException(
+                    "Cancellation state escaped its owner thread's lifetime! " +
+                            "It cannot be accessed from thread: " + currentThread.getName()
+            );
+        }
+
+        if (currentThread != ownerThread) {
+            // Access from a different live thread
+            throw new IllegalStateException(
+                    "Cancellation state accessed from the wrong thread " + currentThread.getName() +
+                            ". Thread " + ownerThread.getName() + " owns this state and it must only be accessed from that thread."
+            );
         }
     }
 
@@ -71,5 +89,22 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
         this.ensureOwnerThreadAccess();
 
         this.cancelled = cancelled;
+    }
+
+    @Override
+    public final void reset() {
+        this.owner = new WeakReference<>(Thread.currentThread());
+
+        NonThreadSafeCancellationState.super.reset();
+    }
+
+    @Override
+    public final void close() {
+        if (null == this.owner.get()) {
+            throw new IllegalStateException("called close() before reset() - possible double close()");
+        }
+
+        // .isCancelled() or .setCancelled() after this point will throw an error.
+        this.owner.clear();
     }
 }

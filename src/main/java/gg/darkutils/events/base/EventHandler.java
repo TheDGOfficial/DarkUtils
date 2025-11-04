@@ -74,9 +74,15 @@ public interface EventHandler<T extends Event> {
      * {@link EventListener}s from receiving the event.
      *
      * @param event The event to trigger.
-     * @return The final {@link CancellationState} of the event after going through all listeners mutations to the state. Calling
+     * @return The {@link FinalCancellationState} of the event after going through all listeners mutations to the state. Calling
      * {@link CancellationState#isCancelled()} will throw a {@link UnsupportedOperationException} if this event is not a {@link CancellableEvent}.
+     * <p>
+     * Calling {@link CancellationState#setCancelled(boolean)} on the returned {@link FinalCancellationState} will always throw
+     * {@link UnsupportedOperationException}.
+     * <p>
+     * {@link CancellationState#isCancelled()} should only be called only once and on the thread that called
+     * this method or else an {@link IllegalStateException} will be thrown.
      */
     @NotNull
-    CancellationState triggerEvent(final @NotNull T event);
+    FinalCancellationState triggerEvent(final @NotNull T event);
 }

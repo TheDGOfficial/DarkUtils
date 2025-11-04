@@ -5,7 +5,7 @@ import gg.darkutils.events.base.impl.BasicNotCancellableCancellationState;
 /**
  * Declares a {@link CancellationState}.
  */
-public sealed interface CancellationState permits NonThreadSafeCancellationState, NotCancellableCancellationState {
+public sealed interface CancellationState permits NonThreadSafeCancellationState, FinalCancellationState {
     /**
      * Returns a cached {@link CancellationState}, defaulting to not cancelled.
      * <p>
@@ -25,11 +25,11 @@ public sealed interface CancellationState permits NonThreadSafeCancellationState
     }
 
     /**
-     * Returns a {@link CancellationState} that always throws {@link UnsupportedOperationException}.
+     * Returns a {@link FinalCancellationState} that always throws {@link UnsupportedOperationException}.
      *
-     * @return A {@link CancellationState} that always throws {@link UnsupportedOperationException}.
+     * @return A {@link FinalCancellationState} that always throws {@link UnsupportedOperationException}.
      */
-    static CancellationState ofNotCancellable() {
+    static FinalCancellationState ofNotCancellable() {
         return BasicNotCancellableCancellationState.getInstance();
     }
 
@@ -62,12 +62,10 @@ public sealed interface CancellationState permits NonThreadSafeCancellationState
     }
 
     /**
-     * Resets this {@link CancellationState} by marking it as not cancelled.
-     * <p>
-     * Does the same thing as {@link CancellationState#uncancel()} but more explicit
-     * for resetting the state name-wise.
+     * Resets this {@link CancellationState} by resetting all state back to initial state, including
+     * uncancelling to mark it as not cancelled.
      */
     default void reset() {
-        this.setCancelled(false);
+        this.uncancel();
     }
 }

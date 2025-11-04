@@ -1,7 +1,6 @@
 package gg.darkutils.events.base.impl;
 
 import gg.darkutils.DarkUtils;
-import gg.darkutils.events.base.NonCancellableEvent;
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
 import gg.darkutils.events.base.DelegatingEventListener;
@@ -9,6 +8,8 @@ import gg.darkutils.events.base.Event;
 import gg.darkutils.events.base.EventHandler;
 import gg.darkutils.events.base.EventListener;
 import gg.darkutils.events.base.EventPriority;
+import gg.darkutils.events.base.FinalCancellationState;
+import gg.darkutils.events.base.NonCancellableEvent;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import org.jetbrains.annotations.NotNull;
 
@@ -93,7 +94,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
 
     @Override
     @NotNull
-    public final CancellationState triggerEvent(@NotNull final T event) {
+    public final FinalCancellationState triggerEvent(@NotNull final T event) {
         if (this.cancellableEvent) {
             return this.triggerCancellableEvent(event, ((CancellableEvent) event).cancellationState());
         }
@@ -103,15 +104,24 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     }
 
     @NotNull
-    private final CancellationState triggerCancellableEvent(@NotNull final T event, @NotNull final CancellationState cancellationState) {
-        // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
+    private final FinalCancellationState triggerCancellableEvent(@NotNull final T event, @NotNull final CancellationState cancellationState) {
+        if (cancellationState instanceof final BasicNonThreadSafeCancellationState closeableState) {
+            try (closeableState) {
+                return this.triggerCancellableEventAndObtainCancellationState(event, cancellationState);
+            }
+        }
+
+        return this.triggerCancellableEventAndObtainCancellationState(event, cancellationState);
+    }
+
+    private final BasicFinalCancellationState triggerCancellableEventAndObtainCancellationState(@NotNull final T event, @NotNull final CancellationState cancellationState) {
         final var localListeners = this.listeners.get();
+
+        // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
         for (int i = 0, len = localListeners.size(); len > i; ++i) {
             final var listener = localListeners.get(i);
 
-            final var cancelled = cancellationState.isCancelled();
-
-            if (cancelled && !listener.receiveCancelled()) {
+            if (cancellationState.isCancelled() && !listener.receiveCancelled()) {
                 continue;
             }
 
@@ -122,7 +132,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             }
         }
 
-        return cancellationState;
+        return BasicFinalCancellationState.of(cancellationState.isCancelled()); // Return a FinalCancellationState so that calling .setCancelled() would always throw, and calling isCancelled() would automatically clear reference to the owner thread which would disallow any more isCancelled() calls while also ensuring the call to isCancelled() occurs on the owner thread.
     }
 
     private final void triggerNonCancellableEvent(@NotNull final T event) {

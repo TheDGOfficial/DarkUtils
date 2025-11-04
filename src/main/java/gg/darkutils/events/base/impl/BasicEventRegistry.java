@@ -42,6 +42,12 @@ public final class BasicEventRegistry implements EventRegistry {
         return BasicEventRegistry.INSTANCE;
     }
 
+    @SuppressWarnings("unchecked")
+    @NotNull
+    private static <T extends Event> EventHandler<T> uncheckedCastToEventHandler(@NotNull final EventHandler<?> eventHandler) {
+        return (EventHandler<T>) eventHandler;
+    }
+
     @Override
     public final <T extends Event> void registerEvent(@NotNull final Class<T> event) {
         this.registerEvent(event, new BasicEventHandler<>(event));
@@ -61,7 +67,6 @@ public final class BasicEventRegistry implements EventRegistry {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     @NotNull
     public final <T extends Event> EventHandler<T> getEventHandler(@NotNull final Class<T> event) {
         final var eventHandler = this.knownEvents.get().get(event);
@@ -70,6 +75,6 @@ public final class BasicEventRegistry implements EventRegistry {
             throw new IllegalStateException("event " + event.getName() + " is not a known registered event for the requested registry, ensure its registered in the static initializer block properly in your event class!");
         }
 
-        return (EventHandler<T>) eventHandler;
+        return BasicEventRegistry.uncheckedCastToEventHandler(eventHandler);
     }
 }

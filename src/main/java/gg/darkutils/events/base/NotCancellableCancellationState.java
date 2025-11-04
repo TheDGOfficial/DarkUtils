@@ -3,7 +3,7 @@ package gg.darkutils.events.base;
 /**
  * Declares a {@link CancellationState} that always throws {@link UnsupportedOperationException} for all its operations.
  */
-public non-sealed interface NotCancellableCancellationState extends CancellationState {
+public interface NotCancellableCancellationState extends FinalCancellationState {
     /**
      * Always throws {@link UnsupportedOperationException}.
      *

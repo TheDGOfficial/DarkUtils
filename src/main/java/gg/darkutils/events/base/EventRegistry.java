@@ -20,6 +20,17 @@ public interface EventRegistry {
         return BasicEventRegistry.getInstance();
     }
 
+    @SuppressWarnings("unchecked")
+    @NotNull
+    private static <T extends Event> Class<T> uncheckedCastToEventClass(@NotNull final Class<?> clazz) {
+        return (Class<T>) clazz;
+    }
+
+    @NotNull
+    private static <T extends Event> Class<T> getEventClass(@NotNull final T event) {
+        return EventRegistry.uncheckedCastToEventClass(event.getClass());
+    }
+
     /**
      * Registers an {@link Event}.
      * <p>
@@ -74,7 +85,7 @@ public interface EventRegistry {
      * @param <T>                    The type of the event.
      */
     @SuppressWarnings("unchecked")
-    default <T extends Event> void addListener(@NotNull final EventListener<T> listener, @NotNull EventPriority priority, final boolean receiveCancelled, @Nullable final T... doNotPassThisParameter) {
+    default <T extends Event> void addListener(@NotNull final EventListener<T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled, @Nullable final T... doNotPassThisParameter) {
         this.addListener(EventListener.create(listener, priority, receiveCancelled), doNotPassThisParameter); // Passing it here is OK
     }
 
@@ -116,22 +127,21 @@ public interface EventRegistry {
             throw new IllegalStateException("failed to force initialization for event class " + eventType.getName(), error);
         }
 
-        this.getEventHandler((Class<T>) eventType).addListener(listener);
+        this.getEventHandler(EventRegistry.<T>uncheckedCastToEventClass(eventType)).addListener(listener);
     }
 
     /**
      * Triggers a {@link CancellableEvent}, which will run all its listeners in the order of {@link EventPriority}
      * and handling {@link CancellationState}, taking into account {@link EventListener#receiveCancelled()} and returning
-     * a final {@link CancellationState}.
+     * a {@link FinalCancellationState}.
      *
      * @param event The event.
      * @param <T>   The type of the event.
-     * @return The {@link CancellationState}.
+     * @return The {@link FinalCancellationState}.
      */
-    @SuppressWarnings("unchecked")
     @NotNull
-    default <T extends CancellableEvent> CancellationState triggerEvent(@NotNull final T event) {
-        return this.getEventHandler((Class<T>) event.getClass()).triggerEvent(event);
+    default <T extends CancellableEvent> FinalCancellationState triggerEvent(@NotNull final T event) {
+        return this.getEventHandler(EventRegistry.getEventClass(event)).triggerEvent(event);
     }
 
     /**
@@ -140,8 +150,7 @@ public interface EventRegistry {
      * @param event The event.
      * @param <T>   The type of the event.
      */
-    @SuppressWarnings("unchecked")
     default <T extends NonCancellableEvent> void triggerEvent(@NotNull final T event) {
-        this.getEventHandler((Class<T>) event.getClass()).triggerEvent(event);
+        this.getEventHandler(EventRegistry.getEventClass(event)).triggerEvent(event);
     }
 }
