@@ -123,22 +123,24 @@ public final class ThreadPriorityTweaker {
     }
 
     /**
-     * Checks if the tweaker is enabled or not in the config and thus tweaker should be enabled.
+     * Checks if the tweaker is enabled or not in the config.
      */
-    private static final boolean shouldEnable() {
+    private static final boolean isEnabled() {
         return DarkUtilsConfig.INSTANCE.threadPriorityTweaker;
     }
 
     public static final void init() {
-        if (ThreadPriorityTweaker.shouldEnable()) {
-            ThreadPriorityTweaker.scheduleTweakTask();
-        }
+        ThreadPriorityTweaker.scheduleTweakTask();
     }
 
     /**
      * Tweaks priorities of currently live threads. This action is done on a separate thread to not cause any lag in-game.
      */
     private static final void tweakPriorities() {
+        if (!ThreadPriorityTweaker.isEnabled()) {
+            return;
+        }
+
         for (final var thread : ThreadPriorityTweaker.getAllThreads()) {
             final var name = thread.getName();
 
