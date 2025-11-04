@@ -86,6 +86,7 @@ public final class DarkUtilsConfig {
     public boolean useVirtualThreadsForTextureDownloading;
     public boolean disableGlowing;
     public boolean soundLagFix;
+    public boolean threadPriorityTweaker;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;

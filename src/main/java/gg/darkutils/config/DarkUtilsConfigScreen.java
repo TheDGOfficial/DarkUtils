@@ -287,6 +287,10 @@ public final class DarkUtilsConfigScreen {
                 "Skips playing duplicate sounds received on the same tick from misbehaving or lagging servers from causing lag in your system, preventing the audio engine from being overloaded/sound pool getting full. Only identical sounds are prevented so you can still hear everything perfectly.",
                 config.soundLagFix, newValue -> config.soundLagFix = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Thread Priority Tweaker",
+                "Improves performance by tweaking priorities of all threads in the background regularly.",
+                config.threadPriorityTweaker, newValue -> config.threadPriorityTweaker = newValue);
+
         // === Bugfixes ===
         final var bugfixes = builder.getOrCreateCategory(Text.of("Bugfixes"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix GUI Scale After Toggling Fullscreen Off",
