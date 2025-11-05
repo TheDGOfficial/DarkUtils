@@ -42,6 +42,7 @@ public final class ThreadPriorityTweaker {
             ThreadPriorityTweaker.exactMatch("CullThread", ThreadPriorityTweaker.ThreadPriority.HIGH),
             ThreadPriorityTweaker.exactMatch("Reference Handler", ThreadPriorityTweaker.ThreadPriority.HIGH),
             ThreadPriorityTweaker.startsWith("scalablelux", ThreadPriorityTweaker.ThreadPriority.HIGH),
+            ThreadPriorityTweaker.startsWith("AsyncParticle", ThreadPriorityTweaker.ThreadPriority.HIGH),
             ThreadPriorityTweaker.exactMatch("Server thread", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
             ThreadPriorityTweaker.exactMatch("Sound engine", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
             ThreadPriorityTweaker.startsWith("Server Pinger #", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
