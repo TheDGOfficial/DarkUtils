@@ -1,5 +1,6 @@
 package gg.darkutils.utils;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
@@ -12,6 +13,8 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Predicate;
+
 public final class Helpers {
     private Helpers() {
         super();
@@ -19,38 +22,38 @@ public final class Helpers {
         throw new UnsupportedOperationException("static utility class");
     }
 
-    public static final boolean isLookingAtAButton() {
+    private static final boolean doesTargetedBlockMatch(@NotNull final Predicate<BlockState> matcher) {
         final var mc = MinecraftClient.getInstance();
         final var world = mc.world;
-        return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && world.getBlockState(blockHitResult.getBlockPos()).isIn(BlockTags.BUTTONS);
+        if (null == world || !(mc.crosshairTarget instanceof final BlockHitResult blockHitResult)) {
+            return false;
+        }
+        final var state = world.getBlockState(blockHitResult.getBlockPos());
+        return matcher.test(state);
+    }
+
+    public static final boolean isLookingAtAButton() {
+        return Helpers.doesTargetedBlockMatch(state -> state.isIn(BlockTags.BUTTONS));
     }
 
     public static final boolean isLookingAtALever() {
-        final var mc = MinecraftClient.getInstance();
-        final var world = mc.world;
-        return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.LEVER);
+        return Helpers.doesTargetedBlockMatch(state -> state.isOf(Blocks.LEVER));
     }
 
     public static final boolean isLookingAtACraftingTable() {
-        final var mc = MinecraftClient.getInstance();
-        final var world = mc.world;
-        return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.CRAFTING_TABLE);
+        return Helpers.doesTargetedBlockMatch(state -> state.isOf(Blocks.CRAFTING_TABLE));
     }
 
     public static final boolean isLookingAtAMushroom() {
-        final var mc = MinecraftClient.getInstance();
-        final var world = mc.world;
-        if (null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult) {
-            final var state = mc.world.getBlockState(blockHitResult.getBlockPos());
-            return state.isOf(Blocks.RED_MUSHROOM) || state.isOf(Blocks.BROWN_MUSHROOM);
-        }
-        return false;
+        return Helpers.doesTargetedBlockMatch(state -> state.isOf(Blocks.RED_MUSHROOM) || state.isOf(Blocks.BROWN_MUSHROOM));
     }
 
     public static final boolean isLookingAtARedstoneBlock() {
-        final var mc = MinecraftClient.getInstance();
-        final var world = mc.world;
-        return null != world && mc.crosshairTarget instanceof final BlockHitResult blockHitResult && mc.world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.REDSTONE_BLOCK);
+        return Helpers.doesTargetedBlockMatch(state -> state.isOf(Blocks.REDSTONE_BLOCK));
+    }
+
+    public static final boolean isLookingAtACommandBlock() {
+        return Helpers.doesTargetedBlockMatch(state -> state.isOf(Blocks.COMMAND_BLOCK));
     }
 
     @NotNull
@@ -59,18 +62,27 @@ public final class Helpers {
         return null == player ? ItemStack.EMPTY : player.getStackInHand(Hand.MAIN_HAND);
     }
 
-    public static final boolean isHoldingASword() {
-        return Helpers.getItemStackInHand()
-                .isIn(ItemTags.SWORDS);
+    private static final boolean doesHeldItemMatch(@NotNull final Predicate<ItemStack> matcher) {
+        final var stack = Helpers.getItemStackInHand();
+        return matcher.test(stack);
     }
 
-    public static final boolean isHoldingRCMWeapon() {
-        final var customName = Helpers.getItemStackInHand().getCustomName();
-        if (null != customName) {
-            final var plain = customName.getString();
-            return plain.contains("Hyperion") || plain.contains("Astraea");
+    private static final boolean doesHeldItemNameMatch(@NotNull final Predicate<String> matcher) {
+        final var stack = Helpers.getItemStackInHand();
+        final var customName = stack.getCustomName();
+        if (null == customName) {
+            return false;
         }
-        return false;
+        final var plain = customName.getString();
+        return matcher.test(plain);
+    }
+
+    public static final boolean isHoldingASword() {
+        return Helpers.doesHeldItemMatch(stack -> stack.isIn(ItemTags.SWORDS));
+    }
+
+    public static final boolean isHoldingARCMWeapon() {
+        return Helpers.doesHeldItemNameMatch(name -> name.contains("Hyperion") || name.contains("Astraea"));
     }
 
     public static final void displayCountdownTitles(@NotNull final String color, @NotNull final String finalText, final int seconds) {

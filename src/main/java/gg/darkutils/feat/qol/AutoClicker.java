@@ -66,17 +66,17 @@ public final class AutoClicker {
         }
 
         private final boolean isPressed(final boolean actual) {
-            return (AutoClicker.Key.RIGHT == this ? !Helpers.isHoldingRCMWeapon() : !Helpers.isHoldingASword()) && actual;
+            return (AutoClicker.Key.RIGHT == this ? !Helpers.isHoldingARCMWeapon() : !Helpers.isHoldingASword()) && actual;
         }
 
         private final boolean wasPressed(final boolean actual) {
             final var right = AutoClicker.Key.RIGHT == this;
-            if (!actual && this.state && (right ? Helpers.isHoldingRCMWeapon() : Helpers.isHoldingASword())) {
+            if (!actual && this.state && (right ? Helpers.isHoldingARCMWeapon() : Helpers.isHoldingASword())) {
                 final var held = this.keyBinding.isPressed();
 
                 if (held) {
                     this.state = false;
-                    return !right || !Helpers.isLookingAtAButton() && (DarkUtilsConfig.INSTANCE.autoClickerWorkInLevers || !Helpers.isLookingAtALever());
+                    return !right || !Helpers.isLookingAtAButton() && (DarkUtilsConfig.INSTANCE.autoClickerWorkInLevers || !Helpers.isLookingAtALever()) && !Helpers.isLookingAtACommandBlock();
                 }
             }
             return actual;
