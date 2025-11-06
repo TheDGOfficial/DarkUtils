@@ -11,12 +11,9 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Random;
-
 public final class ArmorStandOptimizer {
     private static final @NotNull ReferenceOpenHashSet<ArmorStandEntity> armorStandRenderSet = new ReferenceOpenHashSet<>(64);
     private static final @NotNull ReferenceArrayList<ArmorStandEntity> reusableStands = new ReferenceArrayList<>(512);
-    private static final @NotNull Random RANDOM = new Random();
 
     private ArmorStandOptimizer() {
         super();
@@ -100,8 +97,8 @@ public final class ArmorStandOptimizer {
     }
 
     private static final int partition(@NotNull final ReferenceArrayList<ArmorStandEntity> list, final int left, final int right, @NotNull final ClientPlayerEntity player) {
-        // Random pivot to avoid worst-case
-        final var pivotIdx = ArmorStandOptimizer.RANDOM.nextInt(left, right + 1);
+        // Deterministic pivot: middle element
+        final var pivotIdx = (left + right) >>> 1;
         final var pivot = list.get(pivotIdx);
         list.set(pivotIdx, list.get(right));
         list.set(right, pivot);
