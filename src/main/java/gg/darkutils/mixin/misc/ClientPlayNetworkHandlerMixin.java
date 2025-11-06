@@ -7,7 +7,11 @@ import gg.darkutils.events.SentMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.network.ClientConnectionState;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.network.ClientCommonNetworkHandler;
+import net.minecraft.network.ClientConnection;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
 import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket;
 import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket;
@@ -21,9 +25,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientPlayNetworkHandler.class)
-final class ClientPlayNetworkHandlerMixin {
-    private ClientPlayNetworkHandlerMixin() {
-        super();
+abstract class ClientPlayNetworkHandlerMixin extends ClientCommonNetworkHandler {
+    private ClientPlayNetworkHandlerMixin(@NotNull final MinecraftClient client, @NotNull final ClientConnection clientConnection, @NotNull final ClientConnectionState clientConnectionState) {
+        super(client, clientConnection, clientConnectionState);
 
         throw new UnsupportedOperationException("mixin class");
     }
@@ -45,14 +49,11 @@ final class ClientPlayNetworkHandlerMixin {
     )
     private final void darkutils$cancelOpenScreenIfEnabled(@NotNull final OpenScreenS2CPacket packet, @NotNull final CallbackInfo ci) {
         if (EventRegistry.centralRegistry().triggerEvent(new OpenScreenEvent(packet.getScreenHandlerType(), packet.getName())).isCancelled()) {
-            final var client = MinecraftClient.getInstance();
-            if (null != client && null != client.getNetworkHandler()) {
-                // syncId from the OpenScreenS2CPacket tells server which container to close
-                client.getNetworkHandler().sendPacket(new CloseHandledScreenC2SPacket(packet.getSyncId()));
+            // syncId from the OpenScreenS2CPacket tells server which container to close
+            this.sendPacket(new CloseHandledScreenC2SPacket(packet.getSyncId()));
 
-                // stop vanilla from opening the screen
-                ci.cancel();
-            }
+            // stop vanilla from opening the screen
+            ci.cancel();
         }
     }
 
