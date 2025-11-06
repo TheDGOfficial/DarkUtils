@@ -88,6 +88,7 @@ public final class DarkUtilsConfig {
     public boolean disableGlowing;
     public boolean soundLagFix;
     public boolean threadPriorityTweaker;
+    public boolean disableSignatureVerification;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;

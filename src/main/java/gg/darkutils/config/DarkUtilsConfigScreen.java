@@ -295,6 +295,10 @@ public final class DarkUtilsConfigScreen {
                 "Improves performance by tweaking priorities of all threads in the background regularly.",
                 config.threadPriorityTweaker, newValue -> config.threadPriorityTweaker = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable Signature Verification",
+                "Completely disables signature verification. This might fix some texture errors and will improve performance by skipping RSA encryption validation. This is safe if you trust the server you join to not send unverified textures.",
+                config.disableSignatureVerification, newValue -> config.disableSignatureVerification = newValue);
+
         // === Bugfixes ===
         final var bugfixes = builder.getOrCreateCategory(Text.of("Bugfixes"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix GUI Scale After Toggling Fullscreen Off",

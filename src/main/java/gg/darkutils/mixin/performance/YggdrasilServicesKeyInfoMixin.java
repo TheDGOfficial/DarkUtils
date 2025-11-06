@@ -1,5 +1,6 @@
 package gg.darkutils.mixin.performance;
 
+import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.YggdrasilServicesKeyInfo;
 import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.client.MinecraftClient;
@@ -8,7 +9,9 @@ import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +29,19 @@ final class YggdrasilServicesKeyInfoMixin {
         super();
 
         throw new UnsupportedOperationException("mixin class");
+    }
+
+    /**
+     * If enabled, completely disables signature validation.
+     * <p>
+     * This avoids RSA verification methods from being called, improving performance.
+     * Might also make unverified textures show, but that's not our concern if the user choose to enable, its their concern.
+     */
+    @Inject(method = "validateProperty", at = @At("HEAD"), cancellable = true)
+    private final void darkutils$preventSignatureVerificationIfEnabled(@NotNull final Property property, @NotNull final CallbackInfoReturnable<Boolean> cir) {
+        if (DarkUtilsConfig.INSTANCE.disableSignatureVerification) {
+            cir.setReturnValue(true);
+        }
     }
 
     /**
