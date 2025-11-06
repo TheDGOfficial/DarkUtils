@@ -34,11 +34,12 @@ public final class ThreadPriorityTweaker {
      * Holds all tweaks.
      */
     private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> tweaks = Set.of(
-            ThreadPriorityTweaker.exactMatch("Render thread", ThreadPriorityTweaker.ThreadPriority.CRITICAL),
-            ThreadPriorityTweaker.startsWith("Chunk Render ", ThreadPriorityTweaker.ThreadPriority.HIGHEST),
-            ThreadPriorityTweaker.startsWith("c2me", ThreadPriorityTweaker.ThreadPriority.HIGHEST),
-            ThreadPriorityTweaker.startsWith("Netty ", ThreadPriorityTweaker.ThreadPriority.VERY_HIGH),
-            ThreadPriorityTweaker.startsWith("Ixeris ", ThreadPriorityTweaker.ThreadPriority.VERY_HIGH),
+            // Keep important I/O at the top to not cause unexpected latency increase after turning on the tweaker.
+            ThreadPriorityTweaker.startsWith("Netty ", ThreadPriorityTweaker.ThreadPriority.CRITICAL),
+            ThreadPriorityTweaker.startsWith("Ixeris ", ThreadPriorityTweaker.ThreadPriority.CRITICAL),
+            ThreadPriorityTweaker.exactMatch("Render thread", ThreadPriorityTweaker.ThreadPriority.HIGHEST),
+            ThreadPriorityTweaker.startsWith("Chunk Render ", ThreadPriorityTweaker.ThreadPriority.VERY_HIGH),
+            ThreadPriorityTweaker.startsWith("c2me", ThreadPriorityTweaker.ThreadPriority.VERY_HIGH),
             ThreadPriorityTweaker.exactMatch("CullThread", ThreadPriorityTweaker.ThreadPriority.HIGH),
             ThreadPriorityTweaker.exactMatch("Reference Handler", ThreadPriorityTweaker.ThreadPriority.HIGH),
             ThreadPriorityTweaker.startsWith("scalablelux", ThreadPriorityTweaker.ThreadPriority.HIGH),
