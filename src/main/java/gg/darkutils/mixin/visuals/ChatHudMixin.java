@@ -25,7 +25,7 @@ final class ChatHudMixin {
             ),
             slice = @Slice(
                     from = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/hud/ChatHud;scrolledLines:I")
-                    // no 'to' → slice extends to end of method
+                    // no "to" means slice extends to end of method
             )
     )
     private final void darkutils$removeChatScrollbarIfEnabled(@NotNull final DrawContext context, final int x1, final int y1, final int x2, final int y2, final int color) {

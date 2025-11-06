@@ -73,7 +73,7 @@ public final class TreeGiftsPerHour {
             return;
         }
 
-        // ⏱️ Skip if last gift was more than 1 minute ago
+        // Skip if last gift was more than 1 minute ago
         if (0L != TreeGiftsPerHour.lastGiftTime) {
             final var now = System.nanoTime();
             final var oneMinuteNanos = TimeUnit.MINUTES.toNanos(1L);

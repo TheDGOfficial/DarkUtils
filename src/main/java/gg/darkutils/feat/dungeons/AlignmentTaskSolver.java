@@ -370,8 +370,6 @@ public final class AlignmentTaskSolver {
         }
     }
 
-    /* ----------------- Helper methods replacing Kotlin stdlib ----------------- */
-
     private static final List<AlignmentTaskSolver.GridMove> convertPointMapToMoves(final List<AlignmentTaskSolver.Point> solution) {
         if (solution.isEmpty()) {
             return Collections.emptyList();

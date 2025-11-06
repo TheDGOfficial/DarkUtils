@@ -134,7 +134,7 @@ public final class RenderUtils {
 
         final var buffer = consumers.getBuffer(RenderUtils.BOX_OUTLINE_LAYER);
 
-        // Convert Formatting → RGBA floats
+        // Convert Formatting to RGBA floats
         final var rgb = RenderUtils.convertFormattingToRGBA(color);
 
         // Translate block position relative to camera

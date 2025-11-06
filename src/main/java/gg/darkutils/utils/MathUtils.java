@@ -13,6 +13,7 @@ public final class MathUtils {
 
     private MathUtils() {
         super();
+
         throw new UnsupportedOperationException("static utility class");
     }
 
