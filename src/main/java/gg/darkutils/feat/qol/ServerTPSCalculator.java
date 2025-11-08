@@ -4,6 +4,8 @@ import gg.darkutils.events.ServerTickEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,7 +57,7 @@ public final class ServerTPSCalculator {
     }
 
     public static final void init() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, world) -> ServerTPSCalculator.onWorldUnload());
+        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(ServerTPSCalculator::onWorldUnload);
         EventRegistry.centralRegistry().addListener(ServerTPSCalculator::onServerTick);
     }
 
@@ -67,7 +69,7 @@ public final class ServerTPSCalculator {
         return ServerTPSCalculator.initialized.get() ? ServerTPSCalculator.lastTPS.get() : -1;
     }
 
-    private static final void onWorldUnload() {
+    private static final void onWorldUnload(@NotNull final MinecraftClient client, @NotNull ClientWorld world) {
         if (ServerTPSCalculator.shouldCalculate()) {
             ServerTPSCalculator.initialized.getAndSet(false);
             ServerTPSCalculator.lastTPS.getAndSet(0);

@@ -6,6 +6,8 @@ import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.chat.BasicColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 
 public final class SoloCrushTimer {
@@ -20,11 +22,12 @@ public final class SoloCrushTimer {
 
     public static final void init() {
         EventRegistry.centralRegistry().addListener(SoloCrushTimer::onChat);
+        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(SoloCrushTimer::reset);
+    }
 
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, world) -> {
-            SoloCrushTimer.firstLightningReceived = false;
-            SoloCrushTimer.done = false;
-        });
+    private static final void reset(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
+        SoloCrushTimer.firstLightningReceived = false;
+        SoloCrushTimer.done = false;
     }
 
     private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {

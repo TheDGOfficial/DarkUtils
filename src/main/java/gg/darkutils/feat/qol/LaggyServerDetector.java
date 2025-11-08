@@ -6,7 +6,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -22,22 +21,24 @@ public final class LaggyServerDetector {
     }
 
     public static final void init() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, world) -> LaggyServerDetector.onWorldChange(world));
+        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(LaggyServerDetector::onWorldChange);
     }
 
     private static final boolean isEnabled() {
         return DarkUtilsConfig.INSTANCE.laggyServerDetector;
     }
 
-    private static final void onWorldChange(@Nullable final ClientWorld world) {
-        if (!LaggyServerDetector.isEnabled() || null == world/* || world.isClient*/) {
+    private static final void onWorldChange(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
+        if (!LaggyServerDetector.isEnabled() || MinecraftClient.getInstance().isConnectedToLocalServer()) {
             return;
         }
 
         Arrays.fill(LaggyServerDetector.TPS_SAMPLES, 0);
         LaggyServerDetector.currentIndex = 0;
 
-        ServerTPSCalculator.startCalculatingTPS(LaggyServerDetector::onTPSUpdate);
+        if (null != MinecraftClient.getInstance().getCurrentServerEntry()) {
+            ServerTPSCalculator.startCalculatingTPS(LaggyServerDetector::onTPSUpdate);
+        }
     }
 
     private static final @NotNull LaggyServerDetector.TPSCommentAndColor getTpsStatus(final double tps) {

@@ -11,6 +11,8 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.projectile.FishingBobberEntity;
 import net.minecraft.item.Items;
@@ -39,23 +41,31 @@ public final class AutoFishingRod {
     }
 
     public static final void init() {
-        // Run tick method every client tick
+        // Runs tick method every client tick
         ClientTickEvents.END_CLIENT_TICK.register(AutoFishingRod::tick);
 
-        // Reset cached armor stand + state when world changes
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, world) -> AutoFishingRod.resetState());
+        // Resets cached armor stand + state when world changes
+        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(AutoFishingRod::onWorldChange);
 
-        // Reset state when a new bobber owned by us spawns
-        ClientEntityEvents.ENTITY_LOAD.register((entity, world) -> {
-            if (!DarkUtilsConfig.INSTANCE.autoFishing) {
-                return;
-            }
-            final var client = MinecraftClient.getInstance();
-            final var player = client.player;
-            if (null != player && entity instanceof final FishingBobberEntity bobber && bobber.getOwner() == player) {
-                AutoFishingRod.resetState();
-            }
-        });
+        // Resets state when a new bobber owned by us spawns
+        ClientEntityEvents.ENTITY_LOAD.register(AutoFishingRod::onEntityJoinWorld);
+    }
+
+    private static final void onWorldChange(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
+        AutoFishingRod.resetState();
+    }
+
+    private static final void onEntityJoinWorld(@NotNull final Entity entity, @NotNull final ClientWorld world) {
+        if (!DarkUtilsConfig.INSTANCE.autoFishing) {
+            return;
+        }
+
+        final var client = MinecraftClient.getInstance();
+        final var player = client.player;
+
+        if (null != player && entity instanceof final FishingBobberEntity bobber && bobber.getOwner() == player) {
+            AutoFishingRod.resetState();
+        }
     }
 
     private static final boolean isCountdownArmorStand(@Nullable final Text customName) {

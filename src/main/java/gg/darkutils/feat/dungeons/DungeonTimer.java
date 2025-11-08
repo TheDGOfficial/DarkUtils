@@ -4,6 +4,8 @@ import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.chat.BasicColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -51,14 +53,14 @@ public final class DungeonTimer {
 
     public static final void init() {
         EventRegistry.centralRegistry().addListener(DungeonTimer::onChat);
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, world) -> DungeonTimer.reset());
+        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(DungeonTimer::reset);
     }
 
     private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
         event.match(DungeonTimer.MESSAGE_HANDLERS);
     }
 
-    private static final void reset() {
+    private static final void reset(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
         DungeonTimer.bossEntryTime = 0L;
         DungeonTimer.phase2ClearTime = 0L;
         DungeonTimer.phase4ClearTime = 0L;

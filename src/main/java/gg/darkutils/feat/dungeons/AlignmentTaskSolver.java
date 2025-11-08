@@ -15,6 +15,7 @@ import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.item.Items;
@@ -221,14 +222,14 @@ public final class AlignmentTaskSolver {
     }
 
     public static final void init() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, world) -> AlignmentTaskSolver.onWorldUnload());
+        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(AlignmentTaskSolver::onWorldUnload);
 
         EventRegistry.centralRegistry().addListener(AlignmentTaskSolver::onRenderWorld);
         EventRegistry.centralRegistry().addListener(AlignmentTaskSolver::onInteractEntity);
         EventRegistry.centralRegistry().addListener(AlignmentTaskSolver::onPacketReceive);
     }
 
-    private static final void onWorldUnload() {
+    private static final void onWorldUnload(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
         AlignmentTaskSolver.grid.clear();
         AlignmentTaskSolver.directionSet.clear();
         AlignmentTaskSolver.pendingClicks.clear();
