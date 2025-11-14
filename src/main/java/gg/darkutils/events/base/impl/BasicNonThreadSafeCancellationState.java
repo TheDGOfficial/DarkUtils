@@ -28,9 +28,16 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
     @NotNull
     private static final ThreadLocal<BasicNonThreadSafeCancellationState> INSTANCE = ThreadLocal.withInitial(BasicNonThreadSafeCancellationState::new);
     /**
-     * Holds the owner thread of this instance.
+     * Holds the owner thread id of this instance.
      */
-    private @NotNull WeakReference<Thread> owner = new WeakReference<>(Thread.currentThread());
+    private long ownerId = Thread.currentThread().threadId();
+    /**
+     * Holds the owner thread name of this instance.
+     * <p>
+     * Used only for aiding in debugging for example in error messages.
+     */
+    @NotNull
+    private String ownerName = Thread.currentThread().getName();
     /**
      * Keeps track of the cancellation state.
      */
@@ -57,22 +64,24 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
     }
 
     private final void ensureOwnerThreadAccess() {
-        final var currentThread = Thread.currentThread();
-        final var ownerThread = this.owner.get();
+        final var ownerThreadId = this.ownerId;
 
-        if (null == ownerThread) {
+        if (-1L == ownerThreadId) {
             // The state has been closed (owner cleared) or the owner thread finished its work and got GCed
             throw new IllegalStateException(
                     "Cancellation state escaped its owner thread's lifetime! " +
-                            "It cannot be accessed from thread: " + currentThread.getName()
+                            "It cannot be accessed from thread: " + Thread.currentThread().getName()
             );
         }
 
-        if (currentThread != ownerThread) {
+        final var currentThread = Thread.currentThread();
+        final var currentThreadId = currentThread.threadId();
+
+        if (currentThreadId != ownerThreadId) {
             // Access from a different live thread
             throw new IllegalStateException(
                     "Cancellation state accessed from the wrong thread " + currentThread.getName() +
-                            ". Thread " + ownerThread.getName() + " owns this state and it must only be accessed from that thread."
+                            ". Thread " + this.ownerName + " owns this state and it must only be accessed from that thread."
             );
         }
     }
@@ -93,18 +102,21 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
 
     @Override
     public final void reset() {
-        this.owner = new WeakReference<>(Thread.currentThread());
+        final var currentThread = Thread.currentThread();
+
+        this.ownerId = currentThread.threadId();
+        this.ownerName = currentThread.getName();
 
         NonThreadSafeCancellationState.super.reset();
     }
 
     @Override
     public final void close() {
-        if (null == this.owner.get()) {
+        if (-1L == this.ownerId) {
             throw new IllegalStateException("called close() before reset() - possible double close()");
         }
 
         // .isCancelled() or .setCancelled() after this point will throw an error.
-        this.owner.clear();
+        this.ownerId = -1L;
     }
 }

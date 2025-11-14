@@ -132,7 +132,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             }
         }
 
-        return BasicFinalCancellationState.of(cancellationState.isCancelled()); // Return a FinalCancellationState so that calling .setCancelled() would always throw, and calling isCancelled() would automatically clear reference to the owner thread which would disallow any more isCancelled() calls while also ensuring the call to isCancelled() occurs on the owner thread.
+        return BasicFinalCancellationState.ofCached(cancellationState.isCancelled()); // Return a FinalCancellationState so that calling .setCancelled() would always throw, and calling isCancelled() would automatically clear reference to the owner thread which would disallow any more isCancelled() calls while also ensuring the call to isCancelled() occurs on the owner thread.
     }
 
     private final void triggerNonCancellableEvent(@NotNull final T event) {
