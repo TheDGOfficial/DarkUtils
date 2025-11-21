@@ -299,6 +299,10 @@ public final class DarkUtilsConfigScreen {
                 "Completely disables signature verification. This might fix some texture errors and will improve performance by skipping RSA encryption validation. This is safe if you trust the server you join to not send unverified textures.",
                 config.disableSignatureVerification, newValue -> config.disableSignatureVerification = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Block Entity Unload Lag Fix",
+                "Fixes a bug in Minecraft's bug tracker causing lag when unloading a large amount of block entities.",
+                config.blockEntityUnloadLagFix, newValue -> config.blockEntityUnloadLagFix = newValue);
+
         // === Bugfixes ===
         final var bugfixes = builder.getOrCreateCategory(Text.of("Bugfixes"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix GUI Scale After Toggling Fullscreen Off",
@@ -308,6 +312,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix Inactivity FPS Limiter",
                 "Fixes inactivity FPS limiter defaulting to 10 FPS limit before the first input is received.",
                 config.fixInactivityFpsLimiter, newValue -> config.fixInactivityFpsLimiter = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Item Frame Sound Fix",
+                "Fixes a bug in Minecraft's bug tracker causing item frames to play a sound when they should not in some cases.",
+                config.itemFrameSoundFix, newValue -> config.itemFrameSoundFix = newValue);
 
         // === Development ===
         final var development = builder.getOrCreateCategory(Text.of("Development"));

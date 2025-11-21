@@ -89,10 +89,12 @@ public final class DarkUtilsConfig {
     public boolean soundLagFix;
     public boolean threadPriorityTweaker;
     public boolean disableSignatureVerification;
+    public boolean blockEntityUnloadLagFix;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;
     public boolean fixInactivityFpsLimiter;
+    public boolean itemFrameSoundFix;
 
     // === Development ===
     @NotNull
