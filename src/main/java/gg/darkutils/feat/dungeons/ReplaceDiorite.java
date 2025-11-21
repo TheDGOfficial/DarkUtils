@@ -3,7 +3,7 @@ package gg.darkutils.feat.dungeons;
 import gg.darkutils.config.DarkUtilsConfig;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -30,7 +30,7 @@ public final class ReplaceDiorite {
      * 4 chunks total.
      */
     @NotNull
-    private static final Long2ObjectOpenHashMap<ObjectOpenHashSet<BlockPos>> chunkToPositions =
+    private static final Long2ObjectOpenHashMap<List<BlockPos>> chunkToPositions =
             new Long2ObjectOpenHashMap<>(4);
 
     private static final BlockState[] getGlassStates() {
@@ -69,13 +69,21 @@ public final class ReplaceDiorite {
     }
 
     public static final void init() {
+        ReplaceDiorite.addPillars();
+
+        // register tick callback
+        ClientTickEvents.END_CLIENT_TICK.register(ReplaceDiorite::onTick);
+    }
+
+    private static final void addPillars() {
         ReplaceDiorite.addPillar(new BlockPos(46, 169, 41), 5);
         ReplaceDiorite.addPillar(new BlockPos(46, 169, 65), 4);
         ReplaceDiorite.addPillar(new BlockPos(100, 169, 65), 10);
         ReplaceDiorite.addPillar(new BlockPos(100, 169, 41), 14);
 
-        // register tick callback
-        ClientTickEvents.END_CLIENT_TICK.register(ReplaceDiorite::onTick);
+        for (final var entry : ReplaceDiorite.chunkToPositions.long2ObjectEntrySet()) {
+            entry.setValue(List.copyOf(entry.getValue()));
+        }
     }
 
     private static final void addPillar(@NotNull final BlockPos origin, final int color) {
@@ -90,7 +98,7 @@ public final class ReplaceDiorite {
                     ReplaceDiorite.posToColor.put(pos, color);
 
                     final var key = (long) (x >> 4) << 32 | (long) z >> 4 & 0xFFFF_FFFFL;
-                    ReplaceDiorite.chunkToPositions.computeIfAbsent(key, l -> new ObjectOpenHashSet<>(1_862)).add(pos);
+                    ReplaceDiorite.chunkToPositions.computeIfAbsent(key, l -> new ObjectArrayList<>(1_862)).add(pos);
                 }
             }
         }
@@ -120,8 +128,13 @@ public final class ReplaceDiorite {
                 continue; // skip unloaded
             }
 
-            // forEach avoids allocating a temporary Iterator object. The lambda call is a trivial inline for JIT to turn into invokespecial, while the Iterator always stays invokevirtual and the allocation of the Iterator object itself can't easily be optimized out due to it having a state.
-            entry.getValue().forEach(pos -> ReplaceDiorite.setGlassIfDiorite(world, chunk, pos));
+            final var positions = entry.getValue();
+
+            for (int i = 0, len = positions.size(); i < len; ++i) {
+                final var pos = positions.get(i);
+
+                ReplaceDiorite.setGlassIfDiorite(world, chunk, pos);
+            }
         }
     }
 
