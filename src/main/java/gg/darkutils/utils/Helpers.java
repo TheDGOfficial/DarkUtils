@@ -3,6 +3,8 @@ package gg.darkutils.utils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.ItemTags;
@@ -11,6 +13,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.EntityHitResult;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
@@ -52,7 +55,32 @@ public final class Helpers {
         return Helpers.doesTargetedBlockMatch(state -> state.isOf(Blocks.REDSTONE_BLOCK));
     }
 
-    public static final boolean isLookingAtACommandBlock() {
+    private static final boolean doesTargetedEntityMatch(@NotNull final Predicate<Entity> matcher) {
+        final var mc = MinecraftClient.getInstance();
+        final var world = mc.world;
+        if (null == world || !(mc.crosshairTarget instanceof final EntityHitResult entityHitResult)) {
+            return false;
+        }
+        final var entity = entityHitResult.getEntity();
+        return matcher.test(entity);
+    }
+
+    public static final boolean isLookingAtATerminal() {
+        return Helpers.isLookingAtACommandBlock() || Helpers.doesTargetedEntityMatch(entity -> {
+            if (entity instanceof ArmorStandEntity) {
+                final var customName = entity.getCustomName();
+                if (null != customName) {
+                    final var name = customName.getString();
+                    if ("Inactive Terminal".equals(name) || "CLICK HERE".equals(name)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        });
+    }
+
+    private static final boolean isLookingAtACommandBlock() {
         return Helpers.doesTargetedBlockMatch(state -> state.isOf(Blocks.COMMAND_BLOCK));
     }
 

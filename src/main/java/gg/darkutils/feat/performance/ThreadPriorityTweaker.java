@@ -79,12 +79,6 @@ public final class ThreadPriorityTweaker {
             .filter(tweak -> ThreadPriorityTweaker.NameMatcherMode.EXACT != tweak.nameMatcherMode())
             .collect(Collectors.toUnmodifiableSet());
 
-    /**
-     * Holds the scheduled tweak priorities task.
-     */
-    @Nullable
-    private static ScheduledFuture<?> scheduledTweakPrioritiesTask;
-
     private ThreadPriorityTweaker() {
         super();
 
@@ -105,23 +99,9 @@ public final class ThreadPriorityTweaker {
      * Tweaks the priority of all currently live threads and registers a
      * task that runs every minute to periodically do this operation again,
      * in case new threads are spawned.
-     * <p>
-     * This method automatically cancels the previous scheduled task if it
-     * is not already cancelled.
      */
     private static final void scheduleTweakTask() {
-        ThreadPriorityTweaker.cancelTweakTask();
-        ThreadPriorityTweaker.scheduledTweakPrioritiesTask = ThreadPriorityTweaker.threadPriorityTweakerScheduler.scheduleWithFixedDelay(ThreadPriorityTweaker::tweakPriorities, 0L, 60L, TimeUnit.SECONDS);
-    }
-
-    /**
-     * Cancels the periodic thread priority tweaking task so that it will not run again, unless you call the {@link ThreadPriorityTweaker#scheduleTweakTask()} method again.
-     */
-    private static final void cancelTweakTask() {
-        if (null != ThreadPriorityTweaker.scheduledTweakPrioritiesTask) {
-            ThreadPriorityTweaker.scheduledTweakPrioritiesTask.cancel(false);
-            ThreadPriorityTweaker.scheduledTweakPrioritiesTask = null;
-        }
+        ThreadPriorityTweaker.threadPriorityTweakerScheduler.scheduleWithFixedDelay(ThreadPriorityTweaker::tweakPriorities, 0L, 60L, TimeUnit.SECONDS);
     }
 
     /**

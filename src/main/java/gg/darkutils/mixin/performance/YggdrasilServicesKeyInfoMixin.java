@@ -22,7 +22,7 @@ final class YggdrasilServicesKeyInfoMixin {
      * Tracks servers we've already warned about.
      */
     @Unique
-    private static final @NotNull Set<String> warnedServers =
+    private static final @NotNull Set<String> darkutils$warnedServers =
             ConcurrentHashMap.newKeySet(1);
 
     private YggdrasilServicesKeyInfoMixin() {
@@ -63,7 +63,7 @@ final class YggdrasilServicesKeyInfoMixin {
             logger.error(format, arg, arg2);
 
             // Reset state if feature is turned off
-            YggdrasilServicesKeyInfoMixin.warnedServers.clear();
+            YggdrasilServicesKeyInfoMixin.darkutils$warnedServers.clear();
 
             return;
         }
@@ -82,7 +82,7 @@ final class YggdrasilServicesKeyInfoMixin {
         final var serverIP = serverData.address;
 
         // Only log once per server
-        if (YggdrasilServicesKeyInfoMixin.warnedServers.add(serverIP)) {
+        if (YggdrasilServicesKeyInfoMixin.darkutils$warnedServers.add(serverIP)) {
             logger.error("Signature error on server {}: {}: {} - repeating signature errors for this server in this game session will not be logged anymore.", serverIP, formatted, arg2 instanceof final Throwable t ? t.getMessage() : "");
         }
     }

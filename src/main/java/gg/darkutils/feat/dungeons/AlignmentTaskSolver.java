@@ -41,7 +41,7 @@ public final class AlignmentTaskSolver {
     private static final @NotNull Object2IntOpenHashMap<BlockPos> clicks = new Object2IntOpenHashMap<>();
     private static final @NotNull Object2IntOpenHashMap<BlockPos> pendingClicks = new Object2IntOpenHashMap<>();
 
-    private static final @NotNull Direction @NotNull [] directions = AlignmentTaskSolver.getDirections().toArray(new Direction[0]);
+    private static final @NotNull List<@NotNull Direction> directions = List.copyOf(AlignmentTaskSolver.getDirections());
 
     static {
         // Sort the box

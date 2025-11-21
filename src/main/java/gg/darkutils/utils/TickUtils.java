@@ -40,6 +40,23 @@ public final class TickUtils {
     // ============================================================
 
     /**
+     * Awaits a negated condition then runs an action. The condition is polled every tick.
+     * If the negated condition is initially true, the action is run instantly.
+     * <p>
+     * This is a convenience shortcut method to allow using method references, for example:
+     * {@snippet :
+     * TickUtils.awaitNegatedCondition(LocationUtils::isInDungeons, () -> {});
+     * }
+     * would run when isInDungeons returns false rather than true, e.g., when leaving dungeons.
+     *
+     * @param condition The condition before negating.
+     * @param action    The action.
+     */
+    public static final void awaitNegatedCondition(@NotNull final BooleanSupplier condition, @NotNull final Runnable action) {
+        TickUtils.awaitCondition(() -> !condition.getAsBoolean(), action);
+    }
+
+    /**
      * Awaits a condition then runs an action. The condition is polled every tick.
      * If the condition is initially true, the action is run instantly.
      *

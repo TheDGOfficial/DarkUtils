@@ -1,6 +1,7 @@
 package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.utils.LocationUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
@@ -29,7 +30,7 @@ public final class LaggyServerDetector {
     }
 
     private static final void onWorldChange(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
-        if (!LaggyServerDetector.isEnabled() || MinecraftClient.getInstance().isConnectedToLocalServer()) {
+        if (!LaggyServerDetector.isEnabled() || LocationUtils.isInSingleplayer()) {
             return;
         }
 

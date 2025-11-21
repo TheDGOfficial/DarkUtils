@@ -15,8 +15,11 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 public final class ReplaceDiorite {
-    private static final BlockState @NotNull [] glassStates = new BlockState[16];
+    @NotNull
+    private static final List<@NotNull BlockState> glassStates = List.of(ReplaceDiorite.getGlassStates());
     /**
      * 7448 total block positions.
      */
@@ -30,7 +33,9 @@ public final class ReplaceDiorite {
     private static final Long2ObjectOpenHashMap<ObjectOpenHashSet<BlockPos>> chunkToPositions =
             new Long2ObjectOpenHashMap<>(4);
 
-    static {
+    private static final BlockState[] getGlassStates() {
+        final var glassStates = new BlockState[16];
+
         for (final var color : DyeColor.values()) {
             final var state = (switch (color) {
                 case WHITE -> Blocks.WHITE_STAINED_GLASS;
@@ -51,8 +56,10 @@ public final class ReplaceDiorite {
                 case BLACK -> Blocks.BLACK_STAINED_GLASS;
             }).getDefaultState();
 
-            ReplaceDiorite.glassStates[color.ordinal()] = state;
+            glassStates[color.ordinal()] = state;
         }
+
+        return glassStates;
     }
 
     private ReplaceDiorite() {
@@ -129,7 +136,7 @@ public final class ReplaceDiorite {
     private static final void setGlass(@NotNull final ClientWorld world, @NotNull final BlockPos pos) {
         final var color = ReplaceDiorite.posToColor.getOrDefault(pos, -1);
         if (-1 != color) {
-            world.setBlockState(pos, ReplaceDiorite.glassStates[color], 3);
+            world.setBlockState(pos, ReplaceDiorite.glassStates.get(color), 3);
         }
     }
 }

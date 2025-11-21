@@ -54,4 +54,8 @@ public final class LocationUtils {
     public static final boolean isInHypixel() {
         return null != LocationUtils.serverName;
     }
+
+    public static final boolean isInSingleplayer() {
+        return MinecraftClient.getInstance().isConnectedToLocalServer();
+    }
 }

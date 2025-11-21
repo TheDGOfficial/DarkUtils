@@ -21,9 +21,9 @@ final class MouseMixin {
     private double y;
 
     @Unique
-    private double prevX;
+    private double darkutils$prevX;
     @Unique
-    private double prevY;
+    private double darkutils$prevY;
 
     private MouseMixin() {
         super();
@@ -34,24 +34,24 @@ final class MouseMixin {
     @Inject(method = "unlockCursor", at = @At("HEAD"))
     private final void darkutils$saveUnlockCursorPositionIfEnabled(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.neverResetCursorPosition) {
-            this.prevX = this.x;
-            this.prevY = this.y;
+            this.darkutils$prevX = this.x;
+            this.darkutils$prevY = this.y;
         } else {
             // Reset values when turning the feature off
-            this.prevX = 0.0D;
-            this.prevY = 0.0D;
+            this.darkutils$prevX = 0.0D;
+            this.darkutils$prevY = 0.0D;
         }
     }
 
     @Inject(method = "lockCursor", at = @At("HEAD"))
     private final void darkutils$saveLockCursorPositionIfEnabled(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.neverResetCursorPosition) {
-            this.prevX = this.x;
-            this.prevY = this.y;
+            this.darkutils$prevX = this.x;
+            this.darkutils$prevY = this.y;
         } else {
             // Reset values when turning the feature off
-            this.prevX = 0.0D;
-            this.prevY = 0.0D;
+            this.darkutils$prevX = 0.0D;
+            this.darkutils$prevY = 0.0D;
         }
     }
 
@@ -65,8 +65,8 @@ final class MouseMixin {
     private final void darkutils$preventUnlockCursorWarpIfEnabled(final long handler, final int inputModeValue, final double x, final double y) {
         if (DarkUtilsConfig.INSTANCE.neverResetCursorPosition) {
             // Restore previous x/y to prevent warp
-            this.x = this.prevX;
-            this.y = this.prevY;
+            this.x = this.darkutils$prevX;
+            this.y = this.darkutils$prevY;
 
             // Only set input mode so cursor is visible
             GLFW.glfwSetInputMode(handler, GLFW.GLFW_CURSOR, inputModeValue);
@@ -85,8 +85,8 @@ final class MouseMixin {
     private final void darkutils$preventLockCursorWarpIfEnabled(final long handler, final int inputModeValue, final double x, final double y) {
         if (DarkUtilsConfig.INSTANCE.neverResetCursorPosition) {
             // Restore previous x/y to prevent warp
-            this.x = this.prevX;
-            this.y = this.prevY;
+            this.x = this.darkutils$prevX;
+            this.y = this.darkutils$prevY;
 
             // Only set input mode so cursor is grabbed
             GLFW.glfwSetInputMode(handler, GLFW.GLFW_CURSOR, inputModeValue);

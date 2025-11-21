@@ -76,7 +76,7 @@ public final class AutoClicker {
 
                 if (held) {
                     this.state = false;
-                    return !right || !Helpers.isLookingAtAButton() && (DarkUtilsConfig.INSTANCE.autoClickerWorkInLevers || !Helpers.isLookingAtALever()) && !Helpers.isLookingAtACommandBlock();
+                    return !right || !Helpers.isLookingAtAButton() && (DarkUtilsConfig.INSTANCE.autoClickerWorkInLevers || !Helpers.isLookingAtALever()) && !Helpers.isLookingAtATerminal();
                 }
             }
             return actual;
