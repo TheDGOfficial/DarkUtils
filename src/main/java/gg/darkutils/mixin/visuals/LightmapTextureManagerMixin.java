@@ -2,6 +2,7 @@ package gg.darkutils.mixin.visuals;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
+import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.entity.effect.StatusEffect;
@@ -9,6 +10,8 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.registry.entry.RegistryEntry;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -22,10 +25,39 @@ final class LightmapTextureManagerMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
+    @Shadow
+    private boolean dirty;
+
+    @Unique
+    @NotNull
+    private TriState darkutils$fullbrightAtLastUpdate = TriState.DEFAULT;
+
+    @Unique
+    @NotNull
+    private TriState darkutils$nightVisionAtLastUpdate = TriState.DEFAULT;
+
+    @Unique
+    private final boolean darkutils$forceUpdate() {
+        return TriState.of(DarkUtilsConfig.INSTANCE.fullbright) != this.darkutils$fullbrightAtLastUpdate && TriState.DEFAULT != this.darkutils$fullbrightAtLastUpdate || TriState.of(DarkUtilsConfig.INSTANCE.nightVision) != this.darkutils$nightVisionAtLastUpdate && TriState.DEFAULT != this.darkutils$nightVisionAtLastUpdate;
+    }
+
     @Inject(method = "update", at = @At("HEAD"), cancellable = true)
     private final void darkutils$stopLightUpdatesIfEnabled(final float tickProgress, @NotNull final CallbackInfo ci) {
-        if (DarkUtilsConfig.INSTANCE.stopLightUpdates) {
+        final var stopLightUpdates = DarkUtilsConfig.INSTANCE.stopLightUpdates;
+        final var forced = this.darkutils$forceUpdate();
+
+        if (DarkUtilsConfig.INSTANCE.stopLightUpdates && !forced) {
             ci.cancel();
+            return;
+        }
+
+        if (forced) {
+            this.dirty = true;
+        }
+
+        if (this.dirty) {
+            this.darkutils$fullbrightAtLastUpdate = TriState.of(DarkUtilsConfig.INSTANCE.fullbright);
+            this.darkutils$nightVisionAtLastUpdate = TriState.of(DarkUtilsConfig.INSTANCE.nightVision);
         }
     }
 
