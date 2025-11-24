@@ -3,18 +3,14 @@ package gg.darkutils.mixin.misc;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.RenderEntityEvent;
 import gg.darkutils.events.base.EventRegistry;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.Frustum;
-import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.entity.Entity;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(EntityRenderer.class)
@@ -32,8 +28,15 @@ final class EntityRendererMixin<T extends Entity> {
         }
     }
 
-    @Redirect(method = "renderLabelIfPresent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextRenderer;draw(Lnet/minecraft/text/Text;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)V"))
-    private final void darkutils$renderTransparentNametagIfEnabled(final TextRenderer instance, @NotNull final Text text, final float x, final float y, final int color, final boolean shadow, @NotNull final Matrix4f matrix, @NotNull final VertexConsumerProvider vertexConsumers, final TextRenderer.@NotNull TextLayerType layerType, final int backgroundColor, final int light) {
-        instance.draw(text, x, y, color, shadow, matrix, vertexConsumers, layerType, DarkUtilsConfig.INSTANCE.transparentNametags ? 0x00FF_FFFF : backgroundColor, light);
+    @ModifyArg(
+            method = "renderLabelIfPresent",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/font/TextRenderer;draw(Lnet/minecraft/text/Text;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)V"
+            ),
+            index = 8
+    )
+    private static final int darkutils$modifyBackgroundColor(final int backgroundColor) {
+        return DarkUtilsConfig.INSTANCE.transparentNametags ? 0x00FF_FFFF : backgroundColor;
     }
 }
