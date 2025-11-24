@@ -28,7 +28,6 @@ import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
 import java.util.List;
 
 public final class AlignmentTaskSolver {
@@ -373,7 +372,7 @@ public final class AlignmentTaskSolver {
 
     private static final List<AlignmentTaskSolver.GridMove> convertPointMapToMoves(final List<AlignmentTaskSolver.Point> solution) {
         if (solution.isEmpty()) {
-            return Collections.emptyList();
+            return List.of();
         }
 
         // Reverse copy
@@ -466,7 +465,7 @@ public final class AlignmentTaskSolver {
                 }
             }
         }
-        return Collections.emptyList();
+        return List.of();
     }
 
     private static final @Nullable AlignmentTaskSolver.Point move(final int @NotNull [][] grid, final AlignmentTaskSolver.Point[][] gridCopy, final AlignmentTaskSolver.Point currPos, final Direction dir) {

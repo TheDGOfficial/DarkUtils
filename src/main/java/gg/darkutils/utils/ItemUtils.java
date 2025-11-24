@@ -6,7 +6,6 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
 import java.util.List;
 
 public final class ItemUtils {
@@ -19,7 +18,7 @@ public final class ItemUtils {
     private static final @NotNull List<Text> getLoreLines(@NotNull final ItemStack stack) {
         final var lore = stack.getComponents().get(DataComponentTypes.LORE);
 
-        return null == lore ? Collections.emptyList() : lore.lines();
+        return null == lore ? List.of() : lore.lines();
     }
 
     @Nullable
