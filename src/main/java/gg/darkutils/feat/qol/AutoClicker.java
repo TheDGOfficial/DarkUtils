@@ -15,7 +15,7 @@ public final class AutoClicker {
 
     public static final void resetState() {
         for (final var key : AutoClicker.Key.VALUES) {
-            key.state = true;
+            key.resetState();
         }
     }
 
@@ -27,7 +27,7 @@ public final class AutoClicker {
         }
 
         for (final var key : AutoClicker.Key.VALUES) {
-            if (key.keyBinding == keyBinding) {
+            if (key.isForKeyBinding(keyBinding)) {
                 return key.isPressed(true);
             }
         }
@@ -43,7 +43,7 @@ public final class AutoClicker {
         }
 
         for (final var key : AutoClicker.Key.VALUES) {
-            if (key.keyBinding == keyBinding) {
+            if (key.isForKeyBinding(keyBinding)) {
                 return key.wasPressed(actual);
             }
         }
@@ -63,6 +63,14 @@ public final class AutoClicker {
 
         private Key(@NotNull final KeyBinding keyBinding) {
             this.keyBinding = keyBinding;
+        }
+
+        private final void resetState() {
+            this.state = true;
+        }
+
+        private final boolean isForKeyBinding(@NotNull final KeyBinding keyBinding) {
+            return this.keyBinding == keyBinding;
         }
 
         private final boolean isPressed(final boolean actual) {

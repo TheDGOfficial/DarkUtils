@@ -31,6 +31,11 @@ public interface EventRegistry {
         return EventRegistry.uncheckedCastToEventClass(event.getClass());
     }
 
+    @NotNull
+    private <T extends Event> EventHandler<T> getEventHandler(@NotNull final T event) {
+        return this.getEventHandler(EventRegistry.getEventClass(event));
+    }
+
     /**
      * Registers an {@link Event}.
      * <p>
@@ -141,7 +146,7 @@ public interface EventRegistry {
      */
     @NotNull
     default <T extends CancellableEvent> FinalCancellationState triggerEvent(@NotNull final T event) {
-        return this.getEventHandler(EventRegistry.getEventClass(event)).triggerEvent(event);
+        return this.getEventHandler(event).triggerEvent(event);
     }
 
     /**
@@ -151,6 +156,6 @@ public interface EventRegistry {
      * @param <T>   The type of the event.
      */
     default <T extends NonCancellableEvent> void triggerEvent(@NotNull final T event) {
-        this.getEventHandler(EventRegistry.getEventClass(event)).triggerEvent(event);
+        this.getEventHandler(event).triggerEvent(event);
     }
 }

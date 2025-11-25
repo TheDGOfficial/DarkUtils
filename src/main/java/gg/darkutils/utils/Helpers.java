@@ -71,9 +71,7 @@ public final class Helpers {
                 final var customName = entity.getCustomName();
                 if (null != customName) {
                     final var name = customName.getString();
-                    if ("Inactive Terminal".equals(name) || "CLICK HERE".equals(name)) {
-                        return true;
-                    }
+                    return "Inactive Terminal".equals(name) || "CLICK HERE".equals(name);
                 }
             }
             return false;

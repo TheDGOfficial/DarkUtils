@@ -69,18 +69,12 @@ public final class LaggyServerDetector {
                 totalTicksOver30Seconds += ticks;
             }
 
-            final var tpsAverageOver30Seconds = (double) totalTicksOver30Seconds / LaggyServerDetector.TPS_SAMPLES.length;
-            final var tpsStatus = LaggyServerDetector.getTpsStatus(tpsAverageOver30Seconds);
-
-            final var client = MinecraftClient.getInstance();
-            final var player = client.player;
-
-            if (null == player) {
-                return;
-            }
-
             // Required or else would display too much precision, bad for human readability.
+            final var tpsAverageOver30Seconds = (double) totalTicksOver30Seconds / LaggyServerDetector.TPS_SAMPLES.length;
             final var tpsAverageOver30SecondsFormatted = String.format(Locale.ROOT, "%.2f", tpsAverageOver30Seconds);
+
+            final var tpsStatus = LaggyServerDetector.getTpsStatus(tpsAverageOver30Seconds);
+            final var client = MinecraftClient.getInstance();
 
             client.inGameHud.setTitle(Text.of("§d30s TPS AVG: " + tpsStatus.color() + tpsAverageOver30SecondsFormatted + tpsStatus.comment()));
             client.inGameHud.setTitleTicks(10, 70, 20);

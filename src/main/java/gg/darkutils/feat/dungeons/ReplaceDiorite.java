@@ -33,6 +33,12 @@ public final class ReplaceDiorite {
     private static final Long2ObjectOpenHashMap<List<BlockPos>> chunkToPositions =
             new Long2ObjectOpenHashMap<>(4);
 
+    private ReplaceDiorite() {
+        super();
+
+        throw new UnsupportedOperationException("static-only class");
+    }
+
     private static final BlockState[] getGlassStates() {
         final var glassStates = new BlockState[16];
 
@@ -60,12 +66,6 @@ public final class ReplaceDiorite {
         }
 
         return glassStates;
-    }
-
-    private ReplaceDiorite() {
-        super();
-
-        throw new UnsupportedOperationException("static-only class");
     }
 
     public static final void init() {
@@ -130,6 +130,7 @@ public final class ReplaceDiorite {
 
             final var positions = entry.getValue();
 
+            // Iterate manually to avoid creating an iterator for less allocation overhead
             for (int i = 0, len = positions.size(); i < len; ++i) {
                 final var pos = positions.get(i);
 

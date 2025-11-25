@@ -44,7 +44,7 @@ public final class BasicEventRegistry implements EventRegistry {
 
     @SuppressWarnings("unchecked")
     @NotNull
-    private static <T extends Event> EventHandler<T> uncheckedCastToEventHandler(@NotNull final EventHandler<?> eventHandler) {
+    private static final <T extends Event> EventHandler<T> uncheckedCastToEventHandler(@NotNull final EventHandler<?> eventHandler) {
         return (EventHandler<T>) eventHandler;
     }
 

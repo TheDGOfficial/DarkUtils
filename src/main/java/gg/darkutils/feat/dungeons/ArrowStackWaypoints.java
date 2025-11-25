@@ -1,8 +1,7 @@
 package gg.darkutils.feat.dungeons;
 
-import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.config.DarkUtilsConfig;
-
+import gg.darkutils.utils.RenderUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;

@@ -35,7 +35,7 @@ final class YggdrasilServicesKeyInfoMixin {
      * If enabled, completely disables signature validation.
      * <p>
      * This avoids RSA verification methods from being called, improving performance.
-     * Might also make unverified textures show, but that's not our concern if the user choose to enable, its their concern.
+     * Might also make unverified textures show, but that's not our concern if the user choose to enable, it's their concern.
      */
     @Inject(method = "validateProperty", at = @At("HEAD"), cancellable = true)
     private final void darkutils$preventSignatureVerificationIfEnabled(@NotNull final Property property, @NotNull final CallbackInfoReturnable<Boolean> cir) {

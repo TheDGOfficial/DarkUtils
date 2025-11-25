@@ -7,11 +7,10 @@ import gg.darkutils.events.SentMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.network.ClientCommonNetworkHandler;
 import net.minecraft.client.network.ClientConnectionState;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.ClientCommonNetworkHandler;
 import net.minecraft.network.ClientConnection;
-import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
 import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket;
 import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket;
@@ -26,8 +25,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientPlayNetworkHandler.class)
 abstract class ClientPlayNetworkHandlerMixin extends ClientCommonNetworkHandler {
-    private ClientPlayNetworkHandlerMixin(@NotNull final MinecraftClient client, @NotNull final ClientConnection clientConnection, @NotNull final ClientConnectionState clientConnectionState) {
-        super(client, clientConnection, clientConnectionState);
+    private ClientPlayNetworkHandlerMixin(@NotNull final MinecraftClient client, @NotNull final ClientConnection connection, @NotNull final ClientConnectionState connectionState) {
+        super(client, connection, connectionState);
 
         throw new UnsupportedOperationException("mixin class");
     }

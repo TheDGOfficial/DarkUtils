@@ -6,8 +6,6 @@ import gg.darkutils.events.base.EventHandler;
 import gg.darkutils.events.base.NonThreadSafeCancellationState;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.ref.WeakReference;
-
 /**
  * A basic {@link CancellationState} with a simple mutable primitive boolean field.
  * <p>

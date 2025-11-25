@@ -69,7 +69,7 @@ public final class ServerTPSCalculator {
         return ServerTPSCalculator.initialized.get() ? ServerTPSCalculator.lastTPS.get() : -1;
     }
 
-    private static final void onWorldUnload(@NotNull final MinecraftClient client, @NotNull ClientWorld world) {
+    private static final void onWorldUnload(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
         if (ServerTPSCalculator.shouldCalculate()) {
             ServerTPSCalculator.initialized.getAndSet(false);
             ServerTPSCalculator.lastTPS.getAndSet(0);

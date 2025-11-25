@@ -46,7 +46,7 @@ public final class TickUtils {
      * This is a convenience shortcut method to allow using method references, for example:
      * {@snippet :
      * TickUtils.awaitNegatedCondition(LocationUtils::isInDungeons, () -> {});
-     * }
+     *}
      * would run when isInDungeons returns false rather than true, e.g., when leaving dungeons.
      *
      * @param condition The condition before negating.

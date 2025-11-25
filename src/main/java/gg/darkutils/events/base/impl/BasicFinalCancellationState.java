@@ -3,8 +3,6 @@ package gg.darkutils.events.base.impl;
 import gg.darkutils.events.base.FinalCancellationState;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.ref.WeakReference;
-
 /**
  * A basic {@link FinalCancellationState} with a simple immutable primitive final boolean field.
  * <p>
@@ -22,12 +20,14 @@ public final class BasicFinalCancellationState implements FinalCancellationState
      */
     @NotNull
     private static final ThreadLocal<BasicFinalCancellationState> CANCELLED = ThreadLocal.withInitial(() -> new BasicFinalCancellationState(true));
-
+    /**
+     * The cancellation state.
+     */
+    private final boolean cancelled;
     /**
      * Holds the owner thread id of this instance.
      */
     private long ownerId = Thread.currentThread().threadId();
-
     /**
      * Holds the owner thread name of this instance.
      * <p>
@@ -35,11 +35,6 @@ public final class BasicFinalCancellationState implements FinalCancellationState
      */
     @NotNull
     private String ownerName = Thread.currentThread().getName();
-
-    /**
-     * The cancellation state.
-     */
-    private final boolean cancelled;
 
     /**
      * Creates a new {@link BasicFinalCancellationState} with the given cancelled state.
@@ -57,7 +52,7 @@ public final class BasicFinalCancellationState implements FinalCancellationState
      */
     @NotNull
     public static final BasicFinalCancellationState ofCached(final boolean cancelled) {
-        final var state = cancelled ? BasicFinalCancellationState.CANCELLED.get() : BasicFinalCancellationState.NOT_CANCELLED.get();
+        final var state = (cancelled ? BasicFinalCancellationState.CANCELLED : BasicFinalCancellationState.NOT_CANCELLED).get();
         state.reset();
 
         return state;

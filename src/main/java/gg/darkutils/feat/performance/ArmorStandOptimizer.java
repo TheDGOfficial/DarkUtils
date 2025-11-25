@@ -1,7 +1,7 @@
 package gg.darkutils.feat.performance;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.events.RenderEntityEvent;
+import gg.darkutils.events.RenderEntityEvents;
 import gg.darkutils.events.base.EventRegistry;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
@@ -71,8 +71,8 @@ public final class ArmorStandOptimizer {
         ArmorStandOptimizer.reusableStands.clear();
     }
 
-    private static final void onRenderEntity(@NotNull final RenderEntityEvent event) {
-        if (DarkUtilsConfig.INSTANCE.armorStandOptimizer && event.entity() instanceof final ArmorStandEntity armorStand && !ArmorStandOptimizer.armorStandRenderSet.contains(armorStand)) {
+    private static final void onRenderEntity(@NotNull final RenderEntityEvents.ArmorStandRenderEvent event) {
+        if (DarkUtilsConfig.INSTANCE.armorStandOptimizer && !ArmorStandOptimizer.armorStandRenderSet.contains(event.armorStand())) {
             event.cancellationState().cancel();
         }
     }
@@ -98,7 +98,7 @@ public final class ArmorStandOptimizer {
 
     private static final int partition(@NotNull final ReferenceArrayList<ArmorStandEntity> list, final int left, final int right, @NotNull final ClientPlayerEntity player) {
         // Deterministic pivot: middle element
-        final var pivotIdx = (left + right) >>> 1;
+        final var pivotIdx = left + right >>> 1;
         final var pivot = list.get(pivotIdx);
         list.set(pivotIdx, list.get(right));
         list.set(right, pivot);

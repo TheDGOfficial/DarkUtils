@@ -1,11 +1,12 @@
 package gg.darkutils.mixin.misc;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.events.RenderEntityEvent;
+import gg.darkutils.events.RenderEntityEvents;
 import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.decoration.ArmorStandEntity;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,13 +22,6 @@ final class EntityRendererMixin<T extends Entity> {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
-    private final void darkutils$skipRenderingArmorStandIfEnabled(@NotNull final T entity, @NotNull final Frustum frustum, final double x, final double y, final double z, @NotNull final CallbackInfoReturnable<Boolean> cir) {
-        if (EventRegistry.centralRegistry().triggerEvent(new RenderEntityEvent(entity)).isCancelled()) {
-            cir.setReturnValue(false);
-        }
-    }
-
     @ModifyArg(
             method = "renderLabelIfPresent",
             at = @At(
@@ -38,5 +32,12 @@ final class EntityRendererMixin<T extends Entity> {
     )
     private static final int darkutils$modifyBackgroundColor(final int backgroundColor) {
         return DarkUtilsConfig.INSTANCE.transparentNametags ? 0x00FF_FFFF : backgroundColor;
+    }
+
+    @Inject(method = "shouldRender", at = @At("RETURN"), cancellable = true)
+    private final void darkutils$skipRenderingArmorStandIfEnabled(@NotNull final T entity, @NotNull final Frustum frustum, final double x, final double y, final double z, @NotNull final CallbackInfoReturnable<Boolean> cir) {
+        if (cir.getReturnValueZ() && entity instanceof final ArmorStandEntity armorStand && EventRegistry.centralRegistry().triggerEvent(new RenderEntityEvents.ArmorStandRenderEvent(armorStand)).isCancelled()) {
+            cir.setReturnValue(false);
+        }
     }
 }

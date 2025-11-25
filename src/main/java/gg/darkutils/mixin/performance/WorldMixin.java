@@ -1,39 +1,39 @@
 package gg.darkutils.mixin.performance;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import gg.darkutils.config.DarkUtilsConfig;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.BlockEntityTickInvoker;
-import net.minecraft.world.tick.TickManager;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.llamalad7.mixinextras.sugar.Local;
 
 import java.util.Iterator;
 import java.util.List;
 
 @Mixin(World.class)
 public final class WorldMixin {
+    @Final
+    @Shadow
+    @NotNull
+    private List<BlockEntityTickInvoker> blockEntityTickers;
+    @Unique
+    @Nullable
+    private ReferenceOpenHashSet<BlockEntityTickInvoker> toRemove;
+
     private WorldMixin() {
         super();
 
         throw new UnsupportedOperationException("mixin class");
     }
-
-    @Final
-    @Shadow
-    private List<BlockEntityTickInvoker> blockEntityTickers;
-
-    @Unique
-    private ReferenceOpenHashSet<BlockEntityTickInvoker> toRemove;
 
     @Inject(at = @At(target = "Ljava/util/List;iterator()Ljava/util/Iterator;", value = "INVOKE"), method = "tickBlockEntities")
     private final void darkutils$instantiateToRemove(@NotNull final CallbackInfo ci) {
@@ -44,7 +44,7 @@ public final class WorldMixin {
     }
 
     @Redirect(at = @At(target = "Ljava/util/Iterator;remove()V", value = "INVOKE"), method = "tickBlockEntities")
-    private final void darkutils$addToRemove(@NotNull final Iterator instance, @Local @NotNull final BlockEntityTickInvoker blockEntityTickInvoker) {
+    private final void darkutils$addToRemove(@NotNull final Iterator<BlockEntityTickInvoker> instance, @Local @NotNull final BlockEntityTickInvoker blockEntityTickInvoker) {
         if (DarkUtilsConfig.INSTANCE.blockEntityUnloadLagFix) {
             final var toRemoveLocal = this.toRemove;
             if (null != toRemoveLocal) { // may happen if feature is toggled in between calls

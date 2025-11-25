@@ -1,6 +1,6 @@
 package gg.darkutils.mixin.performance;
 
-import gg.darkutils.events.RenderEntityEvent;
+import gg.darkutils.events.RenderEntityEvents;
 import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.client.render.entity.ArmorStandEntityRenderer;
 import net.minecraft.entity.decoration.ArmorStandEntity;
@@ -19,6 +19,6 @@ final class ArmorStandEntityRendererMixin {
 
     @Redirect(method = "hasLabel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/decoration/ArmorStandEntity;isCustomNameVisible()Z"))
     private final boolean darkutils$skipRenderingLabelIfEnabled(@NotNull final ArmorStandEntity armorStand) {
-        return armorStand.isCustomNameVisible() && !EventRegistry.centralRegistry().triggerEvent(new RenderEntityEvent(armorStand)).isCancelled();
+        return armorStand.isCustomNameVisible() && !EventRegistry.centralRegistry().triggerEvent(new RenderEntityEvents.ArmorStandRenderEvent(armorStand)).isCancelled();
     }
 }
