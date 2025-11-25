@@ -6,6 +6,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.config.DarkUtilsConfigScreen;
+import gg.darkutils.feat.bugfixes.CursorFix;
 import gg.darkutils.feat.dungeons.AlignmentTaskSolver;
 import gg.darkutils.feat.dungeons.ArrowStackWaypoints;
 import gg.darkutils.feat.dungeons.AutoCloseSecretChests;
@@ -28,6 +29,7 @@ import gg.darkutils.feat.qol.LaggyServerDetector;
 import gg.darkutils.feat.qol.PreventUselessBlockHit;
 import gg.darkutils.feat.qol.RejoinCooldownDisplay;
 import gg.darkutils.feat.qol.ServerTPSCalculator;
+import gg.darkutils.feat.qol.VanillaMode;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
@@ -399,7 +401,9 @@ public final class DarkUtils implements ClientModInitializer {
                 LaggyServerDetector::init,
                 SoundLagFix::init,
                 ThreadPriorityTweaker::init,
-                ArrowStackWaypoints::init
+                ArrowStackWaypoints::init,
+                VanillaMode::init,
+                CursorFix::init
         );
 
         // Send welcome message once player joins a world/server/realm

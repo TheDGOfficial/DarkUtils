@@ -1,6 +1,8 @@
 package gg.darkutils.config;
 
 import gg.darkutils.DarkUtils;
+import gg.darkutils.events.ConfigScreenOpenEvent;
+import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import gg.darkutils.utils.LogLevel;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -40,6 +42,8 @@ public final class DarkUtilsConfigScreen {
     }
 
     public static final @NotNull Screen create(@Nullable final Screen parent) {
+        EventRegistry.centralRegistry().triggerEvent(ConfigScreenOpenEvent.INSTANCE);
+
         final var config = DarkUtilsConfig.INSTANCE;
 
         final var builder = ConfigBuilder.create()
@@ -114,6 +118,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Laggy Server Detector",
                 "Shows 30 second TPS average 30 seconds after you change/join servers, telling you the expected gameplay quality of the server.",
                 config.laggyServerDetector, newValue -> config.laggyServerDetector = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Vanilla Mode",
+                "Automatically disables certain visual tweaks when playing a singleplayer world, such as hiding the armor and food bars. Your settings will not be actually modified and will revert to default when leaving singleplayer.",
+                config.vanillaMode, newValue -> config.vanillaMode = newValue);
 
         // === Foraging ===
         final var foraging = builder.getOrCreateCategory(Text.of("Foraging"));
@@ -313,9 +321,13 @@ public final class DarkUtilsConfigScreen {
                 "Fixes inactivity FPS limiter defaulting to 10 FPS limit before the first input is received.",
                 config.fixInactivityFpsLimiter, newValue -> config.fixInactivityFpsLimiter = newValue);
 
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Item Frame Sound Fix",
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Item Frame Sound Fix",
                 "Fixes a bug in Minecraft's bug tracker causing item frames to play a sound when they should not in some cases.",
                 config.itemFrameSoundFix, newValue -> config.itemFrameSoundFix = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Cursor Fix",
+                "Fixes a bug where the mouse cursor stays on screen after closing a menu that set a custom cursor but forgot to revert it.",
+                config.cursorFix, newValue -> config.cursorFix = newValue);
 
         // === Development ===
         final var development = builder.getOrCreateCategory(Text.of("Development"));

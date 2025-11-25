@@ -3,6 +3,9 @@ package gg.darkutils.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import gg.darkutils.DarkUtils;
+import gg.darkutils.events.ConfigSaveFinishEvent;
+import gg.darkutils.events.ConfigSaveStartEvent;
+import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import gg.darkutils.utils.LogLevel;
 import net.fabricmc.loader.api.FabricLoader;
@@ -39,6 +42,7 @@ public final class DarkUtilsConfig {
     public boolean disableCommandConfirmation;
     public boolean rejoinCooldownDisplay;
     public boolean laggyServerDetector;
+    public boolean vanillaMode;
 
     // === Foraging ===
     public boolean treeGiftConfirmation;
@@ -95,6 +99,7 @@ public final class DarkUtilsConfig {
     public boolean fixGuiScaleAfterFullscreen;
     public boolean fixInactivityFpsLimiter;
     public boolean itemFrameSoundFix;
+    public boolean cursorFix;
 
     // === Development ===
     @NotNull
@@ -116,10 +121,14 @@ public final class DarkUtilsConfig {
     }
 
     static final void save() {
+        EventRegistry.centralRegistry().triggerEvent(ConfigSaveStartEvent.INSTANCE);
+
         try {
             Files.writeString(DarkUtilsConfig.FILE.toPath(), DarkUtilsConfig.GSON.toJson(DarkUtilsConfig.INSTANCE), StandardCharsets.UTF_8);
         } catch (final IOException e) {
             DarkUtils.error(DarkUtilsConfig.class, "Unable to save config", e);
+        } finally {
+            EventRegistry.centralRegistry().triggerEvent(ConfigSaveFinishEvent.INSTANCE);
         }
     }
 }
