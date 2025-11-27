@@ -103,11 +103,11 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
     /**
      * Checks if the received (plain) message matches the given search.
      * <p>
-     * This is equivalant to doing:
+     * This is equivalent to doing:
      * {@snippet :
      * "search".equals(event.content())
      * event.matches("search") // same result
-     * }
+     *}
      *
      * @return Whether the received (plain) message matches the given search or not.
      */
