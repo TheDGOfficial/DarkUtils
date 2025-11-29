@@ -187,14 +187,14 @@ public final class DarkUtils implements ClientModInitializer {
 
                 final var rootError = DarkUtils.getRootError(error, (@NotNull final Throwable err) -> {
                     for (final var ste : err.getStackTrace()) {
-                        if (!isOurModule.test(ste.getClassName())) {
-                            return false;
+                        if (isOurModule.test(ste.getClassName())) {
+                            return true;
                         }
                     }
-                    return true;
+                    return false;
                 });
 
-                final var stack = error.getStackTrace();
+                final var stack = rootError.getStackTrace();
 
                 var className = "?";
                 var methodName = "?";
@@ -237,17 +237,22 @@ public final class DarkUtils implements ClientModInitializer {
                         }
                         break;
                     }
+
+                    if (ste.getClassName().contains("feat")) {
+                        featureName = ste.getClassName().substring(ste.getClassName().lastIndexOf('.') + 1);
+                        break;
+                    }
                 }
 
                 var details = "";
-                final var msg = error.getMessage();
+                final var msg = rootError.getMessage();
                 if (null != msg && !msg.isEmpty()) {
                     details = " Details: " + msg;
                 }
 
                 DarkUtils.error(
                         DarkUtils.class,
-                        "Encountered " + error.getClass().getSimpleName()
+                        "Encountered " + rootError.getClass().getSimpleName()
                                 + " at " + fileName
                                 + " in method " + methodName
                                 + " (line " + lineNumber + ')'

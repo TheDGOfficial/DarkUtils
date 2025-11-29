@@ -87,10 +87,17 @@ tasks.withType(JavaCompile).configureEach {
 tasks.named("jar", Jar) {
     manifest {
         attributes(
+            "Multi-Release": "true",
+            "Sealed": "true",
+            "Main-Class": "gg.darkutils.DarkUtils",
             "Automatic-Module-Name": "gg.darkutils",
+            "Specification-Title": "DarkUtils",
+            "Specification-Version": project.version.toString(),
+            "Specification-Vendor": "DarkUtils",
             "Implementation-Title": "DarkUtils",
             "Implementation-Version": project.version.toString(),
-            "Implementation-Vendor": "DarkUtils"
+            "Implementation-Vendor": "DarkUtils",
+            "Name": "gg/darkutils/"
         )
     }
 }
