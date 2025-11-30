@@ -2,8 +2,8 @@ package gg.darkutils.feat.dungeons;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.RenderUtils;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.Formatting;
@@ -32,7 +32,7 @@ public final class ArrowStackWaypoints {
     }
 
     public static final void init() {
-        WorldRenderEvents.LAST.register(ArrowStackWaypoints::renderArrowStackWaypoints);
+        WorldRenderEvents.END_MAIN.register(ArrowStackWaypoints::renderArrowStackWaypoints);
     }
 
     private static final boolean isEnabled() {
@@ -41,7 +41,7 @@ public final class ArrowStackWaypoints {
 
     private static final boolean shouldRender() {
         final ClientPlayerEntity player;
-        return ArrowStackWaypoints.isEnabled() && (0L != DungeonTimer.phase4ClearTime || null != (player = MinecraftClient.getInstance().player) && 45.0D >= player.getPos().getY()) && 0L == DungeonTimer.phase5ClearTime && 0L != DungeonTimer.bossEntryTime/* && LocationUtils.isInM7()*/;
+        return ArrowStackWaypoints.isEnabled() && (0L != DungeonTimer.phase4ClearTime || null != (player = MinecraftClient.getInstance().player) && 45.0D >= player.getY()) && 0L == DungeonTimer.phase5ClearTime && 0L != DungeonTimer.bossEntryTime/* && LocationUtils.isInM7()*/;
     }
 
     private static final void renderArrowStackWaypoints(@NotNull final WorldRenderContext context) {

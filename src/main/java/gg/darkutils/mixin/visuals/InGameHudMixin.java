@@ -34,12 +34,6 @@ final class InGameHudMixin {
         }
     }
 
-    @Redirect(method = "renderScoreboardSidebar(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/scoreboard/ScoreboardObjective;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V"))
-    private final void darkutils$transparentScoreboardIfEnabled(final DrawContext context, final int x1, final int y1, final int x2, final int y2, final int color) {
-        // draw a transparent background for scoreboard (sidebar) in the right middle of screen, making it transparent, which both looks better and has better performance due to no shadow rendering.
-        context.fill(x1, y1, x2, y2, DarkUtilsConfig.INSTANCE.transparentScoreboard ? 0x0000_0000 : color);
-    }
-
     @Inject(method = "renderFood", at = @At("HEAD"), cancellable = true)
     private final void darkutils$skipRenderFoodIfEnabled(@NotNull final DrawContext context, @NotNull final PlayerEntity player, final int top, final int right, @NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.hideArmorAndFood) {
