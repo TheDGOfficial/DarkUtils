@@ -57,17 +57,17 @@ abstract class ClientPlayNetworkHandlerMixin extends ClientCommonNetworkHandler 
     }
 
     @Shadow
-    private final void openConfirmCommandScreen(@NotNull final String command, @NotNull final String message, @Nullable final Screen screenAfterRun) {
+    private final void openConfirmRunCommandScreen(@NotNull final String command, @NotNull final String message, @Nullable final Screen screenAfterRun) {
         throw new IllegalStateException("shadow failed");
     }
 
-    @Redirect(method = "runClickEventCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;openConfirmCommandScreen(Ljava/lang/String;Ljava/lang/String;Lnet/minecraft/client/gui/screen/Screen;)V"))
+    @Redirect(method = "runClickEventCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;openConfirmRunCommandScreen(Ljava/lang/String;Ljava/lang/String;Lnet/minecraft/client/gui/screen/Screen;)V"))
     private final void darkutils$openConfirmCommandScreen$disableIfEnabled(@NotNull final ClientPlayNetworkHandler handler, @NotNull final String command, @NotNull final String message, @NotNull final Screen afterActionScreen) {
         if (DarkUtilsConfig.INSTANCE.disableCommandConfirmation && message.contains("parse_errors")) {
             handler.sendPacket(new CommandExecutionC2SPacket(command));
             MinecraftClient.getInstance().setScreen(afterActionScreen);
         } else {
-            this.openConfirmCommandScreen(command, message, afterActionScreen);
+            this.openConfirmRunCommandScreen(command, message, afterActionScreen);
         }
     }
 }

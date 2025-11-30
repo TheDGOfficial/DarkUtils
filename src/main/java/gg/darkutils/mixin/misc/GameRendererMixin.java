@@ -24,7 +24,7 @@ final class GameRendererMixin {
     @Inject(method = "getNightVisionStrength", at = @At("HEAD"), cancellable = true)
     private static final void darkutils$overrideNightVisionIfEnabled(@NotNull final LivingEntity entity, final float tickProgress, @NotNull final CallbackInfoReturnable<Float> cir) {
         if (DarkUtilsConfig.INSTANCE.nightVision) {
-            cir.setReturnValue(1.0F);
+            cir.setReturnValue(0.9F);
         }
     }
 

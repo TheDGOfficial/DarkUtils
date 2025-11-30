@@ -2,7 +2,7 @@ package gg.darkutils.utils;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import gg.darkutils.DarkUtils;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
@@ -120,7 +120,7 @@ public final class RenderUtils {
     public static final void drawBlockOutline(@NotNull final WorldRenderContext context,
                                               @NotNull final BlockPos pos,
                                               @NotNull final Formatting color) {
-        final var matrices = context.matrixStack();
+        final var matrices = context.matrices();
 
         if (null == matrices) {
             return;
@@ -140,7 +140,7 @@ public final class RenderUtils {
         // Translate block position relative to camera
         matrices.push();
 
-        final var camPos = context.camera().getPos().negate();
+        final var camPos = context.gameRenderer().getCamera().getPos().negate();
 
         matrices.translate(
                 camPos.x,
@@ -157,7 +157,7 @@ public final class RenderUtils {
 
         // Draw outline for a single block using RGBA color
         VertexRendering.drawBox(
-                matrices,
+                matrices.peek(),
                 buffer,
                 Box.enclosing(immutablePos, immutablePos),
                 (float) red, (float) green, (float) blue, (float) alpha

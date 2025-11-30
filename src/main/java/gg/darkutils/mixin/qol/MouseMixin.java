@@ -1,8 +1,10 @@
 package gg.darkutils.mixin.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.util.Window;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
@@ -59,19 +61,19 @@ final class MouseMixin {
             method = "unlockCursor",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/util/InputUtil;setCursorParameters(JIDD)V"
+                    target = "Lnet/minecraft/client/util/InputUtil;setCursorParameters(Lnet/minecraft/client/util/Window;IDD)V"
             )
     )
-    private final void darkutils$preventUnlockCursorWarpIfEnabled(final long handler, final int inputModeValue, final double x, final double y) {
+    private final void darkutils$preventUnlockCursorWarpIfEnabled(@NotNull final Window window, final int inputModeValue, final double x, final double y) {
         if (DarkUtilsConfig.INSTANCE.neverResetCursorPosition) {
             // Restore previous x/y to prevent warp
             this.x = this.darkutils$prevX;
             this.y = this.darkutils$prevY;
 
             // Only set input mode so cursor is visible
-            GLFW.glfwSetInputMode(handler, GLFW.GLFW_CURSOR, inputModeValue);
+            GLFW.glfwSetInputMode(window.getHandle(), GLFW.GLFW_CURSOR, inputModeValue);
         } else {
-            InputUtil.setCursorParameters(handler, inputModeValue, x, y);
+            InputUtil.setCursorParameters(window, inputModeValue, x, y);
         }
     }
 
@@ -79,19 +81,19 @@ final class MouseMixin {
             method = "lockCursor",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/util/InputUtil;setCursorParameters(JIDD)V"
+                    target = "Lnet/minecraft/client/util/InputUtil;setCursorParameters(Lnet/minecraft/client/util/Window;IDD)V"
             )
     )
-    private final void darkutils$preventLockCursorWarpIfEnabled(final long handler, final int inputModeValue, final double x, final double y) {
+    private final void darkutils$preventLockCursorWarpIfEnabled(@NotNull final Window window, final int inputModeValue, final double x, final double y) {
         if (DarkUtilsConfig.INSTANCE.neverResetCursorPosition) {
             // Restore previous x/y to prevent warp
             this.x = this.darkutils$prevX;
             this.y = this.darkutils$prevY;
 
             // Only set input mode so cursor is grabbed
-            GLFW.glfwSetInputMode(handler, GLFW.GLFW_CURSOR, inputModeValue);
+            GLFW.glfwSetInputMode(window.getHandle(), GLFW.GLFW_CURSOR, inputModeValue);
         } else {
-            InputUtil.setCursorParameters(handler, inputModeValue, x, y);
+            InputUtil.setCursorParameters(window, inputModeValue, x, y);
         }
     }
 }

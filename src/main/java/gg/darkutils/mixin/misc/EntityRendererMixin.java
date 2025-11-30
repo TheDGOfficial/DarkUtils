@@ -22,18 +22,6 @@ final class EntityRendererMixin<T extends Entity> {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @ModifyArg(
-            method = "renderLabelIfPresent",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/font/TextRenderer;draw(Lnet/minecraft/text/Text;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)V"
-            ),
-            index = 8
-    )
-    private static final int darkutils$modifyBackgroundColor(final int backgroundColor) {
-        return DarkUtilsConfig.INSTANCE.transparentNametags ? 0x00FF_FFFF : backgroundColor;
-    }
-
     @Inject(method = "shouldRender", at = @At("RETURN"), cancellable = true)
     private final void darkutils$skipRenderingArmorStandIfEnabled(@NotNull final T entity, @NotNull final Frustum frustum, final double x, final double y, final double z, @NotNull final CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValueZ() && entity instanceof final ArmorStandEntity armorStand && EventRegistry.centralRegistry().triggerEvent(new RenderEntityEvents.ArmorStandRenderEvent(armorStand)).isCancelled()) {

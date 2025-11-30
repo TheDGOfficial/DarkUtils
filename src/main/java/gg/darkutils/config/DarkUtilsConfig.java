@@ -61,8 +61,6 @@ public final class DarkUtilsConfig {
     // === Visual Tweaks ===
     public boolean hideEffectsHud;
     public boolean hideEffectsInInventory;
-    public boolean transparentScoreboard;
-    public boolean transparentNametags;
     public boolean transparentPlayerList;
     public boolean removeChatScrollbar;
     public boolean fullbright;

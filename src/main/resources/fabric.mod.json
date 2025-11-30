@@ -31,10 +31,10 @@
   ],
   "depends": {
     "fabricloader": ">=0.18.1",
-    "minecraft": ">=1.21.8",
+    "minecraft": ">=1.21.10",
     "java": ">=21",
-    "fabric-api": ">=0.136.1+1.21.8",
-    "cloth-config": ">=19.0.147",
+    "fabric-api": ">=0.138.3+1.21.10",
+    "cloth-config": ">=20.0.149",
     "hypixel-mod-api": ">=1.0.1"
   }
 }

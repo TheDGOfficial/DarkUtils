@@ -10,6 +10,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -26,7 +27,7 @@ public final class GhostBlockKey {
                     "Create Ghost Block",
                     InputUtil.Type.KEYSYM,
                     GLFW.GLFW_KEY_G,
-                    DarkUtils.class.getSimpleName()
+                    KeyBinding.Category.create(Identifier.of(DarkUtils.MOD_ID, "main"))
             )
     );
 

@@ -28,16 +28,17 @@
     "performance.CrashMemoryReserveMixin",
     "visuals.StatusEffectsDisplayMixin",
     "visuals.HeartTypeMixin",
-    "visuals.EntityRenderDispatcherMixin",
+    "visuals.FireCommandRendererMixin",
     "accessors.MinecraftClientAccessor",
-    "misc.NetworkThreadUtilsMixin",
+    "misc.PacketApplyBatcherEntryMixin",
     "performance.UtilMixin",
     "qol.ClientPlayerInteractionManagerMixin",
     "performance.LivingEntityMixin",
     "performance.EntityMixin",
     "misc.ClientConnectionMixin",
     "performance.ItemFrameEntityMixin",
-    "performance.WorldMixin"
+    "performance.WorldMixin",
+    "visuals.FogRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

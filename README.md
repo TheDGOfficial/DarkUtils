@@ -12,14 +12,14 @@ You need all of the Required Runtime Dependency criterias met to launch the game
 The versions listed are the ones the mod was tested and developed against, not necessarily what you should use. Forward compatibility is often the case so latest versions are recommended.
 
 Required Dependencies:
-- Minecraft 1.21.8 or later.
+- Minecraft 1.21.10 or later.
 - Fabric Loader 0.18.1 or later.
-- Fabric API 0.136.1 or later.
-- Cloth Config API 19.0.147 or later.
+- Fabric API 0.138.3 or later.
+- Cloth Config API 20.0.149 or later.
 - Hypixel Mod API 1.0.1 or later.
 
 Optional Dependencies:
-- Mod Menu 15.0.0 or later.
+- Mod Menu 16.0.0-rc.1 or later.
 
 # Quality of Life
 ## Never Reset Cursor Position
