@@ -13,7 +13,7 @@ The versions listed are the ones the mod was tested and developed against, not n
 
 Required Dependencies:
 - Minecraft 1.21.8 or later.
-- Fabric Loader 0.18.1 or later.
+- Fabric Loader 0.18.2 or later.
 - Fabric API 0.136.1 or later.
 - Cloth Config API 19.0.147 or later.
 - Hypixel Mod API 1.0.1 or later.
