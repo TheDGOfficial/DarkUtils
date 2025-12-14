@@ -176,13 +176,6 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Hide Effects In Inventory",
                 "Hides the potion/effects displayed on the left or right side of your player inventory.",
                 config.hideEffectsInInventory, newValue -> config.hideEffectsInInventory = newValue);
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Transparent Scoreboard",
-                "Makes the scoreboard background transparent for better visuals.",
-                config.transparentScoreboard, newValue -> config.transparentScoreboard = newValue);
-
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Transparent Nametags",
-                "Makes player/entity nametags transparent for better visuals.",
-                config.transparentNametags, newValue -> config.transparentNametags = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Transparent Player List",
                 "Makes Player List (Tab List) transparent for better visuals.",

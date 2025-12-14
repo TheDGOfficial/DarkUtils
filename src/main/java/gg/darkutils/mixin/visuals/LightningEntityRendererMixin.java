@@ -2,8 +2,10 @@ package gg.darkutils.mixin.visuals;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.entity.LightningEntityRenderer;
 import net.minecraft.client.render.entity.state.LightningEntityRenderState;
+import net.minecraft.client.render.state.CameraRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,15 +22,15 @@ final class LightningEntityRendererMixin {
     }
 
     @Inject(
-            method = "render(Lnet/minecraft/client/render/entity/state/LightningEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V",
+            method = "render(Lnet/minecraft/client/render/entity/state/LightningEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/render/state/CameraRenderState;)V",
             at = @At("HEAD"),
             cancellable = true
     )
     private final void darkutils$skipLightningBoltRenderingIfEnabled(
             @NotNull final LightningEntityRenderState state,
             @NotNull final MatrixStack matrices,
-            @NotNull final VertexConsumerProvider vertexConsumers,
-            final int light,
+            @NotNull final OrderedRenderCommandQueue orderedRenderCommandQueue,
+            @NotNull final CameraRenderState cameraRenderState,
             @NotNull final CallbackInfo ci
     ) {
         if (DarkUtilsConfig.INSTANCE.noLightningBolts) {
