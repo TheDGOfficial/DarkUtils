@@ -24,7 +24,7 @@ public final class GhostBlockKey {
     @NotNull
     private static final KeyBinding KEYBIND = KeyBindingHelper.registerKeyBinding(
             new KeyBinding(
-                    "Create Ghost Block",
+                    "key.darkutils.createGhostBlock",
                     InputUtil.Type.KEYSYM,
                     GLFW.GLFW_KEY_G,
                     KeyBinding.Category.create(Identifier.of(DarkUtils.MOD_ID, "main"))
