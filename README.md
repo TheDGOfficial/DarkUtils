@@ -30,6 +30,18 @@ Optional Dependencies:
  Automatically run /tip all every 15 minutes taking into account command throttling if you entered a command before it would trigger, and automatically hiding no boosters available to tip responses from the server. This is a very simplified version of the AutoTip mod from 1.8.9 that does not connect to an external server and save/send statistics, everything is done locally and no network connections are made.
 ## Welcome Message
  Sends a cool welcome message when you first join a world confirming the mod has been loaded, welcoming you, showing the mod version and providing a quick button in chat to open the mod's settings menu.
+## Disable Useless Block-Hit
+ Disables useless block-hit when you are holding a sword without an ability. If you right-click on air or on a block that's not an interaction like opening a chest, the right click is handled to simulate the 1.8 blockhit slowdown in Hypixel and can even lag you back. This feature prevents you from rightclicking with a sword that doesn't have an ability and if the click was not on a interaction block or entity/NPC.
+## Disable Cells Alignment
+ Disables using the Cells Alignment ability when right-clicking looking at air or an uninteractable block. The click will still go through but not activate the ability when looking at interactable blocks such as chest, lever, beacon, command block (terminal), etc. The click will also go through when looking at an entity/NPC, which still does not activate the ability.
+## Disable Command Confirmation
+ Disables Command Confirmation menu that opens when you click on chat to run a command but the command is invalid or unrecognized client-side. This happens when servers forget to send the client all the commands they handle or have registered server-side, or if they use dynamic commands. This does not disable the Command Confirmation menu entirely, notably the confirmation menu when running elevated operator commands still appears.
+## Vanilla Mode
+ Automatically and temporarily overrides to disable some of the Visual Tweaks like hiding armor and food bars when you join a Singleplayer world.
+## Laggy Server Detector
+ Shows 30 second TPS Average 30 seconds after joining/changing servers.
+## Rejoin Cooldown Display
+ Displays the time you have to wait until you can rejoin SkyBlock after getting kicked while joining a server (changing island).
 
 # Foraging
 ## Tree Gift Confirmation
@@ -44,6 +56,8 @@ Optional Dependencies:
  Shows a timer for when to move the crusher in the Purple Pad to perform a Solo Crush.
 ## Arrow Alignment Device Solver
  Solver for the third device in Goldor terminals phase, with block incorrect clicks and pre-dev support. Compatible with the AutoClicker so you can finish it fast by holding down right click (block incorrect clicks will automatically stop once an arrow is rotated enough times). Uses vanilla item label rendering - you need to hover over the item frame to see how many clicks is needed, but this a non-issue since you need to hover over to rotate the arrow anyways.
+## Arrow Stack Waypoints
+ Displays arrow stack waypoints in the Wither King dragon fight showing where to shoot your Last Breath arrows for optimal stacking.
 
 # Visual Tweaks
 ## Hide Effects HUD
@@ -100,9 +114,26 @@ Optional Dependencies:
  Overrides OpenGL Version hinted to the GLFW during Window context initialization to a higher value than the default of OpenGL 3.3. This does not magically make Minecraft take advantage of features from OpenGL 4.6 specification, but it does ensure forward compatibility and a stricter standard, which might or might not change anything at all.
 ## Use Virtual Threads for Texture Downloading
  Makes Minecraft use Java's new (Lightweight) Virtual Threads over Platform (OS) Threads. Normally, Minecraft uses a Cached Thread Pool which ends up creating hundreds of texture downloading threads in texture-heavy game-modes like Hypixel SkyBlock where items have a player skull model. Those hundreds of texture downloading threads all have their separate stack, and there is a limit to how many platform threads you can create in the OS level at which point it will crash. Virtual Threads are a lightweight new technology replacement that only creates threads when tasks are blocked and this also made texture loading speedier during tests due to creating a new (platform/OS) thread not being a free operation.
+## Disable Glowing
+ Disables the glowing effect Hypixel renders on certain entities to improve performance at the cost of no longer being able to see the outline through walls on those entities. Those include:
+ - Dungeon temmate glow (Hypixel adds rank based glow in Dungeons, for example VIP will be green, MVP will be blue. With this feature it will be turned off)
+ - Frogs in Galatea (Hypixel glows Frogs white in the galatea. This disables it)
+ - Dropped items (Hypixel renders dropped items with their rarity color, e.g an epic item in the floor renders as purple. This will disable it.)
+## Sound Lag Fix
+ Prevents duplicate sounds from being played on the same tick by misbehaving or lagging servers. Only the duplicate sounds are prevented meaning you will still hear all sounds, but without it affecting your performance.
+## Thread Priority Tweaker
+ Improves performance by tweaking priorities of all threads in the background regularly.
+## Block Entity Unload Lag Fix
+ Fixes vanilla Minecraft bug, where lag occurs when unloading large amount of block entities.
+## Disable Signature Verification
+ Disables signature verification to improve performance by skipping the verification step, also possibly fixing missing textures in certain servers.
 
 # Bugfixes
 ## Fix GUI Scale After Toggling Out Fullscreen
  Fixes two different bugs depending on Window manager. X11: Fixes the window height getting smaller everytime when going out of Fullscreen. Wayland: Fixes the window height getting bigger everytime when going out of Fullscreen.
 ## Fix Inactivity FPS Limiter
  Fixes the Inactivity FPS Limiter from limiting the FPS to 10 whilst the game is loading by making the last input time start with an initial value of current time instead of zero.
+## Item Frame Sound Fix
+ Fixes vanilla Minecraft bug, where sounds are played when they shouldn't in certain cases near item frames.
+## Cursor Fix
+ Fixes mouse cursor staying on screen after closing a menu.
