@@ -20,7 +20,7 @@ jobs:
           java-version: '21'
           distribution: 'microsoft'
       - name: setup gradle
-        uses: gradle/actions/setup-gradle@030fdb2d3d26e7c77770bfe796534fcd841c69dc
+        uses: gradle/actions/setup-gradle@bfd569614358980afc8f89c2730eee75bb97efdf
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
       - name: build
