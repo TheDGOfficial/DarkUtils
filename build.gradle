@@ -44,6 +44,13 @@ loom {
             sourceSet sourceSets.main
         }
     }
+
+    decompilers {
+        vineflower {
+            // Makes lambda names easy to find for Mixins
+            options.put("mark-corresponding-synthetics", "1")
+        }
+    }
 }
 
 dependencies {

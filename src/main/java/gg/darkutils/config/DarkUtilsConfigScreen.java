@@ -92,12 +92,16 @@ public final class DarkUtilsConfigScreen {
                 config.welcomeMessage, newValue -> config.welcomeMessage = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker",
-                "Stop carpal tunnel by automatically sending clicks when you are holding down the mouse buttons when holding swords. Right-clicks are only sent for Hyperion/Astraea while left clicks work on all sword types.",
+                "Stop carpal tunnel by automatically sending clicks when you are holding down the mouse buttons when holding swords of any type, the huntaxe (for damage and ferocity swap) or the diana spades (for burrow-digging). Right-clicks are only sent for Hyperion/Astraea.",
                 config.autoClicker, newValue -> config.autoClicker = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker Work In Levers",
                 "Makes Auto Clicker work even if you are looking at a lever. It will cause the lever to flick (activate and de-activate) multiple times. This is fine for 2 levers at the gates, but you likely want to keep this disabled if you do lever flick device in Section 2 as healer.",
                 config.autoClickerWorkInLevers, newValue -> config.autoClickerWorkInLevers = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker Work With AOTV",
+                "Makes Auto Clicker work when holding AOTV, causing you to teleport rapidly/faster. Might make you teleport more than you intented to even if you click a single time, even when etherwarping, but it usually makes you teleport through longer distances much, much faster.",
+                config.autoClickerWorkWithAOTV, newValue -> config.autoClickerWorkWithAOTV = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Disable Cells Alignment",
                 "Disables using the Cells Alignment ability of the Gyrokinetic Wand when you are holding it and right-click. The click will still go through if it would interact with an entity or block instead of using the item.",
@@ -241,6 +245,10 @@ public final class DarkUtilsConfigScreen {
                 "Makes Sodium always use no error context, even if you are on wayland.",
                 config.alwaysUseNoErrorContext, newValue -> config.alwaysUseNoErrorContext = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable Error Checking Entirely",
+                "Overrides glGetError to always return no error to disable error checking completely.",
+                config.disableErrorCheckingEntirely, newValue -> config.disableErrorCheckingEntirely = newValue);
+
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable Campfire Smoke Particles",
                 "Disables campfire smoke particles, which optimizes memory allocation rate of the game, due to smoke particles calling entity collision code for some reason.",
                 config.disableCampfireSmokeParticles, newValue -> config.disableCampfireSmokeParticles = newValue);
@@ -260,6 +268,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "No Memory Reserve",
                 "Removes the 10 MB memory reserve Minecraft allocates that's never freed unless your game crashes, freeing it to be used for other stuff. This should generally have zero downsides, even if you crash or if 10 MB is too insignificant for you, it's better for the Java Garbage Collector to have more free memory to work with.",
                 config.noMemoryReserve, newValue -> config.noMemoryReserve = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Optimize Enum Values",
+                "Optimizes memory allocation rate by eliminating enum values array copying in some places, currently a single place.",
+                config.optimizeEnumValues, newValue -> config.optimizeEnumValues = newValue);
 
         performance.addEntry(entryBuilder
                 .startEnumSelector(Text.of("OpenGL Version Override"), OpenGLVersionOverride.class, config.openGLVersionOverride)
@@ -321,6 +333,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Cursor Fix",
                 "Fixes a bug where the mouse cursor stays on screen after closing a menu that set a custom cursor but forgot to revert it.",
                 config.cursorFix, newValue -> config.cursorFix = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Middle Click Fix",
+                "Allows you to middle click when hovering over items like in 1.8, such as to disable Witherborn ability of your armor.",
+                config.middleClickFix, newValue -> config.middleClickFix = newValue);
 
         // === Development ===
         final var development = builder.getOrCreateCategory(Text.of("Development"));

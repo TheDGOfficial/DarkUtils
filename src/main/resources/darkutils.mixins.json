@@ -38,7 +38,10 @@
     "misc.ClientConnectionMixin",
     "performance.ItemFrameEntityMixin",
     "performance.WorldMixin",
-    "visuals.FogRendererMixin"
+    "visuals.FogRendererMixin",
+    "performance.FormattingMixin",
+    "performance.GL11Mixin",
+    "bugfixes.HandledScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

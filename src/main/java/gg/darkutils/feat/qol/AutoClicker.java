@@ -74,12 +74,12 @@ public final class AutoClicker {
         }
 
         private final boolean isPressed(final boolean actual) {
-            return (AutoClicker.Key.RIGHT == this ? !Helpers.isHoldingARCMWeapon() : !Helpers.isHoldingASword()) && actual;
+            return (AutoClicker.Key.RIGHT == this ? !Helpers.isHoldingARCMWeaponOrMatches(name -> DarkUtilsConfig.INSTANCE.autoClickerWorkWithAOTV && Helpers.matchHoldingAOTV().test(name)) : !Helpers.isHoldingASwordHuntaxeOrSpade()) && actual;
         }
 
         private final boolean wasPressed(final boolean actual) {
             final var right = AutoClicker.Key.RIGHT == this;
-            if (!actual && this.state && (right ? Helpers.isHoldingARCMWeapon() : Helpers.isHoldingASword())) {
+            if (!actual && this.state && (right ? Helpers.isHoldingARCMWeaponOrMatches(name -> DarkUtilsConfig.INSTANCE.autoClickerWorkWithAOTV && Helpers.matchHoldingAOTV().test(name)) : Helpers.isHoldingASwordHuntaxeOrSpade())) {
                 final var held = this.keyBinding.isPressed();
 
                 if (held) {

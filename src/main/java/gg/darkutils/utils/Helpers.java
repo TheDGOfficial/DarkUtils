@@ -94,7 +94,10 @@ public final class Helpers {
     }
 
     private static final boolean doesHeldItemNameMatch(@NotNull final Predicate<String> matcher) {
-        final var stack = Helpers.getItemStackInHand();
+        return Helpers.doesHeldItemNameMatch(Helpers.getItemStackInHand(), matcher);
+    }
+
+    private static final boolean doesHeldItemNameMatch(@NotNull final ItemStack stack, @NotNull final Predicate<String> matcher) {
         final var customName = stack.getCustomName();
         if (null == customName) {
             return false;
@@ -103,12 +106,17 @@ public final class Helpers {
         return matcher.test(plain);
     }
 
-    public static final boolean isHoldingASword() {
-        return Helpers.doesHeldItemMatch(stack -> stack.isIn(ItemTags.SWORDS));
+    public static final boolean isHoldingASwordHuntaxeOrSpade() {
+        return Helpers.doesHeldItemMatch(stack -> stack.isIn(ItemTags.SWORDS) || Helpers.doesHeldItemNameMatch(stack, name -> name.contains("Huntaxe") || name.contains("Spade")));
     }
 
-    public static final boolean isHoldingARCMWeapon() {
-        return Helpers.doesHeldItemNameMatch(name -> name.contains("Hyperion") || name.contains("Astraea"));
+    public static final boolean isHoldingARCMWeaponOrMatches(@NotNull final Predicate<String> matcher) {
+        return Helpers.doesHeldItemNameMatch(name -> name.contains("Hyperion") || name.contains("Astraea") || matcher.test(name));
+    }
+
+    @NotNull
+    public static final Predicate<String> matchHoldingAOTV() {
+        return name -> name.contains("Aspect of the Void");
     }
 
     public static final void displayCountdownTitles(@NotNull final String color, @NotNull final String finalText, final int seconds) {
