@@ -66,7 +66,7 @@ dependencies {
         exclude(group: 'net.fabricmc.fabric-api')
     }
 
-    modApi('com.terraformersmc:modmenu:15.0.0') {
+    modApi('com.terraformersmc:modmenu:16.0.0-rc.2') {
         exclude(group: 'net.fabricmc.fabric-api')
     }
 

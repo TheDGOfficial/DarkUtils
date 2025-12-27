@@ -365,28 +365,22 @@ public final class DarkUtils implements ClientModInitializer {
         });
     }
 
-    /**
-     * This entrypoint is suitable for setting up client-specific logic, such as rendering.
-     */
-    @Override
-    public final void onInitializeClient() {
-        // Register mod commands
-        DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.openConfig(), "darkutil", "du");
-
-        // Init utils, features may depend on those so they should be init before features
+    private static final void initUtils() {
         DarkUtils.init(
                 LocationUtils::init,
                 ChatUtils::init
         );
+    }
 
-        // Init feature dependencies, features will depend on those so they should be init before features
+    private static final void initFeatureDependencies() {
         DarkUtils.init(
                 TreeGiftFeatures::init,
                 DungeonTimer::init,
                 ServerTPSCalculator::init
         );
+    }
 
-        // Init features
+    private static final void initFeatures() {
         DarkUtils.init(
                 ArmorStandOptimizer::init,
                 AutoFishingRod::init,
@@ -410,6 +404,24 @@ public final class DarkUtils implements ClientModInitializer {
                 VanillaMode::init,
                 CursorFix::init
         );
+    }
+
+    /**
+     * This entrypoint is suitable for setting up client-specific logic, such as rendering.
+     */
+    @Override
+    public final void onInitializeClient() {
+        // Register mod commands
+        DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.openConfig(), "darkutil", "du");
+
+        // Init utils, features may depend on those so they should be init before features
+        DarkUtils.initUtils();
+
+        // Init feature dependencies, features will depend on those so they should be init before features
+        DarkUtils.initFeatureDependencies();
+
+        // Init features
+        DarkUtils.initFeatures();
 
         // Send welcome message once player joins a world/server/realm
         DarkUtils.queueWelcomeMessageIfEnabled();
