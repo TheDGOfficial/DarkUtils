@@ -24,7 +24,7 @@ public final class DialogueSkipTimer {
         }
 
         if (event.matches("[BOSS] The Watcher: Let's see how you can handle this.") && event.isStyledWith(BasicColor.RED)) {
-            Helpers.displayCountdownTitles("§4", "Kill Blood Mobs!", 3);
+            Helpers.displayCountdownTitlesInServerTicks("§4", "Kill Blood Mobs!", 3);
         }
     }
 }
