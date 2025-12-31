@@ -1,5 +1,8 @@
 package gg.darkutils.utils;
 
+import gg.darkutils.events.ServerTickEvent;
+import gg.darkutils.events.base.EventRegistry;
+
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -15,10 +18,13 @@ import java.util.function.Supplier;
 
 public final class TickUtils {
     private static final @NotNull Set<TickUtils.Task> tasks = ConcurrentHashMap.newKeySet();
+    private static final @NotNull Set<TickUtils.Task> serverTasks = ConcurrentHashMap.newKeySet();
+
     private static final @NotNull Supplier<ClientPlayerEntity> localPlayer = () -> MinecraftClient.getInstance().player;
 
     static {
         ClientTickEvents.END_CLIENT_TICK.register(client -> TickUtils.processAwaitingTasks());
+        EventRegistry.centralRegistry().addListener(TickUtils::processAwaitingServerTasks);
     }
 
     private TickUtils() {
@@ -33,6 +39,11 @@ public final class TickUtils {
 
     private static final void processAwaitingTasks() {
         TickUtils.tasks.removeIf(TickUtils.Task::tick);
+    }
+
+    private static final void processAwaitingServerTasks(@NotNull final ServerTickEvent event) {
+        // ServerTickEvent gets triggered in the netty thread, ensure consumers of TickUtils API do not acccidentally access Minecraft off-thread
+        TickUtils.queueTickTask(() -> TickUtils.serverTasks.removeIf(TickUtils.Task::tick), 1);
     }
 
     // ============================================================
@@ -108,6 +119,40 @@ public final class TickUtils {
     }
 
     /**
+     * Queues an updating condition. The given condition will be wrapped to return the same value till it is updated
+     * each tick. This is useful for making conditions update each tick and using them each frame.
+     *
+     * @param condition The interval, in ticks. 20 ticks is considered equal to a second.
+     */
+    @NotNull
+    public static final BooleanSupplier queueUpdatingCondition(@NotNull final BooleanSupplier condition) {
+        Objects.requireNonNull(condition, "condition");
+
+        final class CachedCondition implements BooleanSupplier {
+            private boolean value;
+
+            @Override
+            public final boolean getAsBoolean() {
+                return this.value;
+            }
+
+            private final void update() {
+                this.value = condition.getAsBoolean();
+            }
+        }
+
+        final var cached = new CachedCondition();
+
+        // Initialize immediately so the first read is correct
+        cached.update();
+
+        // Update once per tick
+        TickUtils.queueRepeatingTickTask(cached::update, 1);
+
+        return cached;
+    }
+
+    /**
      * Queues a tick task to be run. If delay is zero, it will be run immediately, without checking the current thread.
      * Otherwise, it will run on the render thread with the specified delay in ticks.
      *
@@ -120,6 +165,22 @@ public final class TickUtils {
             task.run();
         } else {
             TickUtils.tasks.add(new TickUtils.Task(task, delay, false));
+        }
+    }
+
+    /**
+     * Queues a server tick task to be run. If delay is zero, it will be run immediately, without checking the current thread.
+     * Otherwise, it will run on the render thread with the specified delay in server ticks.
+     *
+     * @param task  The task.
+     * @param delay The delay, in server ticks. 20 ticks is considered equal to a second.
+     */
+    public static final void queueServerTickTask(@NotNull final Runnable task, final int delay) {
+        Objects.requireNonNull(task, "task");
+        if (0 == delay) {
+            task.run();
+        } else {
+            TickUtils.serverTasks.add(new TickUtils.Task(task, delay, false));
         }
     }
 

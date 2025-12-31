@@ -17,6 +17,7 @@ import net.minecraft.util.hit.EntityHitResult;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
+import java.util.function.ObjIntConsumer;
 
 public final class Helpers {
     private Helpers() {
@@ -120,6 +121,14 @@ public final class Helpers {
     }
 
     public static final void displayCountdownTitles(@NotNull final String color, @NotNull final String finalText, final int seconds) {
+        Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueTickTask); 
+    }
+
+    public static final void displayCountdownTitlesInServerTicks(@NotNull final String color, @NotNull final String finalText, final int seconds) {
+        Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueServerTickTask);
+    }
+
+    private static final void displayCountdownTitlesInternal(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final ObjIntConsumer<Runnable> queueMethod) {
         // Show the first number immediately
         Helpers.notify(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, color + seconds);
 
@@ -127,14 +136,14 @@ public final class Helpers {
         for (var i = seconds - 1; 0 < i; --i) {
             final var value = i;
             final var delay = 20 * (seconds - i);
-            TickUtils.queueTickTask(
+            queueMethod.accept(
                     () -> Helpers.notify(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, color + value),
                     delay
             );
         }
 
         // Queue the final text
-        TickUtils.queueTickTask(
+        queueMethod.accept(
                 () -> Helpers.notify(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), color + finalText),
                 20 * seconds
         );

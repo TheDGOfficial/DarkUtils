@@ -40,7 +40,7 @@ public final class SoloCrushTimer {
                 SoloCrushTimer.firstLightningReceived = false;
                 SoloCrushTimer.done = true;
 
-                Helpers.displayCountdownTitles("§5", "Crush!", 3);
+                Helpers.displayCountdownTitlesInServerTicks("§5", "Crush!", 3);
             } else {
                 SoloCrushTimer.firstLightningReceived = true;
             }
