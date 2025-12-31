@@ -1,6 +1,7 @@
 package gg.darkutils.feat.dungeons;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.RenderUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
@@ -11,6 +12,7 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 
 public final class ArrowStackWaypoints {
     /**
@@ -24,6 +26,9 @@ public final class ArrowStackWaypoints {
             Formatting.AQUA, new BlockPos(82, 19, 96), // Blue/Ice Dragon
             Formatting.DARK_PURPLE, new BlockPos(56, 20, 124) // Purple/Soul Dragon
     );
+
+    private static final BooleanSupplier SHOULD_RENDER =
+            TickUtils.queueUpdatingCondition(ArrowStackWaypoints::shouldRender);
 
     private ArrowStackWaypoints() {
         super();
@@ -45,7 +50,7 @@ public final class ArrowStackWaypoints {
     }
 
     private static final void renderArrowStackWaypoints(@NotNull final WorldRenderContext context) {
-        if (!ArrowStackWaypoints.shouldRender()) {
+        if (!ArrowStackWaypoints.SHOULD_RENDER.getAsBoolean()) {
             return;
         }
 
