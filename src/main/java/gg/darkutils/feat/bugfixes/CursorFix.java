@@ -5,9 +5,10 @@ import gg.darkutils.utils.TickUtils;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.cursor.Cursor;
 
 import org.jetbrains.annotations.Nullable;
+
+import org.lwjgl.glfw.GLFW;
 
 public final class CursorFix {
     @Nullable
@@ -33,8 +34,9 @@ public final class CursorFix {
 
         if (null == screen && null != CursorFix.previousScreen) {
             // A screen was closed. Set cursor back to default cursor.
-            // Prevents mouse cursor staying on screen after closing a menu that set a custom cursor and forgot to revert it.
-            Cursor.DEFAULT.applyTo(mc.getWindow());
+            // Prevents mouse cursor staying on screen after closing a menu that set a custom cursor.
+            final var windowId = mc.getWindow().getHandle();
+            GLFW.glfwSetCursor(windowId, 0L);
         }
 
         CursorFix.previousScreen = screen;
