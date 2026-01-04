@@ -2,6 +2,7 @@ package gg.darkutils.utils;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import gg.darkutils.DarkUtils;
+import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
@@ -12,6 +13,7 @@ import net.minecraft.client.render.VertexRendering;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
+import net.minecraft.text.OrderedText;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -61,6 +63,15 @@ public final class RenderUtils {
      * Holds the item to empty ItemStack cache.
      */
     private static final @NotNull Map<Item, ItemStack> ITEM_TO_ITEMSTACK = new HashMap<>();
+    /**
+     * Holds the string to ordered text cache.
+     */
+    private static final @NotNull Map<String, OrderedText> ORDERED_TEXT_CACHE = new HashMap<>();
+
+    static {
+        // Clear the cache 1 tick after every second
+        TickUtils.queueRepeatingTickTask(() -> ORDERED_TEXT_CACHE.clear(), 21);
+    }
 
     private RenderUtils() {
         super();
@@ -94,7 +105,7 @@ public final class RenderUtils {
     }
 
     private static final void renderText(@NotNull final DrawContext context, @NotNull final String text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
-        context.drawText(MinecraftClient.getInstance().textRenderer, Text.of(text).asOrderedText(), x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
+        context.drawText(MinecraftClient.getInstance().textRenderer, ORDERED_TEXT_CACHE.computeIfAbsent(text, (t) -> Text.of(t).asOrderedText()), x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
     public static final int middleAlignedXForText(@NotNull final String text) {
@@ -107,7 +118,7 @@ public final class RenderUtils {
     }
 
     public static final void renderCenteredText(@NotNull final DrawContext context, @NotNull final String text, @NotNull final IntSupplier y, @NotNull final Formatting color) {
-        context.drawText(MinecraftClient.getInstance().textRenderer, Text.of(text).asOrderedText(), RenderUtils.middleAlignedXForText(text), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
+        context.drawText(MinecraftClient.getInstance().textRenderer, ORDERED_TEXT_CACHE.computeIfAbsent(text, (t) -> Text.of(t).asOrderedText()), RenderUtils.middleAlignedXForText(text), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
     public static final void renderItem(@NotNull final DrawContext context, @NotNull final Item item, final int x, final int y) {
