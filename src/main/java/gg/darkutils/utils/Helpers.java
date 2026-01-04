@@ -149,12 +149,41 @@ public final class Helpers {
         );
     }
 
-    private static final void notify(@NotNull final SoundEvent sound, @NotNull final String text) {
+    public static final void notify(@NotNull final SoundEvent sound, @NotNull final String text) {
+        Helpers.notify(sound, text, 20);
+    }
+
+    public static final void notify(@NotNull final SoundEvent sound, @NotNull final String text, final int ticks) {
         final var client = MinecraftClient.getInstance();
 
         Helpers.playSound(sound, 1.0F, 1.0F);
         client.inGameHud.setTitle(Text.of(text));
-        client.inGameHud.setTitleTicks(0, 20, 0);
+        client.inGameHud.setTitleTicks(0, ticks, 0);
+    }
+
+    public static final void notifyForServerTicks(@NotNull final SoundEvent sound, @NotNull final String text, final int serverTicks) {
+        Helpers.notifyForServerTicks(sound, text, serverTicks, () -> {});
+    }
+
+    public static final void notifyForServerTicks(@NotNull final SoundEvent sound, @NotNull final String text, final int serverTicks, @NotNull final Runnable afterDismissHook) {
+        final var client = MinecraftClient.getInstance();
+
+        Helpers.playSound(sound, 1.0F, 1.0F);
+        client.inGameHud.setTitle(Text.of(text));
+
+        // Hacky way to simulate server tick dismissal of the title
+        client.inGameHud.setTitleTicks(0, Integer.MAX_VALUE, 0);
+        TickUtils.queueServerTickTask(() -> {
+            Helpers.clearTitle();
+            afterDismissHook.run();
+        }, serverTicks);   
+    }
+
+    private static final void clearTitle() {
+        final var client = MinecraftClient.getInstance();
+
+        client.inGameHud.setTitle(null);
+        client.inGameHud.setTitleTicks(0, Integer.MAX_VALUE, 0);
     }
 
     private static final void playSound(@NotNull final SoundEvent sound, final float volume, final float pitch) {

@@ -118,6 +118,22 @@ public final class TickUtils {
     }
 
     /**
+     * Queues a repeating server tick task to be run with the given interval. If interval is zero, an exception will be thrown.
+     * Otherwise, it will run on the render thread every interval amount of server ticks, e.g., interval = 1 runs it every server tick,
+     * interval = 2 runs it every other server tick, and so on.
+     *
+     * @param task     The task.
+     * @param interval The interval, in server ticks. 20 ticks is considered equal to a second if the server is running at 20 tps with no lag.
+     */
+    public static final void queueRepeatingServerTickTask(@NotNull final Runnable task, final int interval) {
+        Objects.requireNonNull(task, "task");
+        if (0 == interval) {
+            throw new IllegalArgumentException("Queueing a repeating tick task with interval zero is prohibited");
+        }
+        TickUtils.serverTasks.add(new TickUtils.Task(task, interval, true));
+    }
+
+    /**
      * Queues an updating condition. The given condition will be wrapped to return the same value till it is updated
      * each tick. This is useful for making conditions update each tick and using them each frame.
      *
