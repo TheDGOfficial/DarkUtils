@@ -22,9 +22,9 @@ final class EntityRendererMixin<T extends Entity> {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "shouldRender", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
     private final void darkutils$skipRenderingArmorStandIfEnabled(@NotNull final T entity, @NotNull final Frustum frustum, final double x, final double y, final double z, @NotNull final CallbackInfoReturnable<Boolean> cir) {
-        if (cir.getReturnValueZ() && entity instanceof final ArmorStandEntity armorStand && EventRegistry.centralRegistry().triggerEvent(new RenderEntityEvents.ArmorStandRenderEvent(armorStand)).isCancelled()) {
+        if (entity instanceof final ArmorStandEntity armorStand && EventRegistry.centralRegistry().triggerEvent(new RenderEntityEvents.ArmorStandRenderEvent(armorStand)).isCancelled()) {
             cir.setReturnValue(false);
         }
     }
