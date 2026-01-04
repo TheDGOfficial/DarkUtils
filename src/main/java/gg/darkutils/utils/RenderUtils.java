@@ -19,6 +19,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.OptionalDouble;
 import java.util.function.IntSupplier;
@@ -55,6 +57,10 @@ public final class RenderUtils {
             RenderUtils.OUTLINE_CULL_RENDER_PIPELINE,
             RenderUtils.LINES_PARAMETER.build(false)
     );
+    /**
+     * Holds the item to empty ItemStack cache.
+     */
+    private static final @NotNull Map<Item, ItemStack> ITEM_TO_ITEMSTACK = new HashMap<>();
 
     private RenderUtils() {
         super();
@@ -113,8 +119,7 @@ public final class RenderUtils {
     }
 
     private static final void renderItem(@NotNull final DrawContext context, @NotNull final Item item, final IntSupplier x, @NotNull final IntSupplier y) {
-        final var stack = new ItemStack(item);
-        context.drawItem(stack, x.getAsInt(), y.getAsInt());
+        context.drawItemWithoutEntity(ITEM_TO_ITEMSTACK.computeIfAbsent(item, ItemStack::new), x.getAsInt(), y.getAsInt(), 0);
     }
 
     public static final void drawBlockOutline(@NotNull final WorldRenderContext context,
