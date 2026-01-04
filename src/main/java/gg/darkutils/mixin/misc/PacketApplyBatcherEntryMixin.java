@@ -1,9 +1,11 @@
 package gg.darkutils.mixin.misc;
 
 import gg.darkutils.events.ReceiveMainThreadPacketEvent;
+import gg.darkutils.events.ServerTickEvent;
 import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -32,6 +34,10 @@ final class PacketApplyBatcherEntryMixin<T extends PacketListener> {
             cancellable = true
     )
     private final void darkutils$beforeMainThreadPacket(@NotNull final CallbackInfo ci) {
+        if (this.packet instanceof CommonPingS2CPacket) {
+            EventRegistry.centralRegistry().triggerEvent(ServerTickEvent.INSTANCE);
+        }
+
         if (EventRegistry.centralRegistry().triggerEvent(new ReceiveMainThreadPacketEvent(this.packet)).isCancelled()) {
             ci.cancel(); // prevent executing original packet handler
         }

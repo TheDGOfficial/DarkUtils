@@ -12,7 +12,6 @@
     "bugfixes.HandledScreenMixin",
     "bugfixes.InactivityFpsLimiterMixin",
 
-    "misc.ClientConnectionMixin",
     "misc.ClientPlayNetworkHandlerMixin",
     "misc.EntityRendererMixin",
     "misc.GameRendererMixin",

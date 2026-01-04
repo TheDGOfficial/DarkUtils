@@ -42,8 +42,7 @@ public final class TickUtils {
     }
 
     private static final void processAwaitingServerTasks(@NotNull final ServerTickEvent event) {
-        // ServerTickEvent gets triggered in the netty thread, ensure consumers of TickUtils API do not acccidentally access Minecraft off-thread
-        TickUtils.queueTickTask(() -> TickUtils.serverTasks.removeIf(TickUtils.Task::tick), 1);
+        TickUtils.serverTasks.removeIf(TickUtils.Task::tick);
     }
 
     // ============================================================
