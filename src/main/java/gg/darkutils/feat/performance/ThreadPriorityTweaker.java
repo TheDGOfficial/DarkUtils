@@ -146,7 +146,9 @@ public final class ThreadPriorityTweaker {
         for (final var tweaker : ThreadPriorityTweaker.others) {
             if (tweaker.appliesTo(name)) {
                 foundMatchingTweaker = true;
+
                 tweaker.applyTo(thread);
+                break;
             }
         }
 
