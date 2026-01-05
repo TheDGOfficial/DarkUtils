@@ -16,8 +16,8 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Predicate;
 import java.util.function.ObjIntConsumer;
+import java.util.function.Predicate;
 
 public final class Helpers {
     private Helpers() {
@@ -26,22 +26,7 @@ public final class Helpers {
         throw new UnsupportedOperationException("static utility class");
     }
 
-    @FunctionalInterface
-    public interface MatcherCondition<T> {
-        boolean test(@NotNull final T value);
-
-        @NotNull
-        default MatcherCondition<T> or(@NotNull final MatcherCondition<T> other) {
-            return value -> this.test(value) || other.test(value);
-        }
-
-        @NotNull
-        default MatcherCondition<T> and(@NotNull final MatcherCondition<T> other) {
-            return value -> this.test(value) && other.test(value);
-        }
-    }
-
-    public static final boolean doesTargetedBlockMatch(@NotNull final MatcherCondition<BlockState> matcher) {
+    public static final boolean doesTargetedBlockMatch(@NotNull final Helpers.MatcherCondition<BlockState> matcher) {
         final var mc = MinecraftClient.getInstance();
         final var world = mc.world;
         if (null == world || !(mc.crosshairTarget instanceof final BlockHitResult blockHitResult)) {
@@ -52,32 +37,32 @@ public final class Helpers {
     }
 
     @NotNull
-    public static final MatcherCondition<BlockState> isButton() {
+    public static final Helpers.MatcherCondition<BlockState> isButton() {
         return state -> state.isIn(BlockTags.BUTTONS);
     }
 
     @NotNull
-    public static final MatcherCondition<BlockState> isLever() {
+    public static final Helpers.MatcherCondition<BlockState> isLever() {
         return state -> state.isOf(Blocks.LEVER);
     }
 
     @NotNull
-    public static final MatcherCondition<BlockState> isCraftingTable() {
+    public static final Helpers.MatcherCondition<BlockState> isCraftingTable() {
         return state -> state.isOf(Blocks.CRAFTING_TABLE);
     }
 
     @NotNull
-    public static final MatcherCondition<BlockState> isMushroom() {
+    public static final Helpers.MatcherCondition<BlockState> isMushroom() {
         return state -> state.isOf(Blocks.RED_MUSHROOM) || state.isOf(Blocks.BROWN_MUSHROOM);
     }
 
     @NotNull
-    public static final MatcherCondition<BlockState> isRedstoneBlock() {
+    public static final Helpers.MatcherCondition<BlockState> isRedstoneBlock() {
         return state -> state.isOf(Blocks.REDSTONE_BLOCK);
     }
 
     @NotNull
-    public static final MatcherCondition<BlockState> isCommandBlock() {
+    public static final Helpers.MatcherCondition<BlockState> isCommandBlock() {
         return state -> state.isOf(Blocks.COMMAND_BLOCK);
     }
 
@@ -142,7 +127,7 @@ public final class Helpers {
     }
 
     public static final void displayCountdownTitles(@NotNull final String color, @NotNull final String finalText, final int seconds) {
-        Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueTickTask); 
+        Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueTickTask);
     }
 
     public static final void displayCountdownTitlesInServerTicks(@NotNull final String color, @NotNull final String finalText, final int seconds) {
@@ -170,7 +155,7 @@ public final class Helpers {
         );
     }
 
-    public static final void notify(@NotNull final SoundEvent sound, @NotNull final String text) {
+    private static final void notify(@NotNull final SoundEvent sound, @NotNull final String text) {
         Helpers.notify(sound, text, 20);
     }
 
@@ -183,7 +168,8 @@ public final class Helpers {
     }
 
     public static final void notifyForServerTicks(@NotNull final SoundEvent sound, @NotNull final String text, final int serverTicks) {
-        Helpers.notifyForServerTicks(sound, text, serverTicks, () -> {});
+        Helpers.notifyForServerTicks(sound, text, serverTicks, () -> {
+        });
     }
 
     public static final void notifyForServerTicks(@NotNull final SoundEvent sound, @NotNull final String text, final int serverTicks, @NotNull final Runnable afterDismissHook) {
@@ -197,7 +183,7 @@ public final class Helpers {
         TickUtils.queueServerTickTask(() -> {
             Helpers.clearTitle();
             afterDismissHook.run();
-        }, serverTicks);   
+        }, serverTicks);
     }
 
     private static final void clearTitle() {
@@ -212,6 +198,19 @@ public final class Helpers {
 
         if (null != player) {
             player.playSound(sound, volume, pitch);
+        }
+    }
+
+    @FunctionalInterface
+    public interface MatcherCondition<T> extends Predicate<T> {
+        @NotNull
+        default Helpers.MatcherCondition<T> or(@NotNull final Helpers.MatcherCondition<T> other) {
+            return value -> this.test(value) || other.test(value);
+        }
+
+        @NotNull
+        default Helpers.MatcherCondition<T> and(@NotNull final Helpers.MatcherCondition<T> other) {
+            return value -> this.test(value) && other.test(value);
         }
     }
 }
