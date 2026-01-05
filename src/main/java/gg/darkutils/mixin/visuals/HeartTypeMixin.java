@@ -31,6 +31,6 @@ final class HeartTypeMixin {
             )
     )
     private static final boolean darkutils$disableWitherOverlayIfEnabled(@NotNull final PlayerEntity player, @NotNull final RegistryEntry<StatusEffect> effectEntry) {
-        return (effectEntry != StatusEffects.WITHER || !DarkUtilsConfig.INSTANCE.noWitherHearts) && player.hasStatusEffect(effectEntry); // Prevents wither hearts
+        return (!DarkUtilsConfig.INSTANCE.noWitherHearts || effectEntry != StatusEffects.WITHER) && player.hasStatusEffect(effectEntry); // Prevents wither hearts
     }
 }

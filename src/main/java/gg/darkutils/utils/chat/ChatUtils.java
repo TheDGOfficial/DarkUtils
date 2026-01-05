@@ -52,12 +52,19 @@ public final class ChatUtils {
 
     private static final void onTick(@NotNull final MinecraftClient client) {
         final var player = client.player;
+        if (null == player || ChatUtils.sendMessageQueue.isEmpty()) {
+            return;
+        }
 
-        if (null != player && (0L == ChatUtils.lastSentMessageOrCommandAt || System.nanoTime() - ChatUtils.lastSentMessageOrCommandAt > TimeUnit.MILLISECONDS.toNanos(250L))) {
-            final var messageOrCommand = ChatUtils.sendMessageQueue.isEmpty() ? null : ChatUtils.sendMessageQueue.dequeue();
-            if (null != messageOrCommand && !messageOrCommand.isEmpty()) {
-                player.networkHandler.sendChatMessage(messageOrCommand);
-            }
+        final var lastSentAt = ChatUtils.lastSentMessageOrCommandAt;
+        if (0L != lastSentAt &&
+            System.nanoTime() - lastSentAt <= TimeUnit.MILLISECONDS.toNanos(250L)) {
+            return;
+        }
+
+        final var messageOrCommand = ChatUtils.sendMessageQueue.dequeue();
+        if (null != messageOrCommand && !messageOrCommand.isEmpty()) {
+            player.networkHandler.sendChatMessage(messageOrCommand);
         }
     }
 

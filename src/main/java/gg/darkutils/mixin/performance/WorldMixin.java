@@ -57,7 +57,7 @@ public final class WorldMixin {
     private final void darkutils$removeAll(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.blockEntityUnloadLagFix) {
             final var toRemoveLocal = this.toRemove;
-            if (null != toRemoveLocal) { // may happen if feature is toggled in between calls
+            if (null != toRemoveLocal && !toRemoveLocal.isEmpty()) { // may happen if feature is toggled in between calls
                 this.blockEntityTickers.removeAll(toRemoveLocal);
             }
         }

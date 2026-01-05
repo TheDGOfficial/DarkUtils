@@ -26,9 +26,11 @@ public final class ItemUtils {
         for (final var line : ItemUtils.getLoreLines(stack)) {
             final var plain = line.getString();
 
-            if (plain.contains("Ability: ") && plain.endsWith("RIGHT CLICK")) {
-                return plain;
+            if (!plain.contains("Ability: ")) {
+                continue;
             }
+
+            return plain.endsWith("RIGHT CLICK") ? plain : null;
         }
 
         return null;

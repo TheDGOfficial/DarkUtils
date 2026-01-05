@@ -69,8 +69,8 @@ public final class RenderUtils {
     private static final @NotNull Map<String, OrderedText> ORDERED_TEXT_CACHE = new HashMap<>();
 
     static {
-        // Clear the cache 1 tick after every second
-        TickUtils.queueRepeatingTickTask(() -> ORDERED_TEXT_CACHE.clear(), 21);
+        // Clear the cache 2 tick after every other second
+        TickUtils.queueRepeatingTickTask(() -> ORDERED_TEXT_CACHE.clear(), 42);
     }
 
     private RenderUtils() {

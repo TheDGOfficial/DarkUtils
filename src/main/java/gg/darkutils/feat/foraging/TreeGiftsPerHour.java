@@ -73,6 +73,12 @@ public final class TreeGiftsPerHour {
             return;
         }
 
+        final var client = MinecraftClient.getInstance();
+
+        if (null == client.player) {
+            return;
+        }
+
         // Skip if last gift was more than 1 minute ago
         if (0L != TreeGiftsPerHour.lastGiftTime) {
             final var now = System.nanoTime();
@@ -80,12 +86,6 @@ public final class TreeGiftsPerHour {
             if (now - TreeGiftsPerHour.lastGiftTime > oneMinuteNanos) {
                 return;
             }
-        }
-
-        final var client = MinecraftClient.getInstance();
-
-        if (null == client.player) {
-            return;
         }
 
         final var perHour = TreeGiftsPerHour.getGiftsPerHour();

@@ -26,7 +26,22 @@ public final class Helpers {
         throw new UnsupportedOperationException("static utility class");
     }
 
-    private static final boolean doesTargetedBlockMatch(@NotNull final Predicate<BlockState> matcher) {
+    @FunctionalInterface
+    public interface MatcherCondition<T> {
+        boolean test(@NotNull final T value);
+
+        @NotNull
+        default MatcherCondition<T> or(@NotNull final MatcherCondition<T> other) {
+            return value -> this.test(value) || other.test(value);
+        }
+
+        @NotNull
+        default MatcherCondition<T> and(@NotNull final MatcherCondition<T> other) {
+            return value -> this.test(value) && other.test(value);
+        }
+    }
+
+    public static final boolean doesTargetedBlockMatch(@NotNull final MatcherCondition<BlockState> matcher) {
         final var mc = MinecraftClient.getInstance();
         final var world = mc.world;
         if (null == world || !(mc.crosshairTarget instanceof final BlockHitResult blockHitResult)) {
@@ -36,24 +51,34 @@ public final class Helpers {
         return matcher.test(state);
     }
 
-    public static final boolean isLookingAtAButton() {
-        return Helpers.doesTargetedBlockMatch(state -> state.isIn(BlockTags.BUTTONS));
+    @NotNull
+    public static final MatcherCondition<BlockState> isButton() {
+        return state -> state.isIn(BlockTags.BUTTONS);
     }
 
-    public static final boolean isLookingAtALever() {
-        return Helpers.doesTargetedBlockMatch(state -> state.isOf(Blocks.LEVER));
+    @NotNull
+    public static final MatcherCondition<BlockState> isLever() {
+        return state -> state.isOf(Blocks.LEVER);
     }
 
-    public static final boolean isLookingAtACraftingTable() {
-        return Helpers.doesTargetedBlockMatch(state -> state.isOf(Blocks.CRAFTING_TABLE));
+    @NotNull
+    public static final MatcherCondition<BlockState> isCraftingTable() {
+        return state -> state.isOf(Blocks.CRAFTING_TABLE);
     }
 
-    public static final boolean isLookingAtAMushroom() {
-        return Helpers.doesTargetedBlockMatch(state -> state.isOf(Blocks.RED_MUSHROOM) || state.isOf(Blocks.BROWN_MUSHROOM));
+    @NotNull
+    public static final MatcherCondition<BlockState> isMushroom() {
+        return state -> state.isOf(Blocks.RED_MUSHROOM) || state.isOf(Blocks.BROWN_MUSHROOM);
     }
 
-    public static final boolean isLookingAtARedstoneBlock() {
-        return Helpers.doesTargetedBlockMatch(state -> state.isOf(Blocks.REDSTONE_BLOCK));
+    @NotNull
+    public static final MatcherCondition<BlockState> isRedstoneBlock() {
+        return state -> state.isOf(Blocks.REDSTONE_BLOCK);
+    }
+
+    @NotNull
+    public static final MatcherCondition<BlockState> isCommandBlock() {
+        return state -> state.isOf(Blocks.COMMAND_BLOCK);
     }
 
     private static final boolean doesTargetedEntityMatch(@NotNull final Predicate<Entity> matcher) {
@@ -66,8 +91,8 @@ public final class Helpers {
         return matcher.test(entity);
     }
 
-    public static final boolean isLookingAtATerminal() {
-        return Helpers.isLookingAtACommandBlock() || Helpers.doesTargetedEntityMatch(entity -> {
+    public static final boolean isLookingAtATerminalEntity() {
+        return Helpers.doesTargetedEntityMatch(entity -> {
             if (entity instanceof ArmorStandEntity) {
                 final var customName = entity.getCustomName();
                 if (null != customName) {
@@ -77,10 +102,6 @@ public final class Helpers {
             }
             return false;
         });
-    }
-
-    private static final boolean isLookingAtACommandBlock() {
-        return Helpers.doesTargetedBlockMatch(state -> state.isOf(Blocks.COMMAND_BLOCK));
     }
 
     @NotNull

@@ -2,6 +2,7 @@ package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.Helpers;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import org.jetbrains.annotations.NotNull;
@@ -84,7 +85,26 @@ public final class AutoClicker {
 
                 if (held) {
                     this.state = false;
-                    return !right || !Helpers.isLookingAtAButton() && (DarkUtilsConfig.INSTANCE.autoClickerWorkInLevers || !Helpers.isLookingAtALever()) && !Helpers.isLookingAtATerminal();
+
+                    final var button = Helpers.isButton();
+                    final var lever = Helpers.isLever();
+                    final var commandBlock = Helpers.isCommandBlock();
+
+                    Helpers.MatcherCondition<BlockState> combined = button.or(commandBlock);
+
+                    if (!DarkUtilsConfig.INSTANCE.autoClickerWorkInLevers) {
+                        combined = combined.or(lever);
+                    }
+
+                    final boolean isLookingAtBlocked = Helpers.doesTargetedBlockMatch(combined);
+
+                    boolean isLookingAtTerminalEntity = false;
+
+                    if (!isLookingAtBlocked) {
+                        isLookingAtTerminalEntity = Helpers.isLookingAtATerminalEntity();
+                    }
+
+                    return !right || !(isLookingAtBlocked || isLookingAtTerminalEntity);
                 }
             }
             return actual;

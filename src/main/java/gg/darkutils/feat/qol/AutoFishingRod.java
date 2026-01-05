@@ -166,7 +166,7 @@ public final class AutoFishingRod {
 
         final var player = client.player;
 
-        if (null == client.world || null == player || AutoFishingRod.isNotHoldingRod(player) || AutoFishingRod.hooking) {
+        if (null == client.world || null == player || AutoFishingRod.hooking || AutoFishingRod.isNotHoldingRod(player)) {
             return;
         }
 

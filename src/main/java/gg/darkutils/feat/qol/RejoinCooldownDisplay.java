@@ -64,11 +64,7 @@ public final class RejoinCooldownDisplay {
 
         final var client = MinecraftClient.getInstance();
 
-        if (null == client.player) {
-            return;
-        }
-
-        if (0L == RejoinCooldownDisplay.kickCooldownEnd) {
+        if (null == client.player || 0L == RejoinCooldownDisplay.kickCooldownEnd) {
             return;
         }
 
