@@ -42,8 +42,8 @@ public interface EventHandler<T extends Event> {
      * @param listener         An {@link EventListener} to add to the list of listeners.
      * @param priority         The priority of the {@link EventListener}, determining the order it will run,
      *                         and the impact of cancellation affecting other {@link EventListener}s.
-     * @param receiveCancelled Whether this {@link EventListener} should receive cancelled events or not.
-     *                         Can be used to uncancel cancelled events, allowing other {@link EventListener}s
+     * @param receiveCancelled Whether this {@link EventListener} should receive canceled events or not.
+     *                         Can be used to uncancel canceled events, allowing other {@link EventListener}s
      *                         coming after to run and the event to happen.
      */
     default void addListener(final @NotNull EventListener<T> listener, final @NotNull EventPriority priority, final boolean receiveCancelled) {
@@ -66,7 +66,7 @@ public interface EventHandler<T extends Event> {
      * If the event is {@link CancellableEvent} and any {@link EventListener} cancels the event, the further event listeners
      * won't be called unless they return true from {@link EventListener#receiveCancelled()}.
      * <p>
-     * If an event is cancelled by an {@link EventListener} and then uncancelled at a later point by an event receiving cancelled
+     * If an event is canceled by an {@link EventListener} and then uncanceled at a later point by an event receiving canceled
      * events due to {@link EventListener#receiveCancelled()}, the further {@link EventListener}s will receive the event even if
      * they return false from {@link EventListener#receiveCancelled()}.
      * <p>

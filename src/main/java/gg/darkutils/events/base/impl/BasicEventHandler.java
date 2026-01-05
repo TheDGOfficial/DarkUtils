@@ -157,4 +157,12 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
                         " with priority " + actualListener.priority().name() +
                         " for event " + event.getClass().getName(), error);
     }
+
+    @Override
+    public final String toString() {
+        return "BasicEventHandler{" +
+                "cancellableEvent=" + this.cancellableEvent +
+                ", listeners=" + this.listeners +
+                '}';
+    }
 }

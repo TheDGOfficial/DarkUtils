@@ -2,12 +2,9 @@ package gg.darkutils.feat.bugfixes;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.TickUtils;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-
 import org.jetbrains.annotations.Nullable;
-
 import org.lwjgl.glfw.GLFW;
 
 public final class CursorFix {

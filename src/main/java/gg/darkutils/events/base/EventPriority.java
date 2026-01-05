@@ -6,7 +6,7 @@ package gg.darkutils.events.base;
 public enum EventPriority {
     /**
      * Runs before all other event listeners with lower priority. If you want other
-     * event listeners to not see cancelled events, or run code
+     * event listeners to not see canceled events, or run code
      * before others for some other reason, use this.
      */
     HIGHEST(4),
@@ -31,10 +31,10 @@ public enum EventPriority {
      */
     LOW(-1),
     /**
-     * Runs after all other event listeners with higher priority. If you want to decide
+     * Runs after all other event listeners with higher priority. Use if you want to decide
      * the final {@link CancellationState} of an event or if you want
      * other listeners to see the event while still preventing it from happening,
-     * or otherwise you want to run code after others for some other reason, use this.
+     * or otherwise you want to run code after others for other reasons.
      */
     LOWEST(-2);
 

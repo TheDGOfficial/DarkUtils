@@ -92,7 +92,7 @@ final class LightmapTextureManagerMixin {
 
     @Redirect(method = "update", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F", ordinal = 0))
     private final float darkutils$fullbrightIfEnabled(final float first, final float second) {
-        return Math.max(first, DarkUtilsConfig.INSTANCE.fullbright ? 1500.0F : second);
+        return Math.max(first, DarkUtilsConfig.INSTANCE.fullbright ? 1_500.0F : second);
     }
 
     @Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z", ordinal = 0))

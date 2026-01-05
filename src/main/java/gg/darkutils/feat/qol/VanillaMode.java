@@ -18,9 +18,10 @@ import java.util.function.UnaryOperator;
 public final class VanillaMode {
     @NotNull
     private static final Set<UnaryOperator<VanillaMode.ConfigValueState>> changers = Set.of(
-            // Vanilla singleplayer usually needs to be able to see which places are dark
-            // to be able to know where to place torches to prevent mob spawns for example,
-            // or to know which places to not go such as deep caves without a light source.
+            // Vanilla singleplayer usually needs to be able to see which places
+            // are dark to be able to know where to place torches to prevent mob
+            // spawns for example, or to know which places to not go such as deep
+            // caves without a proper light source, so those need disabling.
             state -> VanillaMode.ConfigValueState.of(DarkUtilsConfig.INSTANCE.stopLightUpdates, DarkUtilsConfig.INSTANCE.stopLightUpdates = state.currentOrNewState()),
             state -> VanillaMode.ConfigValueState.of(DarkUtilsConfig.INSTANCE.fullbright, DarkUtilsConfig.INSTANCE.fullbright = state.currentOrNewState()),
             state -> VanillaMode.ConfigValueState.of(DarkUtilsConfig.INSTANCE.nightVision, DarkUtilsConfig.INSTANCE.nightVision = state.currentOrNewState()),

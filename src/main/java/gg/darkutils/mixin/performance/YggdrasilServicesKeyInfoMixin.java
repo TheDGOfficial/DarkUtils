@@ -59,7 +59,7 @@ final class YggdrasilServicesKeyInfoMixin {
     )
     private final void darkutils$preventSignatureLogSpamIfEnabled(@NotNull final Logger logger, @NotNull final String format, @NotNull final Object arg, @NotNull final Object arg2) {
         if (!DarkUtilsConfig.INSTANCE.optimizeExceptions) {
-            // Vanilla behaviour if optimization is not enabled, print full stack trace of all errors every time they happen
+            // Vanilla behavior if optimization is not enabled, print full stack trace of all errors every time they happen
             logger.error(format, arg, arg2);
 
             // Reset state if feature is turned off

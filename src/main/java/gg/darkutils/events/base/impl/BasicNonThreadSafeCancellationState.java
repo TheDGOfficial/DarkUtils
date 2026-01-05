@@ -42,7 +42,7 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
     private boolean cancelled;
 
     /**
-     * Creates a new {@link BasicNonThreadSafeCancellationState} defaulting to not cancelled.
+     * Creates a new {@link BasicNonThreadSafeCancellationState} defaulting to not canceled.
      */
     private BasicNonThreadSafeCancellationState() {
         super();
@@ -116,5 +116,14 @@ public final class BasicNonThreadSafeCancellationState implements NonThreadSafeC
 
         // .isCancelled() or .setCancelled() after this point will throw an error.
         this.ownerId = -1L;
+    }
+
+    @Override
+    public final String toString() {
+        return "BasicNonThreadSafeCancellationState{" +
+                "ownerId=" + this.ownerId +
+                ", ownerName='" + this.ownerName + '\'' +
+                ", cancelled=" + this.cancelled +
+                '}';
     }
 }

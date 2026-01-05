@@ -1,7 +1,6 @@
 package gg.darkutils.mixin.performance;
 
 import gg.darkutils.config.DarkUtilsConfig;
-
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.system.NativeType;
@@ -19,10 +18,7 @@ final class GL11Mixin {
     @NativeType("GLenum")
     @Overwrite
     public static final int glGetError() {
-        if (DarkUtilsConfig.INSTANCE.disableErrorCheckingEntirely) {
-            return GL11C.GL_NO_ERROR;
-        }
-        return GL11C.glGetError();
+        return DarkUtilsConfig.INSTANCE.disableErrorCheckingEntirely ? GL11C.GL_NO_ERROR : GL11C.glGetError();
     }
 }
 

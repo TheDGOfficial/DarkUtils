@@ -64,4 +64,11 @@ public final class TextBuilder {
     public final Text build() {
         return this.text;
     }
+
+    @Override
+    public final String toString() {
+        return "TextBuilder{" +
+                "text=" + this.text +
+                '}';
+    }
 }

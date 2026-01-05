@@ -1,7 +1,6 @@
 package gg.darkutils.mixin.performance;
 
 import gg.darkutils.config.DarkUtilsConfig;
-
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;

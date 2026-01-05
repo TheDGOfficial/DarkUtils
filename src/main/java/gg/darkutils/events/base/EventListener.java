@@ -11,21 +11,21 @@ import java.util.function.Consumer;
  * Listener for an {@link Event}.
  * <p>
  * Single abstract method onEvent(T) keeps this a functional interface while allowing
- * default methods for priority and receiveCancelled behaviour.
+ * default methods for priority and receiveCancelled behavior.
  * <p>
  * See {@link EventListener#create(EventListener, EventPriority, boolean)} to create a
- * listener with custom priority or receiveCancelled behaviour.
+ * listener with custom priority or receiveCancelled behavior.
  *
  * @param <T> The type of the event the listener is listening for.
  */
 @FunctionalInterface
 public interface EventListener<T extends Event> extends Consumer<T> {
     /**
-     * Creates an event listener with custom priority and receiveCancelled behaviour.
+     * Creates an event listener with custom priority and receiveCancelled behavior.
      *
      * @param listener         The basic event listener.
      * @param priority         The custom event priority.
-     * @param receiveCancelled The custom behaviour on whether to accept cancelled events.
+     * @param receiveCancelled The custom behavior on whether to accept canceled events.
      * @param <T>              The type of the event we are listening for.
      * @return The new event listener with custom priority and receiveCancelled set that delegates
      * to the passed basic event listener.
@@ -72,10 +72,10 @@ public interface EventListener<T extends Event> extends Consumer<T> {
     }
 
     /**
-     * Whether this listener should still receive events that are already cancelled.
+     * Whether this listener should still receive events that are already canceled.
      * Default false.
      *
-     * @return Whether this listener should still receive events that are already cancelled.
+     * @return Whether this listener should still receive events that are already canceled.
      */
     default boolean receiveCancelled() {
         return false;

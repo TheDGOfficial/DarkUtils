@@ -2,7 +2,6 @@ package gg.darkutils.utils;
 
 import gg.darkutils.events.ServerTickEvent;
 import gg.darkutils.events.base.EventRegistry;
-
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -146,6 +145,10 @@ public final class TickUtils {
         final class CachedCondition implements BooleanSupplier {
             private boolean value;
 
+            private CachedCondition() {
+                super();
+            }
+
             @Override
             public final boolean getAsBoolean() {
                 return this.value;
@@ -153,6 +156,13 @@ public final class TickUtils {
 
             private final void update() {
                 this.value = condition.getAsBoolean();
+            }
+
+            @Override
+            public final String toString() {
+                return "CachedCondition{" +
+                        "value=" + this.value +
+                        '}';
             }
         }
 
@@ -268,6 +278,17 @@ public final class TickUtils {
 
             this.ticks--;
             return false;
+        }
+
+        @Override
+        public final String toString() {
+            return "Task{" +
+                    "action=" + this.action +
+                    ", initialTicks=" + this.initialTicks +
+                    ", repeats=" + this.repeats +
+                    ", condition=" + this.condition +
+                    ", ticks=" + this.ticks +
+                    '}';
         }
     }
 }

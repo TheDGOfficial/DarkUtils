@@ -58,7 +58,7 @@ public final class ChatUtils {
 
         final var lastSentAt = ChatUtils.lastSentMessageOrCommandAt;
         if (0L != lastSentAt &&
-            System.nanoTime() - lastSentAt <= TimeUnit.MILLISECONDS.toNanos(250L)) {
+                System.nanoTime() - lastSentAt <= TimeUnit.MILLISECONDS.toNanos(250L)) {
             return;
         }
 
@@ -68,8 +68,8 @@ public final class ChatUtils {
         }
     }
 
-    public static final void queueUserSentMessageOrCommand(@NotNull final String messageOrCommand) {
-        ChatUtils.sendMessageQueue.enqueue(messageOrCommand);
+    public static final void addToSendMessageQueue(@NotNull final String message) {
+        ChatUtils.sendMessageQueue.enqueue(message);
     }
 
     public static final boolean hasFormatting(@NotNull final Text text, @NotNull final BasicColor color) {

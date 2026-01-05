@@ -56,12 +56,12 @@ final class ClientPlayerInteractionManagerMixin {
         // We also do not cancel when looking at a mushroom. There is a 1x1 room where you get teleported under the room for a secret chest in Hypixel SkyBlock Dungeons when you right-click to a mushroom.
         // There is also 2 1x1 rooms that require you to place a skull to a redstone block so we also do not cancel if looking at a redstone block.
         if (!player.getEntityWorld().getBlockState(blockHitResult.getBlockPos()).hasBlockEntity() && !Helpers.doesTargetedBlockMatch(
-            Helpers
-                .isButton()
-                .or(Helpers.isLever())
-                .or(Helpers.isCraftingTable())
-                .or(Helpers.isMushroom())
-                .or(Helpers.isRedstoneBlock())
+                Helpers
+                        .isButton()
+                        .or(Helpers.isLever())
+                        .or(Helpers.isCraftingTable())
+                        .or(Helpers.isMushroom())
+                        .or(Helpers.isRedstoneBlock())
         ) && EventRegistry.centralRegistry().triggerEvent(new UseItemEvent(stack)).isCancelled()) {
             cir.setReturnValue(ActionResult.PASS);
         }

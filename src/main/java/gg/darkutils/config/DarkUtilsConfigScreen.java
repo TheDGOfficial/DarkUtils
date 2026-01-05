@@ -100,7 +100,7 @@ public final class DarkUtilsConfigScreen {
                 config.autoClickerWorkInLevers, newValue -> config.autoClickerWorkInLevers = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker Work With AOTV",
-                "Makes Auto Clicker work when holding AOTV, causing you to teleport rapidly/faster. Might make you teleport more than you intented to even if you click a single time, even when etherwarping, but it usually makes you teleport through longer distances much, much faster.",
+                "Makes Auto Clicker work when holding AOTV, causing you to teleport rapidly/faster. Might make you teleport more than you intended to even if you click a single time, even when etherwarping, but it usually makes you teleport through longer distances much, much faster.",
                 config.autoClickerWorkWithAOTV, newValue -> config.autoClickerWorkWithAOTV = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Disable Cells Alignment",

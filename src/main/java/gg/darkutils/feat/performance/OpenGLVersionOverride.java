@@ -48,7 +48,7 @@ public enum OpenGLVersionOverride {
             if (newVersion > oldVersion) {
                 DarkUtils.info(OpenGLVersionOverride.class, baseMessage);
             } else {
-                DarkUtils.warn(OpenGLVersionOverride.class, "{} Downgrading OpenGL version is strictly discouraged.", baseMessage);
+                DarkUtils.warn(OpenGLVersionOverride.class, "{} Downgrading OpenGL version is strongly advised against.", baseMessage);
             }
         }
 

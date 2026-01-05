@@ -1,6 +1,5 @@
 package gg.darkutils.mixin.misc;
 
-import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.RenderEntityEvents;
 import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.client.render.Frustum;
@@ -11,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(EntityRenderer.class)

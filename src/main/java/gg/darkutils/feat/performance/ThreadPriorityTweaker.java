@@ -4,6 +4,7 @@ import gg.darkutils.config.DarkUtilsConfig;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -16,8 +17,9 @@ import java.util.stream.Collectors;
 public final class ThreadPriorityTweaker {
     /**
      * Run from separate thread to not lag the game since finding root thread group, then iterating over all threads,
-     * and then setting their priorities according to their names is not entirely free, and we have to do this periodically
-     * because new threads might spawn at a later time, after we set the priorities for the first time.
+     * and then setting their priorities according to their names is not entirely free, and we have to do this
+     * periodically because new threads might spawn at a later time, after we set the priorities for the first
+     * time. There's unfortunately no JDK API that triggers when a new thread is spawned, so we must do this.
      */
     @NotNull
     private static final ScheduledExecutorService threadPriorityTweakerScheduler = Executors.newSingleThreadScheduledExecutor(r -> Thread.ofPlatform()
@@ -27,37 +29,7 @@ public final class ThreadPriorityTweaker {
     /**
      * Holds all tweaks.
      */
-    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> tweaks = Set.of(
-            // Keep important I/O at the top to not cause unexpected latency increase after turning on the tweaker.
-            ThreadPriorityTweaker.startsWith("Netty ", ThreadPriorityTweaker.ThreadPriority.CRITICAL),
-            ThreadPriorityTweaker.startsWith("Ixeris ", ThreadPriorityTweaker.ThreadPriority.CRITICAL),
-            ThreadPriorityTweaker.exactMatch("Render thread", ThreadPriorityTweaker.ThreadPriority.HIGHEST),
-            ThreadPriorityTweaker.startsWith("Chunk Render ", ThreadPriorityTweaker.ThreadPriority.VERY_HIGH),
-            ThreadPriorityTweaker.startsWith("c2me", ThreadPriorityTweaker.ThreadPriority.VERY_HIGH),
-            ThreadPriorityTweaker.exactMatch("CullThread", ThreadPriorityTweaker.ThreadPriority.HIGH),
-            ThreadPriorityTweaker.exactMatch("Reference Handler", ThreadPriorityTweaker.ThreadPriority.HIGH),
-            ThreadPriorityTweaker.startsWith("scalablelux", ThreadPriorityTweaker.ThreadPriority.HIGH),
-            ThreadPriorityTweaker.startsWith("AsyncParticle", ThreadPriorityTweaker.ThreadPriority.HIGH),
-            ThreadPriorityTweaker.exactMatch("Server thread", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
-            ThreadPriorityTweaker.startsWith("ALSoft", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
-            ThreadPriorityTweaker.exactMatch("Sound engine", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
-            ThreadPriorityTweaker.exactMatch("RSLS Scheduler", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
-            ThreadPriorityTweaker.startsWith("Server Pinger #", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
-            ThreadPriorityTweaker.startsWith("LanServerDetector #", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
-            ThreadPriorityTweaker.exactMatch("Yggdrasil Key Fetcher", ThreadPriorityTweaker.ThreadPriority.LOW),
-            ThreadPriorityTweaker.startsWith("Worker", ThreadPriorityTweaker.ThreadPriority.LOW),
-            ThreadPriorityTweaker.startsWith("IO", ThreadPriorityTweaker.ThreadPriority.LOW),
-            ThreadPriorityTweaker.startsWith("DefaultDispatcher", ThreadPriorityTweaker.ThreadPriority.VERY_LOW),
-            ThreadPriorityTweaker.startsWith("ForkJoinPool", ThreadPriorityTweaker.ThreadPriority.VERY_LOW),
-            ThreadPriorityTweaker.startsWith("HttpClient", ThreadPriorityTweaker.ThreadPriority.VERY_LOW),
-            ThreadPriorityTweaker.startsWith("spark", ThreadPriorityTweaker.ThreadPriority.VERY_LOW),
-            ThreadPriorityTweaker.startsWith("Scheduler", ThreadPriorityTweaker.ThreadPriority.VERY_LOW),
-            ThreadPriorityTweaker.startsWith("Log4j2", ThreadPriorityTweaker.ThreadPriority.LOWEST),
-            ThreadPriorityTweaker.exactMatch("Timer hack thread", ThreadPriorityTweaker.ThreadPriority.IDLE),
-            ThreadPriorityTweaker.exactMatch("Snooper timer", ThreadPriorityTweaker.ThreadPriority.IDLE),
-            ThreadPriorityTweaker.startsWith("DarkUtils", ThreadPriorityTweaker.ThreadPriority.IDLE)
-    );
-
+    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> tweaks = ThreadPriorityTweaker.getAllTweaks();
     /**
      * Holds only the exact tweaks for O(1) HashMap access.
      */
@@ -65,7 +37,6 @@ public final class ThreadPriorityTweaker {
             .stream()
             .filter(tweak -> ThreadPriorityTweaker.NameMatcherMode.EXACT == tweak.nameMatcherMode())
             .collect(Collectors.toUnmodifiableMap(ThreadPriorityTweaker.ThreadPriorityTweak::threadName, Function.identity()));
-
     /**
      * Holds other tweaks that need to do more complex checks than equality.
      * We can't use hash here and so it will be O(n) in terms of algorithmic complexity.
@@ -79,6 +50,67 @@ public final class ThreadPriorityTweaker {
         super();
 
         throw new UnsupportedOperationException("static-only class");
+    }
+
+    /**
+     * Gets all tweaks.
+     */
+    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> getAllTweaks() {
+        final var set = HashSet.<ThreadPriorityTweaker.ThreadPriorityTweak>newHashSet(32);
+
+        set.addAll(ThreadPriorityTweaker.getCriticalTweaks());
+        set.addAll(ThreadPriorityTweaker.getOtherTweaks());
+
+        return Set.copyOf(set);
+    }
+
+    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> getCriticalTweaks() {
+        final var crit = ThreadPriorityTweaker.ThreadPriority.CRITICAL;
+        final var highest = ThreadPriorityTweaker.ThreadPriority.HIGHEST;
+        final var veryHigh = ThreadPriorityTweaker.ThreadPriority.VERY_HIGH;
+        final var high = ThreadPriorityTweaker.ThreadPriority.HIGH;
+        final var aboveNormal = ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL;
+
+        return Set.of(
+                // Keep important I/O at the top to not cause unexpected latency increase after turning on the tweaker.
+                ThreadPriorityTweaker.startsWith("Netty ", crit),
+                ThreadPriorityTweaker.startsWith("Ixeris ", crit),
+                ThreadPriorityTweaker.exactMatch("Render thread", highest),
+                ThreadPriorityTweaker.startsWith("Chunk Render ", veryHigh),
+                ThreadPriorityTweaker.startsWith("c2me", veryHigh),
+                ThreadPriorityTweaker.exactMatch("CullThread", high),
+                ThreadPriorityTweaker.exactMatch("Reference Handler", high),
+                ThreadPriorityTweaker.startsWith("scalablelux", high),
+                ThreadPriorityTweaker.startsWith("AsyncParticle", high),
+                ThreadPriorityTweaker.exactMatch("Server thread", aboveNormal),
+                ThreadPriorityTweaker.startsWith("ALSoft", aboveNormal),
+                ThreadPriorityTweaker.exactMatch("Sound engine", aboveNormal),
+                ThreadPriorityTweaker.exactMatch("RSLS Scheduler", aboveNormal),
+                ThreadPriorityTweaker.startsWith("Server Pinger #", aboveNormal),
+                ThreadPriorityTweaker.startsWith("LanServerDetector #", aboveNormal)
+        );
+    }
+
+    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> getOtherTweaks() {
+        final var low = ThreadPriorityTweaker.ThreadPriority.LOW;
+        final var veryLow = ThreadPriorityTweaker.ThreadPriority.VERY_LOW;
+        final var lowest = ThreadPriorityTweaker.ThreadPriority.LOWEST;
+        final var idle = ThreadPriorityTweaker.ThreadPriority.IDLE;
+
+        return Set.of(
+                ThreadPriorityTweaker.exactMatch("Yggdrasil Key Fetcher", low),
+                ThreadPriorityTweaker.startsWith("Worker", low),
+                ThreadPriorityTweaker.startsWith("IO", low),
+                ThreadPriorityTweaker.startsWith("DefaultDispatcher", veryLow),
+                ThreadPriorityTweaker.startsWith("ForkJoinPool", veryLow),
+                ThreadPriorityTweaker.startsWith("HttpClient", veryLow),
+                ThreadPriorityTweaker.startsWith("spark", veryLow),
+                ThreadPriorityTweaker.startsWith("Scheduler", veryLow),
+                ThreadPriorityTweaker.startsWith("Log4j2", lowest),
+                ThreadPriorityTweaker.exactMatch("Timer hack thread", idle),
+                ThreadPriorityTweaker.exactMatch("Snooper timer", idle),
+                ThreadPriorityTweaker.startsWith("DarkUtils", idle)
+        );
     }
 
     @NotNull

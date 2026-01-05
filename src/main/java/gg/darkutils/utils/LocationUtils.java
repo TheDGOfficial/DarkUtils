@@ -28,7 +28,7 @@ public final class LocationUtils {
         HypixelModAPI.getInstance().subscribeToEventPacket(ClientboundLocationPacket.class);
 
         HypixelModAPI.getInstance().createHandler(ClientboundLocationPacket.class, LocationUtils::onLocationUpdate);
-        ClientPlayConnectionEvents.DISCONNECT.register(LocationUtils::onDisconnect);
+        ClientPlayConnectionEvents.DISCONNECT.register(LocationUtils::onQuit);
     }
 
     private static final void onLocationUpdate(@NotNull final ClientboundLocationPacket packet) {
@@ -37,7 +37,7 @@ public final class LocationUtils {
         LocationUtils.mode = packet.getMode().orElse(null);
     }
 
-    private static final void onDisconnect(@NotNull final ClientPlayNetworkHandler handler, @NotNull final MinecraftClient client) {
+    private static final void onQuit(@NotNull final ClientPlayNetworkHandler handler, @NotNull final MinecraftClient client) {
         LocationUtils.serverName = null;
         LocationUtils.serverType = null;
         LocationUtils.mode = null;

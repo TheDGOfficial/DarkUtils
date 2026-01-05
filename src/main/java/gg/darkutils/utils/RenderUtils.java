@@ -62,15 +62,15 @@ public final class RenderUtils {
     /**
      * Holds the item to empty ItemStack cache.
      */
-    private static final @NotNull Map<Item, ItemStack> ITEM_TO_ITEMSTACK = new HashMap<>();
+    private static final @NotNull Map<Item, ItemStack> ITEM_TO_ITEM_STACK = HashMap.newHashMap(16);
     /**
      * Holds the string to ordered text cache.
      */
-    private static final @NotNull Map<String, OrderedText> ORDERED_TEXT_CACHE = new HashMap<>();
+    private static final @NotNull Map<String, OrderedText> ORDERED_TEXT_CACHE = HashMap.newHashMap(32);
 
     static {
         // Clear the cache 2 tick after every other second
-        TickUtils.queueRepeatingTickTask(() -> ORDERED_TEXT_CACHE.clear(), 42);
+        TickUtils.queueRepeatingTickTask(RenderUtils.ORDERED_TEXT_CACHE::clear, 42);
     }
 
     private RenderUtils() {
@@ -105,7 +105,7 @@ public final class RenderUtils {
     }
 
     private static final void renderText(@NotNull final DrawContext context, @NotNull final String text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
-        context.drawText(MinecraftClient.getInstance().textRenderer, ORDERED_TEXT_CACHE.computeIfAbsent(text, (t) -> Text.of(t).asOrderedText()), x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
+        context.drawText(MinecraftClient.getInstance().textRenderer, RenderUtils.ORDERED_TEXT_CACHE.computeIfAbsent(text, t -> Text.of(t).asOrderedText()), x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
     public static final int middleAlignedXForText(@NotNull final String text) {
@@ -118,7 +118,7 @@ public final class RenderUtils {
     }
 
     public static final void renderCenteredText(@NotNull final DrawContext context, @NotNull final String text, @NotNull final IntSupplier y, @NotNull final Formatting color) {
-        context.drawText(MinecraftClient.getInstance().textRenderer, ORDERED_TEXT_CACHE.computeIfAbsent(text, (t) -> Text.of(t).asOrderedText()), RenderUtils.middleAlignedXForText(text), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
+        context.drawText(MinecraftClient.getInstance().textRenderer, RenderUtils.ORDERED_TEXT_CACHE.computeIfAbsent(text, t -> Text.of(t).asOrderedText()), RenderUtils.middleAlignedXForText(text), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
     public static final void renderItem(@NotNull final DrawContext context, @NotNull final Item item, final int x, final int y) {
@@ -130,7 +130,7 @@ public final class RenderUtils {
     }
 
     private static final void renderItem(@NotNull final DrawContext context, @NotNull final Item item, final IntSupplier x, @NotNull final IntSupplier y) {
-        context.drawItemWithoutEntity(ITEM_TO_ITEMSTACK.computeIfAbsent(item, ItemStack::new), x.getAsInt(), y.getAsInt(), 0);
+        context.drawItemWithoutEntity(RenderUtils.ITEM_TO_ITEM_STACK.computeIfAbsent(item, ItemStack::new), x.getAsInt(), y.getAsInt(), 0);
     }
 
     public static final void drawBlockOutline(@NotNull final WorldRenderContext context,

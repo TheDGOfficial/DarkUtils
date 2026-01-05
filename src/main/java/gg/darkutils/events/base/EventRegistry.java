@@ -84,7 +84,7 @@ public interface EventRegistry {
      *
      * @param listener               The listener.
      * @param priority               The priority.
-     * @param receiveCancelled       Whether the listener should receive cancelled events or not.
+     * @param receiveCancelled       Whether the listener should receive canceled events or not.
      * @param doNotPassThisParameter Do not pass this parameter, it is automatically
      *                               passed by the compiler and used for type inference.
      * @param <T>                    The type of the event.

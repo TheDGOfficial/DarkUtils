@@ -1,10 +1,10 @@
 package gg.darkutils.mixin.visuals;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.client.render.fog.FogRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 
 @Mixin(FogRenderer.class)
 final class FogRendererMixin {

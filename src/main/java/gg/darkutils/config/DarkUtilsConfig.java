@@ -9,6 +9,8 @@ import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import gg.darkutils.utils.LogLevel;
 import net.fabricmc.loader.api.FabricLoader;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -132,6 +134,11 @@ public final class DarkUtilsConfig {
         } finally {
             EventRegistry.centralRegistry().triggerEvent(ConfigSaveFinishEvent.INSTANCE);
         }
+    }
+
+    @Override
+    public final @NotNull String toString() {
+        return new ReflectionToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE).toString();
     }
 }
 

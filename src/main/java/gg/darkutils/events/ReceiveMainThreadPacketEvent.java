@@ -24,7 +24,7 @@ public record ReceiveMainThreadPacketEvent(@NotNull CancellationState cancellati
 
     /**
      * Creates a new {@link ReceiveMainThreadPacketEvent} suitable for triggering the event.
-     * A cached {@link CancellationState#ofCached()} will be used with non-cancelled state by default.
+     * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.
      *
      * @param packet The packet.
      */

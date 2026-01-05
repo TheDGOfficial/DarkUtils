@@ -10,13 +10,13 @@ import org.jetbrains.annotations.NotNull;
  */
 public final class BasicFinalCancellationState implements FinalCancellationState {
     /**
-     * Holds the {@link ThreadLocal} of the shared {@link BasicFinalCancellationState} instance for not cancelled status.
+     * Holds the {@link ThreadLocal} of the shared {@link BasicFinalCancellationState} instance for not canceled status.
      */
     @NotNull
     private static final ThreadLocal<BasicFinalCancellationState> NOT_CANCELLED = ThreadLocal.withInitial(() -> new BasicFinalCancellationState(false));
 
     /**
-     * Holds the {@link ThreadLocal} of the shared {@link BasicFinalCancellationState} instance for cancelled status.
+     * Holds the {@link ThreadLocal} of the shared {@link BasicFinalCancellationState} instance for canceled status.
      */
     @NotNull
     private static final ThreadLocal<BasicFinalCancellationState> CANCELLED = ThreadLocal.withInitial(() -> new BasicFinalCancellationState(true));
@@ -37,7 +37,7 @@ public final class BasicFinalCancellationState implements FinalCancellationState
     private String ownerName = Thread.currentThread().getName();
 
     /**
-     * Creates a new {@link BasicFinalCancellationState} with the given cancelled state.
+     * Creates a new {@link BasicFinalCancellationState} with the given canceled state.
      */
     private BasicFinalCancellationState(final boolean cancelled) {
         super();
@@ -46,9 +46,9 @@ public final class BasicFinalCancellationState implements FinalCancellationState
     }
 
     /**
-     * Returns a cached instance for current thread for the given cancelled state.
+     * Returns a cached instance for current thread for the given canceled state.
      *
-     * @return A cached instance for current thread for the given cancelled state.
+     * @return A cached instance for current thread for the given canceled state.
      */
     @NotNull
     public static final BasicFinalCancellationState ofCached(final boolean cancelled) {
@@ -93,6 +93,15 @@ public final class BasicFinalCancellationState implements FinalCancellationState
         this.ownerId = -1L; // only allow one call
 
         return this.cancelled;
+    }
+
+    @Override
+    public final String toString() {
+        return "BasicFinalCancellationState{" +
+                "cancelled=" + this.cancelled +
+                ", ownerId=" + this.ownerId +
+                ", ownerName='" + this.ownerName + '\'' +
+                '}';
     }
 }
 

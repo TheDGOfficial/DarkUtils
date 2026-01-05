@@ -77,4 +77,11 @@ public final class BasicEventRegistry implements EventRegistry {
 
         return BasicEventRegistry.uncheckedCastToEventHandler(eventHandler);
     }
+
+    @Override
+    public final String toString() {
+        return "BasicEventRegistry{" +
+                "knownEvents=" + this.knownEvents +
+                '}';
+    }
 }

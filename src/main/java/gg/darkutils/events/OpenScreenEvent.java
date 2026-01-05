@@ -26,7 +26,7 @@ public record OpenScreenEvent(@NotNull CancellationState cancellationState,
 
     /**
      * Creates a new {@link OpenScreenEvent} suitable for triggering the event.
-     * A cached {@link CancellationState#ofCached()} will be used with non-cancelled state by default.
+     * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.
      *
      * @param screenHandlerType The screen handler type.
      * @param name              The name of the screen.

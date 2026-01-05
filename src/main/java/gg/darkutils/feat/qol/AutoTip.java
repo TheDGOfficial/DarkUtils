@@ -52,11 +52,11 @@ public final class AutoTip {
             return;
         }
 
-        final var now = System.nanoTime();
+        final var now = 0L == AutoTip.lastTipAt ? 0L : System.nanoTime();
 
         if (0L == AutoTip.lastTipAt || now - AutoTip.lastTipAt > TimeUnit.MINUTES.toNanos(15L)) {
-            AutoTip.lastTipAt = now;
-            ChatUtils.queueUserSentMessageOrCommand("/tip all");
+            AutoTip.lastTipAt = 0L == AutoTip.lastTipAt ? System.nanoTime() : now;
+            ChatUtils.addToSendMessageQueue("/tip all");
         }
     }
 }

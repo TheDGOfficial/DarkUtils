@@ -29,7 +29,7 @@ public final class RenderEntityEvents {
 
         /**
          * Creates a new {@link RenderEntityEvents.ArmorStandRenderEvent} suitable for triggering the event.
-         * A cached {@link CancellationState#ofCached()} will be used with non-cancelled state by default.
+         * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.
          *
          * @param armorStand The armor stand.
          */

@@ -1,8 +1,8 @@
 package gg.darkutils.feat.dungeons;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.RenderUtils;
+import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
@@ -27,6 +27,7 @@ public final class ArrowStackWaypoints {
             Formatting.DARK_PURPLE, new BlockPos(56, 20, 124) // Purple/Soul Dragon
     );
 
+    @NotNull
     private static final BooleanSupplier SHOULD_RENDER =
             TickUtils.queueUpdatingCondition(ArrowStackWaypoints::shouldRender);
 

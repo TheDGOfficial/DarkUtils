@@ -34,7 +34,9 @@ final class MinecraftClientMixin {
         if (!DarkUtilsConfig.INSTANCE.disableYield) {
             Thread.yield();
         }
-        // skip a yield call that reduces fps, the call was put to make sure rendering does not stall other threads such as chunk loading, but that's OS scheduler's job to handle, the code should utilize maximum resources so this yield call is unnecessary.
+        // skip a yield call that reduces fps
+        // the call was put to make sure rendering does not stall other threads such as chunk loading, but that's OS scheduler's job to handle,
+        // the code should utilize maximum resources so this yield call is unnecessary.
     }
 
     @Inject(at = @At("HEAD"), method = "run")
