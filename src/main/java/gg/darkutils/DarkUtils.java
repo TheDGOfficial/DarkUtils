@@ -182,86 +182,71 @@ public final class DarkUtils implements ClientModInitializer {
             try {
                 initializer.run();
             } catch (final Throwable error) {
-                // Detect which feature failed and where
-                final Predicate<String> isOurModule = (@NotNull final String clsName) -> clsName.contains(DarkUtils.MOD_ID);
-
-                final var rootError = DarkUtils.getRootError(error, (@NotNull final Throwable err) -> {
-                    for (final var ste : err.getStackTrace()) {
-                        if (isOurModule.test(ste.getClassName())) {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-
-                final var stack = rootError.getStackTrace();
-
-                var className = "?";
-                var methodName = "?";
-                var fileName = "SourceFile.java";
-                var lineNumber = 0;
-
-                // find our first DarkUtils class that isn't a lambda or synthetic bridge
-                for (int i = 1, len = stack.length; i <= len; ++i) {
-                    final var stackTraceElement = stack[i - 1];
-
-                    fileName = stackTraceElement.getFileName();
-                    lineNumber = stackTraceElement.getLineNumber();
-                    className = stackTraceElement.getClassName();
-                    methodName = stackTraceElement.getMethodName();
-
-                    if (isOurModule.test(className) && 1 != lineNumber && !className.contains("$$Lambda$")) { // line number 1 is usually used for synthetic accessor methods, $$Lambda$ stack trace elements will have "Unknown Source", so skip those
-                        break;
-                    }
-                }
-
-                // if we didn’t find anything meaningful, fallback to top-of-stack
-                if (!isOurModule.test(className) && 1 <= stack.length) {
-                    final var topOfStack = stack[0];
-
-                    fileName = topOfStack.getFileName();
-                    lineNumber = topOfStack.getLineNumber();
-
-                    methodName = topOfStack.getMethodName();
-                }
-
-                // derive "feature name" from the call stack:
-                // look *below* DarkUtils.init in the stack, the next user frame is the feature init
-                var featureName = "UnknownFeature";
-                for (int i = 0, len = stack.length; i < len; ++i) {
-                    final var ste = stack[i];
-                    if (ste.getClassName().contains("DarkUtils") && "init".equals(ste.getMethodName())) {
-                        if (0 < i) {
-                            final var below = stack[i - 1];
-                            featureName = below.getClassName().substring(below.getClassName().lastIndexOf('.') + 1);
-                        }
-                        break;
-                    }
-
-                    if (ste.getClassName().contains("feat")) {
-                        featureName = ste.getClassName().substring(ste.getClassName().lastIndexOf('.') + 1);
-                        break;
-                    }
-                }
-
-                var details = "";
-                final var msg = rootError.getMessage();
-                if (null != msg && !msg.isEmpty()) {
-                    details = " Details: " + msg;
-                }
-
-                DarkUtils.error(
-                        DarkUtils.class,
-                        "Encountered " + rootError.getClass().getSimpleName()
-                                + " at " + fileName
-                                + " in method " + methodName
-                                + " (line " + lineNumber + ')'
-                                + " while initializing feature " + featureName + '.'
-                                + details,
-                        rootError
-                );
+                DarkUtils.handleInitError(error);
             }
         }
+    }
+
+    private static final void handleInitError(@NotNull final Throwable error) {
+        final var rootError = DarkUtils.getRootError(error, DarkUtils::isOurModuleFrame);
+
+        final var ste = DarkUtils.findRelevantStackTrace(rootError.getStackTrace());
+        final var featureName = DarkUtils.deriveFeatureName(rootError.getStackTrace());
+
+        var details = "";
+        final var msg = rootError.getMessage();
+        if (null != msg && !msg.isEmpty()) {
+            details = " Details: " + msg;
+        }
+
+        DarkUtils.error(
+                DarkUtils.class,
+                "Encountered " + rootError.getClass().getSimpleName()
+                        + " at " + ste.getFileName()
+                        + " in method " + ste.getMethodName()
+                        + " (line " + ste.getLineNumber() + ')'
+                        + " while initializing feature " + featureName + '.'
+                        + details,
+                rootError
+        );
+    }
+
+    private static final boolean isOurModuleFrame(@NotNull final Throwable err) {
+        for (final var ste : err.getStackTrace()) {
+            if (ste.getClassName().contains(DarkUtils.MOD_ID)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @NotNull
+    private static final StackTraceElement findRelevantStackTrace(final @NotNull StackTraceElement... stack) {
+        final Predicate<String> isOurModule = cls -> cls.contains(DarkUtils.MOD_ID);
+
+        for (final var ste : stack) {
+            if (isOurModule.test(ste.getClassName()) && !ste.getClassName().contains("$$Lambda$") && 1 != ste.getLineNumber()) {
+                return ste;
+            }
+        }
+
+        // fallback to top-of-stack
+        return 0 < stack.length ? stack[0] : new StackTraceElement("?", "?", "SourceFile.java", 0);
+    }
+
+    @NotNull
+    private static final String deriveFeatureName(final @NotNull StackTraceElement @NotNull ... stack) {
+        for (int i = 0, len = stack.length; i < len; ++i) {
+            final var ste = stack[i];
+            if (ste.getClassName().contains("DarkUtils") && "init".equals(ste.getMethodName()) && 0 < i) {
+                final var below = stack[i - 1];
+                return below.getClassName().substring(below.getClassName().lastIndexOf('.') + 1);
+            }
+            if (ste.getClassName().contains("feat")) {
+                return ste.getClassName().substring(ste.getClassName().lastIndexOf('.') + 1);
+            }
+        }
+        return "UnknownFeature";
     }
 
     /**
