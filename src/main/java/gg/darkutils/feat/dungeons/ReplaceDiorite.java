@@ -11,6 +11,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import org.jetbrains.annotations.NotNull;
@@ -122,7 +123,7 @@ public final class ReplaceDiorite {
         for (final var entry : ReplaceDiorite.chunkToPositions.long2ObjectEntrySet()) {
             final var key = entry.getLongKey();
 
-            final var chunk = world.getChunk((int) (key >> 32), (int) (key & 0xFFFF_FFFFL), ChunkStatus.FULL, false);
+            final var chunk = world.getChunkAsView((int) (key >> 32), (int) (key & 0xFFFF_FFFFL));
 
             if (null == chunk) {
                 continue; // skip unloaded
@@ -139,8 +140,8 @@ public final class ReplaceDiorite {
         }
     }
 
-    private static final void setGlassIfDiorite(@NotNull final ClientWorld world, @NotNull final Chunk chunk, @NotNull final BlockPos pos) {
-        final var state = chunk.getBlockState(pos);
+    private static final void setGlassIfDiorite(@NotNull final ClientWorld world, @NotNull final BlockView view, @NotNull final BlockPos pos) {
+        final var state = view.getBlockState(pos);
 
         if (state.isOf(Blocks.DIORITE) || state.isOf(Blocks.POLISHED_DIORITE)) {
             ReplaceDiorite.setGlass(world, pos);
