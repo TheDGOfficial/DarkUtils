@@ -39,6 +39,7 @@ public final class ThreadPriorityTweaker {
             ThreadPriorityTweaker.startsWith("scalablelux", ThreadPriorityTweaker.ThreadPriority.HIGH),
             ThreadPriorityTweaker.startsWith("AsyncParticle", ThreadPriorityTweaker.ThreadPriority.HIGH),
             ThreadPriorityTweaker.exactMatch("Server thread", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
+            ThreadPriorityTweaker.startsWith("ALSoft", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
             ThreadPriorityTweaker.exactMatch("Sound engine", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
             ThreadPriorityTweaker.exactMatch("RSLS Scheduler", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
             ThreadPriorityTweaker.startsWith("Server Pinger #", ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL),
