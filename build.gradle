@@ -1,3 +1,16 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'org.javassist:javassist:3.30.2-GA'
+    }
+}
+
+import javassist.bytecode.ClassFile
+import javassist.bytecode.MethodInfo
+
 plugins {
     id 'fabric-loom' version "${loom_version}"
     id 'maven-publish'
@@ -40,7 +53,7 @@ repositories {
 
 loom {
     mods {
-        "darkutils" {
+        'darkutils' {
             sourceSet sourceSets.main
         }
     }
@@ -48,7 +61,7 @@ loom {
     decompilers {
         vineflower {
             // Makes lambda names easy to find for Mixins
-            options.put("mark-corresponding-synthetics", "1")
+            options.put('mark-corresponding-synthetics', '1')
         }
     }
 }
@@ -57,6 +70,7 @@ dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    //mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API. This is technically optional, but you probably want it anyway.
@@ -91,20 +105,20 @@ tasks.withType(JavaCompile).configureEach {
     it.options.release = 21
 }
 
-tasks.named("jar", Jar) {
+tasks.named('jar', Jar) {
     manifest {
         attributes(
-            "Multi-Release": "true",
-            "Sealed": "true",
-            "Main-Class": "gg.darkutils.DarkUtils",
-            "Automatic-Module-Name": "gg.darkutils",
-            "Specification-Title": "DarkUtils",
-            "Specification-Version": project.version.toString(),
-            "Specification-Vendor": "DarkUtils",
-            "Implementation-Title": "DarkUtils",
-            "Implementation-Version": project.version.toString(),
-            "Implementation-Vendor": "DarkUtils",
-            "Name": "gg/darkutils/"
+                'Multi-Release': 'true',
+                'Sealed': 'true',
+                'Main-Class': 'gg.darkutils.DarkUtils',
+                'Automatic-Module-Name': 'gg.darkutils',
+                'Specification-Title': 'DarkUtils',
+                'Specification-Version': project.version.toString(),
+                'Specification-Vendor': 'DarkUtils',
+                'Implementation-Title': 'DarkUtils',
+                'Implementation-Version': project.version.toString(),
+                'Implementation-Vendor': 'DarkUtils',
+                'Name': 'gg/darkutils/'
         )
     }
 }
@@ -121,7 +135,7 @@ java {
 
 jar {
     inputs.property 'archivesName', project.base.archivesName
-    def archiveName = inputs.properties.archivesName
+    final def archiveName = inputs.properties.archivesName
 
     from('LICENSE') {
         rename { "${it}_${archiveName}" }
@@ -145,3 +159,68 @@ publishing {
         // retrieving dependencies.
     }
 }
+
+// Task class for full configuration-cache compatibility
+abstract class CheckMethodSizesTask extends DefaultTask {
+    @InputFiles
+    abstract ConfigurableFileCollection getClassesDirectories()
+
+    @TaskAction
+    void checkMethods() {
+        final def thresholds = [huge: 8000, large: 2000, nonsmall: 325]
+        final def issues = []
+
+        getClassesDirectories().each { final File directory ->
+            if (!directory.exists()) return
+
+            directory.eachFileRecurse { final File file ->
+                if (!file.name.endsWith('.class')) return
+
+                final def relativePath = directory.toPath().relativize(file.toPath()).toString()
+                final def className = relativePath.replace(File.separator, '.').replaceAll('[.]class$', '')
+
+                file.withInputStream { final inputStream ->
+                    new DataInputStream(inputStream).withCloseable { final dataInputStream ->
+                        final def classFile = new ClassFile(dataInputStream)
+                        classFile.methods.each { final MethodInfo methodInfo ->
+                            final def codeAttribute = methodInfo.codeAttribute
+                            if (codeAttribute == null) return
+                            final def size = codeAttribute.code.length
+
+                            if (size > thresholds.huge) issues << "Huge method: $className#${methodInfo.name} (bytecode size: $size)"
+                            else if (size > thresholds.large) issues << "Large method: $className#${methodInfo.name} (bytecode size: $size)"
+                            else if (size > thresholds.nonsmall) issues << "Non trivial method: $className#${methodInfo.name} (bytecode size: $size)"
+                        }
+                    }
+                }
+            }
+        }
+
+        if (issues.empty) {
+            println 'All methods are within size thresholds.'
+        } else {
+            println 'Method size issues found:'
+            issues.each { println it }
+            println "Method size check failed: ${issues.size()} issues"
+        }
+    }
+}
+
+// Register the task in a configuration-cache-safe way
+tasks.register('checkMethodSizes', CheckMethodSizesTask) {
+    group = 'verification'
+    description = 'Checks bytecode sizes of compiled methods.'
+
+    // Use a FileCollection as input (lazy, configuration-cache safe)
+    classesDirectories.from(
+        layout.buildDirectory.dir("classes/java/main")
+    )
+
+    dependsOn tasks.named('classes')
+}
+
+// Make it run after check
+tasks.named('check') {
+    finalizedBy tasks.named('checkMethodSizes')
+}
+
