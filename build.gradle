@@ -201,7 +201,7 @@ abstract class CheckMethodSizesTask extends DefaultTask {
         } else {
             println 'Method size issues found:'
             issues.each { println it }
-            println "Method size check failed: ${issues.size()} issues"
+            println "Method size check: ${issues.size()} issues"
         }
     }
 }

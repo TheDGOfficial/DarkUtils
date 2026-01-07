@@ -14,12 +14,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public final class DarkUtilsConfigScreen {
     private DarkUtilsConfigScreen() {
         super();
 
         throw new UnsupportedOperationException("static-only class");
+    }
+
+    private static final void addSimpleIntegerSetting(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, final int value, @NotNull final Consumer<Integer> setter, final int defaultValue, final int max) {
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(configEntryBuilder, configCategory, name, desc, value, setter, defaultValue, 0, max);
     }
 
     private static final void addSimpleIntegerSetting(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, final int value, @NotNull final Consumer<Integer> setter, final int defaultValue, final int min, final int max) {
@@ -41,19 +46,18 @@ public final class DarkUtilsConfigScreen {
                 .build());
     }
 
-    public static final @NotNull Screen create(@Nullable final Screen parent) {
-        EventRegistry.centralRegistry().triggerEvent(ConfigScreenOpenEvent.INSTANCE);
+    @SuppressWarnings("unchecked") // safe
+    private static final <T extends Enum<T>> void addEnumSetting(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, final T value, @NotNull final Consumer<T> setter, @NotNull final T defaultValue, @NotNull final Function<Enum<T>, String> namePrettifier) {
+        configCategory.addEntry(configEntryBuilder
+                .startEnumSelector(Text.of(name), defaultValue.getDeclaringClass(), value)
+                .setDefaultValue(defaultValue)
+                .setSaveConsumer(setter)
+                .setTooltip(Text.of(desc))
+                .setEnumNameProvider(v -> Text.of(namePrettifier.apply(v)))
+                .build());
+    }
 
-        final var config = DarkUtilsConfig.INSTANCE;
-
-        final var builder = ConfigBuilder.create()
-                .setParentScreen(parent)
-                .setTitle(Text.of("DarkUtils v" + DarkUtils.getVersion() + " Settings"))
-                .setSavingRunnable(DarkUtilsConfig::save);
-
-        final var entryBuilder = builder.entryBuilder();
-
-        // === Quality of Life ===
+    private static final void addQualityOfLife(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var qol = builder.getOrCreateCategory(Text.of("Quality of Life"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Fishing",
                 "Automatically fishes for you in Hypixel SkyBlock. Does not kill the fished mobs (Recommended to treasure or trophy fish if you are going to leave it unattended). Requires Skyblock Menu->Settings->Personal->Fishing Settings->Fishing Status Holograms and Fishing Timer to be enabled.",
@@ -67,9 +71,9 @@ public final class DarkUtilsConfigScreen {
                 "Makes it so pulling and recasting the rod works even if you have menus open. Does nothing if auto fishing is not enabled.",
                 config.autoFishingWorkThroughMenus, newValue -> config.autoFishingWorkThroughMenus = newValue);
 
-        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, qol, "Auto Fishing Minimum Delay", "Minimum delay in ticks before pulling or casting the rod. 1 ticks equals to 50 milliseconds real time. Affects nothing if auto fishing isn't enabled.", config.autoFishingStartingDelay, newValue -> config.autoFishingStartingDelay = newValue, 4, 0, 10);
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, qol, "Auto Fishing Minimum Delay", "Minimum delay in ticks before pulling or casting the rod. 1 ticks equals to 50 milliseconds real time. Affects nothing if auto fishing isn't enabled.", config.autoFishingStartingDelay, newValue -> config.autoFishingStartingDelay = newValue, 4, 10);
 
-        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, qol, "Auto Fishing Maximum Delay", "Max delay in ticks before pulling or casting the rod. 1 ticks equals to 50 milliseconds real time. Affects nothing if auto fishing isn't enabled.", config.autoFishingMaximumDelay, newValue -> config.autoFishingMaximumDelay = newValue, 5, 0, 10);
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, qol, "Auto Fishing Maximum Delay", "Max delay in ticks before pulling or casting the rod. 1 ticks equals to 50 milliseconds real time. Affects nothing if auto fishing isn't enabled.", config.autoFishingMaximumDelay, newValue -> config.autoFishingMaximumDelay = newValue, 5, 10);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Never Reset Cursor Position",
                 "Prevents mouse cursor position from resetting to the middle of the screen when opening menus and containers, remembering the last position.",
@@ -126,8 +130,9 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Vanilla Mode",
                 "Automatically disables certain visual tweaks when playing a singleplayer world, such as hiding the armor and food bars. Your settings will not be actually modified and will revert to default when leaving singleplayer.",
                 config.vanillaMode, newValue -> config.vanillaMode = newValue);
+    }
 
-        // === Foraging ===
+    private static final void addForaging(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var foraging = builder.getOrCreateCategory(Text.of("Foraging"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, foraging, "Tree Gift Confirmation",
                 "Displays a title and plays a sound when you get a Tree Gift, to confirm that you can move to the next tree. Also shows if you spawned a mob from the tree or not.",
@@ -136,8 +141,9 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, foraging, "Tree Gifts Per Hour",
                 "Renders the tree gifts per hour on the left middle side of your screen. Cut at least 2 trees for it to show. Disappears when no tree is cut for over 1 minutes till the next tree is cut.",
                 config.treeGiftsPerHour, newValue -> config.treeGiftsPerHour = newValue);
+    }
 
-        // === Dungeons ===
+    private static final void addDungeons(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var dungeons = builder.getOrCreateCategory(Text.of("Dungeons"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Dialogue Skip Timer",
                 "Displays a timer for when to kill blood mobs to perform a watcher dialogue skip, speeding up the blood camp.",
@@ -170,8 +176,9 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Arrow Stack Waypoints",
                 "Displays arrow stack waypoints in the Wither King dragon fight showing where to shoot your Last Breath arrows for optimal stacking.",
                 config.arrowStackWaypoints, newValue -> config.arrowStackWaypoints = newValue);
+    }
 
-        // === Visual Tweaks ===
+    private static final void addVisualTweaks(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var visual = builder.getOrCreateCategory(Text.of("Visual Tweaks"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Hide Effects HUD",
                 "Hides the potion/effects HUD on the top right of the screen for less visual clutter on screen. You can still see your effects when you open your inventory on the side.",
@@ -220,14 +227,15 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "No Wither Hearts",
                 "Skips making your hearts black when you have the Wither status effect, allowing you to always be able to see your Health clearly.",
                 config.noWitherHearts, newValue -> config.noWitherHearts = newValue);
+    }
 
-        // === Performance ===
+    private static final void addPerformance(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var performance = builder.getOrCreateCategory(Text.of("Performance"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Armor Stand Optimizer",
                 "Optimizes FPS when lots of Armor Stands are present by limiting the rendering to the configured amount of closest Armor Stands to the player.",
                 config.armorStandOptimizer, newValue -> config.armorStandOptimizer = newValue);
 
-        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, performance, "Armor Stand Limit", "Max armor stands to render when optimizer is enabled. Affects nothing if optimizer isn't enabled.", config.armorStandLimit, newValue -> config.armorStandLimit = newValue, 50, 0, 500);
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, performance, "Armor Stand Limit", "Max armor stands to render when optimizer is enabled. Affects nothing if optimizer isn't enabled.", config.armorStandLimit, newValue -> config.armorStandLimit = newValue, 50, 500);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable Yield",
                 "Disables thread yielding for performance. Vanilla Minecraft yields through Render thread after finishing rendering a frame before starting to render the next frame, which reduces the potential maximum FPS. Disabling the yielding improves FPS.",
@@ -273,12 +281,7 @@ public final class DarkUtilsConfigScreen {
                 "Optimizes memory allocation rate by eliminating enum values array copying in some places, currently a single place.",
                 config.optimizeEnumValues, newValue -> config.optimizeEnumValues = newValue);
 
-        performance.addEntry(entryBuilder
-                .startEnumSelector(Text.of("OpenGL Version Override"), OpenGLVersionOverride.class, config.openGLVersionOverride)
-                .setDefaultValue(OpenGLVersionOverride.NO_OVERRIDE)
-                .setSaveConsumer(newValue -> config.openGLVersionOverride = newValue)
-                .setTooltip(Text.of("Allows you to forcefully modify the OpenGL version Minecraft requests during Window context creation to a modern OpenGL version. By default Minecraft requests OpenGL 3.3. This does not magically make Minecraft take advantage of new additions from later OpenGL specifications, but it will ensure its future-proof. Note however, your game might become unbootable if you set this to a higher value than what your GPU supports. Generally speaking, GPUs from the last decade should all support OpenGL 4.6 with latest drivers installed."))
-                .setEnumNameProvider(openGLVersionOverride -> Text.of(switch (openGLVersionOverride) {
+        DarkUtilsConfigScreen.addEnumSetting(entryBuilder, performance, "OpenGL Version Override", "Allows you to forcefully modify the OpenGL version Minecraft requests during Window context creation to a modern OpenGL version. By default Minecraft requests OpenGL 3.3. This does not magically make Minecraft take advantage of new additions from later OpenGL specifications, but it will ensure its future-proof. Note however, your game might become unbootable if you set this to a higher value than what your GPU supports. Generally speaking, GPUs from the last decade should all support OpenGL 4.6 with latest drivers installed.", config.openGLVersionOverride, newValue -> config.openGLVersionOverride = newValue, OpenGLVersionOverride.NO_OVERRIDE, openGLVersionOverride -> switch (openGLVersionOverride) {
                     case OpenGLVersionOverride.NO_OVERRIDE -> "No Override";
                     case OpenGLVersionOverride.GL4_0 -> "OpenGL 4.0";
                     case OpenGLVersionOverride.GL4_1 -> "OpenGL 4.1";
@@ -289,8 +292,7 @@ public final class DarkUtilsConfigScreen {
                     case OpenGLVersionOverride.GL4_6 -> "OpenGL 4.6";
                     default ->
                             throw new IllegalStateException("Unexpected " + OpenGLVersionOverride.class.getSimpleName() + " value: " + openGLVersionOverride.name());
-                }))
-                .build());
+        });
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Use Virtual Threads for Texture Downloading",
                 "Makes Minecraft use Java's new (Lightweight) Virtual Threads over Platform (OS) Threads. Normally, Minecraft uses a Cached Thread Pool which ends up creating hundreds of texture downloading threads in texture-heavy game-modes like Hypixel SkyBlock where items have a player skull model. Those hundreds of texture downloading threads all have their separate stack, and there is a limit to how many platform threads you can create in the OS level at which point it will crash. Virtual Threads are a lightweight new technology replacement that only creates threads when tasks are blocked and this also made texture loading speedier during tests due to creating a new (platform/OS) thread not being a free operation.",
@@ -315,8 +317,9 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Block Entity Unload Lag Fix",
                 "Fixes a bug in Minecraft's bug tracker causing lag when unloading a large amount of block entities.",
                 config.blockEntityUnloadLagFix, newValue -> config.blockEntityUnloadLagFix = newValue);
+    }
 
-        // === Bugfixes ===
+    private static final void addBugfixes(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var bugfixes = builder.getOrCreateCategory(Text.of("Bugfixes"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix GUI Scale After Toggling Fullscreen Off",
                 "Fixes GUI scale getting tiny after leaving fullscreen.",
@@ -337,22 +340,52 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Middle Click Fix",
                 "Allows you to middle click when hovering over items like in 1.8, such as to disable Witherborn ability of your armor.",
                 config.middleClickFix, newValue -> config.middleClickFix = newValue);
+    }
 
-        // === Development ===
+    private static final void addDevelopment(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var development = builder.getOrCreateCategory(Text.of("Development"));
-        development.addEntry(entryBuilder
-                .startEnumSelector(Text.of("Ingame Log Level"), LogLevel.class, config.ingameLogLevel)
-                .setDefaultValue(LogLevel.WARN)
-                .setSaveConsumer(newValue -> config.ingameLogLevel = newValue)
-                .setTooltip(Text.of("Allows you to change at what threshold log messages should also be printed to in-game chat for development. Do not change unless instructed or know what you are doing."))
-                .setEnumNameProvider(logLevel -> Text.of(switch (logLevel) {
+
+        DarkUtilsConfigScreen.addEnumSetting(entryBuilder, development, "Ingame Log Level", "Allows you to change at what threshold log messages should also be printed to in-game chat for development. Do not change unless instructed or know what you are doing.", config.ingameLogLevel, newValue -> config.ingameLogLevel = newValue, LogLevel.WARN, logLevel -> switch (logLevel) {
                     case LogLevel.INFO -> "Info";
                     case LogLevel.WARN -> "Warning";
                     case LogLevel.ERROR -> "Error";
                     default ->
                             throw new IllegalStateException("Unexpected " + LogLevel.class.getSimpleName() + " value: " + logLevel.name());
-                }))
-                .build());
+        });
+    }
+
+    public static final @NotNull Screen create(@Nullable final Screen parent) {
+        EventRegistry.centralRegistry().triggerEvent(ConfigScreenOpenEvent.INSTANCE);
+
+        final var config = DarkUtilsConfig.INSTANCE;
+
+        final var builder = ConfigBuilder.create()
+                .setParentScreen(parent)
+                .setTitle(Text.of("DarkUtils v" + DarkUtils.getVersion() + " Settings"))
+                .setSavingRunnable(DarkUtilsConfig::save);
+
+        final var entryBuilder = builder.entryBuilder();
+
+        // === Quality of Life ===
+        DarkUtilsConfigScreen.addQualityOfLife(config, builder, entryBuilder);
+
+        // === Foraging ===
+        DarkUtilsConfigScreen.addForaging(config, builder, entryBuilder);
+
+        // === Dungeons ===
+        DarkUtilsConfigScreen.addDungeons(config, builder, entryBuilder);
+
+        // === Visual Tweaks ===
+        DarkUtilsConfigScreen.addVisualTweaks(config, builder, entryBuilder);
+
+        // === Performance ===
+        DarkUtilsConfigScreen.addPerformance(config, builder, entryBuilder);
+
+        // === Bugfixes ===
+        DarkUtilsConfigScreen.addBugfixes(config, builder, entryBuilder);
+
+        // === Development ===
+        DarkUtilsConfigScreen.addDevelopment(config, builder, entryBuilder);
 
         return builder.build();
     }

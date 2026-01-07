@@ -17,6 +17,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
@@ -24,17 +25,22 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public final class AlignmentTaskSolver {
     private static final @NotNull BlockPos topLeft = new BlockPos(-2, 124, 79);
     private static final @NotNull BlockPos bottomRight = new BlockPos(-2, 120, 75);
 
     private static final @NotNull List<BlockPos> box;
+    private static final @NotNull Set<BlockPos> boxSet;
+    private static final @NotNull Box boxAABB;
     private static final @NotNull ObjectLinkedOpenHashSet<AlignmentTaskSolver.MazeSpace> grid = new ObjectLinkedOpenHashSet<>();
     private static final @NotNull Object2IntOpenHashMap<AlignmentTaskSolver.Point> directionSet = new Object2IntOpenHashMap<>();
     private static final @NotNull Object2IntOpenHashMap<BlockPos> clicks = new Object2IntOpenHashMap<>();
@@ -61,6 +67,17 @@ public final class AlignmentTaskSolver {
         });
 
         box = List.copyOf(temp);
+        boxSet = Set.copyOf(AlignmentTaskSolver.box);
+
+        boxAABB = new Box(
+            Math.min(topLeft.getX(), bottomRight.getX()) - 1.0D,
+            Math.min(topLeft.getY(), bottomRight.getY()) - 1.0D,
+            Math.min(topLeft.getZ(), bottomRight.getZ()) - 1.0D,
+
+            Math.max(topLeft.getX(), bottomRight.getX()) + 2.0D,
+            Math.max(topLeft.getY(), bottomRight.getY()) + 2.0D,
+            Math.max(topLeft.getZ(), bottomRight.getZ()) + 2.0D
+        );
 
         AlignmentTaskSolver.sanityCheckBoxes(AlignmentTaskSolver.box);
 
@@ -78,7 +95,13 @@ public final class AlignmentTaskSolver {
     }
 
     private static final void sanityCheckBoxes(final @NotNull List<BlockPos> boxes) {
-        final var expectedBoxes = List.of(new BlockPos(-2, 124, 79), new BlockPos(-2, 124, 78), new BlockPos(-2, 124, 77), new BlockPos(-2, 124, 76), new BlockPos(-2, 124, 75), new BlockPos(-2, 123, 79), new BlockPos(-2, 123, 78), new BlockPos(-2, 123, 77), new BlockPos(-2, 123, 76), new BlockPos(-2, 123, 75), new BlockPos(-2, 122, 79), new BlockPos(-2, 122, 78), new BlockPos(-2, 122, 77), new BlockPos(-2, 122, 76), new BlockPos(-2, 122, 75), new BlockPos(-2, 121, 79), new BlockPos(-2, 121, 78), new BlockPos(-2, 121, 77), new BlockPos(-2, 121, 76), new BlockPos(-2, 121, 75), new BlockPos(-2, 120, 79), new BlockPos(-2, 120, 78), new BlockPos(-2, 120, 77), new BlockPos(-2, 120, 76), new BlockPos(-2, 120, 75));
+        final var expectedBoxes = new ArrayList<BlockPos>(25);
+
+        for (var y = 124; 120 <= y; --y) {
+            for (var z = 79; 75 <= z; --z) {
+                expectedBoxes.add(new BlockPos(-2, y, z));
+            }
+        }
 
         if (boxes.size() != expectedBoxes.size()) {
             throw new IllegalStateException("Box sanity check failed: expected size "
@@ -101,7 +124,7 @@ public final class AlignmentTaskSolver {
     }
 
     private static final boolean isInPhase3() {
-        return DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolverPredev || 0L != DungeonTimer.phase2ClearTime;
+        return DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolverPredev || DungeonTimer.isPhaseFinished(DungeonTimer.DungeonPhase.PHASE_2_CLEAR);
     }
 
     private static final boolean isSolverActive() {
@@ -115,63 +138,112 @@ public final class AlignmentTaskSolver {
         if (!AlignmentTaskSolver.isSolverActive()) {
             return;
         }
-        if (null == MinecraftClient.getInstance().player) {
+
+        final var player = MinecraftClient.getInstance().player;
+        if (null == player) {
             return;
         }
-        final var x = MinecraftClient.getInstance().player.getX();
-        final var y = MinecraftClient.getInstance().player.getY();
-        final var z = MinecraftClient.getInstance().player.getZ();
-        if (25.0D * 25.0D >= AlignmentTaskSolver.topLeft.getSquaredDistanceFromCenter(x, y, z)) {
-            if (25 > AlignmentTaskSolver.grid.size()) {
-                final var frames = new ObjectArrayList<ItemFrameEntity>();
-                if (null != MinecraftClient.getInstance().world) {
-                    for (final var entity : MinecraftClient.getInstance().world.getEntities()) {
-                        if (entity instanceof final ItemFrameEntity frame && AlignmentTaskSolver.box.contains(frame.getBlockPos())) {
-                            final var held = frame.getHeldItemStack();
-                            if (null != held && (held.isOf(Items.ARROW) || held.isOf(Items.RED_WOOL) || held.isOf(Items.LIME_WOOL))) {
-                                frames.add(frame);
-                            }
-                        }
-                    }
-                }
-                if (!frames.isEmpty()) {
-                    for (int i = 0, len = AlignmentTaskSolver.box.size(); i < len; ++i) {
-                        final var pos = AlignmentTaskSolver.box.get(i);
-                        final var coords = new AlignmentTaskSolver.Point(i % 5, i / 5);
 
-                        ItemFrameEntity frame = null;
-                        for (final var itemFrame : frames) {
-                            if (pos.equals(itemFrame.getBlockPos())) {
-                                frame = itemFrame;
-                                break;
-                            }
-                        }
+        final var px = player.getX();
+        final var py = player.getY();
+        final var pz = player.getZ();
 
-                        final var type = AlignmentTaskSolver.getSpaceType(frame);
-                        AlignmentTaskSolver.grid.add(new AlignmentTaskSolver.MazeSpace(null == frame ? null : frame.getBlockPos(), type, coords));
-                    }
-                }
-            } else if (AlignmentTaskSolver.directionSet.isEmpty()) {
-                final var startPositions = new ObjectArrayList<AlignmentTaskSolver.MazeSpace>();
-                final var endPositions = new ObjectArrayList<AlignmentTaskSolver.MazeSpace>();
-                for (final var space : AlignmentTaskSolver.grid) {
-                    if (AlignmentTaskSolver.SpaceType.STARTER == space.type()) {
-                        startPositions.add(space);
-                    }
-                    if (AlignmentTaskSolver.SpaceType.END == space.type()) {
-                        endPositions.add(space);
-                    }
-                }
+        if (!AlignmentTaskSolver.isWithinTopLeftDistance(px, py, pz)) {
+            return;
+        }
 
-                final var layout = AlignmentTaskSolver.getLayout();
-                for (final var start : startPositions) {
-                    for (final var end : endPositions) {
-                        final var pointMap = AlignmentTaskSolver.solve(layout, start.coords(), end.coords());
-                        final var moves = AlignmentTaskSolver.convertPointMapToMoves(pointMap);
-                        for (final var move : moves) {
-                            AlignmentTaskSolver.directionSet.put(move.point(), move.directionNum());
-                        }
-                    }
+        if (25 > AlignmentTaskSolver.grid.size()) {
+            AlignmentTaskSolver.computeGrid();
+        } else if (AlignmentTaskSolver.directionSet.isEmpty()) {
+            AlignmentTaskSolver.computeDirections();
+        }
+    }
+
+    private static final boolean isWithinTopLeftDistance(final double x, final double y, final double z) {
+        return 25.0D * 25.0D >= AlignmentTaskSolver.topLeft.getSquaredDistanceFromCenter(x, y, z);
+    }
+
+    private static final void computeGrid() {
+        final var frames = AlignmentTaskSolver.collectRelevantItemFrames();
+        if (frames.isEmpty()) {
+            return;
+        }
+
+        for (int i = 0, len = AlignmentTaskSolver.box.size(); i < len; ++i) {
+            final var pos = AlignmentTaskSolver.box.get(i);
+            final var coords = new AlignmentTaskSolver.Point(i % 5, i / 5);
+            final var frame = AlignmentTaskSolver.findFrameAtPos(frames, pos);
+
+            final var type = AlignmentTaskSolver.getSpaceType(frame);
+
+            final var framePos = frame == null ? null : frame.getBlockPos();
+            final var frameBox = frame == null ? null : new Box(
+                framePos.getX() - 1.0D,
+                framePos.getY() - 1.0D,
+                framePos.getZ() - 1.0D,
+
+                framePos.getX() + 2.0D,
+                framePos.getY() + 2.0D,
+                framePos.getZ() + 2.0D
+            );
+
+            AlignmentTaskSolver.grid.add(new AlignmentTaskSolver.MazeSpace(framePos, frameBox, type, coords));
+        }
+    }
+
+    @NotNull
+    private static final ObjectArrayList<ItemFrameEntity> collectRelevantItemFrames() {
+        final var frames = new ObjectArrayList<ItemFrameEntity>();
+        final var world = MinecraftClient.getInstance().world;
+        if (null == world) {
+            return frames;
+        }
+
+        for (final var frame : world.getEntitiesByType(EntityType.ITEM_FRAME, AlignmentTaskSolver.boxAABB, ignored -> true)) {
+            if (!AlignmentTaskSolver.boxSet.contains(frame.getBlockPos())) {
+                continue;
+            }
+
+            final var held = frame.getHeldItemStack();
+            if (held.isOf(Items.ARROW) || held.isOf(Items.RED_WOOL) || held.isOf(Items.LIME_WOOL)) {
+                frames.add(frame);
+            }
+        }
+        return frames;
+    }
+
+    @Nullable
+    private static final ItemFrameEntity findFrameAtPos(@NotNull final ObjectArrayList<ItemFrameEntity> frames, @NotNull final BlockPos pos) {
+        for (final var frame : frames) {
+            if (pos.equals(frame.getBlockPos())) {
+                return frame;
+            }
+        }
+        return null;
+    }
+
+    private static final void computeDirections() {
+        final var startPositions = new ObjectArrayList<AlignmentTaskSolver.MazeSpace>();
+        final var endPositions = new ObjectArrayList<AlignmentTaskSolver.MazeSpace>();
+
+        for (final var space : AlignmentTaskSolver.grid) {
+            switch (space.type()) {
+                case STARTER -> startPositions.add(space);
+                case END -> endPositions.add(space);
+                case EMPTY, PATH -> {
+                    // we only care about start and end
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + space.type());
+            }
+        }
+
+        final var layout = AlignmentTaskSolver.getLayout();
+        for (final var start : startPositions) {
+            for (final var end : endPositions) {
+                final var pointMap = AlignmentTaskSolver.solve(layout, start.coords(), end.coords());
+                final var moves = AlignmentTaskSolver.convertPointMapToMoves(pointMap);
+                for (final var move : moves) {
+                    AlignmentTaskSolver.directionSet.put(move.point(), move.directionNum());
                 }
             }
         }
@@ -180,15 +252,13 @@ public final class AlignmentTaskSolver {
     private static final @NotNull AlignmentTaskSolver.SpaceType getSpaceType(final @Nullable ItemFrameEntity frame) {
         if (null != frame) {
             final var held = frame.getHeldItemStack();
-            if (null != held) {
-                if (held.isOf(Items.ARROW)) {
-                    return AlignmentTaskSolver.SpaceType.PATH;
-                }
-                if (held.isOf(Items.RED_WOOL)) {
-                    return AlignmentTaskSolver.SpaceType.END;
-                }
-                return held.isOf(Items.LIME_WOOL) ? AlignmentTaskSolver.SpaceType.STARTER : AlignmentTaskSolver.SpaceType.EMPTY;
+            if (held.isOf(Items.ARROW)) { // FIXME test if can give NPE
+                return AlignmentTaskSolver.SpaceType.PATH;
             }
+            if (held.isOf(Items.RED_WOOL)) {
+                return AlignmentTaskSolver.SpaceType.END;
+            }
+            return held.isOf(Items.LIME_WOOL) ? AlignmentTaskSolver.SpaceType.STARTER : AlignmentTaskSolver.SpaceType.EMPTY;
         }
         return AlignmentTaskSolver.SpaceType.EMPTY;
     }
@@ -198,12 +268,14 @@ public final class AlignmentTaskSolver {
             return;
         }
         for (final var space : AlignmentTaskSolver.grid) {
-            if (AlignmentTaskSolver.SpaceType.PATH != space.type() || null == space.framePos()) {
+            final var framePos = space.framePos();
+            final var frameBox = space.frameBox();
+            if (AlignmentTaskSolver.SpaceType.PATH != space.type() || null == framePos) {
                 continue;
             }
             ItemFrameEntity frame = null;
-            for (final var entity : MinecraftClient.getInstance().world.getEntities()) {
-                if (entity instanceof final ItemFrameEntity frameEntity && space.framePos().equals(frameEntity.getBlockPos())) {
+            for (final var frameEntity : MinecraftClient.getInstance().world.getEntitiesByType(EntityType.ITEM_FRAME, frameBox, ignored -> true)) {
+                if (framePos.equals(frameEntity.getBlockPos())) {
                     frame = frameEntity;
                     break;
                 }
@@ -239,27 +311,29 @@ public final class AlignmentTaskSolver {
             return;
         }
         for (final var space : AlignmentTaskSolver.grid) {
-            if (AlignmentTaskSolver.SpaceType.PATH != space.type() || null == space.framePos()) {
+            final var pos = space.framePos();
+            final var box = space.frameBox();
+            if (AlignmentTaskSolver.SpaceType.PATH != space.type() || null == pos || null == box) {
                 continue;
             }
-            final var neededClicks = AlignmentTaskSolver.clicks.getOrDefault(space.framePos(), 0);
+            final var neededClicks = AlignmentTaskSolver.clicks.getOrDefault(pos, 0);
             if (0 == neededClicks) {
                 continue;
             }
-            final var pending = AlignmentTaskSolver.pendingClicks.getOrDefault(space.framePos(), 0);
-            AlignmentTaskSolver.showNametagAtFrame(space.framePos(), Integer.toString(0 < pending ? neededClicks - pending : neededClicks), 0 < pending && 0 == neededClicks - pending ? Formatting.GREEN : Formatting.RED);
+            final var pending = AlignmentTaskSolver.pendingClicks.getOrDefault(pos, 0);
+            AlignmentTaskSolver.showNametagAtFrame(pos, box, Integer.toString(0 < pending ? neededClicks - pending : neededClicks), 0 < pending && 0 == neededClicks - pending ? Formatting.GREEN : Formatting.RED);
         }
     }
 
-    private static final void showNametagAtFrame(final @NotNull BlockPos pos, final @NotNull String text, final @NotNull Formatting formatting) {
+    private static final void showNametagAtFrame(final @NotNull BlockPos pos, final @NotNull Box box, final @NotNull String text, final @NotNull Formatting formatting) {
         final var world = MinecraftClient.getInstance().world;
         if (null == world) {
             return;
         }
 
         ItemFrameEntity entity = null;
-        for (final var e : world.getEntities()) {
-            if (e instanceof final ItemFrameEntity frame && pos.equals(frame.getBlockPos())) {
+        for (final var frame : world.getEntitiesByType(EntityType.ITEM_FRAME, box, ignored -> true)) {
+            if (pos.equals(frame.getBlockPos())) {
                 entity = frame;
                 break;
             }
@@ -306,68 +380,89 @@ public final class AlignmentTaskSolver {
         }
     }
 
-    private static final void onPacketReceive(final @NotNull ReceiveMainThreadPacketEvent event) {
-        final var p = event.packet();
+    private static final void onPacketReceive(@NotNull final ReceiveMainThreadPacketEvent event) {
+        if (!(event.packet() instanceof final EntityTrackerUpdateS2CPacket packet) || !AlignmentTaskSolver.shouldProceedPacketReceive()) {
+            return;
+        }
 
-        if (!AlignmentTaskSolver.directionSet.isEmpty()
-                && DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver
+        final var entity = AlignmentTaskSolver.getItemFrameEntity(packet);
+        if (null == entity) {
+            return;
+        }
+
+        final var pos = entity.getBlockPos();
+        final var pending = AlignmentTaskSolver.pendingClicks.getOrDefault(pos, -1);
+        if (-1 == pending) {
+            return;
+        }
+
+        final var rotationVarInt = AlignmentTaskSolver.extractRotation(packet);
+        if (null == rotationVarInt) {
+            return;
+        }
+
+        AlignmentTaskSolver.updatePendingClicks(entity, pos, pending, rotationVarInt);
+        AlignmentTaskSolver.syncClicks(pos, rotationVarInt);
+    }
+
+    private static final boolean shouldProceedPacketReceive() {
+        return DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver
+                && !AlignmentTaskSolver.directionSet.isEmpty()
                 && AlignmentTaskSolver.isSolverActive()
-                && p instanceof final EntityTrackerUpdateS2CPacket packet
-                && null != MinecraftClient.getInstance().world
-                && MinecraftClient.getInstance().world.getEntityById(packet.id()) instanceof final ItemFrameEntity entity) {
-            final var pos = entity.getBlockPos();
-            final var pending = AlignmentTaskSolver.pendingClicks.getOrDefault(pos, -1);
+                && null != MinecraftClient.getInstance().world;
+    }
 
-            if (-1 == pending) {
-                return;
-            }
+    private static final @Nullable ItemFrameEntity getItemFrameEntity(@NotNull final EntityTrackerUpdateS2CPacket packet) {
+        final var world = MinecraftClient.getInstance().world;
+        if (null == world) {
+            return null;
+        }
+        final var entity = world.getEntityById(packet.id());
+        return entity instanceof final ItemFrameEntity frame ? frame : null;
+    }
 
-            // Extract rotation value (id 10)
-            Integer rotationVarInt = null;
-            for (final var tracked : packet.trackedValues()) {
-                final var id = tracked.id();
-                if (10 == id) {
-                    final var val = tracked.value();
-                    if (val instanceof final Integer i) {
-                        rotationVarInt = i;
-                    } else {
-                        DarkUtils.error(AlignmentTaskSolver.class, "Tracked value has wrong type {}", null == val ? "null" : val.getClass().getName());
-                    }
-                    break;
+    private static final @Nullable Integer extractRotation(@NotNull final EntityTrackerUpdateS2CPacket packet) {
+        for (final var tracked : packet.trackedValues()) {
+            if (10 == tracked.id()) {
+                final var val = tracked.value();
+                if (val instanceof final Integer i) {
+                    return i;
                 }
-            }
-
-            if (null == rotationVarInt) {
-                return;
-            }
-
-            final int newRot = rotationVarInt;
-            final var currentRot = entity.getRotation();
-            final var delta = AlignmentTaskSolver.getTurnsNeeded(currentRot, newRot);
-            final var newPending = pending - delta;
-
-            AlignmentTaskSolver.pendingClicks.put(pos, newPending);
-
-            // Sync clicks
-            AlignmentTaskSolver.MazeSpace space = null;
-            for (final var gridSpace : AlignmentTaskSolver.grid) {
-                if (pos.equals(gridSpace.framePos())) {
-                    space = gridSpace;
-                    break;
-                }
-            }
-
-            if (null == space) {
-                return;
-            }
-
-            final var turns = AlignmentTaskSolver.getTurnsNeeded(newRot, AlignmentTaskSolver.directionSet.getOrDefault(space.coords(), 0));
-            final var currentClicks = AlignmentTaskSolver.clicks.getOrDefault(pos, -1);
-
-            if (-1 == currentClicks || turns != currentClicks) {
-                AlignmentTaskSolver.clicks.put(pos, turns);
+                DarkUtils.error(AlignmentTaskSolver.class, "Tracked value has wrong type {}", null == val ? "null" : val.getClass().getName());
+                return null;
             }
         }
+        return null;
+    }
+
+    private static final void updatePendingClicks(@NotNull final ItemFrameEntity entity, @NotNull final BlockPos pos, final int pending, final int newRot) {
+        final var currentRot = entity.getRotation();
+        final var delta = AlignmentTaskSolver.getTurnsNeeded(currentRot, newRot);
+        final var newPending = pending - delta;
+        AlignmentTaskSolver.pendingClicks.put(pos, newPending);
+    }
+
+    private static final void syncClicks(@NotNull final BlockPos pos, final int newRot) {
+        final var space = AlignmentTaskSolver.findGridSpace(pos);
+        if (null == space) {
+            return;
+        }
+
+        final var turns = AlignmentTaskSolver.getTurnsNeeded(newRot, AlignmentTaskSolver.directionSet.getOrDefault(space.coords(), 0));
+        final var currentClicks = AlignmentTaskSolver.clicks.getOrDefault(pos, -1);
+
+        if (-1 == currentClicks || turns != currentClicks) {
+            AlignmentTaskSolver.clicks.put(pos, turns);
+        }
+    }
+
+    private static final @Nullable AlignmentTaskSolver.MazeSpace findGridSpace(@NotNull final BlockPos pos) {
+        for (final var gridSpace : AlignmentTaskSolver.grid) {
+            if (pos.equals(gridSpace.framePos())) {
+                return gridSpace;
+            }
+        }
+        return null;
     }
 
     private static final List<AlignmentTaskSolver.GridMove> convertPointMapToMoves(final List<AlignmentTaskSolver.Point> solution) {
@@ -488,7 +583,9 @@ public final class AlignmentTaskSolver {
         END
     }
 
-    private record MazeSpace(@Nullable BlockPos framePos, @NotNull AlignmentTaskSolver.SpaceType type,
+    private record MazeSpace(@Nullable BlockPos framePos,
+                             @Nullable Box frameBox,
+                             @NotNull AlignmentTaskSolver.SpaceType type,
                              @NotNull AlignmentTaskSolver.Point coords) {
     }
 
