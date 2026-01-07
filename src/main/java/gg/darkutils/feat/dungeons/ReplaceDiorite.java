@@ -12,8 +12,6 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BlockView;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -112,9 +110,7 @@ public final class ReplaceDiorite {
             return;
         }
 
-        if (DarkUtilsConfig.INSTANCE.replaceDiorite
-                && 0L != DungeonTimer.bossEntryTime
-                && 0L == DungeonTimer.phase2ClearTime) {
+        if (DarkUtilsConfig.INSTANCE.replaceDiorite && DungeonTimer.isInBetweenPhases(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_2_CLEAR)) {
             ReplaceDiorite.replaceDiorite(world);
         }
     }

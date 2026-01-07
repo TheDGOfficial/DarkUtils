@@ -47,7 +47,14 @@ public final class ArrowStackWaypoints {
 
     private static final boolean shouldRender() {
         final ClientPlayerEntity player;
-        return ArrowStackWaypoints.isEnabled() && (0L != DungeonTimer.phase4ClearTime || null != (player = MinecraftClient.getInstance().player) && 45.0D >= player.getY()) && 0L == DungeonTimer.phase5ClearTime && 0L != DungeonTimer.bossEntryTime/* && LocationUtils.isInM7()*/;
+
+        return ArrowStackWaypoints.isEnabled()
+                && (
+                DungeonTimer.isPhaseFinished(DungeonTimer.DungeonPhase.PHASE_4_CLEAR)
+                        || null != (player = MinecraftClient.getInstance().player) && 45.0D >= player.getY()
+        )
+                && DungeonTimer.isPhaseNotFinished(DungeonTimer.DungeonPhase.PHASE_5_CLEAR)
+                && DungeonTimer.isPhaseFinished(DungeonTimer.DungeonPhase.BOSS_ENTRY)/* && LocationUtils.isInM7() */;
     }
 
     private static final void renderArrowStackWaypoints(@NotNull final WorldRenderContext context) {
