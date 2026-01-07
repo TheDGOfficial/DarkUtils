@@ -252,7 +252,7 @@ public final class AlignmentTaskSolver {
     private static final @NotNull AlignmentTaskSolver.SpaceType getSpaceType(final @Nullable ItemFrameEntity frame) {
         if (null != frame) {
             final var held = frame.getHeldItemStack();
-            if (held.isOf(Items.ARROW)) { // FIXME test if can give NPE
+            if (held.isOf(Items.ARROW)) {
                 return AlignmentTaskSolver.SpaceType.PATH;
             }
             if (held.isOf(Items.RED_WOOL)) {
