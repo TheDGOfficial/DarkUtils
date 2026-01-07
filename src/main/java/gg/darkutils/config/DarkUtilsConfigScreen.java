@@ -91,6 +91,10 @@ public final class DarkUtilsConfigScreen {
                 "Automatically runs the tip all boosters command while in Hypixel every 15 minutes. Checks are in place to not get throttled if you sent a command shortly before it gets triggered.",
                 config.autoTip, newValue -> config.autoTip = newValue);
 
+        DarkUtilsConfigScreen.addQualityOfLifeSecond(config, builder, entryBuilder, qol);
+    }
+
+    private static final void addQualityOfLifeSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory qol) {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Welcome Message",
                 "Sends a cool welcome message about the mod with a button to open the settings menu quickly or learn more about the mod.",
                 config.welcomeMessage, newValue -> config.welcomeMessage = newValue);
@@ -277,6 +281,10 @@ public final class DarkUtilsConfigScreen {
                 "Removes the 10 MB memory reserve Minecraft allocates that's never freed unless your game crashes, freeing it to be used for other stuff. This should generally have zero downsides, even if you crash or if 10 MB is too insignificant for you, it's better for the Java Garbage Collector to have more free memory to work with.",
                 config.noMemoryReserve, newValue -> config.noMemoryReserve = newValue);
 
+        DarkUtilsConfigScreen.addPerformanceSecond(config, builder, entryBuilder, performance);
+    }
+
+    private static final void addPerformanceSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull ConfigCategory performance) {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Optimize Enum Values",
                 "Optimizes memory allocation rate by eliminating enum values array copying in some places, currently a single place.",
                 config.optimizeEnumValues, newValue -> config.optimizeEnumValues = newValue);
