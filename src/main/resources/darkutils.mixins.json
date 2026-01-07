@@ -8,6 +8,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "accessors.MinecraftClientAccessor",
+    "accessors.ChatHudAccessor",
 
     "bugfixes.HandledScreenMixin",
     "bugfixes.InactivityFpsLimiterMixin",
