@@ -2,7 +2,7 @@ package gg.darkutils.utils;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import gg.darkutils.DarkUtils;
-import gg.darkutils.utils.TickUtils;
+import gg.darkutils.utils.LazyConstants;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
@@ -12,8 +12,8 @@ import net.minecraft.client.render.RenderPhase;
 import net.minecraft.client.render.VertexRendering;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
 import net.minecraft.text.OrderedText;
+import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -21,10 +21,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalDouble;
+import java.util.Set;
+import java.util.function.Supplier;
 import java.util.function.IntSupplier;
 
 public final class RenderUtils {
@@ -60,6 +63,16 @@ public final class RenderUtils {
             RenderUtils.LINES_PARAMETER.build(false)
     );
     /**
+     * Holds the formatting to text color cache.
+     */
+    private static final @NotNull Supplier<Map<Formatting, TextColor>> FORMATTING_TO_TEXT_COLOR = LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(
+            Set.copyOf(Arrays.asList(Formatting.values())),
+            formatting -> Objects.requireNonNull(
+                    TextColor.fromFormatting(formatting),
+                    "Formatting must convert to TextColor"
+            )
+    ));
+    /**
      * Holds the item to empty ItemStack cache.
      */
     private static final @NotNull Map<Item, ItemStack> ITEM_TO_ITEM_STACK = HashMap.newHashMap(16);
@@ -85,10 +98,7 @@ public final class RenderUtils {
     }
 
     private static final int convertFormattingToRGBA(@NotNull final Formatting color) {
-        return Objects.requireNonNull(
-                TextColor.fromFormatting(color),
-                "Formatting must convert to TextColor"
-        ).getRgb();
+        return RenderUtils.FORMATTING_TO_TEXT_COLOR.get().get(color).getRgb();
     }
 
     private static final int convertFormattingToOpaqueColor(@NotNull final Formatting color) {

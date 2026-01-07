@@ -6,6 +6,7 @@ import gg.darkutils.events.SentMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RoundingMode;
+import gg.darkutils.utils.LazyConstants;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
@@ -81,7 +82,7 @@ public final class ChatUtils {
     }
 
     public static final boolean hasFormatting(final Text text, @NotNull final SimpleStyle color) {
-        final var colorStyle = Suppliers.memoize(color::toStyle); // TODO replace with JDK StableValue
+        final var colorStyle = LazyConstants.lazyConstantOf(color::toStyle);
         return !text.asOrderedText().accept((index, style, codePoint) -> style.isBold() != colorStyle.get().isBold() ||
                 null == style.getColor() || !style.getColor().equals(colorStyle.get().getColor()));
     }

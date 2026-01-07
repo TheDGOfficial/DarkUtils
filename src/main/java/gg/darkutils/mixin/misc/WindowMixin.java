@@ -2,6 +2,7 @@ package gg.darkutils.mixin.misc;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
+import gg.darkutils.utils.LazyConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Window;
 import org.jetbrains.annotations.NotNull;
@@ -15,8 +16,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.function.Supplier;
+
 @Mixin(Window.class)
 final class WindowMixin {
+    @Unique
+    @Final
+    @NotNull
+    private static final Supplier<String> darkutils$platform = LazyConstants.lazyConstantOf(Window::getGlfwPlatform);
     @Shadow
     private boolean fullscreen;
     @Shadow
@@ -30,9 +37,6 @@ final class WindowMixin {
     private int x;
     @Shadow
     private int y;
-    @Unique
-    @NotNull
-    private String darkutils$platform;
 
     private WindowMixin() {
         super();
@@ -40,20 +44,15 @@ final class WindowMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void darkutils$init(@NotNull final CallbackInfo ci) {
-        this.darkutils$platform = Window.getGlfwPlatform();
-    }
-
     @Unique
-    private final boolean darkutils$isWayland() {
-        return "wayland".equals(this.darkutils$platform);
+    private static final boolean darkutils$isWayland() {
+        return "wayland".equals(WindowMixin.darkutils$platform.get());
     }
 
     @Inject(method = "onFramebufferSizeChanged", at = @At("RETURN"))
     private final void darkutils$fixGuiScaleIfEnabled(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.fixGuiScaleAfterFullscreen) {
-            final var wayland = this.darkutils$isWayland();
+            final var wayland = WindowMixin.darkutils$isWayland();
 
             if (!wayland && 480 > this.framebufferHeight) {
                 this.darkutils$fixFramebufferHeight(true);

@@ -1,21 +1,22 @@
 package gg.darkutils.events;
 
-import com.google.common.base.Suppliers;
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
 import gg.darkutils.events.base.EventRegistry;
+import gg.darkutils.utils.LazyConstants;
 import gg.darkutils.utils.chat.BasicColor;
 import gg.darkutils.utils.chat.BasicFormatting;
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleStyle;
-import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Triggers when a game message in chat was received by the local client from the server.
@@ -30,7 +31,19 @@ import java.util.function.Supplier;
 public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationState,
                                       @NotNull Text message,
                                       @NotNull Supplier<String> contentSupplier,
-                                      @NotNull Object2BooleanOpenHashMap<SimpleStyle> hasFormattingCache) implements CancellableEvent {
+                                      @NotNull Supplier<Map<SimpleStyle, Boolean>> hasFormattingCache) implements CancellableEvent {
+    @NotNull
+    private static final Set<SimpleStyle> ALL_STYLE_COMBINATIONS = Set.copyOf(Stream.concat(
+                    // all colors without formatting
+                    Stream.of(BasicColor.values()).map(SimpleStyle::colored),
+                    // all color + formatting combinations
+                    Stream.of(BasicColor.values()).flatMap(color ->
+                            Stream.of(BasicFormatting.values())
+                                    .map(format -> SimpleStyle.colored(color).also(SimpleStyle.formatted(format)))
+                    )
+            )
+            .toList());
+
     static {
         EventRegistry.centralRegistry().registerEvent(ReceiveGameMessageEvent.class);
         ClientReceiveMessageEvents.ALLOW_GAME.register(ReceiveGameMessageEvent::post);
@@ -38,13 +51,12 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
 
     /**
      * Creates a new {@link ReceiveGameMessageEvent} suitable for triggering the event.
-     * A cached {@link CancellationState#ofCached()} will be used with non-cancelled state by default.
+     * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.
      *
      * @param message The message.
      */
     public ReceiveGameMessageEvent(@NotNull final Text message) {
-        // TODO replace with JDK StableValue
-        this(CancellationState.ofCached(), message, Suppliers.memoize(message::getString), new Object2BooleanOpenHashMap<>());
+        this(CancellationState.ofCached(), message, LazyConstants.lazyConstantOf(message::getString), LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(ReceiveGameMessageEvent.ALL_STYLE_COMBINATIONS, style -> ChatUtils.hasFormatting(message, style))));
     }
 
     private static final boolean post(@NotNull final Text message, final boolean overlay) {
@@ -97,7 +109,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * @return Whether the message has the given style.
      */
     private final boolean isStyledWith(@NotNull final SimpleStyle style) {
-        return this.hasFormattingCache.computeIfAbsent(style, (SimpleStyle simpleStyle) -> ChatUtils.hasFormatting(this.message, simpleStyle));
+        return this.hasFormattingCache.get().get(style);
     }
 
     /**
