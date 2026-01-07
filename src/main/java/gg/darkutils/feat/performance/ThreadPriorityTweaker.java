@@ -84,6 +84,7 @@ public final class ThreadPriorityTweaker {
                 ThreadPriorityTweaker.startsWith("AsyncParticle", high),
                 ThreadPriorityTweaker.exactMatch("Server thread", aboveNormal),
                 ThreadPriorityTweaker.startsWith("ALSoft", aboveNormal),
+                ThreadPriorityTweaker.exactMatch("PWEventThread", aboveNormal),
                 ThreadPriorityTweaker.exactMatch("Sound engine", aboveNormal),
                 ThreadPriorityTweaker.exactMatch("RSLS Scheduler", aboveNormal),
                 ThreadPriorityTweaker.startsWith("Server Pinger #", aboveNormal),
