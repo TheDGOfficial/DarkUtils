@@ -30,10 +30,14 @@ import java.util.function.Consumer;
 public final class DungeonTimer {
     private static final long TICK_NANOS = TimeUnit.MILLISECONDS.toNanos(50L);
     private static final long MIN_DISPLAY_LAG_NANO = TimeUnit.MILLISECONDS.toNanos(100L);
+    private static final long SECONDS_PER_DAY = TimeUnit.DAYS.toSeconds(1L);
+    private static final long SECONDS_PER_HOUR = TimeUnit.HOURS.toSeconds(1L);
+    private static final long SECONDS_PER_MINUTE = TimeUnit.MINUTES.toSeconds(1L);
+    private static final long HUNDRED_MS_AS_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
     @NotNull
     private static final DungeonTimer.DungeonTimingState TIMING_STATE = new DungeonTimer.DungeonTimingState();
     @NotNull
-    private static final ArrayList<DungeonTimer.RenderableLine> lines = new ArrayList<>(16);
+    private static final ArrayList<DungeonTimer.RenderableLine> lines = new ArrayList<>(32);
     private static long serverTickCounter;
     @NotNull
     private static final Consumer<ReceiveGameMessageEvent> PHASE_5_FINISH = event -> {
@@ -186,23 +190,19 @@ public final class DungeonTimer {
     @NotNull
     private static final String formatSeconds(final long seconds) {
         if (60L > seconds) {
-            return Long.toString(seconds) + 's';
+            return DungeonTimer.longToString(seconds) + 's';
         }
-
-        final var secondsPerDay = TimeUnit.DAYS.toSeconds(1L);
 
         var remainingSeconds = seconds;
 
-        final var days = remainingSeconds / secondsPerDay;
-        remainingSeconds -= days * secondsPerDay;
+        final var days = remainingSeconds / DungeonTimer.SECONDS_PER_DAY;
+        remainingSeconds -= days * DungeonTimer.SECONDS_PER_DAY;
 
-        final var secondsPerHour = TimeUnit.HOURS.toSeconds(1L);
-        final var hours = remainingSeconds / secondsPerHour;
-        remainingSeconds -= hours * secondsPerHour;
+        final var hours = remainingSeconds / DungeonTimer.SECONDS_PER_HOUR;
+        remainingSeconds -= hours * DungeonTimer.SECONDS_PER_HOUR;
 
-        final var secondsPerMinute = TimeUnit.MINUTES.toSeconds(1L);
-        final var minutes = remainingSeconds / secondsPerMinute;
-        remainingSeconds -= minutes * secondsPerMinute;
+        final var minutes = remainingSeconds / DungeonTimer.SECONDS_PER_MINUTE;
+        remainingSeconds -= minutes * DungeonTimer.SECONDS_PER_MINUTE;
 
         final var builder = new StringBuilder(8);
         var needsSpace = false;
@@ -245,19 +245,24 @@ public final class DungeonTimer {
         }
 
         // truncate to 1 decimal (no rounding up - monotonic-safe)
-        final var secondsTimes10 = nanos / TimeUnit.MILLISECONDS.toNanos(100L);
+        final var secondsTimes10 = nanos / DungeonTimer.HUNDRED_MS_AS_NANOS;
 
         final var wholeSeconds = secondsTimes10 / 10L;
         final var decimal = secondsTimes10 % 10L;
 
         if (60L > wholeSeconds) {
             return 0L == decimal
-                    ? Long.toString(wholeSeconds) + 's'
-                    : Long.toString(wholeSeconds) + '.' + Long.toString(decimal) + 's';
+                    ? DungeonTimer.longToString(wholeSeconds) + 's'
+                    : DungeonTimer.longToString(wholeSeconds) + '.' + DungeonTimer.longToString(decimal) + 's';
         }
 
         // fall back to existing formatter for large values
         return DungeonTimer.formatSeconds(wholeSeconds);
+    }
+
+    @NotNull
+    private static final String longToString(final long l) {
+        return Long.toString(l);
     }
 
     private static final void addLine(@NotNull final DungeonTimer.DungeonPhase start, @NotNull final DungeonTimer.DungeonPhase end, @NotNull final String prettyName, @NotNull final Formatting color, @Nullable final Item optionalItemIcon) {

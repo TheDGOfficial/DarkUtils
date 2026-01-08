@@ -106,8 +106,9 @@ public final class ArmorStandOptimizer {
         final var pivotDist = player.squaredDistanceTo(pivot);
         var i = left;
         for (var j = left; right > j; ++j) {
-            if (pivotDist > player.squaredDistanceTo(list.get(j))) {
-                list.set(j, list.set(i, list.get(j)));
+            final var element = list.get(j);
+            if (pivotDist > player.squaredDistanceTo(element)) {
+                list.set(j, list.set(i, element));
                 ++i;
             }
         }
