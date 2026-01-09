@@ -70,13 +70,13 @@ public final class AlignmentTaskSolver {
         boxSet = Set.copyOf(AlignmentTaskSolver.box);
 
         boxAABB = new Box(
-            Math.min(topLeft.getX(), bottomRight.getX()) - 1.0D,
-            Math.min(topLeft.getY(), bottomRight.getY()) - 1.0D,
-            Math.min(topLeft.getZ(), bottomRight.getZ()) - 1.0D,
+                Math.min(AlignmentTaskSolver.topLeft.getX(), AlignmentTaskSolver.bottomRight.getX()) - 1.0D,
+                Math.min(AlignmentTaskSolver.topLeft.getY(), AlignmentTaskSolver.bottomRight.getY()) - 1.0D,
+                Math.min(AlignmentTaskSolver.topLeft.getZ(), AlignmentTaskSolver.bottomRight.getZ()) - 1.0D,
 
-            Math.max(topLeft.getX(), bottomRight.getX()) + 2.0D,
-            Math.max(topLeft.getY(), bottomRight.getY()) + 2.0D,
-            Math.max(topLeft.getZ(), bottomRight.getZ()) + 2.0D
+                Math.max(AlignmentTaskSolver.topLeft.getX(), AlignmentTaskSolver.bottomRight.getX()) + 2.0D,
+                Math.max(AlignmentTaskSolver.topLeft.getY(), AlignmentTaskSolver.bottomRight.getY()) + 2.0D,
+                Math.max(AlignmentTaskSolver.topLeft.getZ(), AlignmentTaskSolver.bottomRight.getZ()) + 2.0D
         );
 
         AlignmentTaskSolver.sanityCheckBoxes(AlignmentTaskSolver.box);
@@ -176,15 +176,15 @@ public final class AlignmentTaskSolver {
 
             final var type = AlignmentTaskSolver.getSpaceType(frame);
 
-            final var framePos = frame == null ? null : frame.getBlockPos();
-            final var frameBox = frame == null ? null : new Box(
-                framePos.getX() - 1.0D,
-                framePos.getY() - 1.0D,
-                framePos.getZ() - 1.0D,
+            final var framePos = null == frame ? null : frame.getBlockPos();
+            final var frameBox = null == framePos ? null : new Box(
+                    framePos.getX() - 1.0D,
+                    framePos.getY() - 1.0D,
+                    framePos.getZ() - 1.0D,
 
-                framePos.getX() + 2.0D,
-                framePos.getY() + 2.0D,
-                framePos.getZ() + 2.0D
+                    framePos.getX() + 2.0D,
+                    framePos.getY() + 2.0D,
+                    framePos.getZ() + 2.0D
             );
 
             AlignmentTaskSolver.grid.add(new AlignmentTaskSolver.MazeSpace(framePos, frameBox, type, coords));

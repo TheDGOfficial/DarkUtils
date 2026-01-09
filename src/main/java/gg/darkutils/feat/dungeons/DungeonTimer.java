@@ -35,14 +35,12 @@ public final class DungeonTimer {
     private static final long SECONDS_PER_MINUTE = TimeUnit.MINUTES.toSeconds(1L);
     private static final long HUNDRED_MS_AS_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
     @NotNull
-    private static final DungeonTimer.DungeonTimingState TIMING_STATE = new DungeonTimer.DungeonTimingState();
-    @NotNull
     private static final ArrayList<DungeonTimer.RenderableLine> lines = new ArrayList<>(32);
     private static long serverTickCounter;
     @NotNull
     private static final Consumer<ReceiveGameMessageEvent> PHASE_5_FINISH = event -> {
         if (event.isStyledWith(BasicColor.DARK_RED)) {
-            DungeonTimer.TIMING_STATE.finishedPhase(DungeonTimer.DungeonPhase.PHASE_5_CLEAR);
+            DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_5_CLEAR);
         }
     };
     private static long lastClientNow;
@@ -50,17 +48,17 @@ public final class DungeonTimer {
     private static final Map<String, Consumer<ReceiveGameMessageEvent>> MESSAGE_HANDLERS = Map.ofEntries(
             Map.entry("Starting in 1 second.", event -> {
                 if (event.isStyledWith(BasicColor.GREEN)) {
-                    TickUtils.queueServerTickTask(() -> DungeonTimer.TIMING_STATE.finishedPhase(DungeonTimer.DungeonPhase.DUNGEON_START), 20);
+                    TickUtils.queueServerTickTask(() -> DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.DUNGEON_START), 20);
                 }
             }),
             Map.entry("The BLOOD DOOR has been opened!", event -> {
                 if (event.isStyledWith(BasicColor.RED)) {
-                    DungeonTimer.TIMING_STATE.finishedPhase(DungeonTimer.DungeonPhase.BLOOD_OPEN);
+                    DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.BLOOD_OPEN);
                 }
             }),
             Map.entry("[BOSS] The Watcher: You have proven yourself. You may pass.", event -> {
                 if (event.isStyledWith(BasicColor.RED)) {
-                    DungeonTimer.TIMING_STATE.finishedPhase(DungeonTimer.DungeonPhase.BLOOD_CLEAR);
+                    DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.BLOOD_CLEAR);
 
                     TickUtils.queueTickTask(() -> {
                         final var seconds = DungeonTimer.getPhaseTimeInSecondsForPhase(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, false);
@@ -70,32 +68,32 @@ public final class DungeonTimer {
             }),
             Map.entry("[BOSS] Maxor: WELL! WELL! WELL! LOOK WHO'S HERE!", event -> {
                 if (event.isStyledWith(BasicColor.DARK_RED)) {
-                    DungeonTimer.TIMING_STATE.finishedPhase(DungeonTimer.DungeonPhase.BOSS_ENTRY);
+                    DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.BOSS_ENTRY);
                 }
             }),
             Map.entry("[BOSS] Storm: Pathetic Maxor, just like expected.", event -> {
                 if (event.isStyledWith(BasicColor.DARK_RED)) {
-                    DungeonTimer.TIMING_STATE.finishedPhase(DungeonTimer.DungeonPhase.PHASE_1_CLEAR);
+                    DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_1_CLEAR);
                 }
             }),
             Map.entry("[BOSS] Goldor: Who dares trespass into my domain?", event -> {
                 if (event.isStyledWith(BasicColor.DARK_RED)) {
-                    DungeonTimer.TIMING_STATE.finishedPhase(DungeonTimer.DungeonPhase.PHASE_2_CLEAR);
+                    DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_2_CLEAR);
                 }
             }),
             Map.entry("The Core entrance is opening!", event -> {
                 if (event.isStyledWith(BasicColor.GREEN)) {
-                    DungeonTimer.TIMING_STATE.finishedPhase(DungeonTimer.DungeonPhase.TERMINALS_CLEAR);
+                    DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.TERMINALS_CLEAR);
                 }
             }),
             Map.entry("[BOSS] Necron: You went further than any human before, congratulations.", event -> {
                 if (event.isStyledWith(BasicColor.DARK_RED)) {
-                    DungeonTimer.TIMING_STATE.finishedPhase(DungeonTimer.DungeonPhase.PHASE_3_CLEAR);
+                    DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_3_CLEAR);
                 }
             }),
             Map.entry("[BOSS] Necron: All this, for nothing...", event -> {
                 if (event.isStyledWith(BasicColor.DARK_RED)) {
-                    DungeonTimer.TIMING_STATE.finishedPhase(DungeonTimer.DungeonPhase.PHASE_4_CLEAR);
+                    DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_4_CLEAR);
                 }
             }),
             Map.entry("[BOSS] Wither King: Incredible. You did what I couldn't do myself.", DungeonTimer.PHASE_5_FINISH),
@@ -104,7 +102,7 @@ public final class DungeonTimer {
     private static long lastServerTickNow;
     private static long lastMonotonicGlobalLagNano;
     private static int linesSize;
-    private static boolean shouldRender;
+    private static boolean skipRender = true;
 
     private DungeonTimer() {
         super();
@@ -113,11 +111,11 @@ public final class DungeonTimer {
     }
 
     public static final boolean isPhaseFinished(@NotNull final DungeonTimer.DungeonPhase phase) {
-        return null != DungeonTimer.TIMING_STATE.getPhase(phase);
+        return null != DungeonTimer.DungeonTimingState.getPhase(phase);
     }
 
     public static final boolean isPhaseNotFinished(@NotNull final DungeonTimer.DungeonPhase phase) {
-        return null == DungeonTimer.TIMING_STATE.getPhase(phase);
+        return null == DungeonTimer.DungeonTimingState.getPhase(phase);
     }
 
     public static final boolean isInBetweenPhases(@NotNull final DungeonTimer.DungeonPhase started, @NotNull final DungeonTimer.DungeonPhase notYetFinished) {
@@ -148,13 +146,13 @@ public final class DungeonTimer {
     }
 
     private static final long getPhaseTimeInSecondsForPhase(@NotNull final DungeonTimer.DungeonPhase start, @NotNull final DungeonTimer.DungeonPhase end, final boolean live) {
-        final var startTime = DungeonTimer.TIMING_STATE.getPhase(start);
+        final var startTime = DungeonTimer.DungeonTimingState.getPhase(start);
 
         if (null == startTime) {
             return 0L;
         }
 
-        final var endTime = DungeonTimer.TIMING_STATE.getPhase(end);
+        final var endTime = DungeonTimer.DungeonTimingState.getPhase(end);
         final var endClientNano = null == endTime ? 0L : endTime.clientNano;
 
         return DungeonTimer.getPhaseTimeInSeconds(startTime.clientNano, endClientNano, live);
@@ -190,7 +188,7 @@ public final class DungeonTimer {
     @NotNull
     private static final String formatSeconds(final long seconds) {
         if (60L > seconds) {
-            return DungeonTimer.longToString(seconds) + 's';
+            return seconds + "s";
         }
 
         var remainingSeconds = seconds;
@@ -248,31 +246,26 @@ public final class DungeonTimer {
         final var secondsTimes10 = nanos / DungeonTimer.HUNDRED_MS_AS_NANOS;
 
         final var wholeSeconds = secondsTimes10 / 10L;
-        final var decimal = secondsTimes10 % 10L;
 
         if (60L > wholeSeconds) {
+            final var decimal = secondsTimes10 % 10L;
             return 0L == decimal
-                    ? DungeonTimer.longToString(wholeSeconds) + 's'
-                    : DungeonTimer.longToString(wholeSeconds) + '.' + DungeonTimer.longToString(decimal) + 's';
+                    ? wholeSeconds + "s"
+                    : wholeSeconds + "." + decimal + 's';
         }
 
         // fall back to existing formatter for large values
         return DungeonTimer.formatSeconds(wholeSeconds);
     }
 
-    @NotNull
-    private static final String longToString(final long l) {
-        return Long.toString(l);
-    }
-
     private static final void addLine(@NotNull final DungeonTimer.DungeonPhase start, @NotNull final DungeonTimer.DungeonPhase end, @NotNull final String prettyName, @NotNull final Formatting color, @Nullable final Item optionalItemIcon) {
-        final var startTime = DungeonTimer.TIMING_STATE.getPhase(start);
+        final var startTime = DungeonTimer.DungeonTimingState.getPhase(start);
 
         if (null == startTime) {
             return;
         }
 
-        final var endTime = DungeonTimer.TIMING_STATE.getPhase(end);
+        final var endTime = DungeonTimer.DungeonTimingState.getPhase(end);
         final var endClientNano = null == endTime ? 0L : endTime.clientNano;
 
         final var phaseTime = DungeonTimer.getPhaseTimeInSeconds(startTime.clientNano, endClientNano, true);
@@ -327,11 +320,11 @@ public final class DungeonTimer {
         DungeonTimer.linesSize = DungeonTimer.lines.size();
 
         // TODO add config option
-        DungeonTimer.shouldRender = /*DarkUtilsConfig.INSTANCE.dungeonTimer && */ null != MinecraftClient.getInstance().player && LocationUtils.isInDungeons() && !DungeonTimer.lines.isEmpty();
+        DungeonTimer.skipRender = /*!DarkUtilsConfig.INSTANCE.dungeonTimer || */ null == MinecraftClient.getInstance().player || !LocationUtils.isInDungeons() || DungeonTimer.lines.isEmpty();
     }
 
     private static final void renderDungeonTimer(@NotNull final DrawContext context) {
-        if (!DungeonTimer.shouldRender) {
+        if (DungeonTimer.skipRender) {
             return;
         }
 
@@ -383,7 +376,7 @@ public final class DungeonTimer {
         DungeonTimer.serverTickCounter = 0L;
         DungeonTimer.lastClientNow = System.nanoTime();
         DungeonTimer.lastServerTickNow = 0L;
-        DungeonTimer.TIMING_STATE.resetAll();
+        DungeonTimer.DungeonTimingState.resetAll();
     }
 
     public enum DungeonPhase {
@@ -443,35 +436,24 @@ public final class DungeonTimer {
 
     private static final class DungeonTimingState {
         @NotNull
-        private final Map<DungeonTimer.DungeonPhase, DungeonTimer.PhaseTiming> timings =
+        private static final Map<DungeonTimer.DungeonPhase, DungeonTimer.PhaseTiming> timings =
                 new EnumMap<>(DungeonTimer.DungeonPhase.class);
 
-        private DungeonTimingState() {
-            super();
-        }
-
-        private final void finishedPhase(@NotNull final DungeonTimer.DungeonPhase phase) {
-            if (this.timings.containsKey(phase)) {
+        private static final void finishedPhase(@NotNull final DungeonTimer.DungeonPhase phase) {
+            if (DungeonTimer.DungeonTimingState.timings.containsKey(phase)) {
                 DarkUtils.warn(DungeonTimer.DungeonTimingState.class, "Phase " + phase.name() + " was finished multiple times");
             } else {
-                this.timings.put(phase, DungeonTimer.PhaseTiming.now());
+                DungeonTimer.DungeonTimingState.timings.put(phase, DungeonTimer.PhaseTiming.now());
             }
         }
 
         @Nullable
-        private final DungeonTimer.PhaseTiming getPhase(@NotNull final DungeonTimer.DungeonPhase phase) {
-            return this.timings.get(phase);
+        private static final DungeonTimer.PhaseTiming getPhase(@NotNull final DungeonTimer.DungeonPhase phase) {
+            return DungeonTimer.DungeonTimingState.timings.get(phase);
         }
 
-        private final void resetAll() {
-            this.timings.clear();
-        }
-
-        @Override
-        public final String toString() {
-            return "DungeonTimingState{" +
-                    "timings=" + this.timings +
-                    '}';
+        private static final void resetAll() {
+            DungeonTimer.DungeonTimingState.timings.clear();
         }
     }
 

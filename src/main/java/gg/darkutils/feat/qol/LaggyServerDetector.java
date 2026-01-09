@@ -25,12 +25,12 @@ public final class LaggyServerDetector {
         ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(LaggyServerDetector::onWorldChange);
     }
 
-    private static final boolean isEnabled() {
-        return DarkUtilsConfig.INSTANCE.laggyServerDetector;
+    private static final boolean isNotEnabled() {
+        return !DarkUtilsConfig.INSTANCE.laggyServerDetector;
     }
 
     private static final void onWorldChange(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
-        if (!LaggyServerDetector.isEnabled() || LocationUtils.isInSingleplayer()) {
+        if (LaggyServerDetector.isNotEnabled() || LocationUtils.isInSingleplayer()) {
             return;
         }
 
@@ -52,7 +52,7 @@ public final class LaggyServerDetector {
     }
 
     private static final void onTPSUpdate(final int tps) {
-        if (!LaggyServerDetector.isEnabled()) {
+        if (LaggyServerDetector.isNotEnabled()) {
             return;
         }
 

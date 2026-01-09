@@ -47,7 +47,7 @@ public final class DarkUtilsConfigScreen {
     }
 
     @SuppressWarnings("unchecked") // safe
-    private static final <T extends Enum<T>> void addEnumSetting(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, final T value, @NotNull final Consumer<T> setter, @NotNull final T defaultValue, @NotNull final Function<Enum<T>, String> namePrettifier) {
+    private static final <T extends Enum<T>> void addEnumSetting(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, @NotNull final T value, @NotNull final Consumer<T> setter, @NotNull final T defaultValue, @NotNull final Function<Enum<T>, String> namePrettifier) {
         configCategory.addEntry(configEntryBuilder
                 .startEnumSelector(Text.of(name), defaultValue.getDeclaringClass(), value)
                 .setDefaultValue(defaultValue)
@@ -91,10 +91,10 @@ public final class DarkUtilsConfigScreen {
                 "Automatically runs the tip all boosters command while in Hypixel every 15 minutes. Checks are in place to not get throttled if you sent a command shortly before it gets triggered.",
                 config.autoTip, newValue -> config.autoTip = newValue);
 
-        DarkUtilsConfigScreen.addQualityOfLifeSecond(config, builder, entryBuilder, qol);
+        DarkUtilsConfigScreen.addQualityOfLifeSecond(config, entryBuilder, qol);
     }
 
-    private static final void addQualityOfLifeSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory qol) {
+    private static final void addQualityOfLifeSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory qol) {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Welcome Message",
                 "Sends a cool welcome message about the mod with a button to open the settings menu quickly or learn more about the mod.",
                 config.welcomeMessage, newValue -> config.welcomeMessage = newValue);
@@ -281,25 +281,25 @@ public final class DarkUtilsConfigScreen {
                 "Removes the 10 MB memory reserve Minecraft allocates that's never freed unless your game crashes, freeing it to be used for other stuff. This should generally have zero downsides, even if you crash or if 10 MB is too insignificant for you, it's better for the Java Garbage Collector to have more free memory to work with.",
                 config.noMemoryReserve, newValue -> config.noMemoryReserve = newValue);
 
-        DarkUtilsConfigScreen.addPerformanceSecond(config, builder, entryBuilder, performance);
+        DarkUtilsConfigScreen.addPerformanceSecond(config, entryBuilder, performance);
     }
 
-    private static final void addPerformanceSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull ConfigCategory performance) {
+    private static final void addPerformanceSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory performance) {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Optimize Enum Values",
                 "Optimizes memory allocation rate by eliminating enum values array copying in some places, currently a single place.",
                 config.optimizeEnumValues, newValue -> config.optimizeEnumValues = newValue);
 
         DarkUtilsConfigScreen.addEnumSetting(entryBuilder, performance, "OpenGL Version Override", "Allows you to forcefully modify the OpenGL version Minecraft requests during Window context creation to a modern OpenGL version. By default Minecraft requests OpenGL 3.3. This does not magically make Minecraft take advantage of new additions from later OpenGL specifications, but it will ensure its future-proof. Note however, your game might become unbootable if you set this to a higher value than what your GPU supports. Generally speaking, GPUs from the last decade should all support OpenGL 4.6 with latest drivers installed.", config.openGLVersionOverride, newValue -> config.openGLVersionOverride = newValue, OpenGLVersionOverride.NO_OVERRIDE, openGLVersionOverride -> switch (openGLVersionOverride) {
-                    case OpenGLVersionOverride.NO_OVERRIDE -> "No Override";
-                    case OpenGLVersionOverride.GL4_0 -> "OpenGL 4.0";
-                    case OpenGLVersionOverride.GL4_1 -> "OpenGL 4.1";
-                    case OpenGLVersionOverride.GL4_2 -> "OpenGL 4.2";
-                    case OpenGLVersionOverride.GL4_3 -> "OpenGL 4.3";
-                    case OpenGLVersionOverride.GL4_4 -> "OpenGL 4.4";
-                    case OpenGLVersionOverride.GL4_5 -> "OpenGL 4.5";
-                    case OpenGLVersionOverride.GL4_6 -> "OpenGL 4.6";
-                    default ->
-                            throw new IllegalStateException("Unexpected " + OpenGLVersionOverride.class.getSimpleName() + " value: " + openGLVersionOverride.name());
+            case OpenGLVersionOverride.NO_OVERRIDE -> "No Override";
+            case OpenGLVersionOverride.GL4_0 -> "OpenGL 4.0";
+            case OpenGLVersionOverride.GL4_1 -> "OpenGL 4.1";
+            case OpenGLVersionOverride.GL4_2 -> "OpenGL 4.2";
+            case OpenGLVersionOverride.GL4_3 -> "OpenGL 4.3";
+            case OpenGLVersionOverride.GL4_4 -> "OpenGL 4.4";
+            case OpenGLVersionOverride.GL4_5 -> "OpenGL 4.5";
+            case OpenGLVersionOverride.GL4_6 -> "OpenGL 4.6";
+            default ->
+                    throw new IllegalStateException("Unexpected " + OpenGLVersionOverride.class.getSimpleName() + " value: " + openGLVersionOverride.name());
         });
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Use Virtual Threads for Texture Downloading",
@@ -354,11 +354,11 @@ public final class DarkUtilsConfigScreen {
         final var development = builder.getOrCreateCategory(Text.of("Development"));
 
         DarkUtilsConfigScreen.addEnumSetting(entryBuilder, development, "Ingame Log Level", "Allows you to change at what threshold log messages should also be printed to in-game chat for development. Do not change unless instructed or know what you are doing.", config.ingameLogLevel, newValue -> config.ingameLogLevel = newValue, LogLevel.WARN, logLevel -> switch (logLevel) {
-                    case LogLevel.INFO -> "Info";
-                    case LogLevel.WARN -> "Warning";
-                    case LogLevel.ERROR -> "Error";
-                    default ->
-                            throw new IllegalStateException("Unexpected " + LogLevel.class.getSimpleName() + " value: " + logLevel.name());
+            case LogLevel.INFO -> "Info";
+            case LogLevel.WARN -> "Warning";
+            case LogLevel.ERROR -> "Error";
+            default ->
+                    throw new IllegalStateException("Unexpected " + LogLevel.class.getSimpleName() + " value: " + logLevel.name());
         });
     }
 

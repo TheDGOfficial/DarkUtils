@@ -1,12 +1,11 @@
 package gg.darkutils.utils.chat;
 
-import com.google.common.base.Suppliers;
 import gg.darkutils.events.SentCommandEvent;
 import gg.darkutils.events.SentMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
+import gg.darkutils.utils.LazyConstants;
 import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RoundingMode;
-import gg.darkutils.utils.LazyConstants;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;

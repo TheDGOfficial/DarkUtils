@@ -26,7 +26,7 @@ public final class Helpers {
         throw new UnsupportedOperationException("static utility class");
     }
 
-    public static final boolean doesTargetedBlockMatch(@NotNull final Helpers.MatcherCondition<BlockState> matcher) {
+    public static final boolean doesTargetedBlockMatch(@NotNull final Predicate<BlockState> matcher) {
         final var mc = MinecraftClient.getInstance();
         final var world = mc.world;
         if (null == world || !(mc.crosshairTarget instanceof final BlockHitResult blockHitResult)) {
@@ -37,33 +37,38 @@ public final class Helpers {
     }
 
     @NotNull
-    public static final Helpers.MatcherCondition<BlockState> isButton() {
+    public static final Predicate<BlockState> isButton() {
         return state -> state.isIn(BlockTags.BUTTONS);
     }
 
     @NotNull
-    public static final Helpers.MatcherCondition<BlockState> isLever() {
+    public static final Predicate<BlockState> isLever() {
         return state -> state.isOf(Blocks.LEVER);
     }
 
     @NotNull
-    public static final Helpers.MatcherCondition<BlockState> isCraftingTable() {
+    public static final Predicate<BlockState> isCraftingTable() {
         return state -> state.isOf(Blocks.CRAFTING_TABLE);
     }
 
     @NotNull
-    public static final Helpers.MatcherCondition<BlockState> isMushroom() {
+    public static final Predicate<BlockState> isMushroom() {
         return state -> state.isOf(Blocks.RED_MUSHROOM) || state.isOf(Blocks.BROWN_MUSHROOM);
     }
 
     @NotNull
-    public static final Helpers.MatcherCondition<BlockState> isRedstoneBlock() {
+    public static final Predicate<BlockState> isRedstoneBlock() {
         return state -> state.isOf(Blocks.REDSTONE_BLOCK);
     }
 
     @NotNull
-    public static final Helpers.MatcherCondition<BlockState> isCommandBlock() {
+    public static final Predicate<BlockState> isCommandBlock() {
         return state -> state.isOf(Blocks.COMMAND_BLOCK);
+    }
+
+    @NotNull
+    public static final Predicate<BlockState> isDoor() {
+        return state -> state.isIn(BlockTags.DOORS);
     }
 
     private static final boolean doesTargetedEntityMatch(@NotNull final Predicate<Entity> matcher) {
@@ -198,19 +203,6 @@ public final class Helpers {
 
         if (null != player) {
             player.playSound(sound, volume, pitch);
-        }
-    }
-
-    @FunctionalInterface
-    public interface MatcherCondition<T> extends Predicate<T> {
-        @NotNull
-        default Helpers.MatcherCondition<T> or(@NotNull final Helpers.MatcherCondition<T> other) {
-            return value -> this.test(value) || other.test(value);
-        }
-
-        @NotNull
-        default Helpers.MatcherCondition<T> and(@NotNull final Helpers.MatcherCondition<T> other) {
-            return value -> this.test(value) && other.test(value);
         }
     }
 }
