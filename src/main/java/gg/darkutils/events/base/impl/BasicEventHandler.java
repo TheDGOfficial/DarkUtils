@@ -123,7 +123,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
         for (int i = 0, len = localListeners.size(); len > i; ++i) {
             final var listener = localListeners.get(i);
 
-            if ((cancelled = cancellationState.isCancelled()) && !listener.receiveCancelled()) {
+            if (cancelled && !listener.receiveCancelled()) {
                 continue;
             }
 
@@ -132,6 +132,8 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             } catch (final Throwable error) {
                 BasicEventHandler.handleListenerError(listener, event, error);
             }
+
+            cancelled = cancellationState.isCancelled();
         }
 
         return BasicFinalCancellationState.ofCached(cancelled); // Return a FinalCancellationState so that calling .setCancelled() would always throw, and calling isCancelled() would automatically clear reference to the owner thread which would disallow any more isCancelled() calls while also ensuring the call to isCancelled() occurs on the owner thread.
