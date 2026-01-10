@@ -67,8 +67,8 @@ public final class Helpers {
     }
 
     @NotNull
-    public static final Predicate<BlockState> isDoor() {
-        return state -> state.isIn(BlockTags.DOORS);
+    public static final Predicate<BlockState> isWoodenDoor() {
+        return state -> state.isIn(BlockTags.WOODEN_DOORS);
     }
 
     private static final boolean doesTargetedEntityMatch(@NotNull final Predicate<Entity> matcher) {
