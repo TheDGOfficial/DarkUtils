@@ -19,7 +19,7 @@ Required Dependencies:
 - Hypixel Mod API 1.0.1 or later.
 
 Optional Dependencies:
-- Mod Menu 17.0.0-beta.1 or later.
+- Mod Menu 17.0.0-beta.2 or later.
 
 # Quality of Life
 ## Never Reset Cursor Position
