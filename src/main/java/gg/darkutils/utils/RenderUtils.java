@@ -1,7 +1,6 @@
 package gg.darkutils.utils;
 
 import gg.darkutils.DarkUtils;
-import gg.darkutils.utils.LazyConstants;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -25,8 +24,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalDouble;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public final class RenderUtils {
     /**
@@ -36,7 +35,7 @@ public final class RenderUtils {
     /**
      * Middle aligned y position, calculating based on current window size.
      */
-    public static final @NotNull IntSupplier MIDDLE_ALIGNED_Y = RenderUtils::getMiddleOfScreenYCoords;
+    public static final @NotNull IntSupplier MIDDLE_ALIGNED_Y = RenderUtils::getMiddleOfScreenYCoordinate;
     /**
      * Holds the formatting to text color cache.
      */
@@ -67,7 +66,7 @@ public final class RenderUtils {
         throw new UnsupportedOperationException("static utility class");
     }
 
-    private static final int getMiddleOfScreenYCoords() {
+    private static final int getMiddleOfScreenYCoordinate() {
         final var client = MinecraftClient.getInstance();
         return (client.getWindow().getScaledHeight() >> 1) - (client.textRenderer.fontHeight >> 1);
     }

@@ -175,18 +175,18 @@ public final class ThreadPriorityTweaker {
     }
 
     private static final void tweakPriority(@NotNull final Thread thread, @NotNull final String name) {
-        var foundMatchingTweaker = false;
+        var noMatchingTweakerFound = true;
 
         for (final var tweaker : ThreadPriorityTweaker.others) {
             if (tweaker.appliesTo(name)) {
-                foundMatchingTweaker = true;
+                noMatchingTweakerFound = false;
 
                 tweaker.applyTo(thread);
                 break;
             }
         }
 
-        if (!foundMatchingTweaker && ThreadPriorityTweaker.ThreadPriority.NORMAL.getPriority() < thread.getPriority()) {
+        if (noMatchingTweakerFound && ThreadPriorityTweaker.ThreadPriority.NORMAL.getPriority() < thread.getPriority()) {
             // Unknown thread names with higher than NORMAL priority gets set back to NORMAL.
             ThreadPriorityTweaker.tweakPriority(thread, ThreadPriorityTweaker.ThreadPriority.NORMAL.getPriority());
         }

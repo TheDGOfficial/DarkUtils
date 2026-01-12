@@ -55,6 +55,7 @@ final class ClientPlayerInteractionManagerMixin {
         // Additionally, we do not cancel if looking at a button, lever or crafting table. Those are not classified as block entities but still have interactions.
         // We also do not cancel when looking at a mushroom. There is a 1x1 room where you get teleported under the room for a secret chest in Hypixel SkyBlock Dungeons when you right-click to a mushroom.
         // There is also 2 1x1 rooms that require you to place a skull to a redstone block so we also do not cancel if looking at a redstone block.
+        // We also do not cancel when looking at a wooden door, as that makes the door open/close.
         if (!player.getEntityWorld().getBlockState(blockHitResult.getBlockPos()).hasBlockEntity() && !Helpers.doesTargetedBlockMatch(
                 Helpers
                         .isButton()
@@ -62,6 +63,7 @@ final class ClientPlayerInteractionManagerMixin {
                         .or(Helpers.isCraftingTable())
                         .or(Helpers.isMushroom())
                         .or(Helpers.isRedstoneBlock())
+                        .or(Helpers.isWoodenDoor())
         ) && EventRegistry.centralRegistry().triggerEvent(new UseItemEvent(stack)).isCancelled()) {
             cir.setReturnValue(ActionResult.PASS);
         }

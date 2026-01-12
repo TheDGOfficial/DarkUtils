@@ -1,5 +1,7 @@
 package gg.darkutils.utils;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Map;
 import java.util.AbstractMap;
 import java.util.Set;
@@ -10,8 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import org.jetbrains.annotations.NotNull;
 
 import com.google.common.base.Suppliers;
 

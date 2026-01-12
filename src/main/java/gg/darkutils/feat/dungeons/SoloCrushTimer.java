@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class SoloCrushTimer {
     private static boolean firstLightningReceived;
-    private static boolean done;
+    private static boolean inProgress = true;
 
     private SoloCrushTimer() {
         super();
@@ -27,7 +27,7 @@ public final class SoloCrushTimer {
 
     private static final void reset(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
         SoloCrushTimer.firstLightningReceived = false;
-        SoloCrushTimer.done = false;
+        SoloCrushTimer.inProgress = true;
     }
 
     private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
@@ -35,10 +35,10 @@ public final class SoloCrushTimer {
             return;
         }
 
-        if (!SoloCrushTimer.done && event.content().startsWith("Storm's Giga Lightning hit you for ") && event.isStyledWith(BasicColor.GRAY)) {
+        if (SoloCrushTimer.inProgress && event.content().startsWith("Storm's Giga Lightning hit you for ") && event.isStyledWith(BasicColor.GRAY)) {
             if (SoloCrushTimer.firstLightningReceived) {
                 SoloCrushTimer.firstLightningReceived = false;
-                SoloCrushTimer.done = true;
+                SoloCrushTimer.inProgress = false;
 
                 Helpers.displayCountdownTitlesInServerTicks("§5", "Crush!", 3);
             } else {

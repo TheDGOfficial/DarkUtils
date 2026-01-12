@@ -117,22 +117,26 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     private final BasicFinalCancellationState triggerCancellableEventAndObtainCancellationState(@NotNull final T event, @NotNull final CancellationState cancellationState) {
         final var localListeners = this.listeners.get();
 
+        var cancelled = false;
+
         // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
         for (int i = 0, len = localListeners.size(); len > i; ++i) {
             final var listener = localListeners.get(i);
 
-            if (cancellationState.isCancelled() && !listener.receiveCancelled()) {
+            if (cancelled && !listener.receiveCancelled()) {
                 continue;
             }
 
             try {
                 listener.onEvent(event);
             } catch (final Throwable error) {
-                this.handleListenerError(listener, event, error);
+                BasicEventHandler.handleListenerError(listener, event, error);
             }
+
+            cancelled = cancellationState.isCancelled();
         }
 
-        return BasicFinalCancellationState.ofCached(cancellationState.isCancelled()); // Return a FinalCancellationState so that calling .setCancelled() would always throw, and calling isCancelled() would automatically clear reference to the owner thread which would disallow any more isCancelled() calls while also ensuring the call to isCancelled() occurs on the owner thread.
+        return BasicFinalCancellationState.ofCached(cancelled); // Return a FinalCancellationState so that calling .setCancelled() would always throw, and calling isCancelled() would automatically clear reference to the owner thread which would disallow any more isCancelled() calls while also ensuring the call to isCancelled() occurs on the owner thread.
     }
 
     private final void triggerNonCancellableEvent(@NotNull final T event) {
@@ -143,13 +147,13 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             try {
                 listener.onEvent(event);
             } catch (final Throwable error) {
-                this.handleListenerError(listener, event, error);
+                BasicEventHandler.handleListenerError(listener, event, error);
             }
         }
     }
 
-    private final void handleListenerError(@NotNull final EventListener<T> listener, @NotNull final T event, @NotNull final Throwable error) {
-        final var actualListener = listener instanceof final DelegatingEventListener<T> delegatingEventListener
+    private static final void handleListenerError(@NotNull final EventListener<? extends Event> listener, @NotNull final Event event, @NotNull final Throwable error) {
+        final var actualListener = listener instanceof final DelegatingEventListener<? extends Event> delegatingEventListener
                 ? delegatingEventListener.listener()
                 : listener;
         DarkUtils.error(BasicEventHandler.class,

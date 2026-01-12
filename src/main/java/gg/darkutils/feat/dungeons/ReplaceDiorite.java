@@ -12,6 +12,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BlockView;
+import net.minecraft.world.chunk.EmptyChunk;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -121,7 +122,7 @@ public final class ReplaceDiorite {
 
             final var chunk = world.getChunkAsView((int) (key >> 32), (int) (key & 0xFFFF_FFFFL));
 
-            if (null == chunk) {
+            if (null == chunk || chunk instanceof EmptyChunk) {
                 continue; // skip unloaded
             }
 
