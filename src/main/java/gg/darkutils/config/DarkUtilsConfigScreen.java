@@ -363,7 +363,7 @@ public final class DarkUtilsConfigScreen {
     }
 
     public static final @NotNull Screen create(@Nullable final Screen parent) {
-        EventRegistry.centralRegistry().triggerEvent(ConfigScreenOpenEvent.INSTANCE);
+        ConfigScreenOpenEvent.INSTANCE.trigger();
 
         final var config = DarkUtilsConfig.INSTANCE;
 

@@ -4,8 +4,6 @@ import gg.darkutils.events.base.impl.BasicEventRegistry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.invoke.MethodHandles;
-
 /**
  * Defines a {@link EventRegistry}.
  */
@@ -22,52 +20,14 @@ public interface EventRegistry {
 
     @SuppressWarnings("unchecked")
     @NotNull
-    private static <T extends Event> Class<T> uncheckedCastToEventClass(@NotNull final Class<?> clazz) {
-        return (Class<T>) clazz;
-    }
-
-    @NotNull
     private static <T extends Event> Class<T> getEventClass(@NotNull final T event) {
-        return EventRegistry.uncheckedCastToEventClass(event.getClass());
+        return (Class<T>) event.getClass();
     }
 
     @NotNull
     private <T extends Event> EventHandler<T> getEventHandler(@NotNull final T event) {
         return this.getEventHandler(EventRegistry.getEventClass(event));
     }
-
-    /**
-     * Registers an {@link Event}.
-     * <p>
-     * An {@link Event} can't have listeners added before being registered.
-     * <p>
-     * You should call this method from your event class's static initializer block
-     * to ensure it's always registered before listeners are added for it.
-     * <p>
-     * If the event is already registered, an {@link IllegalStateException} will be thrown.
-     * <p>
-     * A default {@link EventHandler} suitable for this {@link EventRegistry} will be created and used.
-     *
-     * @param event The event class.
-     * @param <T>   The type of the event class.
-     */
-    <T extends Event> void registerEvent(@NotNull final Class<T> event);
-
-    /**
-     * Registers an {@link Event} with a custom {@link EventHandler} implementation.
-     * <p>
-     * An {@link Event} can't have listeners added before being registered.
-     * <p>
-     * You should call this method from your event class's static initializer block
-     * to ensure it's always registered before listeners are added for it.
-     * <p>
-     * If the event is already registered, an {@link IllegalStateException} will be thrown.
-     *
-     * @param event   The event class.
-     * @param handler The custom {@link EventHandler}.
-     * @param <T>     The type of the event class.
-     */
-    <T extends Event> void registerEvent(@NotNull final Class<T> event, @NotNull final EventHandler<T> handler);
 
     /**
      * Gets the {@link EventHandler} for an event, allowing you to add listeners.
@@ -123,16 +83,7 @@ public interface EventRegistry {
             throw new IllegalArgumentException("listener method has wrong parameter with type " + eventType.getName());
         }
 
-        // Force static initializer to run so that the event can be registered before we try to add a listener for it
-        try {
-            MethodHandles.publicLookup().ensureInitialized(eventType);
-        } catch (final IllegalAccessException iae) {
-            throw new IllegalStateException("event class " + eventType.getName() + " is not accessible by event registry", iae);
-        } catch (final Throwable error) {
-            throw new IllegalStateException("failed to force initialization for event class " + eventType.getName(), error);
-        }
-
-        this.getEventHandler(EventRegistry.<T>uncheckedCastToEventClass(eventType)).addListener(listener);
+        this.getEventHandler((Class<T>) eventType).addListener(listener);
     }
 
     /**

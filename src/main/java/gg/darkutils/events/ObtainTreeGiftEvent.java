@@ -13,7 +13,4 @@ import org.jetbrains.annotations.NotNull;
  */
 public record ObtainTreeGiftEvent(
         @NotNull TreeMobSpawned treeMobSpawned) implements NonCancellableEvent {
-    static {
-        EventRegistry.centralRegistry().registerEvent(ObtainTreeGiftEvent.class);
-    }
 }

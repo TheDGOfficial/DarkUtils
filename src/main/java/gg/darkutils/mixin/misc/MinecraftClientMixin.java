@@ -64,6 +64,6 @@ final class MinecraftClientMixin {
 
     @WrapOperation(method = "doItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;interactEntityAtLocation(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/util/hit/EntityHitResult;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"))
     private final @NotNull ActionResult darkutils$onEntityInteract(@NotNull final ClientPlayerInteractionManager instance, @NotNull final PlayerEntity player, @NotNull final Entity entity, @NotNull final EntityHitResult hitResult, @NotNull final Hand hand, @NotNull final Operation<ActionResult> original) {
-        return EventRegistry.centralRegistry().triggerEvent(new InteractEntityEvent(entity)).isCancelled() ? ActionResult.CONSUME : original.call(instance, player, entity, hitResult, hand);
+        return new InteractEntityEvent(entity).triggerAndCancelled() ? ActionResult.CONSUME : original.call(instance, player, entity, hitResult, hand);
     }
 }

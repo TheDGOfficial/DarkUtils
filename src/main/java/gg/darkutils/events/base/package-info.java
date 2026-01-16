@@ -5,14 +5,13 @@
  * <b>Defining an event</b><br>
  * To define a new event, simply declare a record implementing either
  * {@link gg.darkutils.events.base.NonCancellableEvent} or
- * {@link gg.darkutils.events.base.CancellableEvent}, and register it with the
- * central {@link gg.darkutils.events.base.EventRegistry}:
+ * {@link gg.darkutils.events.base.CancellableEvent}.
+ * <p>
+ * Event handlers are created lazily and automatically the first time an event
+ * class is used. No manual registration or static initializer blocks are required.
  * {@snippet :
  * public record MyEvent(@NotNull MyEventParam1 param1, @NotNull MyEventParam2 param2)
  *         implements NonCancellableEvent {
- *     static {
- *         EventRegistry.centralRegistry().registerEvent(MyEvent.class);
- *     }
  * }
  *}
  *
@@ -35,7 +34,7 @@
  * <b>Triggering an event</b><br>
  * You can trigger an event anywhere using:
  * {@snippet :
- * EventRegistry.centralRegistry().triggerEvent(new MyEvent(new MyEventParam1(), new MyEventParam2()));
+ * new MyEvent(new MyEventParam1(), new MyEventParam2()).trigger();
  *}
  *
  * <b>Working with cancellable events</b><br>
@@ -46,9 +45,6 @@
  *                                  @NotNull MyEventParam1 param1,
  *                                  @NotNull MyEventParam2 param2)
  *         implements CancellableEvent {
- *     static {
- *         EventRegistry.centralRegistry().registerEvent(MyCancellableEvent.class);
- *     }
  *
  *     public MyCancellableEvent(@NotNull MyEventParam1 param1, @NotNull MyEventParam2 param2) {
  *         this(CancellationState.ofCached(), param1, param2);
@@ -59,15 +55,13 @@
  * Listeners for cancellable events work the same way, except they may cancel the event:
  * {@snippet :
  * private void onMyEvent(@NotNull MyCancellableEvent event) {
- *     event.getCancellationState().cancel();
+ *     event.cancellationState().cancel();
  * }
  *}
  * <p>
  * Triggering cancellable events allows checking the result:
  * {@snippet :
- * if (!EventRegistry.centralRegistry()
- *         .triggerEvent(new MyCancellableEvent(new MyEventParam1(), new MyEventParam2()))
- *         .isCancelled()) {
+ * if (new MyCancellableEvent(new MyEventParam1(), new MyEventParam2()).triggerAndNotCancelled()) {
  *     // Event was not cancelled
  * }
  *}
@@ -82,3 +76,4 @@
  * ensure thread-safety if they modify shared state.
  */
 package gg.darkutils.events.base;
+

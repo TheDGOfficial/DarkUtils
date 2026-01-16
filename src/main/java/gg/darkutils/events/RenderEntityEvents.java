@@ -23,10 +23,6 @@ public final class RenderEntityEvents {
      */
     public record ArmorStandRenderEvent(@NotNull CancellationState cancellationState,
                                         @NotNull ArmorStandEntity armorStand) implements CancellableEvent {
-        static {
-            EventRegistry.centralRegistry().registerEvent(RenderEntityEvents.ArmorStandRenderEvent.class);
-        }
-
         /**
          * Creates a new {@link RenderEntityEvents.ArmorStandRenderEvent} suitable for triggering the event.
          * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.

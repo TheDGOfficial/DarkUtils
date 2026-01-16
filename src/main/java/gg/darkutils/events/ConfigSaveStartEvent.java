@@ -13,8 +13,4 @@ public record ConfigSaveStartEvent() implements NonCancellableEvent {
      */
     @NotNull
     public static final ConfigSaveStartEvent INSTANCE = new ConfigSaveStartEvent();
-
-    static {
-        EventRegistry.centralRegistry().registerEvent(ConfigSaveStartEvent.class);
-    }
 }

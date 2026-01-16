@@ -16,10 +16,6 @@ import org.jetbrains.annotations.NotNull;
  */
 public record InteractEntityEvent(@NotNull CancellationState cancellationState,
                                   @NotNull Entity entity) implements CancellableEvent {
-    static {
-        EventRegistry.centralRegistry().registerEvent(InteractEntityEvent.class);
-    }
-
     /**
      * Creates a new {@link InteractEntityEvent} suitable for triggering the event.
      * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.

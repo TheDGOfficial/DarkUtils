@@ -12,7 +12,4 @@ import org.jetbrains.annotations.NotNull;
  * @param content The message content.
  */
 public record SentMessageEvent(@NotNull String content) implements NonCancellableEvent {
-    static {
-        EventRegistry.centralRegistry().registerEvent(SentMessageEvent.class);
-    }
 }

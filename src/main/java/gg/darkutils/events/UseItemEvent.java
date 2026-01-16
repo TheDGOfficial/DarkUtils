@@ -16,10 +16,6 @@ import org.jetbrains.annotations.NotNull;
  */
 public record UseItemEvent(@NotNull CancellationState cancellationState,
                            @NotNull ItemStack itemStack) implements CancellableEvent {
-    static {
-        EventRegistry.centralRegistry().registerEvent(UseItemEvent.class);
-    }
-
     /**
      * Creates a new {@link UseItemEvent} suitable for triggering the event.
      * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.
