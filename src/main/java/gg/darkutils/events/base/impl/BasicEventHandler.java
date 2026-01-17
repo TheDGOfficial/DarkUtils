@@ -116,11 +116,32 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
 
     private final BasicFinalCancellationState triggerCancellableEventAndObtainCancellationState(@NotNull final T event, @NotNull final CancellationState cancellationState) {
         final var localListeners = this.listeners.get();
+        final var size = localListeners.size();
 
+        if (0 == size) {
+            // No listeners - fast path
+            return BasicFinalCancellationState.ofCached(false);
+        }
+
+        if (1 == size) {
+            // Only one listener - fast path
+            // We don't need to check isCancelled or receiveCancelled here as the even't shouldn't be cancelled yet.
+            // We have an assertion just in case though, if -ea is enabled as a JVM argument.
+            assert !cancellationState.isCancelled() : "fresh CancellationState was in cancelled state before any listener invocation";
+            final var listener = localListeners.get(0);
+            try {
+                listener.onEvent(event);
+            } catch (final Throwable error) {
+                BasicEventHandler.handleListenerError(listener, event, error);
+            }
+            return BasicFinalCancellationState.ofCached(cancellationState.isCancelled());
+        }
+
+        // Fallback to slower path if 2 or more listeners
         var cancelled = false;
 
         // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
-        for (int i = 0, len = localListeners.size(); len > i; ++i) {
+        for (int i = 0; size > i; ++i) {
             final var listener = localListeners.get(i);
 
             if (cancelled && !listener.receiveCancelled()) {
@@ -140,9 +161,27 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     }
 
     private final void triggerNonCancellableEvent(@NotNull final T event) {
-        // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
         final var localListeners = this.listeners.get();
-        for (int i = 0, len = localListeners.size(); len > i; ++i) {
+        final int size = localListeners.size();
+
+        if (0 == size) {
+            // No listeners - fast path
+            return;
+        }
+
+        if (1 == size) {
+            // Only one listener - fast path
+            final var listener = localListeners.get(0);
+            try {
+                listener.onEvent(event);
+            } catch (final Throwable error) {
+                BasicEventHandler.handleListenerError(listener, event, error);
+            }
+            return;
+        }
+
+        // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
+        for (int i = 0; size > i; ++i) {
             final var listener = localListeners.get(i);
             try {
                 listener.onEvent(event);
