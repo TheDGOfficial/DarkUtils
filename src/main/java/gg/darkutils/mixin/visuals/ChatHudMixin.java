@@ -17,8 +17,8 @@ final class ChatHudMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Redirect(
-            method = "render(Lnet/minecraft/client/gui/DrawContext;IIIZ)V",
+    /*@Redirect(
+            method = "render(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/client/font/TextRenderer;IIIZZ)V",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V"
@@ -33,5 +33,5 @@ final class ChatHudMixin {
             context.fill(x1, y1, x2, y2, color);
         }
         // prevent the two scrollbar fill(...) calls from drawing
-    }
+    }*/
 }
