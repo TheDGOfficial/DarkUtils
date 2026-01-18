@@ -37,11 +37,15 @@ public final class TickUtils {
     // ============================================================
 
     private static final void processAwaitingTasks() {
-        TickUtils.tasks.removeIf(TickUtils.Task::tick);
+        TickUtils.processAwaitingTasksIn(TickUtils.tasks);
     }
 
     private static final void processAwaitingServerTasks(@NotNull final ServerTickEvent event) {
-        TickUtils.serverTasks.removeIf(TickUtils.Task::tick);
+        TickUtils.processAwaitingTasksIn(TickUtils.serverTasks);
+    }
+
+    private static final void processAwaitingTasksIn(@NotNull final Set<TickUtils.Task> tasks) {
+        tasks.removeIf(TickUtils.Task::tick);
     }
 
     // ============================================================

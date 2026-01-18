@@ -45,7 +45,6 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
             .toList());
 
     static {
-        EventRegistry.centralRegistry().registerEvent(ReceiveGameMessageEvent.class);
         ClientReceiveMessageEvents.ALLOW_GAME.register(ReceiveGameMessageEvent::post);
     }
 
@@ -60,7 +59,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
     }
 
     private static final boolean post(@NotNull final Text message, final boolean overlay) {
-        return overlay || !EventRegistry.centralRegistry().triggerEvent(new ReceiveGameMessageEvent(message)).isCancelled();
+        return overlay || new ReceiveGameMessageEvent(message).triggerAndNotCancelled();
     }
 
     /**

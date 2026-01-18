@@ -33,12 +33,12 @@ abstract class ClientPlayNetworkHandlerMixin extends ClientCommonNetworkHandler 
 
     @Inject(method = "sendChatMessage", at = @At("HEAD"))
     private final void darkutils$onMessage(@NotNull final String content, @NotNull final CallbackInfo ci) {
-        EventRegistry.centralRegistry().triggerEvent(new SentMessageEvent(content));
+        new SentMessageEvent(content).trigger();
     }
 
     @Inject(method = "sendChatCommand", at = @At("HEAD"))
     private final void darkutils$onCommand(@NotNull final String command, @NotNull final CallbackInfo ci) {
-        EventRegistry.centralRegistry().triggerEvent(new SentCommandEvent(command));
+        new SentCommandEvent(command).trigger();
     }
 
     @Inject(
@@ -47,7 +47,7 @@ abstract class ClientPlayNetworkHandlerMixin extends ClientCommonNetworkHandler 
             cancellable = true
     )
     private final void darkutils$cancelOpenScreenIfEnabled(@NotNull final OpenScreenS2CPacket packet, @NotNull final CallbackInfo ci) {
-        if (EventRegistry.centralRegistry().triggerEvent(new OpenScreenEvent(packet.getScreenHandlerType(), packet.getName())).isCancelled()) {
+        if (new OpenScreenEvent(packet.getScreenHandlerType(), packet.getName()).triggerAndCancelled()) {
             // syncId from the OpenScreenS2CPacket tells server which container to close
             this.sendPacket(new CloseHandledScreenC2SPacket(packet.getSyncId()));
 

@@ -13,8 +13,4 @@ public record ConfigScreenOpenEvent() implements NonCancellableEvent {
      */
     @NotNull
     public static final ConfigScreenOpenEvent INSTANCE = new ConfigScreenOpenEvent();
-
-    static {
-        EventRegistry.centralRegistry().registerEvent(ConfigScreenOpenEvent.class);
-    }
 }

@@ -35,10 +35,10 @@ final class PacketApplyBatcherEntryMixin<T extends PacketListener> {
     )
     private final void darkutils$beforeMainThreadPacket(@NotNull final CallbackInfo ci) {
         if (this.packet instanceof CommonPingS2CPacket) {
-            EventRegistry.centralRegistry().triggerEvent(ServerTickEvent.INSTANCE);
+            ServerTickEvent.INSTANCE.trigger();
         }
 
-        if (EventRegistry.centralRegistry().triggerEvent(new ReceiveMainThreadPacketEvent(this.packet)).isCancelled()) {
+        if (new ReceiveMainThreadPacketEvent(this.packet).triggerAndCancelled()) {
             ci.cancel(); // prevent executing original packet handler
         }
     }

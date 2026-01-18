@@ -19,6 +19,6 @@ final class ArmorStandEntityRendererMixin {
 
     @Redirect(method = "hasLabel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/decoration/ArmorStandEntity;isCustomNameVisible()Z"))
     private final boolean darkutils$skipRenderingLabelIfEnabled(@NotNull final ArmorStandEntity armorStand) {
-        return armorStand.isCustomNameVisible() && !EventRegistry.centralRegistry().triggerEvent(new RenderEntityEvents.ArmorStandRenderEvent(armorStand)).isCancelled();
+        return armorStand.isCustomNameVisible() && new RenderEntityEvents.ArmorStandRenderEvent(armorStand).triggerAndNotCancelled();
     }
 }

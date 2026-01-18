@@ -20,10 +20,25 @@ public final class BasicEventRegistry implements EventRegistry {
     private static final BasicEventRegistry INSTANCE = new BasicEventRegistry();
 
     /**
-     * Holds the map of known events to their handlers in a thread-safe manner (immutable map copy each time one is registered).
+     * Holds the event handlers in a thread-safe manner (thread-safety provided by JDK ClassValue)
      */
     @NotNull
-    private final AtomicReference<Map<Class<? extends Event>, EventHandler<? extends Event>>> knownEvents = new AtomicReference<>(Map.of());
+    private final ClassValue<EventHandler<? extends Event>> handlers = new ClassValue<>() {
+        @Override
+        @NotNull
+        protected final EventHandler<? extends Event> computeValue(@NotNull final Class<?> type) {
+            if (!Event.class.isAssignableFrom(type)) {
+                throw new IllegalStateException(
+                        "Class " + type.getName() + " does not extend Event"
+                );
+            }
+
+            @SuppressWarnings("unchecked") // safe because we've already checked above
+            final Class<? extends Event> eventClass = (Class<? extends Event>) type;
+
+            return new BasicEventHandler<>(eventClass);
+        }
+    };
 
     /**
      * Creates the singleton {@link BasicEventRegistry} instance.
@@ -43,45 +58,16 @@ public final class BasicEventRegistry implements EventRegistry {
     }
 
     @SuppressWarnings("unchecked")
-    @NotNull
-    private static final <T extends Event> EventHandler<T> uncheckedCastToEventHandler(@NotNull final EventHandler<?> eventHandler) {
-        return (EventHandler<T>) eventHandler;
-    }
-
-    @Override
-    public final <T extends Event> void registerEvent(@NotNull final Class<T> event) {
-        this.registerEvent(event, new BasicEventHandler<>(event));
-    }
-
-    @Override
-    public final <T extends Event> void registerEvent(@NotNull final Class<T> event, @NotNull final EventHandler<T> handler) {
-        this.knownEvents.updateAndGet(oldMap -> {
-            if (oldMap.containsKey(event)) {
-                throw new IllegalStateException("event " + event.getName() + " is already registered");
-            }
-
-            final var newMap = new IdentityHashMap<>(oldMap);
-            newMap.put(event, handler);
-            return Map.copyOf(newMap);
-        });
-    }
-
     @Override
     @NotNull
     public final <T extends Event> EventHandler<T> getEventHandler(@NotNull final Class<T> event) {
-        final var eventHandler = this.knownEvents.get().get(event);
-
-        if (null == eventHandler) {
-            throw new IllegalStateException("event " + event.getName() + " is not a known registered event for the requested registry, ensure its registered in the static initializer block properly in your event class!");
-        }
-
-        return BasicEventRegistry.uncheckedCastToEventHandler(eventHandler);
+        return (EventHandler<T>) this.handlers.get(event);
     }
 
     @Override
     public final String toString() {
         return "BasicEventRegistry{" +
-                "knownEvents=" + this.knownEvents +
+                "handlers=" + this.handlers +
                 '}';
     }
 }

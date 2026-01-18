@@ -24,7 +24,7 @@ public final class TreeGiftFeatures {
                     TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.NONE;
                     TickUtils.awaitCondition(
                             () -> TreeGiftFeatures.endMessageReceived,
-                            () -> EventRegistry.centralRegistry().triggerEvent(new ObtainTreeGiftEvent(TreeGiftFeatures.treeMobSpawned))
+                            () -> new ObtainTreeGiftEvent(TreeGiftFeatures.treeMobSpawned).trigger()
                     );
                 }
             },

@@ -13,8 +13,4 @@ public record ServerTickEvent() implements NonCancellableEvent {
      */
     @NotNull
     public static final ServerTickEvent INSTANCE = new ServerTickEvent();
-
-    static {
-        EventRegistry.centralRegistry().registerEvent(ServerTickEvent.class);
-    }
 }

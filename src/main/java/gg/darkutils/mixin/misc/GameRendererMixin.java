@@ -30,6 +30,6 @@ final class GameRendererMixin {
 
     @Inject(method = "renderWorld", at = @At(value = "CONSTANT", args = "stringValue=hand", shift = At.Shift.BEFORE))
     private final void darkutils$onRenderWorld(@NotNull final RenderTickCounter renderTickCounter, @NotNull final CallbackInfo ci) {
-        EventRegistry.centralRegistry().triggerEvent(RenderWorldEvent.INSTANCE);
+        RenderWorldEvent.INSTANCE.trigger();
     }
 }

@@ -20,10 +20,6 @@ import org.jetbrains.annotations.NotNull;
 public record OpenScreenEvent(@NotNull CancellationState cancellationState,
                               @NotNull ScreenHandlerType<?> screenHandlerType,
                               @NotNull Text name) implements CancellableEvent {
-    static {
-        EventRegistry.centralRegistry().registerEvent(OpenScreenEvent.class);
-    }
-
     /**
      * Creates a new {@link OpenScreenEvent} suitable for triggering the event.
      * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.

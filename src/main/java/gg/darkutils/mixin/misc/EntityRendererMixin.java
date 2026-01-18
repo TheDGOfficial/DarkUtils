@@ -22,7 +22,7 @@ final class EntityRendererMixin<T extends Entity> {
 
     @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
     private final void darkutils$skipRenderingArmorStandIfEnabled(@NotNull final T entity, @NotNull final Frustum frustum, final double x, final double y, final double z, @NotNull final CallbackInfoReturnable<Boolean> cir) {
-        if (entity instanceof final ArmorStandEntity armorStand && EventRegistry.centralRegistry().triggerEvent(new RenderEntityEvents.ArmorStandRenderEvent(armorStand)).isCancelled()) {
+        if (entity instanceof final ArmorStandEntity armorStand && new RenderEntityEvents.ArmorStandRenderEvent(armorStand).triggerAndCancelled()) {
             cir.setReturnValue(false);
         }
     }

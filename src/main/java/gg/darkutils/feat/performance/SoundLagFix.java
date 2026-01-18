@@ -15,6 +15,11 @@ import org.jetbrains.annotations.NotNull;
 public final class SoundLagFix {
     @NotNull
     private static final Object2IntOpenHashMap<SoundLagFix.SoundData> limitData = new Object2IntOpenHashMap<>(128);
+
+    static {
+        SoundLagFix.limitData.defaultReturnValue(0);
+    }
+
     private static final int limitPerTick = 1;
 
     private SoundLagFix() {
@@ -93,12 +98,59 @@ public final class SoundLagFix {
 
     private record LocationOriginatingSoundData(double x, double y, double z, float volume, float pitch,
                                                 @NotNull SoundCategory soundCategory,
-                                                @NotNull Identifier sound) implements SoundLagFix.SoundData {
+                                                @NotNull Identifier sound,
+                                                int cachedHashCode) implements SoundLagFix.SoundData {
+
+        private LocationOriginatingSoundData(double x, double y, double z, float volume, float pitch,
+                                             @NotNull SoundCategory soundCategory,
+                                             @NotNull Identifier sound) {
+            this(x, y, z, volume, pitch, soundCategory, sound, SoundLagFix.LocationOriginatingSoundData.computeHash(x, y, z, volume, pitch, soundCategory, sound));
+        }
+
+        @Override
+        public final int hashCode() {
+            return this.cachedHashCode;
+        }
+
+        private static final int computeHash(double x, double y, double z, float volume, float pitch,
+                                             @NotNull SoundCategory soundCategory,
+                                             @NotNull Identifier sound) {
+            var result = Double.hashCode(x);
+            result = 31 * result + Double.hashCode(y);
+            result = 31 * result + Double.hashCode(z);
+            result = 31 * result + Float.hashCode(volume);
+            result = 31 * result + Float.hashCode(pitch);
+            result = 31 * result + soundCategory.hashCode();
+            result = 31 * result + sound.hashCode();
+            return result;
+        }
     }
 
     private record EntityOriginatingSoundData(int entityId, float volume, float pitch,
                                               @NotNull SoundCategory soundCategory,
-                                              @NotNull Identifier sound) implements SoundLagFix.SoundData {
+                                              @NotNull Identifier sound,
+                                              int cachedHashCode) implements SoundLagFix.SoundData {
 
+        private EntityOriginatingSoundData(int entityId, float volume, float pitch,
+                                           @NotNull SoundCategory soundCategory,
+                                           @NotNull Identifier sound) {
+            this(entityId, volume, pitch, soundCategory, sound, SoundLagFix.EntityOriginatingSoundData.computeHash(entityId, volume, pitch, soundCategory, sound));
+        }
+
+        @Override
+        public final int hashCode() {
+            return this.cachedHashCode;
+        }
+
+        private static final int computeHash(int entityId, float volume, float pitch,
+                                              @NotNull SoundCategory soundCategory,
+                                              @NotNull Identifier sound) {
+            var result = Integer.hashCode(entityId);
+            result = 31 * result + Float.hashCode(volume);
+            result = 31 * result + Float.hashCode(pitch);
+            result = 31 * result + soundCategory.hashCode();
+            result = 31 * result + sound.hashCode();
+            return result;
+        }
     }
 }

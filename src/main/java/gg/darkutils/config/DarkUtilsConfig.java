@@ -125,14 +125,14 @@ public final class DarkUtilsConfig {
     }
 
     static final void save() {
-        EventRegistry.centralRegistry().triggerEvent(ConfigSaveStartEvent.INSTANCE);
+        ConfigSaveStartEvent.INSTANCE.trigger();
 
         try {
             Files.writeString(DarkUtilsConfig.FILE.toPath(), DarkUtilsConfig.GSON.toJson(DarkUtilsConfig.INSTANCE), StandardCharsets.UTF_8);
         } catch (final IOException e) {
             DarkUtils.error(DarkUtilsConfig.class, "Unable to save config", e);
         } finally {
-            EventRegistry.centralRegistry().triggerEvent(ConfigSaveFinishEvent.INSTANCE);
+            ConfigSaveFinishEvent.INSTANCE.trigger();
         }
     }
 

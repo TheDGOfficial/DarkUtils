@@ -13,8 +13,4 @@ public record RenderWorldEvent() implements NonCancellableEvent {
      */
     @NotNull
     public static final RenderWorldEvent INSTANCE = new RenderWorldEvent();
-
-    static {
-        EventRegistry.centralRegistry().registerEvent(RenderWorldEvent.class);
-    }
 }

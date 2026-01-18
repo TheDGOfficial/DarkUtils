@@ -36,7 +36,7 @@ final class ClientPlayerInteractionManagerMixin {
 
         final var stack = player.getStackInHand(hand);
 
-        if (EventRegistry.centralRegistry().triggerEvent(new UseItemEvent(stack)).isCancelled()) {
+        if (new UseItemEvent(stack).triggerAndCancelled()) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }
@@ -64,7 +64,7 @@ final class ClientPlayerInteractionManagerMixin {
                         .or(Helpers.isMushroom())
                         .or(Helpers.isRedstoneBlock())
                         .or(Helpers.isWoodenDoor())
-        ) && EventRegistry.centralRegistry().triggerEvent(new UseItemEvent(stack)).isCancelled()) {
+        ) && new UseItemEvent(stack).triggerAndCancelled()) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }

@@ -23,7 +23,4 @@ import org.jetbrains.annotations.NotNull;
  * @param command The command.
  */
 public record SentCommandEvent(@NotNull String command) implements NonCancellableEvent {
-    static {
-        EventRegistry.centralRegistry().registerEvent(SentCommandEvent.class);
-    }
 }

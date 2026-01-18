@@ -307,7 +307,7 @@ public final class DarkUtilsConfigScreen {
                 config.useVirtualThreadsForTextureDownloading, newValue -> config.useVirtualThreadsForTextureDownloading = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable Glowing",
-                "Disables glowing of players, dropped items and frogs, which reduce FPS a lot if your graphics card is not capable. Glowed entities are rendered behind walls, so no culling of them which reduces performance. Only enable if you do not care about: seeing your teammates glow with Hypixel rank color (e.g. green for VIP, blue for MVP+) in Dungeons, dropped items glowing with their rarity color (e.g. orange for legendary items), and frogs in galatea glow white.",
+                "Disables all glowing, which reduce FPS a lot if your graphics card is not capable. Glowed entities are rendered behind walls, so no culling of them which reduces performance. Only enable if you do not care about: seeing your teammates glow with Hypixel rank color (e.g. green for VIP, blue for MVP+) in Dungeons, dropped items glowing with their rarity color (e.g. orange for legendary items), frogs in galatea glowing white, and possibly more glowing effects will be disabled for performance.",
                 config.disableGlowing, newValue -> config.disableGlowing = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Sound Lag Fix",
@@ -363,7 +363,7 @@ public final class DarkUtilsConfigScreen {
     }
 
     public static final @NotNull Screen create(@Nullable final Screen parent) {
-        EventRegistry.centralRegistry().triggerEvent(ConfigScreenOpenEvent.INSTANCE);
+        ConfigScreenOpenEvent.INSTANCE.trigger();
 
         final var config = DarkUtilsConfig.INSTANCE;
 
