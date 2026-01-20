@@ -44,10 +44,6 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
             )
             .toList());
 
-    static {
-        ClientReceiveMessageEvents.ALLOW_GAME.register(ReceiveGameMessageEvent::post);
-    }
-
     /**
      * Creates a new {@link ReceiveGameMessageEvent} suitable for triggering the event.
      * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.
@@ -56,6 +52,10 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      */
     public ReceiveGameMessageEvent(@NotNull final Text message) {
         this(CancellationState.ofCached(), message, LazyConstants.lazyConstantOf(message::getString), LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(ReceiveGameMessageEvent.ALL_STYLE_COMBINATIONS, style -> ChatUtils.hasFormatting(message, style))));
+    }
+
+    public static final void init() {
+        ClientReceiveMessageEvents.ALLOW_GAME.register(ReceiveGameMessageEvent::post);
     }
 
     private static final boolean post(@NotNull final Text message, final boolean overlay) {
