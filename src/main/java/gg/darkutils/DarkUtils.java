@@ -6,6 +6,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.config.DarkUtilsConfigScreen;
+import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.feat.bugfixes.CursorFix;
 import gg.darkutils.feat.dungeons.AlignmentTaskSolver;
 import gg.darkutils.feat.dungeons.ArrowStackWaypoints;
@@ -350,6 +351,12 @@ public final class DarkUtils implements ClientModInitializer {
         });
     }
 
+    private static final void initEvents() {
+        DarkUtils.init(
+                ReceiveGameMessageEvent::init
+        );
+    }
+
     private static final void initUtils() {
         DarkUtils.init(
                 LocationUtils::init,
@@ -398,6 +405,9 @@ public final class DarkUtils implements ClientModInitializer {
     public final void onInitializeClient() {
         // Register mod commands
         DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.openConfig(), "darkutil", "du");
+
+        // Init custom events that wrap fabric events, other things depend on them
+        DarkUtils.initEvents();
 
         // Init utils, features may depend on those so they should be init before features
         DarkUtils.initUtils();
