@@ -21,6 +21,7 @@ public final class ArmorStandOptimizer {
     private static final @NotNull ReferenceOpenHashSet<ArmorStandEntity> armorStandRenderSet = new ReferenceOpenHashSet<>(64);
     private static final @NotNull ReferenceArrayList<ArmorStandEntity> reusableStands = new ReferenceArrayList<>(512);
     private static final @NotNull ReferenceArrayList<ArmorStandEntity> loadedArmorStands = new ReferenceArrayList<>(512);
+    private static final @NotNull ReferenceOpenHashSet<ArmorStandEntity> pendingRemovals = new ReferenceOpenHashSet<>(512);
 
     private ArmorStandOptimizer() {
         super();
@@ -70,7 +71,7 @@ public final class ArmorStandOptimizer {
         // No load event would be called for those, which in turn bugs the state.
 
         if (entity instanceof final ArmorStandEntity armorStand) {
-            ArmorStandOptimizer.loadedArmorStands.remove(armorStand);
+            ArmorStandOptimizer.pendingRemovals.add(armorStand);
         }
     }
 
@@ -93,6 +94,13 @@ public final class ArmorStandOptimizer {
     }
 
     private static final void refreshArmorStands(@NotNull final MinecraftClient client) {
+        // No config check - we always need to track armor stands in case user enables the feature while some armor stands are already in the world.
+        // No load event would be called for those, which in turn bugs the state.
+        if (!ArmorStandOptimizer.pendingRemovals.isEmpty()) {
+            ArmorStandOptimizer.loadedArmorStands.removeAll(ArmorStandOptimizer.pendingRemovals);
+            ArmorStandOptimizer.pendingRemovals.clear();
+        }
+
         if (!ArmorStandOptimizer.isEnabled()) {
             ArmorStandOptimizer.clearState();
             return;
