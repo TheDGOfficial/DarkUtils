@@ -82,7 +82,7 @@ public final class ArmorStandOptimizer {
         // 1- World is not loaded
         // 2- Entity with the same id no longer exists in the world
         // 3- Entity with the same id exists in the world, but with a different instance (ID collision)
-        ArmorStandOptimizer.loadedArmorStands.removeIf(ArmorStandOptimizer::isLoaded);
+        ArmorStandOptimizer.loadedArmorStands.removeIf(armorStand -> !ArmorStandOptimizer.isLoaded(armorStand));
     }
 
     private static final boolean isLoaded(@NotNull final ArmorStandEntity armorStand) {
