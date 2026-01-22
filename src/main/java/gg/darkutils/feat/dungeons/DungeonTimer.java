@@ -291,6 +291,12 @@ public final class DungeonTimer {
     }
 
     private static final void updateDungeonTimer() {
+        // TODO add config option
+        if (null == MinecraftClient.getInstance().player || !LocationUtils.isInDungeons()) {
+            DungeonTimer.skipRender = true;
+            return;
+        }
+
         DungeonTimer.lastClientNow = System.nanoTime();
         DungeonTimer.lastServerTickNow = DungeonTimer.serverTickCounter;
 
@@ -319,8 +325,7 @@ public final class DungeonTimer {
 
         DungeonTimer.linesSize = DungeonTimer.lines.size();
 
-        // TODO add config option
-        DungeonTimer.skipRender = /*!DarkUtilsConfig.INSTANCE.dungeonTimer || */ null == MinecraftClient.getInstance().player || !LocationUtils.isInDungeons() || DungeonTimer.lines.isEmpty();
+        DungeonTimer.skipRender = DungeonTimer.lines.isEmpty();
     }
 
     private static final void renderDungeonTimer(@NotNull final DrawContext context) {
