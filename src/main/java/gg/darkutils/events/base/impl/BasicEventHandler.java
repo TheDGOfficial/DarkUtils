@@ -130,7 +130,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             // We don't need to check isCancelled or receiveCancelled here as the even't shouldn't be cancelled yet.
             // We have an assertion just in case though, if -ea is enabled as a JVM argument.
             assert !cancellationState.isCancelled() : "fresh CancellationState was in cancelled state before any listener invocation";
-            final var listener = localListeners.get(0);
+            final var listener = localListeners.getFirst();
             try {
                 listener.onEvent(event);
             } catch (final Throwable error) {
@@ -173,7 +173,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
 
         if (1 == size) {
             // Only one listener - fast path
-            final var listener = localListeners.get(0);
+            final var listener = localListeners.getFirst();
             try {
                 listener.onEvent(event);
             } catch (final Throwable error) {
