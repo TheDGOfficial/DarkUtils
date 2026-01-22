@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A basic {@link EventHandler} that implements all the specification of {@link EventHandler} interface.
@@ -35,9 +34,10 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     private final boolean cancellableEvent;
     /**
      * Holds all listeners of the event we are handling in a thread-safe manner (immutable list copy each time one added or removed).
+     * Volatile attribute ensures the new list of listeners is directly visible to all threads.
      */
     @NotNull
-    private final AtomicReference<List<EventListener<T>>> listeners = new AtomicReference<>(List.of());
+    private volatile List<EventListener<T>> listeners = List.of();
 
     /**
      * Creates a new {@link BasicEventHandler}.
@@ -53,43 +53,45 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
         }
     }
 
-    /**
-     * Sorts listeners based on their {@link EventPriority}.
-     */
-    private final void sortListeners() {
-        this.listeners.updateAndGet(listeners -> listeners.parallelStream()
-                .sorted(BasicEventHandler.eventListenerPriorityComparator)
-                .toList());
-    }
-
     @Override
     @NotNull
     public final Iterable<EventListener<T>> getListeners() {
-        return this.listeners.get();
+        return this.listeners;
     }
 
     @Override
     public final void addListener(@NotNull final EventListener<T> listener) {
-        if (this.listeners.get().contains(listener)) {
+        final var current = this.listeners;
+
+        if (current.contains(listener)) {
             throw new IllegalStateException("listener is already registered");
         }
-        this.listeners.updateAndGet(listeners -> {
-            final var newList = new ReferenceArrayList<>(listeners);
-            newList.add(listener);
-            return List.copyOf(newList);
-        });
-        this.sortListeners();
+
+        final var newList = new ReferenceArrayList<>(current);
+        newList.add(listener);
+        newList.sort(BasicEventHandler.eventListenerPriorityComparator);
+
+        // Single volatile write = safe publication
+        this.listeners = List.copyOf(newList);
     }
 
     @Override
     public final void removeListener(@NotNull final EventListener<T> listener) {
-        if (!this.listeners.get().contains(listener)) {
+        final var current = this.listeners;
+
+        if (!current.contains(listener)) {
             throw new IllegalStateException("tried to remove a listener that is not registered");
         }
-        this.listeners.updateAndGet(listeners -> listeners.parallelStream()
-                .filter(eventListener -> eventListener != listener)
-                .toList());
-        this.sortListeners();
+
+        final var newList = new ReferenceArrayList<EventListener<T>>(current.size() - 1);
+        for (final var existing : current) {
+            if (existing != listener) {
+                newList.add(existing);
+            }
+        }
+
+        // Already sorted by construction, no need to re-sort
+        this.listeners = List.copyOf(newList);
     }
 
     @Override
@@ -115,7 +117,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     }
 
     private final BasicFinalCancellationState triggerCancellableEventAndObtainCancellationState(@NotNull final T event, @NotNull final CancellationState cancellationState) {
-        final var localListeners = this.listeners.get();
+        final var localListeners = this.listeners;
         final var size = localListeners.size();
 
         if (0 == size) {
@@ -161,7 +163,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     }
 
     private final void triggerNonCancellableEvent(@NotNull final T event) {
-        final var localListeners = this.listeners.get();
+        final var localListeners = this.listeners;
         final int size = localListeners.size();
 
         if (0 == size) {
