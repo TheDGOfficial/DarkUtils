@@ -11,6 +11,7 @@ import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class SoundLagFix {
     @NotNull
@@ -108,13 +109,18 @@ public final class SoundLagFix {
         }
 
         @Override
+        public final boolean equals(@Nullable final Object obj) {
+            return this == obj || obj instanceof final LocationOriginatingSoundData losd && Double.compare(this.x, losd.x) == 0 && Double.compare(this.y, losd.y) == 0 && Double.compare(this.z, losd.z) == 0 && Float.compare(this.volume, losd.volume) == 0 && Float.compare(this.pitch, losd.pitch) == 0 && this.soundCategory == losd.soundCategory && this.sound.equals(losd.sound);
+        }
+
+        @Override
         public final int hashCode() {
             return this.cachedHashCode;
         }
 
-        private static final int computeHash(double x, double y, double z, float volume, float pitch,
-                                             @NotNull SoundCategory soundCategory,
-                                             @NotNull Identifier sound) {
+        private static final int computeHash(final double x, final double y, final double z, final float volume, final float pitch,
+                                             @NotNull final SoundCategory soundCategory,
+                                             @NotNull final Identifier sound) {
             var result = Double.hashCode(x);
             result = 31 * result + Double.hashCode(y);
             result = 31 * result + Double.hashCode(z);
@@ -138,13 +144,18 @@ public final class SoundLagFix {
         }
 
         @Override
+        public final boolean equals(@Nullable final Object obj) {
+            return this == obj || obj instanceof final EntityOriginatingSoundData eosd && this.entityId == eosd.entityId && Float.compare(this.volume, eosd.volume) == 0 && Float.compare(this.pitch, eosd.pitch) == 0 && this.soundCategory == eosd.soundCategory && this.sound.equals(eosd.sound);
+        }
+
+        @Override
         public final int hashCode() {
             return this.cachedHashCode;
         }
 
-        private static final int computeHash(int entityId, float volume, float pitch,
-                                              @NotNull SoundCategory soundCategory,
-                                              @NotNull Identifier sound) {
+        private static final int computeHash(final int entityId, final float volume, final float pitch,
+                                              @NotNull final SoundCategory soundCategory,
+                                              @NotNull final Identifier sound) {
             var result = Integer.hashCode(entityId);
             result = 31 * result + Float.hashCode(volume);
             result = 31 * result + Float.hashCode(pitch);
