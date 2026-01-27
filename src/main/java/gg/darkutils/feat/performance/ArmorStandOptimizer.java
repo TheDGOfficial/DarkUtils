@@ -14,6 +14,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -22,6 +23,7 @@ public final class ArmorStandOptimizer {
     private static final @NotNull ReferenceArrayList<ArmorStandEntity> reusableStands = new ReferenceArrayList<>(512);
     private static final @NotNull ReferenceArrayList<ArmorStandEntity> loadedArmorStands = new ReferenceArrayList<>(512);
     private static final @NotNull ReferenceOpenHashSet<ArmorStandEntity> pendingRemovals = new ReferenceOpenHashSet<>(512);
+    private static boolean belowLimit;
 
     private ArmorStandOptimizer() {
         super();
@@ -75,7 +77,7 @@ public final class ArmorStandOptimizer {
         }
     }
 
-    private static final void onWorldChange(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
+    private static final void onWorldChange(@NotNull final MinecraftClient client, @Nullable final ClientWorld world) {
         // No config check - we always need to track armor stands in case user enables the feature while some armor stands are already in the world.
         // No load event would be called for those, which in turn bugs the state.
 
@@ -131,19 +133,21 @@ public final class ArmorStandOptimizer {
 
         if (reusableStandsSize <= limit) {
             ArmorStandOptimizer.armorStandRenderSet.addAll(ArmorStandOptimizer.reusableStands);
+            ArmorStandOptimizer.belowLimit = true;
         } else {
             // Partial selection: closest `limit` stands will be in the first `limit` positions
             ArmorStandOptimizer.selectClosest(ArmorStandOptimizer.reusableStands, reusableStandsSize, limit, player);
             for (var i = 0; limit > i; ++i) {
                 ArmorStandOptimizer.armorStandRenderSet.add(ArmorStandOptimizer.reusableStands.get(i));
             }
+            ArmorStandOptimizer.belowLimit = false;
         }
 
         ArmorStandOptimizer.reusableStands.clear();
     }
 
     private static final void onRenderEntity(@NotNull final RenderEntityEvents.ArmorStandRenderEvent event) {
-        if (ArmorStandOptimizer.isEnabled() && !ArmorStandOptimizer.armorStandRenderSet.contains(event.armorStand())) {
+        if (ArmorStandOptimizer.isEnabled() && !belowLimit && !ArmorStandOptimizer.armorStandRenderSet.contains(event.armorStand())) {
             event.cancellationState().cancel();
         }
     }

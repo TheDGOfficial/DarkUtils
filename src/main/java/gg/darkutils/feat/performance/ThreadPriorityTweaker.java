@@ -39,7 +39,7 @@ public final class ThreadPriorityTweaker {
             .collect(Collectors.toUnmodifiableMap(ThreadPriorityTweaker.ThreadPriorityTweak::threadName, Function.identity()));
     /**
      * Holds other tweaks that need to do more complex checks than equality.
-     * We can't use hash here and so it will be O(n) in terms of algorithmic complexity.
+     * We can't use hash map here and so it will be O(n) in terms of algorithmic complexity.
      */
     private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> others = ThreadPriorityTweaker.tweaks
             .stream()
@@ -130,6 +130,7 @@ public final class ThreadPriorityTweaker {
      * in case new threads are spawned.
      */
     private static final void scheduleTweakTask() {
+        // initialDelay as 0L runs the task, while interval as 60L runs it periodically every minute.
         ThreadPriorityTweaker.threadPriorityTweakerScheduler.scheduleWithFixedDelay(ThreadPriorityTweaker::tweakPriorities, 0L, 60L, TimeUnit.SECONDS);
     }
 
