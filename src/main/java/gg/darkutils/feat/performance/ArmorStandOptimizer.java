@@ -3,6 +3,7 @@ package gg.darkutils.feat.performance;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.RenderEntityEvents;
 import gg.darkutils.events.base.EventRegistry;
+import gg.darkutils.mixin.accessors.LivingEntityAccessor;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
@@ -12,6 +13,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityEquipment;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -146,9 +148,16 @@ public final class ArmorStandOptimizer {
         ArmorStandOptimizer.reusableStands.clear();
     }
 
+    private static final boolean isInventoryEmpty(@NotNull final ArmorStandEntity armorStand) {
+        return ((LivingEntityAccessor) armorStand).getEquipment().isEmpty();
+    }
+
     private static final void onRenderEntity(@NotNull final RenderEntityEvents.ArmorStandRenderEvent event) {
-        if (ArmorStandOptimizer.isEnabled() && !belowLimit && !ArmorStandOptimizer.armorStandRenderSet.contains(event.armorStand())) {
-            event.cancellationState().cancel();
+        if (ArmorStandOptimizer.isEnabled()) {
+            final var armorStand = event.armorStand();
+            if ((armorStand.age < 10 && null == armorStand.getCustomName() && ArmorStandOptimizer.isInventoryEmpty(armorStand)) || (!belowLimit && !ArmorStandOptimizer.armorStandRenderSet.contains(armorStand))) {
+                event.cancellationState().cancel();
+            }
         }
     }
 
