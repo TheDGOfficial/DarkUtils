@@ -155,7 +155,7 @@ public final class ArmorStandOptimizer {
     private static final void onRenderEntity(@NotNull final RenderEntityEvents.ArmorStandRenderEvent event) {
         if (ArmorStandOptimizer.isEnabled()) {
             final var armorStand = event.armorStand();
-            if ((armorStand.age < 10 && null == armorStand.getCustomName() && ArmorStandOptimizer.isInventoryEmpty(armorStand)) || (!belowLimit && !ArmorStandOptimizer.armorStandRenderSet.contains(armorStand))) {
+            if ((!belowLimit && !ArmorStandOptimizer.armorStandRenderSet.contains(armorStand)) || (armorStand.age < 10 && null == armorStand.getCustomName() && ArmorStandOptimizer.isInventoryEmpty(armorStand))) {
                 event.cancellationState().cancel();
             }
         }
