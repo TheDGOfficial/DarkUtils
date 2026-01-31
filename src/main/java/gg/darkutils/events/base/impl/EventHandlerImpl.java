@@ -15,13 +15,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 
 /**
- * A basic {@link EventHandler} that implements all the specification of {@link EventHandler} interface.
+ * An {@link EventHandler} that implements all the specification of {@link EventHandler} interface.
  *
  * @param <T> The type of the event to handle.
  */
-public final class BasicEventHandler<T extends Event> implements EventHandler<T> {
+public final class EventHandlerImpl<T extends Event> implements EventHandler<T> {
     /**
      * Comparator for comparing {@link EventListener}s. Used to sort the listeners list.
      */
@@ -40,9 +41,9 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     private volatile List<EventListener<? super Event>> listeners = List.of();
 
     /**
-     * Creates a new {@link BasicEventHandler}.
+     * Creates a new {@link EventHandlerImpl}.
      */
-    BasicEventHandler(@NotNull final Class<T> eventClass) {
+    EventHandlerImpl(@NotNull final Class<T> eventClass) {
         super();
 
         this.cancellableEvent = CancellableEvent.class.isAssignableFrom(eventClass);
@@ -69,7 +70,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
 
         final var newList = new ReferenceArrayList<>(current);
         newList.add(listener);
-        newList.sort(BasicEventHandler.eventListenerPriorityComparator);
+        newList.sort(EventHandlerImpl.eventListenerPriorityComparator);
 
         // Single volatile write = safe publication
         this.listeners = List.copyOf(newList);
@@ -98,7 +99,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     @NotNull
     public final <E extends Event & CancellableEvent> CancellationResult triggerCancellableEvent(@NotNull final E event) {
         // Sanity-check
-        assert this.cancellableEvent : "triggerEvent(CancellableEvent) called on a BasicEventHandler<NonCancellableEvent>";
+        assert this.cancellableEvent : "triggerEvent(CancellableEvent) called on a EventHandlerImpl<NonCancellableEvent>";
 
         final var cancellationState = event.cancellationState();
 
@@ -115,12 +116,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             // We don't need to check isCancelled or receiveCancelled here as the even't shouldn't be cancelled yet.
             // We have an assertion just in case though, if -ea is enabled as a JVM argument.
             assert !cancellationState.isCancelled() : "fresh CancellationState was in cancelled state before any listener invocation";
-            final var listener = localListeners.getFirst();
-            try {
-                listener.onEvent(event);
-            } catch (final Throwable error) {
-                BasicEventHandler.handleListenerError(listener, event, error);
-            }
+            EventHandlerImpl.runListener(localListeners.getFirst(), event);
             return CancellationResult.of(cancellationState.isCancelled());
         }
 
@@ -135,12 +131,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
                 continue;
             }
 
-            try {
-                listener.onEvent(event);
-            } catch (final Throwable error) {
-                BasicEventHandler.handleListenerError(listener, event, error);
-            }
-
+            EventHandlerImpl.runListener(listener, event);
             cancelled = cancellationState.isCancelled();
         }
 
@@ -150,7 +141,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     @Override
     public final <E extends Event & NonCancellableEvent> void triggerNonCancellableEvent(@NotNull final E event) {
         // Sanity-check
-        assert !this.cancellableEvent : "triggerEvent(NonCancellableEvent) called on a BasicEventHandler<CancellableEvent>";
+        assert !this.cancellableEvent : "triggerEvent(NonCancellableEvent) called on a EventHandlerImpl<CancellableEvent>";
 
         final var localListeners = this.listeners;
         final int size = localListeners.size();
@@ -162,31 +153,36 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
 
         if (1 == size) {
             // Only one listener - fast path
-            final var listener = localListeners.getFirst();
-            try {
-                listener.onEvent(event);
-            } catch (final Throwable error) {
-                BasicEventHandler.handleListenerError(listener, event, error);
-            }
+            EventHandlerImpl.runListener(localListeners.getFirst(), event);
             return;
         }
 
         // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
         for (int i = 0; size > i; ++i) {
-            final var listener = localListeners.get(i);
-            try {
-                listener.onEvent(event);
-            } catch (final Throwable error) {
-                BasicEventHandler.handleListenerError(listener, event, error);
-            }
+            EventHandlerImpl.runListener(localListeners.get(i), event);
         }
     }
 
-    private static final void handleListenerError(@NotNull final EventListener<? extends Event> listener, @NotNull final Event event, @NotNull final Throwable error) {
+    private static final void runListener(@NotNull final EventListener<? super Event> listener, @NotNull final Event event) {
+        try {
+            listener.onEvent(event);
+        } catch (final Exception error) {
+            if (error instanceof InterruptedException) {
+                Thread.currentThread().interrupt(); // re-set the interrupted flag
+                throw new RuntimeException(error); // propagate upwards
+            } else if (error instanceof CancellationException) {
+                throw error; // a CompletableFuture or Future was cancelled, re-throw to propagate upwards to stop execution
+            }
+
+            EventHandlerImpl.handleListenerError(listener, event, error);
+        }
+    }
+
+    private static final void handleListenerError(@NotNull final EventListener<? extends Event> listener, @NotNull final Event event, @NotNull final Exception error) {
         final var actualListener = listener instanceof final DelegatingEventListener<? extends Event> delegatingEventListener
                 ? delegatingEventListener.listener()
                 : listener;
-        DarkUtils.error(BasicEventHandler.class,
+        DarkUtils.error(EventHandlerImpl.class,
                 "Error when executing listener " + actualListener.getClass().getName() +
                         " with priority " + actualListener.priority().name() +
                         " for event " + event.getClass().getName(), error);
@@ -194,7 +190,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
 
     @Override
     public final String toString() {
-        return "BasicEventHandler{" +
+        return "EventHandlerImpl{" +
                 "cancellableEvent=" + this.cancellableEvent +
                 ", listeners=" + this.listeners +
                 '}';

@@ -9,14 +9,14 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 
 /**
- * A basic {@link EventRegistry}.
+ * An {@link EventRegistry} implementation.
  */
-public final class BasicEventRegistry implements EventRegistry {
+public final class EventRegistryImpl implements EventRegistry {
     /**
      * Singleton instance.
      */
     @NotNull
-    private static final BasicEventRegistry INSTANCE = new BasicEventRegistry();
+    private static final EventRegistryImpl INSTANCE = new EventRegistryImpl();
 
     /**
      * Holds the event handlers in a thread-safe manner (thread-safety provided by JDK ClassValue)
@@ -37,38 +37,38 @@ public final class BasicEventRegistry implements EventRegistry {
             @SuppressWarnings("unchecked") // safe because we've already checked above
             final Class<? extends Event> eventClass = (Class<? extends Event>) type;
 
-            return new BasicEventHandler<>(eventClass);
+            return new EventHandlerImpl<>(eventClass);
         }
     };
 
     /**
-     * Creates the singleton {@link BasicEventRegistry} instance.
+     * Creates the singleton {@link EventRegistryImpl} instance.
      */
-    private BasicEventRegistry() {
+    private EventRegistryImpl() {
         super();
     }
 
     /**
-     * Gets the singleton {@link BasicEventRegistry} instance.
+     * Gets the singleton {@link EventRegistryImpl} instance.
      *
-     * @return The singleton {@link BasicEventRegistry} instance.
+     * @return The singleton {@link EventRegistryImpl} instance.
      */
     @NotNull
-    public static final BasicEventRegistry getInstance() {
-        return BasicEventRegistry.INSTANCE;
+    public static final EventRegistryImpl getInstance() {
+        return EventRegistryImpl.INSTANCE;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     @NotNull
     public final <T extends Event> EventHandler<T> getEventHandler(@NotNull final Class<T> event) {
-        return (EventHandler<T>) BasicEventRegistry.handlers.get(event);
+        return (EventHandler<T>) EventRegistryImpl.handlers.get(event);
     }
 
     @Override
     public final String toString() {
-        return "BasicEventRegistry{" +
-                "handlers=" + BasicEventRegistry.handlers +
+        return "EventRegistryImpl{" +
+                "handlers=" + EventRegistryImpl.handlers +
                 '}';
     }
 }

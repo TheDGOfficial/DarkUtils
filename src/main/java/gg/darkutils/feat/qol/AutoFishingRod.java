@@ -3,8 +3,8 @@ package gg.darkutils.feat.qol;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.mixin.accessors.MinecraftClientAccessor;
 import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.chat.BasicColor;
-import gg.darkutils.utils.chat.BasicFormatting;
+import gg.darkutils.utils.chat.SimpleColor;
+import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -69,7 +69,7 @@ public final class AutoFishingRod {
     }
 
     private static final boolean isCountdownArmorStand(@Nullable final Text customName) {
-        return null != customName && AutoFishingRod.COUNTDOWN_MATCHER.reset(customName.getString()).matches() && ChatUtils.hasFormatting(customName, BasicColor.YELLOW, BasicFormatting.BOLD);
+        return null != customName && AutoFishingRod.COUNTDOWN_MATCHER.reset(customName.getString()).matches() && ChatUtils.hasFormatting(customName, SimpleColor.YELLOW, SimpleFormatting.BOLD);
     }
 
     private static final boolean isNotHoldingRod(@Nullable final ClientPlayerEntity player) {
@@ -173,7 +173,7 @@ public final class AutoFishingRod {
         final var armorStand = AutoFishingRod.getOrFindCountdownArmorStand(client);
         if (null != armorStand) {
             final var customName = armorStand.getCustomName();
-            if (null != customName && AutoFishingRod.READY.equals(customName.getString()) && ChatUtils.hasFormatting(customName, BasicColor.RED, BasicFormatting.BOLD)) {
+            if (null != customName && AutoFishingRod.READY.equals(customName.getString()) && ChatUtils.hasFormatting(customName, SimpleColor.RED, SimpleFormatting.BOLD)) {
                 AutoFishingRod.hook(client);
             }
         }

@@ -35,7 +35,7 @@ import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
 import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.chat.BasicFormatting;
+import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.ButtonData;
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleStyle;
@@ -59,6 +59,7 @@ import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.concurrent.CancellationException;
 
 public final class DarkUtils implements ClientModInitializer {
     public static final @NotNull String MOD_ID = "darkutils";
@@ -218,13 +219,20 @@ public final class DarkUtils implements ClientModInitializer {
         for (final var initializer : initializers) {
             try {
                 initializer.run();
-            } catch (final Throwable error) {
+            } catch (final Exception error) {
+                if (error instanceof InterruptedException) {
+                    Thread.currentThread().interrupt(); // re-set the interrupted flag
+                    throw new RuntimeException(error); // propagate upwards
+                } else if (error instanceof CancellationException) {
+                    throw error; // a CompletableFuture or Future was cancelled, re-throw to propagate upwards to stop execution
+                }
+
                 DarkUtils.handleInitError(error);
             }
         }
     }
 
-    private static final void handleInitError(@NotNull final Throwable error) {
+    private static final void handleInitError(@NotNull final Exception error) {
         final var rootError = DarkUtils.getRootError(error, DarkUtils::isOurModuleFrame);
 
         final var ste = DarkUtils.findRelevantStackTrace(rootError.getStackTrace());
@@ -352,7 +360,7 @@ public final class DarkUtils implements ClientModInitializer {
             }
 
             final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
-            final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(BasicFormatting.BOLD));
+            final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
 
             final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
             final var footer = ChatUtils.fill('▬', true);
@@ -370,13 +378,13 @@ public final class DarkUtils implements ClientModInitializer {
                     .appendNewLine()
                     .appendGradientText(gradientStart, gradientEnd, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', SimpleStyle
                             .centered()
-                            .also(SimpleStyle.formatted(BasicFormatting.BOLD))
+                            .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
                     )
                     .appendNewLine()
                     .appendNewLine()
                     .appendGradientButton(gradientStart, gradientEnd, new ButtonData("Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID), SimpleStyle
                             .centered()
-                            .also(SimpleStyle.formatted(BasicFormatting.BOLD))
+                            .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
                     )
                     .appendNewLine()
                     .appendNewLine()

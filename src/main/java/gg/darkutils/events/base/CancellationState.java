@@ -1,16 +1,18 @@
 package gg.darkutils.events.base;
 
+import gg.darkutils.events.base.impl.CancellationStateImpl;
+
 /**
  * Declares a {@link CancellationState}.
  */
-public sealed interface CancellationState permits NonThreadSafeCancellationState {
+public interface CancellationState {
     /**
      * Returns a fresh {@link CancellationState}, defaulting to not canceled.
      *
      * @return A fresh {@link CancellationState}, defaulting to not canceled.
      */
     static CancellationState ofFresh() {
-        return NonThreadSafeCancellationState.ofFresh();
+        return CancellationStateImpl.ofFresh();
     }
 
     /**

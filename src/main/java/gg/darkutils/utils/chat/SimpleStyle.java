@@ -18,7 +18,7 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         return SimpleStyle.InheritedStyle.INSTANCE;
     }
 
-    static @NotNull SimpleStyle.ColoredStyle colored(@NotNull final BasicColor color) {
+    static @NotNull SimpleStyle.ColoredStyle colored(@NotNull final SimpleColor color) {
         return SimpleStyle.colored(color.toRgb());
     }
 
@@ -26,8 +26,8 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         return new SimpleStyle.ColoredStyle(rgb);
     }
 
-    static @NotNull SimpleStyle.FormattedStyle formatted(final @NotNull BasicFormatting basicFormatting) {
-        return new SimpleStyle.FormattedStyle(Objects.requireNonNull(basicFormatting, "basicFormatting"));
+    static @NotNull SimpleStyle.FormattedStyle formatted(final @NotNull SimpleFormatting simpleFormatting) {
+        return new SimpleStyle.FormattedStyle(Objects.requireNonNull(simpleFormatting, "simpleFormatting"));
     }
 
     static @NotNull SimpleStyle.CenteredStyle centered() {
@@ -108,14 +108,14 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         }
     }
 
-    record FormattedStyle(@NotNull BasicFormatting basicFormatting) implements SimpleStyle {
+    record FormattedStyle(@NotNull SimpleFormatting simpleFormatting) implements SimpleStyle {
         public FormattedStyle {
-            Objects.requireNonNull(basicFormatting, "basicFormatting");
+            Objects.requireNonNull(simpleFormatting, "simpleFormatting");
         }
 
         @Override
         public final @NotNull Style applyStyle(final @NotNull Style style) {
-            return style.withFormatting(this.basicFormatting.toFormatting());
+            return style.withFormatting(this.simpleFormatting.toFormatting());
         }
     }
 

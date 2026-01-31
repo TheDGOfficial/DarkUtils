@@ -72,11 +72,11 @@ public final class ChatUtils {
         ChatUtils.sendMessageQueue.enqueue(message);
     }
 
-    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final BasicColor color) {
+    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleColor color) {
         return ChatUtils.hasFormatting(text, SimpleStyle.colored(color));
     }
 
-    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final BasicColor color, @NotNull final BasicFormatting formatting) {
+    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleColor color, @NotNull final SimpleFormatting formatting) {
         return ChatUtils.hasFormatting(text, SimpleStyle.colored(color).also(SimpleStyle.formatted(formatting)));
     }
 

@@ -4,7 +4,7 @@ import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.Helpers;
-import gg.darkutils.utils.chat.BasicColor;
+import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
@@ -35,7 +35,7 @@ public final class SoloCrushTimer {
             return;
         }
 
-        if (SoloCrushTimer.inProgress && event.content().startsWith("Storm's Giga Lightning hit you for ") && event.isStyledWith(BasicColor.GRAY)) {
+        if (SoloCrushTimer.inProgress && event.content().startsWith("Storm's Giga Lightning hit you for ") && event.isStyledWith(SimpleColor.GRAY)) {
             if (SoloCrushTimer.firstLightningReceived) {
                 SoloCrushTimer.firstLightningReceived = false;
                 SoloCrushTimer.inProgress = false;

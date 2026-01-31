@@ -3,7 +3,7 @@ package gg.darkutils.utils.chat;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
-public enum BasicFormatting {
+public enum SimpleFormatting {
     BOLD(Formatting.BOLD),
     ITALIC(Formatting.ITALIC),
     UNDERLINE(Formatting.UNDERLINE),
@@ -13,7 +13,7 @@ public enum BasicFormatting {
     @NotNull
     private final Formatting formatting;
 
-    private BasicFormatting(@NotNull final Formatting formatting) {
+    private SimpleFormatting(@NotNull final Formatting formatting) {
         this.formatting = formatting;
     }
 

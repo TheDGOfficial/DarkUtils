@@ -4,8 +4,8 @@ import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LazyConstants;
-import gg.darkutils.utils.chat.BasicColor;
-import gg.darkutils.utils.chat.BasicFormatting;
+import gg.darkutils.utils.chat.SimpleColor;
+import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleStyle;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
@@ -35,10 +35,10 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
     @NotNull
     private static final Set<SimpleStyle> ALL_STYLE_COMBINATIONS = Set.copyOf(Stream.concat(
                     // all colors without formatting
-                    Stream.of(BasicColor.values()).map(SimpleStyle::colored),
+                    Stream.of(SimpleColor.values()).map(SimpleStyle::colored),
                     // all color + formatting combinations
-                    Stream.of(BasicColor.values()).flatMap(color ->
-                            Stream.of(BasicFormatting.values())
+                    Stream.of(SimpleColor.values()).flatMap(color ->
+                            Stream.of(SimpleFormatting.values())
                                     .map(format -> SimpleStyle.colored(color).also(SimpleStyle.formatted(format)))
                     )
             )
@@ -78,7 +78,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * @param color The color.
      * @return Whether the message has the given color or not.
      */
-    public final boolean isStyledWith(@NotNull final BasicColor color) {
+    public final boolean isStyledWith(@NotNull final SimpleColor color) {
         final var style = SimpleStyle.colored(color);
 
         return this.isStyledWith(style);
@@ -91,7 +91,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * @param formatting The formatting.
      * @return Whether the message has the given color and formatting.
      */
-    public final boolean isStyledWith(@NotNull final BasicColor color, @NotNull final BasicFormatting formatting) {
+    public final boolean isStyledWith(@NotNull final SimpleColor color, @NotNull final SimpleFormatting formatting) {
         final var style = SimpleStyle.colored(color).also(SimpleStyle.formatted(formatting));
 
         return this.isStyledWith(style);

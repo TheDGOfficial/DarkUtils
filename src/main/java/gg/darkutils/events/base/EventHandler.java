@@ -1,6 +1,5 @@
 package gg.darkutils.events.base;
 
-import gg.darkutils.events.base.impl.BasicEventHandler;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -13,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface EventHandler<T extends Event> {
     /**
-     * Gets a sorted, unmodifiable list of active listeners listening to the event this {@link BasicEventHandler} is handling.
+     * Gets a sorted, unmodifiable list of active listeners listening to the event this {@link EventHandler} is handling.
      *
      * @return A sorted, unmodifiable list of active listeners listening to the event.
      */

@@ -4,7 +4,7 @@ import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
-import gg.darkutils.utils.chat.BasicColor;
+import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 public final class AutoTip {
     @NotNull
     private static final Consumer<ReceiveGameMessageEvent> MESSAGE_ACTION = event -> {
-        if (event.isStyledWith(BasicColor.RED)) {
+        if (event.isStyledWith(SimpleColor.RED)) {
             event.cancellationState().cancel();
         }
     };

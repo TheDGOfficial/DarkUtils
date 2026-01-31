@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public enum BasicColor {
+public enum SimpleColor {
     BLACK(Formatting.BLACK),
     DARK_BLUE(Formatting.DARK_BLUE),
     DARK_GREEN(Formatting.DARK_GREEN),
@@ -26,7 +26,7 @@ public enum BasicColor {
     @NotNull
     private final Formatting formatting;
 
-    private BasicColor(@NotNull final Formatting formatting) {
+    private SimpleColor(@NotNull final Formatting formatting) {
         this.formatting = formatting;
     }
 
@@ -36,6 +36,6 @@ public enum BasicColor {
     }
 
     public final int toRgb() {
-        return Objects.requireNonNull(this.formatting.getColorValue(), "BasicColor formatting color value");
+        return Objects.requireNonNull(this.formatting.getColorValue(), "SimpleColor formatting color value");
     }
 }
