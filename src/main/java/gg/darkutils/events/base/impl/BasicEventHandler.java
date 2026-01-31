@@ -8,14 +8,13 @@ import gg.darkutils.events.base.Event;
 import gg.darkutils.events.base.EventHandler;
 import gg.darkutils.events.base.EventListener;
 import gg.darkutils.events.base.EventPriority;
-import gg.darkutils.events.base.FinalCancellationState;
+import gg.darkutils.events.base.CancellationResult;
 import gg.darkutils.events.base.NonCancellableEvent;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A basic {@link EventHandler} that implements all the specification of {@link EventHandler} interface.
@@ -35,9 +34,10 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
     private final boolean cancellableEvent;
     /**
      * Holds all listeners of the event we are handling in a thread-safe manner (immutable list copy each time one added or removed).
+     * Volatile attribute ensures the new list of listeners is directly visible to all threads.
      */
     @NotNull
-    private final AtomicReference<List<EventListener<T>>> listeners = new AtomicReference<>(List.of());
+    private volatile List<EventListener<? super Event>> listeners = List.of();
 
     /**
      * Creates a new {@link BasicEventHandler}.
@@ -53,74 +53,61 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
         }
     }
 
-    /**
-     * Sorts listeners based on their {@link EventPriority}.
-     */
-    private final void sortListeners() {
-        this.listeners.updateAndGet(listeners -> listeners.parallelStream()
-                .sorted(BasicEventHandler.eventListenerPriorityComparator)
-                .toList());
-    }
-
     @Override
     @NotNull
-    public final Iterable<EventListener<T>> getListeners() {
-        return this.listeners.get();
+    public final Iterable<EventListener<? super Event>> getListeners() {
+        return this.listeners;
     }
 
     @Override
-    public final void addListener(@NotNull final EventListener<T> listener) {
-        if (this.listeners.get().contains(listener)) {
+    public final void addListener(@NotNull final EventListener<? super Event> listener) {
+        final var current = this.listeners;
+
+        if (current.contains(listener)) {
             throw new IllegalStateException("listener is already registered");
         }
-        this.listeners.updateAndGet(listeners -> {
-            final var newList = new ReferenceArrayList<>(listeners);
-            newList.add(listener);
-            return List.copyOf(newList);
-        });
-        this.sortListeners();
+
+        final var newList = new ReferenceArrayList<>(current);
+        newList.add(listener);
+        newList.sort(BasicEventHandler.eventListenerPriorityComparator);
+
+        // Single volatile write = safe publication
+        this.listeners = List.copyOf(newList);
     }
 
     @Override
     public final void removeListener(@NotNull final EventListener<T> listener) {
-        if (!this.listeners.get().contains(listener)) {
+        final var current = this.listeners;
+
+        if (!current.contains(listener)) {
             throw new IllegalStateException("tried to remove a listener that is not registered");
         }
-        this.listeners.updateAndGet(listeners -> listeners.parallelStream()
-                .filter(eventListener -> eventListener != listener)
-                .toList());
-        this.sortListeners();
+
+        final var newList = new ReferenceArrayList<EventListener<? super Event>>(current.size() - 1);
+        for (final var existing : current) {
+            if (existing != listener) {
+                newList.add(existing);
+            }
+        }
+
+        // Already sorted by construction, no need to re-sort
+        this.listeners = List.copyOf(newList);
     }
 
     @Override
     @NotNull
-    public final FinalCancellationState triggerEvent(@NotNull final T event) {
-        if (this.cancellableEvent) {
-            return this.triggerCancellableEvent(event, ((CancellableEvent) event).cancellationState());
-        }
+    public final <E extends Event & CancellableEvent> CancellationResult triggerCancellableEvent(@NotNull final E event) {
+        // Sanity-check
+        assert this.cancellableEvent : "triggerEvent(CancellableEvent) called on a BasicEventHandler<NonCancellableEvent>";
 
-        this.triggerNonCancellableEvent(event);
-        return CancellationState.ofNotCancellable();
-    }
+        final var cancellationState = event.cancellationState();
 
-    @NotNull
-    private final FinalCancellationState triggerCancellableEvent(@NotNull final T event, @NotNull final CancellationState cancellationState) {
-        if (cancellationState instanceof final BasicNonThreadSafeCancellationState closeableState) {
-            try (closeableState) {
-                return this.triggerCancellableEventAndObtainCancellationState(event, cancellationState);
-            }
-        }
-
-        return this.triggerCancellableEventAndObtainCancellationState(event, cancellationState);
-    }
-
-    private final BasicFinalCancellationState triggerCancellableEventAndObtainCancellationState(@NotNull final T event, @NotNull final CancellationState cancellationState) {
-        final var localListeners = this.listeners.get();
+        final var localListeners = this.listeners;
         final var size = localListeners.size();
 
         if (0 == size) {
             // No listeners - fast path
-            return BasicFinalCancellationState.ofCached(false);
+            return CancellationResult.NOT_CANCELLED;
         }
 
         if (1 == size) {
@@ -128,13 +115,13 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             // We don't need to check isCancelled or receiveCancelled here as the even't shouldn't be cancelled yet.
             // We have an assertion just in case though, if -ea is enabled as a JVM argument.
             assert !cancellationState.isCancelled() : "fresh CancellationState was in cancelled state before any listener invocation";
-            final var listener = localListeners.get(0);
+            final var listener = localListeners.getFirst();
             try {
                 listener.onEvent(event);
             } catch (final Throwable error) {
                 BasicEventHandler.handleListenerError(listener, event, error);
             }
-            return BasicFinalCancellationState.ofCached(cancellationState.isCancelled());
+            return CancellationResult.of(cancellationState.isCancelled());
         }
 
         // Fallback to slower path if 2 or more listeners
@@ -157,11 +144,15 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
             cancelled = cancellationState.isCancelled();
         }
 
-        return BasicFinalCancellationState.ofCached(cancelled); // Return a FinalCancellationState so that calling .setCancelled() would always throw, and calling isCancelled() would automatically clear reference to the owner thread which would disallow any more isCancelled() calls while also ensuring the call to isCancelled() occurs on the owner thread.
+        return CancellationResult.of(cancelled); // Returning CancellationResult instead of CancellationState ensures the caller can only inspect a finalized immutable cancelled status, and can't mutate it. Furthermore, this avoids the state from escaping to the callers, potentially helping C2 optimize the mutable cancellation state object allocation. It seems to not fully optimize out the allocation at the moment, though, sadly, but in theory it should be able to.
     }
 
-    private final void triggerNonCancellableEvent(@NotNull final T event) {
-        final var localListeners = this.listeners.get();
+    @Override
+    public final <E extends Event & NonCancellableEvent> void triggerNonCancellableEvent(@NotNull final E event) {
+        // Sanity-check
+        assert !this.cancellableEvent : "triggerEvent(NonCancellableEvent) called on a BasicEventHandler<CancellableEvent>";
+
+        final var localListeners = this.listeners;
         final int size = localListeners.size();
 
         if (0 == size) {
@@ -171,7 +162,7 @@ public final class BasicEventHandler<T extends Event> implements EventHandler<T>
 
         if (1 == size) {
             // Only one listener - fast path
-            final var listener = localListeners.get(0);
+            final var listener = localListeners.getFirst();
             try {
                 listener.onEvent(event);
             } catch (final Throwable error) {

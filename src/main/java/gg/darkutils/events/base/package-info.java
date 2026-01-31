@@ -1,6 +1,6 @@
 /**
  * A feature-complete, type-safe, and performant event system designed with
- * thread-safety, error handling, listener priorities, and cancellation semantics in mind.
+ * thread-safety, error handling, listener priorities, cancellation semantics and re-entrancy in mind.
  * <p>
  * <b>Defining an event</b><br>
  * To define a new event, simply declare a record implementing either
@@ -47,7 +47,7 @@
  *         implements CancellableEvent {
  *
  *     public MyCancellableEvent(@NotNull MyEventParam1 param1, @NotNull MyEventParam2 param2) {
- *         this(CancellationState.ofCached(), param1, param2);
+ *         this(CancellationState.ofFresh(), param1, param2);
  *     }
  * }
  *}

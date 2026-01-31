@@ -60,10 +60,8 @@ public final class DungeonTimer {
                 if (event.isStyledWith(BasicColor.RED)) {
                     DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.BLOOD_CLEAR);
 
-                    TickUtils.queueTickTask(() -> {
-                        final var seconds = DungeonTimer.getPhaseTimeInSecondsForPhase(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, false);
-                        Helpers.notify(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, "§cBlood Cleared! (" + seconds + "s)", 60);
-                    }, 1);
+                    final var seconds = DungeonTimer.getPhaseTimeInSecondsForPhase(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, false);
+                    Helpers.notify(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, "§cBlood Cleared! (" + seconds + "s)", 60);
                 }
             }),
             Map.entry("[BOSS] Maxor: WELL! WELL! WELL! LOOK WHO'S HERE!", event -> {
@@ -291,6 +289,12 @@ public final class DungeonTimer {
     }
 
     private static final void updateDungeonTimer() {
+        // TODO add config option
+        if (null == MinecraftClient.getInstance().player || !LocationUtils.isInDungeons()) {
+            DungeonTimer.skipRender = true;
+            return;
+        }
+
         DungeonTimer.lastClientNow = System.nanoTime();
         DungeonTimer.lastServerTickNow = DungeonTimer.serverTickCounter;
 
@@ -319,8 +323,7 @@ public final class DungeonTimer {
 
         DungeonTimer.linesSize = DungeonTimer.lines.size();
 
-        // TODO add config option
-        DungeonTimer.skipRender = /*!DarkUtilsConfig.INSTANCE.dungeonTimer || */ null == MinecraftClient.getInstance().player || !LocationUtils.isInDungeons() || DungeonTimer.lines.isEmpty();
+        DungeonTimer.skipRender = DungeonTimer.lines.isEmpty();
     }
 
     private static final void renderDungeonTimer(@NotNull final DrawContext context) {
@@ -436,14 +439,15 @@ public final class DungeonTimer {
 
     private static final class DungeonTimingState {
         @NotNull
-        private static final Map<DungeonTimer.DungeonPhase, DungeonTimer.PhaseTiming> timings =
+        private static final EnumMap<DungeonTimer.DungeonPhase, DungeonTimer.PhaseTiming> timings =
                 new EnumMap<>(DungeonTimer.DungeonPhase.class);
 
         private static final void finishedPhase(@NotNull final DungeonTimer.DungeonPhase phase) {
-            if (DungeonTimer.DungeonTimingState.timings.containsKey(phase)) {
+            final var timings = DungeonTimer.DungeonTimingState.timings;
+            if (timings.containsKey(phase)) {
                 DarkUtils.warn(DungeonTimer.DungeonTimingState.class, "Phase " + phase.name() + " was finished multiple times");
             } else {
-                DungeonTimer.DungeonTimingState.timings.put(phase, DungeonTimer.PhaseTiming.now());
+                timings.put(phase, DungeonTimer.PhaseTiming.now());
             }
         }
 

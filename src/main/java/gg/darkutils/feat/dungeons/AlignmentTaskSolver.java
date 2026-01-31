@@ -352,8 +352,8 @@ public final class AlignmentTaskSolver {
     private static final void onInteractEntity(final @NotNull InteractEntityEvent event) {
         final var e = event.entity();
 
-        if (!AlignmentTaskSolver.directionSet.isEmpty()
-                && DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver
+        if (DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver
+                && !AlignmentTaskSolver.directionSet.isEmpty()
                 && AlignmentTaskSolver.isSolverActive()
                 && e instanceof final ItemFrameEntity entity) {
             final var pos = entity.getBlockPos();
@@ -381,7 +381,7 @@ public final class AlignmentTaskSolver {
     }
 
     private static final void onPacketReceive(@NotNull final ReceiveMainThreadPacketEvent event) {
-        if (!(event.packet() instanceof final EntityTrackerUpdateS2CPacket packet) || !AlignmentTaskSolver.shouldProceedPacketReceive()) {
+        if (!DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver || AlignmentTaskSolver.directionSet.isEmpty() || !AlignmentTaskSolver.isSolverActive() || null == MinecraftClient.getInstance().world || !(event.packet() instanceof final EntityTrackerUpdateS2CPacket packet)) {
             return;
         }
 
@@ -403,13 +403,6 @@ public final class AlignmentTaskSolver {
 
         AlignmentTaskSolver.updatePendingClicks(entity, pos, pending, rotationVarInt);
         AlignmentTaskSolver.syncClicks(pos, rotationVarInt);
-    }
-
-    private static final boolean shouldProceedPacketReceive() {
-        return DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver
-                && !AlignmentTaskSolver.directionSet.isEmpty()
-                && AlignmentTaskSolver.isSolverActive()
-                && null != MinecraftClient.getInstance().world;
     }
 
     private static final @Nullable ItemFrameEntity getItemFrameEntity(@NotNull final EntityTrackerUpdateS2CPacket packet) {

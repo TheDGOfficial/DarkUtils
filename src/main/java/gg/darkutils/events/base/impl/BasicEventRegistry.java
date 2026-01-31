@@ -7,7 +7,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A basic {@link EventRegistry}.
@@ -21,9 +20,11 @@ public final class BasicEventRegistry implements EventRegistry {
 
     /**
      * Holds the event handlers in a thread-safe manner (thread-safety provided by JDK ClassValue)
+     * <p>
+     * Static is safe since we use a singleton instance, but in future remove the static if multiple event registries.
      */
     @NotNull
-    private final ClassValue<EventHandler<? extends Event>> handlers = new ClassValue<>() {
+    private static final ClassValue<EventHandler<? extends Event>> handlers = new ClassValue<>() {
         @Override
         @NotNull
         protected final EventHandler<? extends Event> computeValue(@NotNull final Class<?> type) {
@@ -61,13 +62,13 @@ public final class BasicEventRegistry implements EventRegistry {
     @Override
     @NotNull
     public final <T extends Event> EventHandler<T> getEventHandler(@NotNull final Class<T> event) {
-        return (EventHandler<T>) this.handlers.get(event);
+        return (EventHandler<T>) BasicEventRegistry.handlers.get(event);
     }
 
     @Override
     public final String toString() {
         return "BasicEventRegistry{" +
-                "handlers=" + this.handlers +
+                "handlers=" + BasicEventRegistry.handlers +
                 '}';
     }
 }

@@ -27,7 +27,7 @@ public non-sealed interface CancellableEvent extends Event {
      * Alternatively, use {@link CancellableEvent#triggerAndCheckIsCancelled()}.
      */
     @NotNull
-    default FinalCancellationState trigger() {
+    default CancellationResult trigger() {
         return EventRegistry.centralRegistry().triggerEvent(this);
     }
 

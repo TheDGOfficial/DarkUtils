@@ -9,20 +9,11 @@ import gg.darkutils.events.base.impl.BasicNonThreadSafeCancellationState;
  */
 public non-sealed interface NonThreadSafeCancellationState extends CancellationState {
     /**
-     * Returns a cached {@link CancellationState}, defaulting to not canceled.
-     * <p>
-     * The returned cancellation state is cached per thread with {@link ThreadLocal} to reduce allocations.
-     * <p>
-     * This makes the shared {@link CancellationState}s itself thread-safe, while keeping the underlying boolean
-     * not thread-safe in the sense that writes might not be able to be seen by other threads or concurrent writes
-     * overriding each other with random order.
-     * <p>
-     * However, this is usually fine as per the contract of {@link EventHandler#triggerEvent(Event)}, which calls
-     * all listeners sequentially in the caller thread, so it won't be mutated by multiple threads in parallel.
+     * Returns a fresh {@link NonThreadSafeCancellationState}, defaulting to not canceled.
      *
-     * @return A cached {@link CancellationState}, defaulting to not canceled.
+     * @return A fresh {@link NonThreadSafeCancellationState}, defaulting to not canceled.
      */
-    static CancellationState ofCached() {
-        return BasicNonThreadSafeCancellationState.getCachedInstanceForCurrentThread();
+    static CancellationState ofFresh() {
+        return BasicNonThreadSafeCancellationState.ofFresh();
     }
 }

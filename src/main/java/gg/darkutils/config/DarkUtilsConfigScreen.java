@@ -236,7 +236,7 @@ public final class DarkUtilsConfigScreen {
     private static final void addPerformance(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var performance = builder.getOrCreateCategory(Text.of("Performance"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Armor Stand Optimizer",
-                "Optimizes FPS when lots of Armor Stands are present by limiting the rendering to the configured amount of closest Armor Stands to the player.",
+                "Optimizes FPS when lots of Armor Stands are present by limiting the rendering to the configured amount of closest Armor Stands to the player. Also hides the temporary armor stands that show up for a split second in Hypixel.",
                 config.armorStandOptimizer, newValue -> config.armorStandOptimizer = newValue);
 
         DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, performance, "Armor Stand Limit", "Max armor stands to render when optimizer is enabled. Affects nothing if optimizer isn't enabled.", config.armorStandLimit, newValue -> config.armorStandLimit = newValue, 50, 500);

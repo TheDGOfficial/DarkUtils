@@ -83,7 +83,7 @@ public interface EventRegistry {
             throw new IllegalArgumentException("listener method has wrong parameter with type " + eventType.getName());
         }
 
-        this.getEventHandler((Class<T>) eventType).addListener(listener);
+        this.getEventHandler((Class<T>) eventType).addListener((EventListener<? super Event>) listener);
     }
 
     /**
@@ -96,8 +96,8 @@ public interface EventRegistry {
      * @return The {@link FinalCancellationState}.
      */
     @NotNull
-    default <T extends CancellableEvent> FinalCancellationState triggerEvent(@NotNull final T event) {
-        return this.getEventHandler(event).triggerEvent(event);
+    default <T extends CancellableEvent> CancellationResult triggerEvent(@NotNull final T event) {
+        return this.getEventHandler(event).triggerCancellableEvent(event);
     }
 
     /**
@@ -107,6 +107,6 @@ public interface EventRegistry {
      * @param <T>   The type of the event.
      */
     default <T extends NonCancellableEvent> void triggerEvent(@NotNull final T event) {
-        this.getEventHandler(event).triggerEvent(event);
+        this.getEventHandler(event).triggerNonCancellableEvent(event);
     }
 }
