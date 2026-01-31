@@ -28,6 +28,6 @@ public record OpenScreenEvent(@NotNull CancellationState cancellationState,
      * @param name              The name of the screen.
      */
     public OpenScreenEvent(@NotNull final ScreenHandlerType<?> screenHandlerType, @NotNull final Text name) {
-        this(CancellationState.ofCached(), screenHandlerType, name);
+        this(CancellationState.ofFresh(), screenHandlerType, name);
     }
 }

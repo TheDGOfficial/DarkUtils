@@ -51,7 +51,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * @param message The message.
      */
     public ReceiveGameMessageEvent(@NotNull final Text message) {
-        this(CancellationState.ofCached(), message, LazyConstants.lazyConstantOf(message::getString), LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(ReceiveGameMessageEvent.ALL_STYLE_COMBINATIONS, style -> ChatUtils.hasFormatting(message, style))));
+        this(CancellationState.ofFresh(), message, LazyConstants.lazyConstantOf(message::getString), LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(ReceiveGameMessageEvent.ALL_STYLE_COMBINATIONS, style -> ChatUtils.hasFormatting(message, style))));
     }
 
     public static final void init() {

@@ -18,7 +18,7 @@ public interface EventHandler<T extends Event> {
      * @return A sorted, unmodifiable list of active listeners listening to the event.
      */
     @NotNull
-    Iterable<EventListener<T>> getListeners();
+    Iterable<EventListener<? super Event>> getListeners();
 
     /**
      * Adds an {@link EventListener} to listen for the event this handler is handling.
@@ -29,7 +29,7 @@ public interface EventHandler<T extends Event> {
      *
      * @param listener An {@link EventListener} to add to the list of listeners.
      */
-    void addListener(final @NotNull EventListener<T> listener);
+    void addListener(final @NotNull EventListener<? super Event> listener);
 
     /**
      * Adds an {@link EventListener} to listen for the event this handler is handling.
@@ -46,7 +46,7 @@ public interface EventHandler<T extends Event> {
      *                         Can be used to uncancel canceled events, allowing other {@link EventListener}s
      *                         coming after to run and the event to happen.
      */
-    default void addListener(final @NotNull EventListener<T> listener, final @NotNull EventPriority priority, final boolean receiveCancelled) {
+    default void addListener(final @NotNull EventListener<? super Event> listener, final @NotNull EventPriority priority, final boolean receiveCancelled) {
         this.addListener(EventListener.create(listener, priority, receiveCancelled));
     }
 
@@ -60,10 +60,10 @@ public interface EventHandler<T extends Event> {
     void removeListener(final @NotNull EventListener<T> listener);
 
     /**
-     * Triggers an event, calling all listeners {@link EventListener#accept(Event)} sequentially in the calling thread,
+     * Triggers a cancellable event, calling all listeners {@link EventListener#accept(Event)} sequentially in the calling thread,
      * ordered based on {@link EventPriority}.
      * <p>
-     * If the event is {@link CancellableEvent} and any {@link EventListener} cancels the event, the further event listeners
+     * If any {@link EventListener} cancels the event, the further event listeners
      * won't be called unless they return true from {@link EventListener#receiveCancelled()}.
      * <p>
      * If an event is canceled by an {@link EventListener} and then uncanceled at a later point by an event receiving canceled
@@ -74,15 +74,20 @@ public interface EventHandler<T extends Event> {
      * {@link EventListener}s from receiving the event.
      *
      * @param event The event to trigger.
-     * @return The {@link FinalCancellationState} of the event after going through all listeners mutations to the state. Calling
-     * {@link CancellationState#isCancelled()} will throw a {@link UnsupportedOperationException} if this event is not a {@link CancellableEvent}.
-     * <p>
-     * Calling {@link CancellationState#setCancelled(boolean)} on the returned {@link FinalCancellationState} will always throw
-     * {@link UnsupportedOperationException}.
-     * <p>
-     * {@link CancellationState#isCancelled()} should only be called only once and on the thread that called
-     * this method or else an {@link IllegalStateException} will be thrown.
+     * @return The {@link CancellationResult} of the event after going through all listeners mutations to the state.
      */
     @NotNull
-    FinalCancellationState triggerEvent(final @NotNull T event);
+    <E extends Event & CancellableEvent> CancellationResult triggerCancellableEvent(final @NotNull E event);
+
+    /**
+     * Triggers a non-cancellable event, calling all listeners {@link EventListener#accept(Event)} sequentially in the calling thread,
+     * ordered based on {@link EventPriority}.
+     * <p>
+     * Implementors must ensure that even if any of the listeners at any point throw any exceptions, it should not stop the further
+     * {@link EventListener}s from receiving the event.
+     *
+     * @param event The event to trigger.
+     */
+    @NotNull
+    <E extends Event & NonCancellableEvent> void triggerNonCancellableEvent(final @NotNull E event);
 }

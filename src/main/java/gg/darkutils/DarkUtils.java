@@ -108,28 +108,38 @@ public final class DarkUtils implements ClientModInitializer {
 
     private static final void log(@NotNull final Class<?> source, @NotNull final LogLevel level, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
         final var finalMessage = DarkUtils.addPrefixToLogEntry(source, message);
-        final var formattedMessage = null == args || 0 == args.length ? finalMessage : MessageFormatter.arrayFormat(finalMessage, args).getMessage();
+        var formattedMessage = null == args || 0 == args.length ? finalMessage : MessageFormatter.arrayFormat(finalMessage, args).getMessage();
 
         if (null == error) {
-            final Pair<BooleanSupplier, Consumer<String>> loggingFunction = switch (level) {
-                case INFO -> new Pair<>(DarkUtils.LOGGER::isInfoEnabled, DarkUtils.LOGGER::info);
-                case WARN -> new Pair<>(DarkUtils.LOGGER::isWarnEnabled, DarkUtils.LOGGER::warn);
-                case ERROR -> new Pair<>(DarkUtils.LOGGER::isErrorEnabled, DarkUtils.LOGGER::error);
-            };
-
-            if (loggingFunction.first().getAsBoolean()) {
-                loggingFunction.second().accept(formattedMessage);
-            }
+            DarkUtils.logMessage(level, formattedMessage);
         } else {
-            if (LogLevel.ERROR != level) {
-                throw new IllegalArgumentException("tried to log an error at a log level of " + level.name());
-            }
-            if (DarkUtils.LOGGER.isErrorEnabled()) {
-                DarkUtils.LOGGER.error(formattedMessage, error);
-            }
+            assert LogLevel.ERROR != level : "tried to log an error at a log level of " + level.name();
+
+            // Append: error type, error reason (message), source file and line number to the message if provided.
+            formattedMessage += ": " + DarkUtils.extractCodeDetails(error);
+
+            DarkUtils.logError(formattedMessage, error);
         }
 
         DarkUtils.logInGame(level, formattedMessage);
+    }
+
+    private static final void logMessage(@NotNull final LogLevel level, @NotNull final String formattedMessage) {
+        final Pair<BooleanSupplier, Consumer<String>> loggingFunction = switch (level) {
+            case INFO -> new Pair<>(DarkUtils.LOGGER::isInfoEnabled, DarkUtils.LOGGER::info);
+            case WARN -> new Pair<>(DarkUtils.LOGGER::isWarnEnabled, DarkUtils.LOGGER::warn);
+            case ERROR -> new Pair<>(DarkUtils.LOGGER::isErrorEnabled, DarkUtils.LOGGER::error);
+        };
+
+        if (loggingFunction.first().getAsBoolean()) {
+            loggingFunction.second().accept(formattedMessage);
+        }
+    }
+
+    private static final void logError(@NotNull final String formattedMessage, @NotNull final Throwable error) {
+        if (DarkUtils.LOGGER.isErrorEnabled()) {
+            DarkUtils.LOGGER.error(formattedMessage, error);
+        }
     }
 
     private static final void logInGame(@NotNull final LogLevel level, @NotNull final String message) {
@@ -160,6 +170,32 @@ public final class DarkUtils implements ClientModInitializer {
     @NotNull
     private static final String addPrefixToLogEntry(@NotNull final Class<?> source, @NotNull final String message) {
         return '[' + DarkUtils.class.getSimpleName() + "]: " + (DarkUtils.class == source ? "" : '[' + source.getSimpleName() + "]: ") + message;
+    }
+
+    @NotNull
+    private static final String extractCodeDetails(@NotNull final Throwable error) {
+        final var type = error.getClass().getName();
+
+        final var desc = error.getMessage();
+        final var stack = error.getStackTrace();
+        final StackTraceElement topOfStack = stack.length > 0 ? stack[0] : null;
+
+        var fileName = null != topOfStack ? topOfStack.getFileName() : null;
+
+        if (null == fileName) {
+            fileName = null != topOfStack ? topOfStack.getClassName() : null;
+            if (null != fileName) {
+                // if no file information is available, assume .java
+                // hopefully it's not kotlin, groovy or scala
+                final var lastDot = fileName.lastIndexOf('.');
+                fileName = (lastDot >= 0 ? fileName.substring(lastDot + 1) : fileName) + ".java";
+            }
+        }
+
+        final var lineNumber = null != topOfStack ? topOfStack.getLineNumber() : -1;
+        final var loc = null != fileName ? fileName + (lineNumber >= 0 ? " line " + lineNumber : "") : null;
+
+        return type + (null != desc ? ": " + desc : "") + (null != loc ? " at " + loc : "");
     }
 
     @NotNull

@@ -23,6 +23,6 @@ public record UseItemEvent(@NotNull CancellationState cancellationState,
      * @param itemStack The item that is going to be used if not canceled.
      */
     public UseItemEvent(@NotNull final ItemStack itemStack) {
-        this(CancellationState.ofCached(), itemStack);
+        this(CancellationState.ofFresh(), itemStack);
     }
 }

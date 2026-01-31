@@ -14,7 +14,6 @@
     "bugfixes.InactivityFpsLimiterMixin",
 
     "misc.ClientPlayNetworkHandlerMixin",
-    "misc.EntityRendererMixin",
     "misc.GameRendererMixin",
     "misc.MinecraftClientMixin",
     "misc.PacketApplyBatcherEntryMixin",

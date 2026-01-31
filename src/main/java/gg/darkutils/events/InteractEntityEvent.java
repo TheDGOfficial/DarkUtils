@@ -23,6 +23,6 @@ public record InteractEntityEvent(@NotNull CancellationState cancellationState,
      * @param entity The entity.
      */
     public InteractEntityEvent(@NotNull final Entity entity) {
-        this(CancellationState.ofCached(), entity);
+        this(CancellationState.ofFresh(), entity);
     }
 }

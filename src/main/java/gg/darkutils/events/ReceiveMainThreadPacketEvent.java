@@ -25,6 +25,6 @@ public record ReceiveMainThreadPacketEvent(@NotNull CancellationState cancellati
      * @param packet The packet.
      */
     public ReceiveMainThreadPacketEvent(@NotNull final Packet<?> packet) {
-        this(CancellationState.ofCached(), packet);
+        this(CancellationState.ofFresh(), packet);
     }
 }

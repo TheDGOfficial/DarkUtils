@@ -1,8 +1,6 @@
 package gg.darkutils.feat.performance;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.events.RenderEntityEvents;
-import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.mixin.accessors.LivingEntityAccessor;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
@@ -43,9 +41,6 @@ public final class ArmorStandOptimizer {
 
         // Run refresh every client tick
         ClientTickEvents.END_CLIENT_TICK.register(ArmorStandOptimizer::refreshArmorStands);
-
-        // Render cancellation logic
-        EventRegistry.centralRegistry().addListener(ArmorStandOptimizer::onRenderEntity);
     }
 
     private static final boolean isEnabled() {
@@ -152,23 +147,28 @@ public final class ArmorStandOptimizer {
         return ((LivingEntityAccessor) armorStand).getEquipment().isEmpty();
     }
 
-    private static final void onRenderEntity(@NotNull final RenderEntityEvents.ArmorStandRenderEvent event) {
+    public static final boolean shouldSkipRenderArmorStand(@NotNull final ArmorStandEntity armorStand) {
         if (ArmorStandOptimizer.isEnabled()) {
-            final var armorStand = event.armorStand();
             if ((!belowLimit && !ArmorStandOptimizer.armorStandRenderSet.contains(armorStand)) || (armorStand.age < 10 && null == armorStand.getCustomName() && ArmorStandOptimizer.isInventoryEmpty(armorStand))) {
-                event.cancellationState().cancel();
+                return true;
             }
         }
+        return false;
     }
 
     /**
      * Performs partial selection using QuickSelect.
      */
     private static final void selectClosest(@NotNull final ReferenceArrayList<ArmorStandEntity> list, final int listSize, final int closestCount, @NotNull final ClientPlayerEntity player) {
+        final var playerX = player.getX();
+        final var playerY = player.getY();
+        final var playerZ = player.getZ();
+
         var left = 0;
         var right = listSize - 1;
+
         while (left <= right) {
-            final var pivotIndex = ArmorStandOptimizer.partition(list, left, right, player);
+            final var pivotIndex = ArmorStandOptimizer.partition(list, left, right, playerX, playerY, playerZ);
             if (pivotIndex == closestCount) {
                 return;
             }
@@ -180,22 +180,49 @@ public final class ArmorStandOptimizer {
         }
     }
 
-    private static final int partition(@NotNull final ReferenceArrayList<ArmorStandEntity> list, final int left, final int right, @NotNull final ClientPlayerEntity player) {
-        // Deterministic pivot: middle element
-        final var pivotIdx = left + right >>> 1;
+    private static final double distanceSquaredToStand(final double originX, final double originY, final double originZ, @NotNull final ArmorStandEntity entity) {
+        final var deltaX = originX - entity.getX();
+        final var deltaY = originY - entity.getY();
+        final var deltaZ = originZ - entity.getZ();
+
+        return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
+    }
+
+    private static final int medianOfThreeIndex(@NotNull final ReferenceArrayList<ArmorStandEntity> list, final int left, final int right, final double playerX, final double playerY, final double playerZ) {
+        final var middleIndex = (left + right) >>> 1;
+
+        final var leftDistance = ArmorStandOptimizer.distanceSquaredToStand(playerX, playerY, playerZ, list.get(left));
+        final var middleDistance = ArmorStandOptimizer.distanceSquaredToStand(playerX, playerY, playerZ, list.get(middleIndex));
+        final var rightDistance = ArmorStandOptimizer.distanceSquaredToStand(playerX, playerY, playerZ, list.get(right));
+
+        return leftDistance < middleDistance
+                ? (middleDistance < rightDistance
+                        ? middleIndex
+                        : (leftDistance < rightDistance ? right : left))
+                : (leftDistance < rightDistance
+                        ? left
+                        : (middleDistance < rightDistance ? right : middleIndex));
+    }
+
+    private static final int partition(@NotNull final ReferenceArrayList<ArmorStandEntity> list, final int left, final int right, final double playerX, final double playerY, final double playerZ) {
+        final var pivotIdx = ArmorStandOptimizer.medianOfThreeIndex(list, left, right, playerX, playerY, playerZ);
+
         final var pivot = list.get(pivotIdx);
         list.set(pivotIdx, list.get(right));
         list.set(right, pivot);
 
-        final var pivotDist = player.squaredDistanceTo(pivot);
+        final var pivotDistance = ArmorStandOptimizer.distanceSquaredToStand(playerX, playerY, playerZ, pivot);
+
         var i = left;
+
         for (var j = left; right > j; ++j) {
             final var element = list.get(j);
-            if (pivotDist > player.squaredDistanceTo(element)) {
+            if (pivotDistance > ArmorStandOptimizer.distanceSquaredToStand(playerX, playerY, playerZ, element)) {
                 list.set(j, list.set(i, element));
                 ++i;
             }
         }
+
         list.set(right, list.set(i, pivot));
         return i;
     }
