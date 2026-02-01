@@ -1,5 +1,6 @@
 package gg.darkutils.mixin.misc;
 
+import gg.darkutils.DarkUtils;
 import gg.darkutils.events.ReceiveMainThreadPacketEvent;
 import gg.darkutils.events.ServerTickEvent;
 import gg.darkutils.events.base.EventRegistry;
@@ -7,10 +8,12 @@ import net.minecraft.network.NetworkSide;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket;
+import net.minecraft.network.packet.s2c.play.BundleS2CPacket;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -26,6 +29,9 @@ final class PacketApplyBatcherEntryMixin<T extends PacketListener> {
     @Final
     @NotNull
     private Packet<T> packet;
+
+    @Unique
+    private static int lastId;
 
     private PacketApplyBatcherEntryMixin() {
         super();
@@ -47,12 +53,39 @@ final class PacketApplyBatcherEntryMixin<T extends PacketListener> {
             return;
         }
 
-        if (this.packet instanceof CommonPingS2CPacket) {
-            ServerTickEvent.INSTANCE.trigger();
+        final var packet = this.packet;
+
+        if (packet instanceof final BundleS2CPacket bundle) {
+            for (final var p : bundle.getPackets()) {
+                if (!PacketApplyBatcherEntryMixin.darkutils$onPacketReceive(p)) {
+                    // TODO Use a different injection point to handle cancellation of bundle packets.
+                    // Most likely net.minecraft.client.network.ClientPlayNetworkHandler.onBundle()
+                    DarkUtils.warn(PacketApplyBatcherEntryMixin.class, "Tried to cancel a packet inside a bundle packet. This would cancel the whole bundle and so is not supported. Packet type: " + p.getClass().getName());
+                }
+            }
         }
 
-        if (new ReceiveMainThreadPacketEvent(this.packet).triggerAndCancelled()) {
+        if (!PacketApplyBatcherEntryMixin.darkutils$onPacketReceive(packet)) {
             ci.cancel(); // prevent executing original packet handler
         }
+    }
+
+    @Unique
+    private static final boolean darkutils$onPacketReceive(@NotNull final Packet<?> packet) {
+        if (packet instanceof final CommonPingS2CPacket p) {
+            final var id = p.getParameter();
+
+            if (id < 0 && id != PacketApplyBatcherEntryMixin.lastId) {
+                PacketApplyBatcherEntryMixin.lastId = id;
+
+                ServerTickEvent.INSTANCE.trigger();
+            }
+        }
+
+        if (new ReceiveMainThreadPacketEvent(packet).triggerAndCancelled()) {
+            return false; // prevent executing original packet handler
+        }
+
+        return true;
     }
 }
