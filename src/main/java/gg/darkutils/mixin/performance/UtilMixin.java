@@ -1,5 +1,6 @@
 package gg.darkutils.mixin.performance;
 
+import gg.darkutils.DarkUtils;
 import com.llamalad7.mixinextras.sugar.Local;
 import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.util.Util;
@@ -36,6 +37,11 @@ final class UtilMixin {
     @NotNull
     private static final ExecutorService darkutils$useVirtualThreadsIfEnabled(@NotNull final ThreadFactory threadFactory, @NotNull @Local(argsOnly = true) final String namePrefix, @Local(argsOnly = true) final boolean daemon) {
         // Only redirect "Download-" daemon threads and otherwise, preserve original behavior
-        return DarkUtilsConfig.INSTANCE.useVirtualThreadsForTextureDownloading && "Download-".equals(namePrefix) && daemon ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newCachedThreadPool(threadFactory);
+        if (DarkUtilsConfig.INSTANCE.useVirtualThreadsForTextureDownloading && "Download-".equals(namePrefix) && daemon) {
+            DarkUtils.info(UtilMixin.class, "Overriding texture downloading executor from cached thread pool to virtual thread per task executor");
+            return Executors.newVirtualThreadPerTaskExecutor();
+        }
+
+        return Executors.newCachedThreadPool(threadFactory);
     }
 }

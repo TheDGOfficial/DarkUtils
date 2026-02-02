@@ -20,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(MinecraftClient.class)
 final class MinecraftClientMixin {
@@ -65,5 +66,12 @@ final class MinecraftClientMixin {
     @WrapOperation(method = "doItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;interactEntityAtLocation(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/util/hit/EntityHitResult;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"))
     private final @NotNull ActionResult darkutils$onEntityInteract(@NotNull final ClientPlayerInteractionManager instance, @NotNull final PlayerEntity player, @NotNull final Entity entity, @NotNull final EntityHitResult hitResult, @NotNull final Hand hand, @NotNull final Operation<ActionResult> original) {
         return new InteractEntityEvent(entity).triggerAndCancelled() ? ActionResult.CONSUME : original.call(instance, player, entity, hitResult, hand);
+    }
+
+    @Inject(method = "hasOutline", at = @At("HEAD"), cancellable = true)
+    public final void darkutils$hasOutline$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
+        if (DarkUtilsConfig.INSTANCE.disableGlowing) {
+            cir.setReturnValue(false);
+        }
     }
 }

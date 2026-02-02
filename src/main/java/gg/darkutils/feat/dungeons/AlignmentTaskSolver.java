@@ -381,7 +381,7 @@ public final class AlignmentTaskSolver {
     }
 
     private static final void onPacketReceive(@NotNull final ReceiveMainThreadPacketEvent event) {
-        if (!DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver || AlignmentTaskSolver.directionSet.isEmpty() || !AlignmentTaskSolver.isSolverActive() || null == MinecraftClient.getInstance().world || !(event.packet() instanceof final EntityTrackerUpdateS2CPacket packet)) {
+        if (!DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver || null == MinecraftClient.getInstance().world || !AlignmentTaskSolver.isSolverActive() || AlignmentTaskSolver.directionSet.isEmpty() || !(event.packet() instanceof final EntityTrackerUpdateS2CPacket packet)) {
             return;
         }
 

@@ -78,31 +78,35 @@ public final class AutoClicker {
         }
 
         private final boolean wasPressed(final boolean actual) {
-            final var right = AutoClicker.Key.RIGHT == this;
-            if (!actual && this.state && (right ? Helpers.isHoldingARCMWeaponOrMatches(name -> DarkUtilsConfig.INSTANCE.autoClickerWorkWithAOTV && Helpers.matchHoldingAOTV().test(name)) : Helpers.isHoldingASwordHuntaxeOrSpade())) {
-                final var held = this.keyBinding.isPressed();
-
-                if (held) {
-                    this.state = false;
-
-                    final var button = Helpers.isButton();
-                    final var lever = Helpers.isLever();
-                    final var commandBlock = Helpers.isCommandBlock();
-
-                    var combined = button.or(commandBlock);
-
-                    if (!DarkUtilsConfig.INSTANCE.autoClickerWorkInLevers) {
-                        combined = combined.or(lever);
-                    }
-
-                    final var isLookingAtBlocked = Helpers.doesTargetedBlockMatch(combined);
-
-                    final var isLookingAtTerminalEntity = !isLookingAtBlocked && Helpers.isLookingAtATerminalEntity();
-
-                    return !right || !(isLookingAtBlocked || isLookingAtTerminalEntity);
-                }
+            if (actual || !this.state) {
+                return actual;
             }
-            return actual;
+
+            final var right = AutoClicker.Key.RIGHT == this;
+
+            if (!(right
+                    ? Helpers.isHoldingARCMWeaponOrMatches(
+                            name -> DarkUtilsConfig.INSTANCE.autoClickerWorkWithAOTV
+                                    && Helpers.matchHoldingAOTV().test(name))
+                    : Helpers.isHoldingASwordHuntaxeOrSpade())) {
+                return actual;
+            }
+
+            if (!this.keyBinding.isPressed()) {
+                return actual;
+            }
+
+            this.state = false;
+
+            var combined = Helpers.isButton().or(Helpers.isCommandBlock());
+
+            if (!DarkUtilsConfig.INSTANCE.autoClickerWorkInLevers) {
+                combined = combined.or(Helpers.isLever());
+            }
+
+            return !right
+                    || !(Helpers.doesTargetedBlockMatch(combined)
+                         || Helpers.isLookingAtATerminalEntity());
         }
     }
 }

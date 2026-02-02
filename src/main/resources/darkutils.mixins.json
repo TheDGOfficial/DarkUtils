@@ -31,6 +31,7 @@
     "performance.WorkaroundsMixin",
     "performance.WorldMixin",
     "performance.YggdrasilServicesKeyInfoMixin",
+    "performance.WorldRendererMixin",
 
     "qol.ClientPlayerEntityMixin",
     "qol.ClientPlayerInteractionManagerMixin",

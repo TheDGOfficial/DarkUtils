@@ -21,6 +21,7 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map;
@@ -439,25 +440,26 @@ public final class DungeonTimer {
 
     private static final class DungeonTimingState {
         @NotNull
-        private static final EnumMap<DungeonTimer.DungeonPhase, DungeonTimer.PhaseTiming> timings =
-                new EnumMap<>(DungeonTimer.DungeonPhase.class);
+        private static final DungeonTimer.PhaseTiming[] timings = new DungeonTimer.PhaseTiming[DungeonTimer.DungeonPhase.values().length];
 
         private static final void finishedPhase(@NotNull final DungeonTimer.DungeonPhase phase) {
             final var timings = DungeonTimer.DungeonTimingState.timings;
-            if (timings.containsKey(phase)) {
+            final var ordinal = phase.ordinal();
+            if (null != timings[ordinal]) {
                 DarkUtils.warn(DungeonTimer.DungeonTimingState.class, "Phase " + phase.name() + " was finished multiple times");
-            } else {
-                timings.put(phase, DungeonTimer.PhaseTiming.now());
+                return;
             }
+
+            timings[ordinal] = DungeonTimer.PhaseTiming.now();
         }
 
         @Nullable
         private static final DungeonTimer.PhaseTiming getPhase(@NotNull final DungeonTimer.DungeonPhase phase) {
-            return DungeonTimer.DungeonTimingState.timings.get(phase);
+            return DungeonTimer.DungeonTimingState.timings[phase.ordinal()];
         }
 
         private static final void resetAll() {
-            DungeonTimer.DungeonTimingState.timings.clear();
+            Arrays.fill(DungeonTimer.DungeonTimingState.timings, null);
         }
     }
 

@@ -101,8 +101,7 @@ final class LightmapTextureManagerMixin {
             return DarkUtilsConfig.INSTANCE.nightVision || player.hasStatusEffect(effect);
         }
 
-        // Won't be the case unless vanilla moved hasStatusEffect around messing with our ordinal but better be safe
-        DarkUtils.error(LightmapTextureManagerMixin.class, "ordinal for hasStatusEffect is outdated for current MC version");
-        return player.hasStatusEffect(effect);
+        // Won't be the case unless vanilla moved hasStatusEffect around messing with our ordinal
+        throw new IllegalStateException(LightmapTextureManagerMixin.class.getName() + " needs updating, ordinal for hasStatusEffect did not match");
     }
 }
