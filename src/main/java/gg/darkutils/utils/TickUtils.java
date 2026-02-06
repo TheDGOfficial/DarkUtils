@@ -5,6 +5,7 @@ import gg.darkutils.events.base.EventRegistry;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import com.mojang.blaze3d.systems.RenderSystem;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -72,6 +73,8 @@ public final class TickUtils {
     /**
      * Awaits a condition then runs an action. The condition is polled every tick.
      * If the condition is initially true, the action is run instantly.
+     * <p>
+     * A check will be performed to ensure correct caller thread.
      *
      * @param condition The condition.
      * @param action    The action.
@@ -79,6 +82,8 @@ public final class TickUtils {
     public static final void awaitCondition(@NotNull final BooleanSupplier condition, @NotNull final Runnable action) {
         Objects.requireNonNull(condition, "condition");
         Objects.requireNonNull(action, "action");
+
+        TickUtils.checkCallerThread();
 
         if (condition.getAsBoolean()) {
             action.run();
@@ -89,12 +94,39 @@ public final class TickUtils {
 
     /**
      * Awaits the local player joining a world/realm/server then runs the given action passing the player as argument.
-     * If the player is initially available, the task will run instantly on the caller thread.
-     * Otherwise, it will run on the Render thread when player starts existing. (e.g. joining a world/realm/server)
+     * <p>
+     * If the player is initially available, the task will run instantly.
+     * Otherwise, it will run when the player starts existing. (e.g. joining a world/realm/server)
+     * <p>
+     * If calling from outside the Render thread, a task will be queued even if the player is initially available, to
+     * ensure thread-safety.
      *
      * @param action The action.
      */
     public static final void awaitLocalPlayer(@NotNull final Consumer<ClientPlayerEntity> action) {
+        Objects.requireNonNull(action, "action");
+
+        if (!TickUtils.isCallingFromRenderThread()) {
+            TickUtils.queueTickTask(() -> TickUtils.awaitLocalPlayerInternal(action), 1);
+            return;
+        }
+
+        TickUtils.awaitLocalPlayerInternal(action);
+    }
+
+    /**
+     * Awaits the local player joining a world/realm/server then runs the given action passing the player as argument.
+     * <p>
+     * If the player is initially available, the task will run instantly.
+     * Otherwise, it will run when the player starts existing. (e.g. joining a world/realm/server)
+     * <p>
+     * If calling from outside the Render thread, an exception will be thrown.
+     *
+     * @param action The action.
+     */
+    private static final void awaitLocalPlayerInternal(@NotNull final Consumer<ClientPlayerEntity> action) {
+        TickUtils.checkCallerThread();
+
         Objects.requireNonNull(action, "action");
 
         // Array wrapping to bypass final variable requirement inside the lambda
@@ -113,11 +145,7 @@ public final class TickUtils {
      * @param interval The interval, in ticks. 20 ticks is considered equal to a second.
      */
     public static final void queueRepeatingTickTask(@NotNull final Runnable task, final int interval) {
-        Objects.requireNonNull(task, "task");
-        if (0 == interval) {
-            throw new IllegalArgumentException("Queueing a repeating tick task with interval zero is prohibited");
-        }
-        TickUtils.tasks.add(new TickUtils.Task(task, interval, true));
+        TickUtils.queueRepeatingTickTaskInternal(task, interval, true);
     }
 
     /**
@@ -129,22 +157,40 @@ public final class TickUtils {
      * @param interval The interval, in server ticks. 20 ticks is considered equal to a second if the server is running at 20 tps with no lag.
      */
     public static final void queueRepeatingServerTickTask(@NotNull final Runnable task, final int interval) {
+        TickUtils.queueRepeatingTickTaskInternal(task, interval, false);
+    }
+
+    /**
+     * Queues a repeating tick task to be run with the given interval. If interval is zero, an exception will be thrown.
+     * Otherwise, it will run on the render thread every interval amount of client or server ticks, e.g., interval = 1 runs it every tick,
+     * interval = 2 runs it every other tick, and so on.
+     *
+     * @param task     The task.
+     * @param interval The interval, in ticks. 20 ticks is considered equal to a second.
+     * @param client   Pass true to use client ticks, false to use server ticks.
+     */
+    private static final void queueRepeatingTickTaskInternal(@NotNull final Runnable task, final int interval, final boolean client) {
         Objects.requireNonNull(task, "task");
         if (0 == interval) {
             throw new IllegalArgumentException("Queueing a repeating tick task with interval zero is prohibited");
         }
-        TickUtils.serverTasks.add(new TickUtils.Task(task, interval, true));
+        (client ? TickUtils.tasks : TickUtils.serverTasks).add(new TickUtils.Task(task, interval, true));
     }
 
     /**
      * Queues an updating condition. The given condition will be wrapped to return the same value till it is updated
      * each tick. This is useful for making conditions update each tick and using them each frame.
+     * <p>
+     * If the calling thread is not the render thread, an exception will be thrown, as we call .update initially
+     * on the caller thread to ensure no uninitialized reads happen.
      *
      * @param condition The interval, in ticks. 20 ticks is considered equal to a second.
      */
     @NotNull
     public static final BooleanSupplier queueUpdatingCondition(@NotNull final BooleanSupplier condition) {
         Objects.requireNonNull(condition, "condition");
+
+        TickUtils.checkCallerThread();
 
         final class CachedCondition implements BooleanSupplier {
             private boolean value;
@@ -182,34 +228,52 @@ public final class TickUtils {
     }
 
     /**
-     * Queues a tick task to be run. If delay is zero, it will be run immediately, without checking the current thread.
+     * Queues a tick task to be run. If delay is zero, it will be run immediately, with a check to ensure correct threading.
      * Otherwise, it will run on the render thread with the specified delay in ticks.
      *
      * @param task  The task.
      * @param delay The delay, in ticks. 20 ticks is considered equal to a second.
      */
     public static final void queueTickTask(@NotNull final Runnable task, final int delay) {
-        Objects.requireNonNull(task, "task");
-        if (0 == delay) {
-            task.run();
-        } else {
-            TickUtils.tasks.add(new TickUtils.Task(task, delay, false));
-        }
+        TickUtils.queueTickTaskInternal(task, delay, true);
     }
 
     /**
-     * Queues a server tick task to be run. If delay is zero, it will be run immediately, without checking the current thread.
+     * Queues a server tick task to be run. If delay is zero, it will be run immediately, with a check to ensure correct threading.
      * Otherwise, it will run on the render thread with the specified delay in server ticks.
      *
      * @param task  The task.
      * @param delay The delay, in server ticks. 20 ticks is considered equal to a second.
      */
     public static final void queueServerTickTask(@NotNull final Runnable task, final int delay) {
+        TickUtils.queueTickTaskInternal(task, delay, false);
+    }
+
+    /**
+     * Queues tick task to be run. If delay is zero, it will be run immediately, with a check to ensure correct threading.
+     * Otherwise, it will run on the render thread with the specified delay in either client or server ticks, depending on the parameter.
+     *
+     * @param task   The task.
+     * @param delay  The delay, in client or server ticks. 20 ticks is considered equal to a second.
+     * @param client Pass true to use client ticks, false to use server ticks.
+     */
+    private static final void queueTickTaskInternal(@NotNull final Runnable task, final int delay, final boolean client) {
         Objects.requireNonNull(task, "task");
         if (0 == delay) {
+            TickUtils.checkCallerThread();
             task.run();
         } else {
-            TickUtils.serverTasks.add(new TickUtils.Task(task, delay, false));
+            (client ? TickUtils.tasks : TickUtils.serverTasks).add(new TickUtils.Task(task, delay, false));
+        }
+    }
+
+    private static final boolean isCallingFromRenderThread() {
+        return RenderSystem.isOnRenderThread();
+    }
+
+    private static final void checkCallerThread() {
+        if (!TickUtils.isCallingFromRenderThread()) {
+            throw new IllegalStateException("unexpected caller thread with name: " + Thread.currentThread().getName() + ", expected: Render thread");
         }
     }
 
