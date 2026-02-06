@@ -32,6 +32,6 @@ final class ChatHudMixin {
         if (!DarkUtilsConfig.INSTANCE.removeChatScrollbar) {
             context.fill(x1, y1, x2, y2, color);
         }
-        // prevent the scrollbar fill(...) calls from drawing
+        // prevent the scrollbar fill(...) call from drawing
     }
 }
