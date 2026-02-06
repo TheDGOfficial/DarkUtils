@@ -4,6 +4,7 @@ import gg.darkutils.events.SentCommandEvent;
 import gg.darkutils.events.SentMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LazyConstants;
+import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RoundingMode;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
