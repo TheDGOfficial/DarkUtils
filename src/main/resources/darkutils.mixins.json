@@ -32,6 +32,7 @@
     "performance.WorldMixin",
     "performance.YggdrasilServicesKeyInfoMixin",
     "performance.WorldRendererMixin",
+    "performance.ArmorStandEntityMixin",
 
     "qol.ClientPlayerEntityMixin",
     "qol.ClientPlayerInteractionManagerMixin",
