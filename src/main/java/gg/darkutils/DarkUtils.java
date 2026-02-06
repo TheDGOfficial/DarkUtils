@@ -35,7 +35,7 @@ import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
 import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.chat.BasicFormatting;
+import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.ButtonData;
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleStyle;
@@ -59,6 +59,7 @@ import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.concurrent.CancellationException;
 
 public final class DarkUtils implements ClientModInitializer {
     public static final @NotNull String MOD_ID = "darkutils";
@@ -151,20 +152,18 @@ public final class DarkUtils implements ClientModInitializer {
 
         // If logging before player joins a world/server/realm (e.g. in main menu),
         // we need to wait till player joins one so they can read chat.
-        TickUtils.awaitLocalPlayer(player -> {
-            final var text = Text.literal(message);
-            var style = Style.EMPTY;
+        final var text = Text.literal(message);
+        var style = Style.EMPTY;
 
-            style = style.withColor(switch (level) {
-                case INFO -> Colors.LIGHT_GRAY;
-                case WARN -> Colors.LIGHT_YELLOW;
-                case ERROR -> Colors.LIGHT_RED;
-            });
-
-            text.setStyle(style);
-
-            player.sendMessage(text, false);
+        style = style.withColor(switch (level) {
+            case INFO -> Colors.LIGHT_GRAY;
+            case WARN -> Colors.LIGHT_YELLOW;
+            case ERROR -> Colors.LIGHT_RED;
         });
+
+        text.setStyle(style);
+
+        ChatUtils.sendMessageToLocalPlayer(text);
     }
 
     @NotNull
@@ -218,13 +217,20 @@ public final class DarkUtils implements ClientModInitializer {
         for (final var initializer : initializers) {
             try {
                 initializer.run();
-            } catch (final Throwable error) {
+            } catch (final Exception error) {
+                if (error instanceof InterruptedException) {
+                    Thread.currentThread().interrupt(); // re-set the interrupted flag
+                    throw new RuntimeException(error); // propagate upwards
+                } else if (error instanceof CancellationException) {
+                    throw error; // a CompletableFuture or Future was cancelled, re-throw to propagate upwards to stop execution
+                }
+
                 DarkUtils.handleInitError(error);
             }
         }
     }
 
-    private static final void handleInitError(@NotNull final Throwable error) {
+    private static final void handleInitError(@NotNull final Exception error) {
         final var rootError = DarkUtils.getRootError(error, DarkUtils::isOurModuleFrame);
 
         final var ste = DarkUtils.findRelevantStackTrace(rootError.getStackTrace());
@@ -346,45 +352,43 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final void queueWelcomeMessageIfEnabled() {
-        TickUtils.awaitLocalPlayer(player -> {
-            if (!DarkUtilsConfig.INSTANCE.welcomeMessage) {
-                return;
-            }
+        if (!DarkUtilsConfig.INSTANCE.welcomeMessage) {
+            return;
+        }
 
-            final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
-            final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(BasicFormatting.BOLD));
+        final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
+        final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
 
-            final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
-            final var footer = ChatUtils.fill('▬', true);
+        final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
+        final var footer = ChatUtils.fill('▬', true);
 
-            final var gradientStart = "#54daf4";
-            final var gradientEnd = "#545eb6";
+        final var gradientStart = "#54daf4";
+        final var gradientEnd = "#545eb6";
 
-            final var text = TextBuilder
-                    .withInitial(header.first(), headerFooterStyle)
-                    .appendSpace()
-                    .appendGradientText(gradientStart, gradientEnd, DarkUtils.class.getSimpleName(), SimpleStyle.inherited())
-                    .appendSpace()
-                    .append(header.second(), headerFooterStyle)
-                    .appendNewLine()
-                    .appendNewLine()
-                    .appendGradientText(gradientStart, gradientEnd, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', SimpleStyle
-                            .centered()
-                            .also(SimpleStyle.formatted(BasicFormatting.BOLD))
-                    )
-                    .appendNewLine()
-                    .appendNewLine()
-                    .appendGradientButton(gradientStart, gradientEnd, new ButtonData("Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID), SimpleStyle
-                            .centered()
-                            .also(SimpleStyle.formatted(BasicFormatting.BOLD))
-                    )
-                    .appendNewLine()
-                    .appendNewLine()
-                    .append(footer, headerFooterStyle)
-                    .build();
+        final var text = TextBuilder
+                .withInitial(header.first(), headerFooterStyle)
+                .appendSpace()
+                .appendGradientText(gradientStart, gradientEnd, DarkUtils.class.getSimpleName(), SimpleStyle.inherited())
+                .appendSpace()
+                .append(header.second(), headerFooterStyle)
+                .appendNewLine()
+                .appendNewLine()
+                .appendGradientText(gradientStart, gradientEnd, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', SimpleStyle
+                        .centered()
+                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                )
+                .appendNewLine()
+                .appendNewLine()
+                .appendGradientButton(gradientStart, gradientEnd, new ButtonData("Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID), SimpleStyle
+                        .centered()
+                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                )
+                .appendNewLine()
+                .appendNewLine()
+                .append(footer, headerFooterStyle)
+                .build();
 
-            player.sendMessage(text, false);
-        });
+        ChatUtils.sendMessageToLocalPlayer(text);
     }
 
     private static final void initEvents() {

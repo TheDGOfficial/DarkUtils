@@ -5,8 +5,8 @@ import gg.darkutils.events.ObtainTreeGiftEvent;
 import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.chat.BasicColor;
-import gg.darkutils.utils.chat.BasicFormatting;
+import gg.darkutils.utils.chat.SimpleColor;
+import gg.darkutils.utils.chat.SimpleFormatting;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -19,7 +19,7 @@ public final class TreeGiftFeatures {
     @NotNull
     private static final Map<String, Consumer<ReceiveGameMessageEvent>> MESSAGE_HANDLERS = Map.of(
             "                                 TREE GIFT", event -> {
-                if (event.isStyledWith(BasicColor.DARK_GREEN, BasicFormatting.BOLD)) {
+                if (event.isStyledWith(SimpleColor.DARK_GREEN, SimpleFormatting.BOLD)) {
                     TreeGiftFeatures.endMessageReceived = false;
                     TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.NONE;
                     TickUtils.awaitCondition(
@@ -29,22 +29,22 @@ public final class TreeGiftFeatures {
                 }
             },
             "                     A Phanflare fell from the Tree!", event -> {
-                if (event.isStyledWith(BasicColor.GRAY)) {
+                if (event.isStyledWith(SimpleColor.GRAY)) {
                     TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.PHANFLARE;
                 }
             },
             "                     A Phanpyre fell from the Tree!", event -> {
-                if (event.isStyledWith(BasicColor.GRAY)) {
+                if (event.isStyledWith(SimpleColor.GRAY)) {
                     TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.PHANPYRE;
                 }
             },
             "                     A Dreadwing fell from the Tree!", event -> {
-                if (event.isStyledWith(BasicColor.GRAY)) {
+                if (event.isStyledWith(SimpleColor.GRAY)) {
                     TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.DREADWING;
                 }
             },
             "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", event -> {
-                if (!TreeGiftFeatures.endMessageReceived && event.isStyledWith(BasicColor.DARK_GREEN, BasicFormatting.BOLD)) {
+                if (!TreeGiftFeatures.endMessageReceived && event.isStyledWith(SimpleColor.DARK_GREEN, SimpleFormatting.BOLD)) {
                     TreeGiftFeatures.endMessageReceived = true;
                 }
             }

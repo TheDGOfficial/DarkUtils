@@ -7,7 +7,7 @@ import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.chat.BasicColor;
+import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
@@ -21,6 +21,7 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map;
@@ -39,7 +40,7 @@ public final class DungeonTimer {
     private static long serverTickCounter;
     @NotNull
     private static final Consumer<ReceiveGameMessageEvent> PHASE_5_FINISH = event -> {
-        if (event.isStyledWith(BasicColor.DARK_RED)) {
+        if (event.isStyledWith(SimpleColor.DARK_RED)) {
             DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_5_CLEAR);
         }
     };
@@ -47,17 +48,17 @@ public final class DungeonTimer {
     @NotNull
     private static final Map<String, Consumer<ReceiveGameMessageEvent>> MESSAGE_HANDLERS = Map.ofEntries(
             Map.entry("Starting in 1 second.", event -> {
-                if (event.isStyledWith(BasicColor.GREEN)) {
+                if (event.isStyledWith(SimpleColor.GREEN)) {
                     TickUtils.queueServerTickTask(() -> DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.DUNGEON_START), 20);
                 }
             }),
             Map.entry("The BLOOD DOOR has been opened!", event -> {
-                if (event.isStyledWith(BasicColor.RED)) {
+                if (event.isStyledWith(SimpleColor.RED)) {
                     DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.BLOOD_OPEN);
                 }
             }),
             Map.entry("[BOSS] The Watcher: You have proven yourself. You may pass.", event -> {
-                if (event.isStyledWith(BasicColor.RED)) {
+                if (event.isStyledWith(SimpleColor.RED)) {
                     DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.BLOOD_CLEAR);
 
                     final var seconds = DungeonTimer.getPhaseTimeInSecondsForPhase(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, false);
@@ -65,32 +66,32 @@ public final class DungeonTimer {
                 }
             }),
             Map.entry("[BOSS] Maxor: WELL! WELL! WELL! LOOK WHO'S HERE!", event -> {
-                if (event.isStyledWith(BasicColor.DARK_RED)) {
+                if (event.isStyledWith(SimpleColor.DARK_RED)) {
                     DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.BOSS_ENTRY);
                 }
             }),
             Map.entry("[BOSS] Storm: Pathetic Maxor, just like expected.", event -> {
-                if (event.isStyledWith(BasicColor.DARK_RED)) {
+                if (event.isStyledWith(SimpleColor.DARK_RED)) {
                     DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_1_CLEAR);
                 }
             }),
             Map.entry("[BOSS] Goldor: Who dares trespass into my domain?", event -> {
-                if (event.isStyledWith(BasicColor.DARK_RED)) {
+                if (event.isStyledWith(SimpleColor.DARK_RED)) {
                     DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_2_CLEAR);
                 }
             }),
             Map.entry("The Core entrance is opening!", event -> {
-                if (event.isStyledWith(BasicColor.GREEN)) {
+                if (event.isStyledWith(SimpleColor.GREEN)) {
                     DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.TERMINALS_CLEAR);
                 }
             }),
             Map.entry("[BOSS] Necron: You went further than any human before, congratulations.", event -> {
-                if (event.isStyledWith(BasicColor.DARK_RED)) {
+                if (event.isStyledWith(SimpleColor.DARK_RED)) {
                     DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_3_CLEAR);
                 }
             }),
             Map.entry("[BOSS] Necron: All this, for nothing...", event -> {
-                if (event.isStyledWith(BasicColor.DARK_RED)) {
+                if (event.isStyledWith(SimpleColor.DARK_RED)) {
                     DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_4_CLEAR);
                 }
             }),
@@ -439,25 +440,26 @@ public final class DungeonTimer {
 
     private static final class DungeonTimingState {
         @NotNull
-        private static final EnumMap<DungeonTimer.DungeonPhase, DungeonTimer.PhaseTiming> timings =
-                new EnumMap<>(DungeonTimer.DungeonPhase.class);
+        private static final DungeonTimer.PhaseTiming[] timings = new DungeonTimer.PhaseTiming[DungeonTimer.DungeonPhase.values().length];
 
         private static final void finishedPhase(@NotNull final DungeonTimer.DungeonPhase phase) {
             final var timings = DungeonTimer.DungeonTimingState.timings;
-            if (timings.containsKey(phase)) {
+            final var ordinal = phase.ordinal();
+            if (null != timings[ordinal]) {
                 DarkUtils.warn(DungeonTimer.DungeonTimingState.class, "Phase " + phase.name() + " was finished multiple times");
-            } else {
-                timings.put(phase, DungeonTimer.PhaseTiming.now());
+                return;
             }
+
+            timings[ordinal] = DungeonTimer.PhaseTiming.now();
         }
 
         @Nullable
         private static final DungeonTimer.PhaseTiming getPhase(@NotNull final DungeonTimer.DungeonPhase phase) {
-            return DungeonTimer.DungeonTimingState.timings.get(phase);
+            return DungeonTimer.DungeonTimingState.timings[phase.ordinal()];
         }
 
         private static final void resetAll() {
-            DungeonTimer.DungeonTimingState.timings.clear();
+            Arrays.fill(DungeonTimer.DungeonTimingState.timings, null);
         }
     }
 

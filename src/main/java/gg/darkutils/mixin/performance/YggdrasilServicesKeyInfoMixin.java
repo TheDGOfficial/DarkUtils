@@ -74,7 +74,7 @@ final class YggdrasilServicesKeyInfoMixin {
         final var formatted = format.replace("{}", arg.toString());
 
         if (null == serverData) {
-            // Singleplayer or no server IP available → fallback to logging normally
+            // Singleplayer or no server IP available - fallback to logging normally
             logger.error("{}: {}", formatted, arg2 instanceof final Throwable t ? t.getMessage() : "");
             return;
         }

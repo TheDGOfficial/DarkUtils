@@ -6,7 +6,7 @@ import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.RenderUtils;
-import gg.darkutils.utils.chat.BasicColor;
+import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -26,7 +26,7 @@ public final class RejoinCooldownDisplay {
 
     @NotNull
     private static final Consumer<ReceiveGameMessageEvent> MESSAGE_ACTION = event -> {
-        if (event.isStyledWith(BasicColor.RED)) {
+        if (event.isStyledWith(SimpleColor.RED)) {
             RejoinCooldownDisplay.kickCooldownEnd = System.currentTimeMillis() + RejoinCooldownDisplay.COOLDOWN_MS;
         }
     };

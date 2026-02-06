@@ -1,6 +1,6 @@
 package gg.darkutils.events.base;
 
-import gg.darkutils.events.base.impl.BasicEventListener;
+import gg.darkutils.events.base.impl.EventListenerImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +32,7 @@ public interface EventListener<T extends Event> extends Consumer<T> {
      */
     @NotNull
     static <T extends Event> EventListener<T> create(@NotNull final EventListener<T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled) {
-        return new BasicEventListener<>(listener, priority, receiveCancelled);
+        return new EventListenerImpl<>(listener, priority, receiveCancelled);
     }
 
     /**

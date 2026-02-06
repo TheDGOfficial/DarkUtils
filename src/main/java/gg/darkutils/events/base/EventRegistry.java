@@ -1,6 +1,6 @@
 package gg.darkutils.events.base;
 
-import gg.darkutils.events.base.impl.BasicEventRegistry;
+import gg.darkutils.events.base.impl.EventRegistryImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,7 +15,7 @@ public interface EventRegistry {
      */
     @NotNull
     static EventRegistry centralRegistry() {
-        return BasicEventRegistry.getInstance();
+        return EventRegistryImpl.getInstance();
     }
 
     @SuppressWarnings("unchecked")

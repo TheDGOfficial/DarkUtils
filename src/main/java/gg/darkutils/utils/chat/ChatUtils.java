@@ -5,6 +5,7 @@ import gg.darkutils.events.SentCommandEvent;
 import gg.darkutils.events.SentMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LazyConstants;
+import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RoundingMode;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
@@ -73,11 +74,17 @@ public final class ChatUtils {
         ChatUtils.sendMessageQueue.enqueue(message);
     }
 
-    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final BasicColor color) {
+    public static final void sendMessageToLocalPlayer(@NotNull final Text text) {
+        // Ensure player is available and no lost messages
+        // The awaitLocalPlayer method ensures correct threading behaviour internally.
+        TickUtils.awaitLocalPlayer(player -> player.sendMessage(text, false));
+    }
+
+    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleColor color) {
         return ChatUtils.hasFormatting(text, SimpleStyle.colored(color));
     }
 
-    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final BasicColor color, @NotNull final BasicFormatting formatting) {
+    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleColor color, @NotNull final SimpleFormatting formatting) {
         return ChatUtils.hasFormatting(text, SimpleStyle.colored(color).also(SimpleStyle.formatted(formatting)));
     }
 

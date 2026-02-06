@@ -4,9 +4,9 @@ import gg.darkutils.config.DarkUtilsConfig;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -24,12 +24,13 @@ public final class ThreadPriorityTweaker {
     @NotNull
     private static final ScheduledExecutorService threadPriorityTweakerScheduler = Executors.newSingleThreadScheduledExecutor(r -> Thread.ofPlatform()
             .name("DarkUtils Thread Priority Tweaker Thread")
+            .daemon(true)
             .unstarted(r));
 
     /**
      * Holds all tweaks.
      */
-    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> tweaks = ThreadPriorityTweaker.getAllTweaks();
+    private static final @NotNull List<ThreadPriorityTweaker.ThreadPriorityTweak> tweaks = ThreadPriorityTweaker.getAllTweaks();
     /**
      * Holds only the exact tweaks for O(1) HashMap access.
      */
@@ -41,10 +42,10 @@ public final class ThreadPriorityTweaker {
      * Holds other tweaks that need to do more complex checks than equality.
      * We can't use hash map here and so it will be O(n) in terms of algorithmic complexity.
      */
-    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> others = ThreadPriorityTweaker.tweaks
+    private static final @NotNull List<ThreadPriorityTweaker.ThreadPriorityTweak> others = ThreadPriorityTweaker.tweaks
             .stream()
             .filter(tweak -> ThreadPriorityTweaker.NameMatcherMode.EXACT != tweak.nameMatcherMode())
-            .collect(Collectors.toUnmodifiableSet());
+            .toList();
 
     private ThreadPriorityTweaker() {
         super();
@@ -55,23 +56,23 @@ public final class ThreadPriorityTweaker {
     /**
      * Gets all tweaks.
      */
-    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> getAllTweaks() {
-        final var set = HashSet.<ThreadPriorityTweaker.ThreadPriorityTweak>newHashSet(32);
+    private static final @NotNull List<ThreadPriorityTweaker.ThreadPriorityTweak> getAllTweaks() {
+        final var list = new ArrayList<ThreadPriorityTweaker.ThreadPriorityTweak>(32);
 
-        set.addAll(ThreadPriorityTweaker.getCriticalTweaks());
-        set.addAll(ThreadPriorityTweaker.getOtherTweaks());
+        list.addAll(ThreadPriorityTweaker.getCriticalTweaks());
+        list.addAll(ThreadPriorityTweaker.getOtherTweaks());
 
-        return Set.copyOf(set);
+        return List.copyOf(list);
     }
 
-    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> getCriticalTweaks() {
+    private static final @NotNull List<ThreadPriorityTweaker.ThreadPriorityTweak> getCriticalTweaks() {
         final var crit = ThreadPriorityTweaker.ThreadPriority.CRITICAL;
         final var highest = ThreadPriorityTweaker.ThreadPriority.HIGHEST;
         final var veryHigh = ThreadPriorityTweaker.ThreadPriority.VERY_HIGH;
         final var high = ThreadPriorityTweaker.ThreadPriority.HIGH;
         final var aboveNormal = ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL;
 
-        return Set.of(
+        return List.of(
                 // Keep important I/O at the top to not cause unexpected latency increase after turning on the tweaker.
                 ThreadPriorityTweaker.startsWith("Netty ", crit),
                 ThreadPriorityTweaker.startsWith("Ixeris ", crit),
@@ -92,13 +93,13 @@ public final class ThreadPriorityTweaker {
         );
     }
 
-    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> getOtherTweaks() {
+    private static final @NotNull List<ThreadPriorityTweaker.ThreadPriorityTweak> getOtherTweaks() {
         final var low = ThreadPriorityTweaker.ThreadPriority.LOW;
         final var veryLow = ThreadPriorityTweaker.ThreadPriority.VERY_LOW;
         final var lowest = ThreadPriorityTweaker.ThreadPriority.LOWEST;
         final var idle = ThreadPriorityTweaker.ThreadPriority.IDLE;
 
-        return Set.of(
+        return List.of(
                 ThreadPriorityTweaker.exactMatch("Yggdrasil Key Fetcher", low),
                 ThreadPriorityTweaker.startsWith("Worker", low),
                 ThreadPriorityTweaker.startsWith("IO", low),
@@ -176,18 +177,15 @@ public final class ThreadPriorityTweaker {
     }
 
     private static final void tweakPriority(@NotNull final Thread thread, @NotNull final String name) {
-        var noMatchingTweakerFound = true;
-
         for (final var tweaker : ThreadPriorityTweaker.others) {
             if (tweaker.appliesTo(name)) {
-                noMatchingTweakerFound = false;
-
                 tweaker.applyTo(thread);
-                break;
+                return; // Return when one matches
             }
         }
 
-        if (noMatchingTweakerFound && ThreadPriorityTweaker.ThreadPriority.NORMAL.getPriority() < thread.getPriority()) {
+        // No matching tweaker found if we reached here
+        if (ThreadPriorityTweaker.ThreadPriority.NORMAL.getPriority() < thread.getPriority()) {
             // Unknown thread names with higher than NORMAL priority gets set back to NORMAL.
             ThreadPriorityTweaker.tweakPriority(thread, ThreadPriorityTweaker.ThreadPriority.NORMAL.getPriority());
         }
@@ -202,7 +200,10 @@ public final class ThreadPriorityTweaker {
     }
 
     @NotNull
-    private static final ThreadGroup getRootThreadGroup() {
+    private static final ThreadGroup ROOT_THREAD_GROUP = ThreadPriorityTweaker.findRootThreadGroup();
+
+    @NotNull
+    private static final ThreadGroup findRootThreadGroup() {
         var threadGroup = Thread.currentThread().getThreadGroup();
 
         ThreadGroup parent;
@@ -215,18 +216,18 @@ public final class ThreadPriorityTweaker {
 
     @NotNull
     private static final Thread @NotNull [] getAllThreads() {
-        final var threadGroup = ThreadPriorityTweaker.getRootThreadGroup();
+        final var threadGroup = ThreadPriorityTweaker.ROOT_THREAD_GROUP;
         var count = threadGroup.activeCount();
 
         Thread[] threads;
         do {
-            threads = new Thread[count];
+            threads = new Thread[count + (count >> 1) + 1];
             count = threadGroup.enumerate(threads, true);
-        } while (count > threads.length);
+        } while (count >= threads.length);
 
         var nonNullCount = 0;
         for (final var thread : threads) {
-            if (null != thread) {
+            if (null != thread && thread.isAlive()) {
                 threads[nonNullCount] = thread;
                 ++nonNullCount;
             }
@@ -263,8 +264,10 @@ public final class ThreadPriorityTweaker {
         HIGHEST, // java prio 9, os prio (nice level) -4
         CRITICAL; // java prio 10, os prio (nice level) -5
 
+        private final int priority = this.ordinal() + 1;
+
         private final int getPriority() {
-            return this.ordinal() + 1;
+            return this.priority;
         }
     }
 
