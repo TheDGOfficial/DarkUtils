@@ -152,20 +152,18 @@ public final class DarkUtils implements ClientModInitializer {
 
         // If logging before player joins a world/server/realm (e.g. in main menu),
         // we need to wait till player joins one so they can read chat.
-        TickUtils.awaitLocalPlayer(player -> {
-            final var text = Text.literal(message);
-            var style = Style.EMPTY;
+        final var text = Text.literal(message);
+        var style = Style.EMPTY;
 
-            style = style.withColor(switch (level) {
-                case INFO -> Colors.LIGHT_GRAY;
-                case WARN -> Colors.LIGHT_YELLOW;
-                case ERROR -> Colors.LIGHT_RED;
-            });
-
-            text.setStyle(style);
-
-            player.sendMessage(text, false);
+        style = style.withColor(switch (level) {
+            case INFO -> Colors.LIGHT_GRAY;
+            case WARN -> Colors.LIGHT_YELLOW;
+            case ERROR -> Colors.LIGHT_RED;
         });
+
+        text.setStyle(style);
+
+        ChatUtils.sendMessageToLocalPlayer(text);
     }
 
     @NotNull
@@ -354,45 +352,43 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final void queueWelcomeMessageIfEnabled() {
-        TickUtils.awaitLocalPlayer(player -> {
-            if (!DarkUtilsConfig.INSTANCE.welcomeMessage) {
-                return;
-            }
+        if (!DarkUtilsConfig.INSTANCE.welcomeMessage) {
+            return;
+        }
 
-            final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
-            final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
+        final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
+        final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
 
-            final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
-            final var footer = ChatUtils.fill('▬', true);
+        final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
+        final var footer = ChatUtils.fill('▬', true);
 
-            final var gradientStart = "#54daf4";
-            final var gradientEnd = "#545eb6";
+        final var gradientStart = "#54daf4";
+        final var gradientEnd = "#545eb6";
 
-            final var text = TextBuilder
-                    .withInitial(header.first(), headerFooterStyle)
-                    .appendSpace()
-                    .appendGradientText(gradientStart, gradientEnd, DarkUtils.class.getSimpleName(), SimpleStyle.inherited())
-                    .appendSpace()
-                    .append(header.second(), headerFooterStyle)
-                    .appendNewLine()
-                    .appendNewLine()
-                    .appendGradientText(gradientStart, gradientEnd, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', SimpleStyle
-                            .centered()
-                            .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
-                    )
-                    .appendNewLine()
-                    .appendNewLine()
-                    .appendGradientButton(gradientStart, gradientEnd, new ButtonData("Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID), SimpleStyle
-                            .centered()
-                            .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
-                    )
-                    .appendNewLine()
-                    .appendNewLine()
-                    .append(footer, headerFooterStyle)
-                    .build();
+        final var text = TextBuilder
+                .withInitial(header.first(), headerFooterStyle)
+                .appendSpace()
+                .appendGradientText(gradientStart, gradientEnd, DarkUtils.class.getSimpleName(), SimpleStyle.inherited())
+                .appendSpace()
+                .append(header.second(), headerFooterStyle)
+                .appendNewLine()
+                .appendNewLine()
+                .appendGradientText(gradientStart, gradientEnd, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', SimpleStyle
+                        .centered()
+                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                )
+                .appendNewLine()
+                .appendNewLine()
+                .appendGradientButton(gradientStart, gradientEnd, new ButtonData("Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID), SimpleStyle
+                        .centered()
+                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                )
+                .appendNewLine()
+                .appendNewLine()
+                .append(footer, headerFooterStyle)
+                .build();
 
-            player.sendMessage(text, false);
-        });
+        ChatUtils.sendMessageToLocalPlayer(text);
     }
 
     private static final void initEvents() {

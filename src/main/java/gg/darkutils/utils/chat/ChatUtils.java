@@ -72,6 +72,12 @@ public final class ChatUtils {
         ChatUtils.sendMessageQueue.enqueue(message);
     }
 
+    public static final void sendMessageToLocalPlayer(@NotNull final Text text) {
+        // Ensure player is available and no lost messages
+        // The awaitLocalPlayer method ensures correct threading behaviour internally.
+        TickUtils.awaitLocalPlayer(player -> player.sendMessage(text, false));
+    }
+
     public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleColor color) {
         return ChatUtils.hasFormatting(text, SimpleStyle.colored(color));
     }
