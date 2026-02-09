@@ -25,7 +25,7 @@ final class InactivityFpsLimiterMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "<init>", at = @At("HEAD"))
+    @Inject(method = "<init>", at = @At("RETURN"))
     private final void darkutils$init(@NotNull final CallbackInfo ci) {
         this.uninitialized = true;
     }
