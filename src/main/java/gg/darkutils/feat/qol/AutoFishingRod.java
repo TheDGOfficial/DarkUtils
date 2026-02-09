@@ -3,6 +3,7 @@ package gg.darkutils.feat.qol;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.mixin.accessors.MinecraftClientAccessor;
 import gg.darkutils.utils.TickUtils;
+import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.SimpleFormatting;
@@ -74,7 +75,7 @@ public final class AutoFishingRod {
 
     private static final boolean isNotHoldingRod(@Nullable final ClientPlayerEntity player) {
         return null == player
-                || !player.getMainHandStack().isOf(Items.FISHING_ROD);
+                || !Helpers.getItemStackInMainHand().isOf(Items.FISHING_ROD);
     }
 
     @Nullable

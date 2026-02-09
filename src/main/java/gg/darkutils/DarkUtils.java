@@ -224,20 +224,13 @@ public final class DarkUtils implements ClientModInitializer {
         for (final var initializer : initializers) {
             try {
                 initializer.run();
-            } catch (final Exception error) {
-                if (error instanceof InterruptedException) {
-                    Thread.currentThread().interrupt(); // re-set the interrupted flag
-                    throw new RuntimeException(error); // propagate upwards
-                } else if (error instanceof CancellationException) {
-                    throw error; // a CompletableFuture or Future was cancelled, re-throw to propagate upwards to stop execution
-                }
-
+            } catch (final Throwable error) {
                 DarkUtils.handleInitError(error);
             }
         }
     }
 
-    private static final void handleInitError(@NotNull final Exception error) {
+    private static final void handleInitError(@NotNull final Throwable error) {
         final var rootError = DarkUtils.getRootError(error, DarkUtils::isOurModuleFrame);
 
         final var ste = DarkUtils.findRelevantStackTrace(rootError.getStackTrace());

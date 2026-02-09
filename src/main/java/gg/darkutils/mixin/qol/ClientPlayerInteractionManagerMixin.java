@@ -1,7 +1,6 @@
 package gg.darkutils.mixin.qol;
 
 import gg.darkutils.events.UseItemEvent;
-import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.Helpers;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
@@ -24,19 +23,12 @@ final class ClientPlayerInteractionManagerMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Shadow
-    private final void syncSelectedSlot() {
-        throw new IllegalStateException("shadow failed");
-    }
-
     @Inject(method = "interactItem(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;",
             at = @At("HEAD"), cancellable = true)
     private final void darkutils$onInteractItem$cancelIfEnabled(@NotNull final PlayerEntity player, @NotNull final Hand hand, @NotNull final CallbackInfoReturnable<ActionResult> cir) {
-        this.syncSelectedSlot();
+        final var stack = Helpers.getItemStackInHand(hand);
 
-        final var stack = player.getStackInHand(hand);
-
-        if (new UseItemEvent(stack).triggerAndCancelled()) {
+        if (new UseItemEvent(stack, hand).triggerAndCancelled()) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }
@@ -44,9 +36,7 @@ final class ClientPlayerInteractionManagerMixin {
     @Inject(method = "interactBlock(Lnet/minecraft/client/network/ClientPlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;",
             at = @At("HEAD"), cancellable = true)
     private final void darkutils$onInteractBlock$cancelIfEnabled(@NotNull final ClientPlayerEntity player, @NotNull final Hand hand, @NotNull final BlockHitResult blockHitResult, @NotNull final CallbackInfoReturnable<ActionResult> cir) {
-        this.syncSelectedSlot();
-
-        final var stack = player.getStackInHand(hand);
+        final var stack = Helpers.getItemStackInHand(hand);
 
         // Treat looking at a regular block the same as clicking in air, so cancelling is allowed.
         // When looking at a block entity such as beacon, chest, command block, etc., we don't want to cancel the click.
@@ -56,7 +46,8 @@ final class ClientPlayerInteractionManagerMixin {
         // We also do not cancel when looking at a mushroom. There is a 1x1 room where you get teleported under the room for a secret chest in Hypixel SkyBlock Dungeons when you right-click to a mushroom.
         // There is also 2 1x1 rooms that require you to place a skull to a redstone block so we also do not cancel if looking at a redstone block.
         // We also do not cancel when looking at a wooden door, as that makes the door open/close.
-        if (!player.getEntityWorld().getBlockState(blockHitResult.getBlockPos()).hasBlockEntity() && !Helpers.doesTargetedBlockMatch(
+        final var blockState = Helpers.getTargetedBlock();
+        if (!blockState.hasBlockEntity() && !Helpers.doesTargetedBlockMatch(
                 Helpers
                         .isButton()
                         .or(Helpers.isLever())
@@ -64,7 +55,7 @@ final class ClientPlayerInteractionManagerMixin {
                         .or(Helpers.isMushroom())
                         .or(Helpers.isRedstoneBlock())
                         .or(Helpers.isWoodenDoor())
-        ) && new UseItemEvent(stack).triggerAndCancelled()) {
+        ) && new UseItemEvent(stack, hand).triggerAndCancelled()) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }

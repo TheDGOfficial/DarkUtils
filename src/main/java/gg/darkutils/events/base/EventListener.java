@@ -1,10 +1,7 @@
 package gg.darkutils.events.base;
 
-import gg.darkutils.events.base.impl.EventListenerImpl;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -13,13 +10,12 @@ import java.util.function.Consumer;
  * Single abstract method onEvent(T) keeps this a functional interface while allowing
  * default methods for priority and receiveCancelled behavior.
  * <p>
- * See {@link EventListener#create(EventListener, EventPriority, boolean)} to create a
+ * See {@link EventListener#create(Consumer, EventPriority, boolean)} to create a
  * listener with custom priority or receiveCancelled behavior.
  *
  * @param <T> The type of the event the listener is listening for.
  */
-@FunctionalInterface
-public interface EventListener<T extends Event> extends Consumer<T> {
+public sealed interface EventListener<T extends Event> extends Consumer<T> permits EventListener.Impl {
     /**
      * Creates an event listener with custom priority and receiveCancelled behavior.
      *
@@ -31,33 +27,9 @@ public interface EventListener<T extends Event> extends Consumer<T> {
      * to the passed basic event listener.
      */
     @NotNull
-    static <T extends Event> EventListener<T> create(@NotNull final EventListener<T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled) {
-        return new EventListenerImpl<>(listener, priority, receiveCancelled);
-    }
-
-    /**
-     * Triggers this event listener.
-     *
-     * @param event The event.
-     */
-    void onEvent(@NotNull final T event);
-
-    /**
-     * Triggers this event listener.
-     * <p>
-     * Use instead {@link EventListener#onEvent(Event)} for clarity unless
-     * compatibility with an API that expects {@link Consumer} is required.
-     * <p>
-     * As the {@link Consumer#accept(Object)} allows null parameters, a runtime
-     * check will be performed to ensure the given event is not null.
-     *
-     * @param event The event.
-     */
-    @Override
-    default void accept(@Nullable final T event) {
-        Objects.requireNonNull(event, "event");
-
-        this.onEvent(event);
+    @SuppressWarnings("unchecked")
+    static <T extends Event> EventListener<T> create(@NotNull final Consumer<? super T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled) {
+        return new EventListener.Impl<>((Consumer<T>) listener, priority, receiveCancelled);
     }
 
     /**
@@ -80,4 +52,21 @@ public interface EventListener<T extends Event> extends Consumer<T> {
     default boolean receiveCancelled() {
         return false;
     }
+
+    /**
+     * An event listener implementation that delegates to a consumer with custom priority and receiveCancelled behavior.
+     *
+     * @param listener         The base listener to be used as a delegate.
+     * @param priority         The custom {@link EventPriority} priority.
+     * @param receiveCancelled The custom receiveCancelled behavior.
+     * @param <T>              The type of the event.
+     */
+    public record Impl<T extends Event>(@NotNull Consumer<T> listener, @NotNull EventPriority priority,
+                                        boolean receiveCancelled) implements EventListener<T> {
+        @Override
+        public final void accept(@NotNull final T event) {
+            this.listener.accept(event);
+        }
+    }
 }
+

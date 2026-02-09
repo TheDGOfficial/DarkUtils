@@ -15,7 +15,9 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Optional;
 import java.util.function.ObjIntConsumer;
 import java.util.function.Predicate;
 
@@ -26,14 +28,54 @@ public final class Helpers {
         throw new UnsupportedOperationException("static utility class");
     }
 
-    public static final boolean doesTargetedBlockMatch(@NotNull final Predicate<BlockState> matcher) {
+    @NotNull
+    private static final BlockState AIR_STATE = Blocks.AIR.getDefaultState();
+
+    @Nullable
+    private static BlockState targetedBlock;
+
+    @Nullable
+    private static Optional<Entity> targetedEntity;
+    @Nullable
+    private static String targetedEntityName;
+
+    @Nullable
+    private static ItemStack mainHandHeldItemStack;
+    @Nullable
+    private static ItemStack offHandHeldItemStack;
+    @Nullable
+    private static String mainHandHeldItemStackName;
+
+    public static final void resetHeldItemCache() {
+        Helpers.mainHandHeldItemStack = null;
+        Helpers.mainHandHeldItemStackName = null;
+
+        Helpers.offHandHeldItemStack = null;
+    }
+
+    public static final void resetTargetCache() {
+        Helpers.targetedBlock = null;
+
+        Helpers.targetedEntity = null;
+        Helpers.targetedEntityName = null;
+    }
+
+    @NotNull
+    public static final BlockState getTargetedBlock() {
+        final var cached = Helpers.targetedBlock;
+
+        if (null != cached) {
+            return cached;
+        }
+
         final var mc = MinecraftClient.getInstance();
         final var world = mc.world;
-        if (null == world || !(mc.crosshairTarget instanceof final BlockHitResult blockHitResult)) {
-            return false;
-        }
-        final var state = world.getBlockState(blockHitResult.getBlockPos());
-        return matcher.test(state);
+        return Helpers.targetedBlock = null == world || !(mc.crosshairTarget instanceof final BlockHitResult blockHitResult) ? Helpers.AIR_STATE : world.getBlockState(blockHitResult.getBlockPos());
+    }
+
+    public static final boolean doesTargetedBlockMatch(@NotNull final Predicate<BlockState> matcher) {
+        final var blockState = Helpers.getTargetedBlock();
+        return Helpers.AIR_STATE != blockState && matcher.test(blockState);
     }
 
     @NotNull
@@ -72,49 +114,101 @@ public final class Helpers {
     }
 
     private static final boolean doesTargetedEntityMatch(@NotNull final Predicate<Entity> matcher) {
+        final var cached = Helpers.targetedEntity;
+
+        if (null != cached) {
+            return cached.isPresent() && matcher.test(cached.get());
+        }
+
         final var mc = MinecraftClient.getInstance();
         final var world = mc.world;
+
         if (null == world || !(mc.crosshairTarget instanceof final EntityHitResult entityHitResult)) {
+            Helpers.targetedEntity = Optional.empty();
             return false;
         }
+
         final var entity = entityHitResult.getEntity();
+        Helpers.targetedEntity = Optional.of(entity);
+
         return matcher.test(entity);
     }
 
     public static final boolean isLookingAtATerminalEntity() {
         return Helpers.doesTargetedEntityMatch(entity -> {
             if (entity instanceof ArmorStandEntity) {
-                final var customName = entity.getCustomName();
-                if (null != customName) {
-                    final var name = customName.getString();
-                    return "Inactive Terminal".equals(name) || "CLICK HERE".equals(name);
+                final String name;
+
+                final var cached = Helpers.targetedEntityName;
+                if (null == cached) {
+                    final var customName = entity.getCustomName();
+                    name = null == customName ? "" : customName.getString();
+                } else {
+                    name = cached;
                 }
+
+                return "Inactive Terminal".equals(name) || "CLICK HERE".equals(name);
             }
             return false;
         });
     }
 
     @NotNull
-    private static final ItemStack getItemStackInHand() {
+    public static final ItemStack getItemStackInHand(@NotNull final Hand hand) {
+        return Helpers.getItemStackInHand(Hand.MAIN_HAND == hand);
+    }
+
+    @NotNull
+    public static final ItemStack getItemStackInMainHand() {
+        return Helpers.getItemStackInHand(true);
+    }
+
+    @NotNull
+    private static final ItemStack getItemStackInHand(final boolean main) {
+        final var cached = main ? Helpers.mainHandHeldItemStack : Helpers.offHandHeldItemStack;
+
+        if (null != cached) {
+            return cached;
+        }
+
         final var player = MinecraftClient.getInstance().player;
-        return null == player ? ItemStack.EMPTY : player.getStackInHand(Hand.MAIN_HAND);
+        final var item = null == player ? ItemStack.EMPTY : player.getStackInHand(Hand.MAIN_HAND);
+
+        if (main) {
+            Helpers.mainHandHeldItemStack = item;
+        } else {
+            Helpers.offHandHeldItemStack = item;
+        }
+
+        return item;
     }
 
     private static final boolean doesHeldItemMatch(@NotNull final Predicate<ItemStack> matcher) {
-        final var stack = Helpers.getItemStackInHand();
+        final var stack = Helpers.getItemStackInMainHand();
         return matcher.test(stack);
     }
 
     private static final boolean doesHeldItemNameMatch(@NotNull final Predicate<String> matcher) {
-        return Helpers.doesHeldItemNameMatch(Helpers.getItemStackInHand(), matcher);
+        return Helpers.doesHeldItemNameMatch(Helpers.getItemStackInMainHand(), matcher);
     }
 
     private static final boolean doesHeldItemNameMatch(@NotNull final ItemStack stack, @NotNull final Predicate<String> matcher) {
+        final var cached = Helpers.mainHandHeldItemStackName;
+
+        if (null != cached) {
+            return matcher.test(cached);
+        }
+
         final var customName = stack.getCustomName();
+
         if (null == customName) {
+            Helpers.mainHandHeldItemStackName = "";
             return false;
         }
+
         final var plain = customName.getString();
+        Helpers.mainHandHeldItemStackName = plain;
+
         return matcher.test(plain);
     }
 
@@ -124,6 +218,10 @@ public final class Helpers {
 
     public static final boolean isHoldingARCMWeaponOrMatches(@NotNull final Predicate<String> matcher) {
         return Helpers.doesHeldItemNameMatch(name -> name.contains("Hyperion") || name.contains("Astraea") || matcher.test(name));
+    }
+
+    public static final boolean isHoldingAGyrokineticWand() {
+        return Helpers.doesHeldItemNameMatch(name -> "Gyrokinetic Wand".equals(name));
     }
 
     @NotNull

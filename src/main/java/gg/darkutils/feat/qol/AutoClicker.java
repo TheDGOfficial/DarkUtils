@@ -65,6 +65,22 @@ public final class AutoClicker {
             this.keyBinding = keyBinding;
         }
 
+        private static final boolean isAutoClickNotAllowedForHeldItem(final boolean right) {
+            return right ? AutoClicker.Key.isAutoClickNotAllowedForHeldItemRc() : AutoClicker.Key.isAutoClickNotAllowedForHeldItemLc();
+
+        }
+
+        private static final boolean isAutoClickNotAllowedForHeldItemRc() {
+            return !Helpers.isHoldingARCMWeaponOrMatches(
+                    name -> DarkUtilsConfig.INSTANCE.autoClickerWorkWithAOTV
+                            && Helpers.matchHoldingAOTV().test(name)
+            );
+        }
+
+        private static final boolean isAutoClickNotAllowedForHeldItemLc() {
+            return !Helpers.isHoldingASwordHuntaxeOrSpade();
+        }
+
         private final void resetState() {
             this.clicking = false;
         }
@@ -73,8 +89,12 @@ public final class AutoClicker {
             return this.keyBinding == keyBinding;
         }
 
+        private final boolean isAutoClickNotAllowedForHeldItem() {
+            return AutoClicker.Key.isAutoClickNotAllowedForHeldItem(AutoClicker.Key.RIGHT == this);
+        }
+
         private final boolean isPressed(final boolean actual) {
-            return (AutoClicker.Key.RIGHT == this ? !Helpers.isHoldingARCMWeaponOrMatches(name -> DarkUtilsConfig.INSTANCE.autoClickerWorkWithAOTV && Helpers.matchHoldingAOTV().test(name)) : !Helpers.isHoldingASwordHuntaxeOrSpade()) && actual;
+            return actual && this.isAutoClickNotAllowedForHeldItem();
         }
 
         private final boolean wasPressed(final boolean actual) {
@@ -82,18 +102,14 @@ public final class AutoClicker {
                 return actual;
             }
 
-            final var right = AutoClicker.Key.RIGHT == this;
-
-            if (!(right
-                    ? Helpers.isHoldingARCMWeaponOrMatches(
-                            name -> DarkUtilsConfig.INSTANCE.autoClickerWorkWithAOTV
-                                    && Helpers.matchHoldingAOTV().test(name))
-                    : Helpers.isHoldingASwordHuntaxeOrSpade())) {
-                return actual;
+            if (!this.keyBinding.isPressed()) {
+                return false;
             }
 
-            if (!this.keyBinding.isPressed()) {
-                return actual;
+            final var right = AutoClicker.Key.RIGHT == this;
+
+            if (AutoClicker.Key.isAutoClickNotAllowedForHeldItem(right)) {
+                return false;
             }
 
             this.clicking = true;
