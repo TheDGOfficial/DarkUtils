@@ -59,14 +59,14 @@ public final class AutoClicker {
 
         @NotNull
         private final KeyBinding keyBinding;
-        private boolean state = true;
+        private boolean clicking;
 
         private Key(@NotNull final KeyBinding keyBinding) {
             this.keyBinding = keyBinding;
         }
 
         private final void resetState() {
-            this.state = true;
+            this.clicking = false;
         }
 
         private final boolean isForKeyBinding(@NotNull final KeyBinding keyBinding) {
@@ -78,7 +78,7 @@ public final class AutoClicker {
         }
 
         private final boolean wasPressed(final boolean actual) {
-            if (actual || !this.state) {
+            if (actual || this.clicking) {
                 return actual;
             }
 
@@ -96,7 +96,7 @@ public final class AutoClicker {
                 return actual;
             }
 
-            this.state = false;
+            this.clicking = true;
 
             var combined = Helpers.isButton().or(Helpers.isCommandBlock());
 
@@ -106,7 +106,7 @@ public final class AutoClicker {
 
             return !right
                     || !(Helpers.doesTargetedBlockMatch(combined)
-                         || Helpers.isLookingAtATerminalEntity());
+                    || Helpers.isLookingAtATerminalEntity());
         }
     }
 }

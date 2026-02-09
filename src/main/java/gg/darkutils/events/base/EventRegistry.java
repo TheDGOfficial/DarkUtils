@@ -89,11 +89,11 @@ public interface EventRegistry {
     /**
      * Triggers a {@link CancellableEvent}, which will run all its listeners in the order of {@link EventPriority}
      * and handling {@link CancellationState}, taking into account {@link EventListener#receiveCancelled()} and returning
-     * a {@link FinalCancellationState}.
+     * a {@link CancellationResult}.
      *
      * @param event The event.
      * @param <T>   The type of the event.
-     * @return The {@link FinalCancellationState}.
+     * @return The {@link CancellationResult}.
      */
     @NotNull
     default <T extends CancellableEvent> CancellationResult triggerEvent(@NotNull final T event) {

@@ -177,7 +177,7 @@ public final class Helpers {
         });
     }
 
-    public static final void notifyForServerTicks(@NotNull final SoundEvent sound, @NotNull final String text, final int serverTicks, @NotNull final Runnable afterDismissHook) {
+    private static final void notifyForServerTicks(@NotNull final SoundEvent sound, @NotNull final String text, final int serverTicks, @NotNull final Runnable afterDismissHook) {
         final var client = MinecraftClient.getInstance();
 
         Helpers.playSound(sound, 1.0F, 1.0F);
