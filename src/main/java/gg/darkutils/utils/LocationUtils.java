@@ -47,6 +47,10 @@ public final class LocationUtils {
         return "dungeon".equals(LocationUtils.mode);
     }
 
+    public static final boolean isInGalatea() {
+        return "foraging_2".equals(LocationUtils.mode);
+    }
+
     public static final boolean isInSkyblock() {
         return GameType.SKYBLOCK == LocationUtils.serverType;
     }

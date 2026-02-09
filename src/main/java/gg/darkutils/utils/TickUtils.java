@@ -1,13 +1,12 @@
 package gg.darkutils.utils;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import gg.darkutils.events.ServerTickEvent;
 import gg.darkutils.events.base.EventRegistry;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import com.mojang.blaze3d.systems.RenderSystem;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Set;
@@ -88,7 +87,7 @@ public final class TickUtils {
         if (condition.getAsBoolean()) {
             action.run();
         } else {
-            TickUtils.tasks.add(new TickUtils.Task(condition, action));
+            TickUtils.tasks.add(new TickUtils.ConditionalTask(condition, action));
         }
     }
 
@@ -106,7 +105,7 @@ public final class TickUtils {
     public static final void awaitLocalPlayer(@NotNull final Consumer<ClientPlayerEntity> action) {
         Objects.requireNonNull(action, "action");
 
-        if (!TickUtils.isCallingFromRenderThread()) {
+        if (TickUtils.isNotCallingFromRenderThread()) {
             TickUtils.queueTickTask(() -> TickUtils.awaitLocalPlayerInternal(action), 1);
             return;
         }
@@ -174,7 +173,7 @@ public final class TickUtils {
         if (0 == interval) {
             throw new IllegalArgumentException("Queueing a repeating tick task with interval zero is prohibited");
         }
-        (client ? TickUtils.tasks : TickUtils.serverTasks).add(new TickUtils.Task(task, interval, true));
+        (client ? TickUtils.tasks : TickUtils.serverTasks).add(new TickUtils.RepeatingTask(task, interval));
     }
 
     /**
@@ -263,16 +262,16 @@ public final class TickUtils {
             TickUtils.checkCallerThread();
             task.run();
         } else {
-            (client ? TickUtils.tasks : TickUtils.serverTasks).add(new TickUtils.Task(task, delay, false));
+            (client ? TickUtils.tasks : TickUtils.serverTasks).add(new TickUtils.OneShotTask(task, delay));
         }
     }
 
-    private static final boolean isCallingFromRenderThread() {
-        return RenderSystem.isOnRenderThread();
+    private static final boolean isNotCallingFromRenderThread() {
+        return !RenderSystem.isOnRenderThread();
     }
 
     private static final void checkCallerThread() {
-        if (!TickUtils.isCallingFromRenderThread()) {
+        if (TickUtils.isNotCallingFromRenderThread()) {
             throw new IllegalStateException("unexpected caller thread with name: " + Thread.currentThread().getName() + ", expected: Render thread");
         }
     }
@@ -281,82 +280,85 @@ public final class TickUtils {
     // Task system
     // ============================================================
 
-    private static final class Task {
+    private sealed interface Task
+            permits TickUtils.OneShotTask, TickUtils.RepeatingTask, TickUtils.ConditionalTask {
+        boolean tick();
+    }
+
+    private static final class OneShotTask implements TickUtils.Task {
         private final @NotNull Runnable action;
-        private final int initialTicks;
-        private final boolean repeats;
-        private final @Nullable BooleanSupplier condition;
         private int ticks;
 
-        /**
-         * Condition-based constructor.
-         */
-        private Task(@NotNull final BooleanSupplier condition, @NotNull final Runnable action) {
+        private OneShotTask(@NotNull final Runnable action, final int delay) {
             super();
 
-            this.condition = condition;
+            if (0 >= delay) {
+                throw new IllegalArgumentException("delay must be > 0");
+            }
             this.action = action;
-            this.initialTicks = -1;
-            this.ticks = -1;
-            this.repeats = false;
+            this.ticks = delay;
         }
 
-        /**
-         * Time-based constructor.
-         */
-        private Task(@NotNull final Runnable action, final int initialTicks, final boolean repeats) {
-            super();
-
-            if (0 >= initialTicks) {
-                throw new IllegalArgumentException("Task interval must be greater than zero");
-            }
-
-            this.condition = null;
-            this.action = action;
-            this.initialTicks = initialTicks;
-            this.ticks = initialTicks;
-            this.repeats = repeats;
-        }
-
-        /**
-         * Ticks the task, running it if it should.
-         *
-         * @return true If the task should be removed.
-         */
-        private final boolean tick() {
-            if (null != this.condition) {
-                if (this.condition.getAsBoolean()) {
-                    this.action.run();
-                    return true; // remove once condition passes
-                }
-
-                return false; // keep until condition is true
-            }
-
-            if (1 >= this.ticks) {
+        @Override
+        public final boolean tick() {
+            if (0 >= --this.ticks) {
                 this.action.run();
-
-                if (this.repeats) {
-                    this.ticks = this.initialTicks;
-                    return false; // keep repeating
-                }
-
-                return true; // one-shot, remove
+                return true; // remove
             }
-
-            this.ticks--;
             return false;
         }
 
         @Override
         public final String toString() {
-            return "Task{" +
-                    "action=" + this.action +
-                    ", initialTicks=" + this.initialTicks +
-                    ", repeats=" + this.repeats +
-                    ", condition=" + this.condition +
-                    ", ticks=" + this.ticks +
-                    '}';
+            return "OneShotTask{ticks=" + this.ticks + ", action=" + this.action + '}';
+        }
+    }
+
+    private static final class RepeatingTask implements TickUtils.Task {
+        private final @NotNull Runnable action;
+        private final int interval;
+        private int ticks;
+
+        private RepeatingTask(@NotNull final Runnable action, final int interval) {
+            super();
+
+            if (0 >= interval) {
+                throw new IllegalArgumentException("interval must be > 0");
+            }
+            this.action = action;
+            this.interval = interval;
+            this.ticks = interval;
+        }
+
+        @Override
+        public final boolean tick() {
+            if (0 >= --this.ticks) {
+                this.action.run();
+                this.ticks = this.interval;
+            }
+            return false; // never removed
+        }
+
+        @Override
+        public final String toString() {
+            return "RepeatingTask{ticks=" + this.ticks + ", interval=" + this.interval + ", action=" + this.action + '}';
+        }
+    }
+
+    private record ConditionalTask(@NotNull BooleanSupplier condition,
+                                   @NotNull Runnable action) implements TickUtils.Task {
+        @Override
+        public final boolean tick() {
+            if (this.condition.getAsBoolean()) {
+                this.action.run();
+                return true; // remove once condition passes
+            }
+            return false;
+        }
+
+        @Override
+        public final @NotNull String toString() {
+            return "ConditionalTask{condition=" + this.condition + ", action=" + this.action + '}';
         }
     }
 }

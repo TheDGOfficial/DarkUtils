@@ -11,7 +11,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityEquipment;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +19,7 @@ import java.util.Objects;
 
 public final class ArmorStandOptimizer {
     private static final @NotNull ReferenceArrayList<ArmorStandEntity> reusableStands = new ReferenceArrayList<>(512);
-    private static final @NotNull ReferenceArrayList<ArmorStandEntity> loadedArmorStands = new ReferenceArrayList<>(512);
+    private static final @NotNull ReferenceArrayList<ArmorStandEntity> loadedArmorStands = new ReferenceArrayList<>(1024);
     private static final @NotNull ReferenceOpenHashSet<ArmorStandEntity> pendingRemovals = new ReferenceOpenHashSet<>(512);
 
     private ArmorStandOptimizer() {
@@ -94,7 +93,7 @@ public final class ArmorStandOptimizer {
     }
 
     private static final boolean isBlankTemporaryStand(@NotNull final ArmorStandEntity armorStand) {
-        return armorStand.age < 10 && null == armorStand.getCustomName() && ArmorStandOptimizer.isInventoryEmpty(armorStand);
+        return 10 > armorStand.age && null == armorStand.getCustomName() && ArmorStandOptimizer.isInventoryEmpty(armorStand);
     }
 
     private static final void refreshArmorStands(@NotNull final MinecraftClient client) {
@@ -164,8 +163,8 @@ public final class ArmorStandOptimizer {
         ((ArmorStandCustomRenderState) armorStand).darkutils$setShouldSkipRender(shouldSkipRender);
     }
 
-    public static final boolean shouldSkipRenderArmorStand(@NotNull final ArmorStandEntity armorStand) {
-        return ArmorStandOptimizer.isEnabled() && ((ArmorStandCustomRenderState) armorStand).darkutils$shouldSkipRender();
+    public static final boolean shouldNotSkipRenderArmorStand(@NotNull final ArmorStandEntity armorStand) {
+        return !ArmorStandOptimizer.isEnabled() || !((ArmorStandCustomRenderState) armorStand).darkutils$shouldSkipRender();
     }
 
     /**
@@ -197,23 +196,23 @@ public final class ArmorStandOptimizer {
         final var deltaY = originY - entity.getY();
         final var deltaZ = originZ - entity.getZ();
 
-        return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ);
+        return deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ;
     }
 
     private static final int medianOfThreeIndex(@NotNull final ReferenceArrayList<ArmorStandEntity> list, final int left, final int right, final double playerX, final double playerY, final double playerZ) {
-        final var middleIndex = (left + right) >>> 1;
+        final var middleIndex = left + right >>> 1;
 
         final var leftDistance = ArmorStandOptimizer.distanceSquaredToStand(playerX, playerY, playerZ, list.get(left));
         final var middleDistance = ArmorStandOptimizer.distanceSquaredToStand(playerX, playerY, playerZ, list.get(middleIndex));
         final var rightDistance = ArmorStandOptimizer.distanceSquaredToStand(playerX, playerY, playerZ, list.get(right));
 
         return leftDistance < middleDistance
-                ? (middleDistance < rightDistance
-                        ? middleIndex
-                        : (leftDistance < rightDistance ? right : left))
-                : (leftDistance < rightDistance
-                        ? left
-                        : (middleDistance < rightDistance ? right : middleIndex));
+                ? middleDistance < rightDistance
+                ? middleIndex
+                : leftDistance < rightDistance ? right : left
+                : leftDistance < rightDistance
+                ? left
+                : middleDistance < rightDistance ? right : middleIndex;
     }
 
     private static final int partition(@NotNull final ReferenceArrayList<ArmorStandEntity> list, final int left, final int right, final double playerX, final double playerY, final double playerZ) {

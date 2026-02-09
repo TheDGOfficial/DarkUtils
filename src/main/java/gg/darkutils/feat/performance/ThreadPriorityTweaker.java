@@ -3,10 +3,10 @@ package gg.darkutils.feat.performance;
 import gg.darkutils.config.DarkUtilsConfig;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +46,8 @@ public final class ThreadPriorityTweaker {
             .stream()
             .filter(tweak -> ThreadPriorityTweaker.NameMatcherMode.EXACT != tweak.nameMatcherMode())
             .toList();
+    @NotNull
+    private static final ThreadGroup ROOT_THREAD_GROUP = ThreadPriorityTweaker.findRootThreadGroup();
 
     private ThreadPriorityTweaker() {
         super();
@@ -198,9 +200,6 @@ public final class ThreadPriorityTweaker {
             thread.setPriority(priority);
         }
     }
-
-    @NotNull
-    private static final ThreadGroup ROOT_THREAD_GROUP = ThreadPriorityTweaker.findRootThreadGroup();
 
     @NotNull
     private static final ThreadGroup findRootThreadGroup() {

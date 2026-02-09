@@ -21,9 +21,8 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -110,7 +109,7 @@ public final class DungeonTimer {
     }
 
     public static final boolean isPhaseFinished(@NotNull final DungeonTimer.DungeonPhase phase) {
-        return null != DungeonTimer.DungeonTimingState.getPhase(phase);
+        return !DungeonTimer.isPhaseNotFinished(phase);
     }
 
     public static final boolean isPhaseNotFinished(@NotNull final DungeonTimer.DungeonPhase phase) {
@@ -125,10 +124,18 @@ public final class DungeonTimer {
         EventRegistry.centralRegistry().addListener(DungeonTimer::onChat);
         ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(DungeonTimer::reset);
 
-        TickUtils.queueRepeatingServerTickTask(() -> ++DungeonTimer.serverTickCounter, 1);
+        TickUtils.queueRepeatingServerTickTask(DungeonTimer::onServerTick, 1);
 
         TickUtils.queueRepeatingTickTask(DungeonTimer::updateDungeonTimer, 1);
         HudElementRegistry.addLast(Identifier.of(DarkUtils.MOD_ID, "dungeon_timer"), (context, tickCounter) -> DungeonTimer.renderDungeonTimer(context));
+    }
+
+    private static final void onServerTick() {
+        if (!LocationUtils.isInDungeons()) {
+            return;
+        }
+
+        ++DungeonTimer.serverTickCounter;
     }
 
     private static final long getPhaseTime(final long prevPhaseTime, final long targetPhaseTime, final boolean live) {
@@ -439,8 +446,13 @@ public final class DungeonTimer {
     }
 
     private static final class DungeonTimingState {
-        @NotNull
-        private static final DungeonTimer.PhaseTiming[] timings = new DungeonTimer.PhaseTiming[DungeonTimer.DungeonPhase.values().length];
+        private static final DungeonTimer.PhaseTiming @NotNull [] timings = new DungeonTimer.PhaseTiming[DungeonTimer.DungeonPhase.values().length];
+
+        private DungeonTimingState() {
+            super();
+
+            throw new UnsupportedOperationException("static class");
+        }
 
         private static final void finishedPhase(@NotNull final DungeonTimer.DungeonPhase phase) {
             final var timings = DungeonTimer.DungeonTimingState.timings;

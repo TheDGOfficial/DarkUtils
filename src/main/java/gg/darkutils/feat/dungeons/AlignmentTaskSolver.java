@@ -129,8 +129,9 @@ public final class AlignmentTaskSolver {
 
     private static final boolean isSolverActive() {
         return DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver
-                && AlignmentTaskSolver.isInDungeons()
+                && null != MinecraftClient.getInstance().world
                 && null != MinecraftClient.getInstance().player
+                && AlignmentTaskSolver.isInDungeons()
                 && AlignmentTaskSolver.isInPhase3();
     }
 
@@ -264,7 +265,8 @@ public final class AlignmentTaskSolver {
     }
 
     private static final void computeTurns() {
-        if (null == MinecraftClient.getInstance().world || AlignmentTaskSolver.directionSet.isEmpty()) {
+        final var world = MinecraftClient.getInstance().world;
+        if (null == world || !AlignmentTaskSolver.isSolverActive() || AlignmentTaskSolver.directionSet.isEmpty()) {
             return;
         }
         for (final var space : AlignmentTaskSolver.grid) {
@@ -274,7 +276,7 @@ public final class AlignmentTaskSolver {
                 continue;
             }
             ItemFrameEntity frame = null;
-            for (final var frameEntity : MinecraftClient.getInstance().world.getEntitiesByType(EntityType.ITEM_FRAME, frameBox, ignored -> true)) {
+            for (final var frameEntity : world.getEntitiesByType(EntityType.ITEM_FRAME, frameBox, ignored -> true)) {
                 if (framePos.equals(frameEntity.getBlockPos())) {
                     frame = frameEntity;
                     break;
@@ -307,7 +309,7 @@ public final class AlignmentTaskSolver {
     }
 
     private static final void onRenderWorld(@NotNull final RenderWorldEvent event) {
-        if (!AlignmentTaskSolver.isInPhase3()) {
+        if (!AlignmentTaskSolver.isSolverActive()) {
             return;
         }
         for (final var space : AlignmentTaskSolver.grid) {
@@ -352,9 +354,8 @@ public final class AlignmentTaskSolver {
     private static final void onInteractEntity(final @NotNull InteractEntityEvent event) {
         final var e = event.entity();
 
-        if (DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver
+        if (AlignmentTaskSolver.isSolverActive()
                 && !AlignmentTaskSolver.directionSet.isEmpty()
-                && AlignmentTaskSolver.isSolverActive()
                 && e instanceof final ItemFrameEntity entity) {
             final var pos = entity.getBlockPos();
 
@@ -365,9 +366,10 @@ public final class AlignmentTaskSolver {
                 if (clickCount == pending) {
                     event.cancellationState().cancel();
                 } else {
-                    if (null != MinecraftClient.getInstance().world) {
+                    final var world = MinecraftClient.getInstance().world;
+                    if (null != world) {
                         final var behind = pos.offset(entity.getHorizontalFacing().getOpposite());
-                        if (MinecraftClient.getInstance().world.getBlockState(behind).isOf(Blocks.SEA_LANTERN)) {
+                        if (world.getBlockState(behind).isOf(Blocks.SEA_LANTERN)) {
                             event.cancellationState().cancel();
                         }
                     }
@@ -381,7 +383,7 @@ public final class AlignmentTaskSolver {
     }
 
     private static final void onPacketReceive(@NotNull final ReceiveMainThreadPacketEvent event) {
-        if (!DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolver || null == MinecraftClient.getInstance().world || !AlignmentTaskSolver.isSolverActive() || AlignmentTaskSolver.directionSet.isEmpty() || !(event.packet() instanceof final EntityTrackerUpdateS2CPacket packet)) {
+        if (!AlignmentTaskSolver.isSolverActive() || AlignmentTaskSolver.directionSet.isEmpty() || !(event.packet() instanceof final EntityTrackerUpdateS2CPacket packet)) {
             return;
         }
 

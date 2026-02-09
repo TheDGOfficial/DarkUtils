@@ -16,12 +16,11 @@ import org.jetbrains.annotations.Nullable;
 public final class SoundLagFix {
     @NotNull
     private static final Object2IntOpenHashMap<SoundLagFix.SoundData> limitData = new Object2IntOpenHashMap<>(128);
+    private static final int limitPerTick = 1;
 
     static {
         SoundLagFix.limitData.defaultReturnValue(0);
     }
-
-    private static final int limitPerTick = 1;
 
     private SoundLagFix() {
         super();
@@ -102,20 +101,10 @@ public final class SoundLagFix {
                                                 @NotNull Identifier sound,
                                                 int cachedHashCode) implements SoundLagFix.SoundData {
 
-        private LocationOriginatingSoundData(double x, double y, double z, float volume, float pitch,
-                                             @NotNull SoundCategory soundCategory,
-                                             @NotNull Identifier sound) {
+        private LocationOriginatingSoundData(final double x, final double y, final double z, final float volume, final float pitch,
+                                             @NotNull final SoundCategory soundCategory,
+                                             @NotNull final Identifier sound) {
             this(x, y, z, volume, pitch, soundCategory, sound, SoundLagFix.LocationOriginatingSoundData.computeHash(x, y, z, volume, pitch, soundCategory, sound));
-        }
-
-        @Override
-        public final boolean equals(@Nullable final Object obj) {
-            return this == obj || obj instanceof final LocationOriginatingSoundData losd && Double.compare(this.x, losd.x) == 0 && Double.compare(this.y, losd.y) == 0 && Double.compare(this.z, losd.z) == 0 && Float.compare(this.volume, losd.volume) == 0 && Float.compare(this.pitch, losd.pitch) == 0 && this.soundCategory == losd.soundCategory && this.sound.equals(losd.sound);
-        }
-
-        @Override
-        public final int hashCode() {
-            return this.cachedHashCode;
         }
 
         private static final int computeHash(final double x, final double y, final double z, final float volume, final float pitch,
@@ -130,6 +119,16 @@ public final class SoundLagFix {
             result = 31 * result + sound.hashCode();
             return result;
         }
+
+        @Override
+        public final boolean equals(@Nullable final Object obj) {
+            return this == obj || obj instanceof final SoundLagFix.LocationOriginatingSoundData losd && 0 == Double.compare(this.x, losd.x) && 0 == Double.compare(this.y, losd.y) && 0 == Double.compare(this.z, losd.z) && 0 == Float.compare(this.volume, losd.volume) && 0 == Float.compare(this.pitch, losd.pitch) && this.soundCategory == losd.soundCategory && this.sound.equals(losd.sound);
+        }
+
+        @Override
+        public final int hashCode() {
+            return this.cachedHashCode;
+        }
     }
 
     private record EntityOriginatingSoundData(int entityId, float volume, float pitch,
@@ -137,31 +136,31 @@ public final class SoundLagFix {
                                               @NotNull Identifier sound,
                                               int cachedHashCode) implements SoundLagFix.SoundData {
 
-        private EntityOriginatingSoundData(int entityId, float volume, float pitch,
-                                           @NotNull SoundCategory soundCategory,
-                                           @NotNull Identifier sound) {
+        private EntityOriginatingSoundData(final int entityId, final float volume, final float pitch,
+                                           @NotNull final SoundCategory soundCategory,
+                                           @NotNull final Identifier sound) {
             this(entityId, volume, pitch, soundCategory, sound, SoundLagFix.EntityOriginatingSoundData.computeHash(entityId, volume, pitch, soundCategory, sound));
         }
 
-        @Override
-        public final boolean equals(@Nullable final Object obj) {
-            return this == obj || obj instanceof final EntityOriginatingSoundData eosd && this.entityId == eosd.entityId && Float.compare(this.volume, eosd.volume) == 0 && Float.compare(this.pitch, eosd.pitch) == 0 && this.soundCategory == eosd.soundCategory && this.sound.equals(eosd.sound);
-        }
-
-        @Override
-        public final int hashCode() {
-            return this.cachedHashCode;
-        }
-
         private static final int computeHash(final int entityId, final float volume, final float pitch,
-                                              @NotNull final SoundCategory soundCategory,
-                                              @NotNull final Identifier sound) {
+                                             @NotNull final SoundCategory soundCategory,
+                                             @NotNull final Identifier sound) {
             var result = Integer.hashCode(entityId);
             result = 31 * result + Float.hashCode(volume);
             result = 31 * result + Float.hashCode(pitch);
             result = 31 * result + soundCategory.hashCode();
             result = 31 * result + sound.hashCode();
             return result;
+        }
+
+        @Override
+        public final boolean equals(@Nullable final Object obj) {
+            return this == obj || obj instanceof final SoundLagFix.EntityOriginatingSoundData eosd && this.entityId == eosd.entityId && 0 == Float.compare(this.volume, eosd.volume) && 0 == Float.compare(this.pitch, eosd.pitch) && this.soundCategory == eosd.soundCategory && this.sound.equals(eosd.sound);
+        }
+
+        @Override
+        public final int hashCode() {
+            return this.cachedHashCode;
         }
     }
 }
