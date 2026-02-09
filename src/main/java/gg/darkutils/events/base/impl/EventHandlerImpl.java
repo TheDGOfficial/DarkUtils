@@ -166,7 +166,7 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
         }
     }
 
-    private static final void handleListenerError(@NotNull final EventListener<? extends Event> listener, @NotNull final Event event, @NotNull final Exception error) {
+    private static final void handleListenerError(@NotNull final EventListener<? extends Event> listener, @NotNull final Event event, @NotNull final Throwable error) {
         final var actualListener = listener instanceof final EventListener.Impl<? extends Event> delegatingEventListener
                 ? delegatingEventListener.listener()
                 : listener;
