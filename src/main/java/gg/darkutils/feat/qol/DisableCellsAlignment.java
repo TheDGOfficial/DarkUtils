@@ -27,10 +27,8 @@ public final class DisableCellsAlignment {
 
         if (itemStack.isOf(Items.BLAZE_ROD)) {
             final var customNameText = itemStack.getCustomName();
-            if (null != customNameText) {
-                if ("Gyrokinetic Wand".equals(customNameText.getString())) {
-                    event.cancellationState().cancel();
-                }
+            if (null != customNameText && "Gyrokinetic Wand".equals(customNameText.getString())) {
+                event.cancellationState().cancel();
             }
         }
     }

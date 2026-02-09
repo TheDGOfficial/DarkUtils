@@ -2,7 +2,6 @@ package gg.darkutils.events;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
-import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +21,7 @@ public record OpenScreenEvent(@NotNull CancellationState cancellationState,
                               @NotNull Text name) implements CancellableEvent {
     /**
      * Creates a new {@link OpenScreenEvent} suitable for triggering the event.
-     * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.
+     * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
      *
      * @param screenHandlerType The screen handler type.
      * @param name              The name of the screen.

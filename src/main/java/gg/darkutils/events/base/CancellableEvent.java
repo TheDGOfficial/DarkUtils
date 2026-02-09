@@ -23,8 +23,8 @@ public non-sealed interface CancellableEvent extends Event {
      * EventRegistry.centralRegistry().triggerEvent(this);
      *}
      * <p>
-     * The returned value should further be checked to see if it is cancelled or not.
-     * Alternatively, use {@link CancellableEvent#triggerAndCheckIsCancelled()}.
+     * The returned value should further be checked to see if it is canceled or not.
+     * Alternatively, use {@link CancellableEvent#triggerAndCancelled()}.
      */
     @NotNull
     default CancellationResult trigger() {
@@ -32,9 +32,9 @@ public non-sealed interface CancellableEvent extends Event {
     }
 
     /**
-     * Triggers this cancellable event in the central event registry, and checks if it is cancelled.
+     * Triggers this cancellable event in the central event registry, and checks if it is canceled.
      * <p>
-     * All of the below perform the same check, just some are shorter:
+     * All the below perform the same check, just some are shorter:
      * {@snippet :
      * // shortest
      * if (this.triggerAndCancelled()) {
@@ -53,16 +53,16 @@ public non-sealed interface CancellableEvent extends Event {
      *}
      * <p>
      * It is a preference which one you use, but this is recommended over plain trigger as it encapsulates
-     * the is cancelled call inside this method, preventing you from accidentally calling it 2 times which throws.
+     * the is canceled call inside this method, preventing you from accidentally calling it 2 times which throws.
      */
     default boolean triggerAndCancelled() {
-        return this.trigger().isCancelled();
+        return EventRegistry.centralRegistry().triggerEvent(this).isCancelled();
     }
 
     /**
-     * Triggers this cancellable event in the central event registry, and checks if its NOT cancelled.
+     * Triggers this cancellable event in the central event registry, and checks if it's NOT canceled.
      * <p>
-     * All of the below perform the same check, just some are shorter:
+     * All the below perform the same check, just some are shorter:
      * {@snippet :
      * // short
      * if (this.triggerAndNotCancelled()) {
@@ -86,9 +86,9 @@ public non-sealed interface CancellableEvent extends Event {
      *}
      * <p>
      * It is a preference which one you use, but this is recommended over manually negating, preventing
-     * you from possibly forgetting to negate the cancelled boolean.
+     * you from possibly forgetting to negate the canceled boolean.
      */
     default boolean triggerAndNotCancelled() {
-        return !this.triggerAndCancelled();
+        return !EventRegistry.centralRegistry().triggerEvent(this).isCancelled();
     }
 }

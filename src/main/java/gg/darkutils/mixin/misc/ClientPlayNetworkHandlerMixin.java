@@ -4,7 +4,6 @@ import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.OpenScreenEvent;
 import gg.darkutils.events.SentCommandEvent;
 import gg.darkutils.events.SentMessageEvent;
-import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientCommonNetworkHandler;

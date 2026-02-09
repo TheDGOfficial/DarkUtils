@@ -2,7 +2,6 @@ package gg.darkutils.mixin.misc;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.RenderWorldEvent;
-import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.LivingEntity;

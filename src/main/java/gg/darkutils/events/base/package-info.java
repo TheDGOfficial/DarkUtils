@@ -1,6 +1,6 @@
 /**
  * A feature-complete, type-safe, and performant event system designed with
- * thread-safety, error handling, listener priorities, cancellation semantics and re-entrancy in mind.
+ * thread-safety, error handling, listener priorities, cancellation semantics and re-entrance in mind.
  * <p>
  * <b>Defining an event</b><br>
  * To define a new event, simply declare a record implementing either
@@ -16,7 +16,7 @@
  *}
  *
  * <b>Registering a listener</b><br>
- * Register listeners for events using {@link gg.darkutils.events.base.EventRegistry#addListener(gg.darkutils.events.base.EventListener, gg.darkutils.events.base.Event[])}:
+ * Register listeners for events using {@link gg.darkutils.events.base.EventRegistry#addListener(java.util.function.Consumer, gg.darkutils.events.base.Event[])}:
  * {@snippet :
  * // Don't forget to call .init()!
  * public void init() {

@@ -2,7 +2,6 @@ package gg.darkutils.config;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.events.ConfigScreenOpenEvent;
-import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import gg.darkutils.utils.LogLevel;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;

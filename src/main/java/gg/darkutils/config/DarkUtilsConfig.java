@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.events.ConfigSaveFinishEvent;
 import gg.darkutils.events.ConfigSaveStartEvent;
-import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import gg.darkutils.utils.LogLevel;
 import net.fabricmc.loader.api.FabricLoader;

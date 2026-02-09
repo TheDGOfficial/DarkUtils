@@ -12,13 +12,13 @@ public enum CancellationResult {
     private CancellationResult() {
     }
 
-    public final boolean isCancelled() {
-        return this == CancellationResult.CANCELLED;
-    }
-
     @NotNull
     public static final CancellationResult of(final boolean cancelled) {
         return cancelled ? CancellationResult.CANCELLED : CancellationResult.NOT_CANCELLED;
+    }
+
+    public final boolean isCancelled() {
+        return CancellationResult.CANCELLED == this;
     }
 }
 
