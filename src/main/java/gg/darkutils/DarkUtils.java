@@ -34,10 +34,9 @@ import gg.darkutils.feat.qol.VanillaMode;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
-import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.ButtonData;
 import gg.darkutils.utils.chat.ChatUtils;
+import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.SimpleStyle;
 import gg.darkutils.utils.chat.TextBuilder;
 import net.fabricmc.api.ClientModInitializer;
@@ -59,7 +58,6 @@ import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.concurrent.CancellationException;
 
 public final class DarkUtils implements ClientModInitializer {
     public static final @NotNull String MOD_ID = "darkutils";
@@ -114,7 +112,9 @@ public final class DarkUtils implements ClientModInitializer {
         if (null == error) {
             DarkUtils.logMessage(level, formattedMessage);
         } else {
-            assert LogLevel.ERROR != level : "tried to log an error at a log level of " + level.name();
+            if (LogLevel.ERROR != level) {
+                throw new IllegalArgumentException("tried to log an error at a log level of " + level.name());
+            }
 
             // Append: error type, error reason (message), source file and line number to the message if provided.
             formattedMessage += ": " + DarkUtils.extractCodeDetails(error);
@@ -177,24 +177,30 @@ public final class DarkUtils implements ClientModInitializer {
 
         final var desc = error.getMessage();
         final var stack = error.getStackTrace();
-        final StackTraceElement topOfStack = stack.length > 0 ? stack[0] : null;
+        final var topOfStack = 0 < stack.length ? stack[0] : null;
 
-        var fileName = null != topOfStack ? topOfStack.getFileName() : null;
+        final var fileName = DarkUtils.getFileName(topOfStack);
+
+        final var lineNumber = null == topOfStack ? -1 : topOfStack.getLineNumber();
+        final var loc = null == fileName ? null : fileName + (0 <= lineNumber ? " line " + lineNumber : "");
+
+        return type + (null == desc ? "" : ": " + desc) + (null == loc ? "" : " at " + loc);
+    }
+
+    private static final @Nullable String getFileName(@Nullable final StackTraceElement topOfStack) {
+        @Nullable var fileName = null == topOfStack ? null : topOfStack.getFileName();
 
         if (null == fileName) {
-            fileName = null != topOfStack ? topOfStack.getClassName() : null;
+            fileName = null == topOfStack ? null : topOfStack.getClassName();
             if (null != fileName) {
                 // if no file information is available, assume .java
                 // hopefully it's not kotlin, groovy or scala
                 final var lastDot = fileName.lastIndexOf('.');
-                fileName = (lastDot >= 0 ? fileName.substring(lastDot + 1) : fileName) + ".java";
+                return (0 <= lastDot ? fileName.substring(lastDot + 1) : fileName) + ".java";
             }
         }
 
-        final var lineNumber = null != topOfStack ? topOfStack.getLineNumber() : -1;
-        final var loc = null != fileName ? fileName + (lineNumber >= 0 ? " line " + lineNumber : "") : null;
-
-        return type + (null != desc ? ": " + desc : "") + (null != loc ? " at " + loc : "");
+        return fileName;
     }
 
     @NotNull
@@ -217,20 +223,13 @@ public final class DarkUtils implements ClientModInitializer {
         for (final var initializer : initializers) {
             try {
                 initializer.run();
-            } catch (final Exception error) {
-                if (error instanceof InterruptedException) {
-                    Thread.currentThread().interrupt(); // re-set the interrupted flag
-                    throw new RuntimeException(error); // propagate upwards
-                } else if (error instanceof CancellationException) {
-                    throw error; // a CompletableFuture or Future was cancelled, re-throw to propagate upwards to stop execution
-                }
-
+            } catch (final Throwable error) {
                 DarkUtils.handleInitError(error);
             }
         }
     }
 
-    private static final void handleInitError(@NotNull final Exception error) {
+    private static final void handleInitError(@NotNull final Throwable error) {
         final var rootError = DarkUtils.getRootError(error, DarkUtils::isOurModuleFrame);
 
         final var ste = DarkUtils.findRelevantStackTrace(rootError.getStackTrace());

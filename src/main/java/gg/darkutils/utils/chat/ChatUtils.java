@@ -5,9 +5,9 @@ import gg.darkutils.events.SentCommandEvent;
 import gg.darkutils.events.SentMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LazyConstants;
-import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RoundingMode;
+import gg.darkutils.utils.TickUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
@@ -76,7 +76,7 @@ public final class ChatUtils {
 
     public static final void sendMessageToLocalPlayer(@NotNull final Text text) {
         // Ensure player is available and no lost messages
-        // The awaitLocalPlayer method ensures correct threading behaviour internally.
+        // The awaitLocalPlayer method ensures correct threading behavior internally.
         TickUtils.awaitLocalPlayer(player -> player.sendMessage(text, false));
     }
 

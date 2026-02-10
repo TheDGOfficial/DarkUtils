@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
-public final class LivingEntityMixin {
+final class LivingEntityMixin {
     private LivingEntityMixin() {
         super();
 

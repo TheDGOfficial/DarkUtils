@@ -5,6 +5,7 @@ import gg.darkutils.events.UseItemEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.ItemUtils;
 import net.minecraft.registry.tag.ItemTags;
+import net.minecraft.util.Hand;
 import org.jetbrains.annotations.NotNull;
 
 public final class PreventUselessBlockHit {
@@ -19,7 +20,7 @@ public final class PreventUselessBlockHit {
     }
 
     private static final void onUseItem(@NotNull final UseItemEvent event) {
-        if (!DarkUtilsConfig.INSTANCE.preventUselessBlockHit) {
+        if (!DarkUtilsConfig.INSTANCE.preventUselessBlockHit || Hand.MAIN_HAND != event.hand()) {
             return;
         }
 

@@ -2,11 +2,10 @@ package gg.darkutils.events;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
-import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LazyConstants;
+import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.SimpleFormatting;
-import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleStyle;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.text.Text;
@@ -46,7 +45,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
 
     /**
      * Creates a new {@link ReceiveGameMessageEvent} suitable for triggering the event.
-     * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.
+     * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
      *
      * @param message The message.
      */

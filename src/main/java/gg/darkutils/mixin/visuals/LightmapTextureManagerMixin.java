@@ -1,6 +1,5 @@
 package gg.darkutils.mixin.visuals;
 
-import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.network.ClientPlayerEntity;

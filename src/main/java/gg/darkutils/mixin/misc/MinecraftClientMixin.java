@@ -4,18 +4,22 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.InteractEntityEvent;
-import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.feat.qol.AutoClicker;
+import gg.darkutils.utils.Helpers;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.EntityHitResult;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -46,6 +50,16 @@ final class MinecraftClientMixin {
             // vanilla game only sets priority to max for processors with 4 or more cores, but it is best to have max priority no matter the core count.
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         }
+    }
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    private final void darkutils$onStartTick(@NotNull final CallbackInfo ci) {
+        Helpers.resetHeldItemCache();
+    }
+
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;updateCrosshairTarget(F)V", shift = At.Shift.AFTER))
+    private final void darkutils$afterCrosshairTargetUpdate(@NotNull final CallbackInfo ci) {
+        Helpers.resetTargetCache();
     }
 
     @Inject(method = "handleInputEvents", at = @At("HEAD"))

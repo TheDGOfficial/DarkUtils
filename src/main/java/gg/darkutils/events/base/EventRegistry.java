@@ -4,6 +4,8 @@ import gg.darkutils.events.base.impl.EventRegistryImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Consumer;
+
 /**
  * Defines a {@link EventRegistry}.
  */
@@ -50,7 +52,7 @@ public interface EventRegistry {
      * @param <T>                    The type of the event.
      */
     @SuppressWarnings("unchecked")
-    default <T extends Event> void addListener(@NotNull final EventListener<T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled, @Nullable final T... doNotPassThisParameter) {
+    default <T extends Event> void addListener(@NotNull final Consumer<T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled, @Nullable final T... doNotPassThisParameter) {
         this.addListener(EventListener.create(listener, priority, receiveCancelled), doNotPassThisParameter); // Passing it here is OK
     }
 
@@ -63,7 +65,7 @@ public interface EventRegistry {
      * @param <T>                    The type of the event.
      */
     @SuppressWarnings("unchecked")
-    default <T extends Event> void addListener(@NotNull final EventListener<T> listener, @Nullable final T... doNotPassThisParameter) {
+    default <T extends Event> void addListener(@NotNull final Consumer<T> listener, @Nullable final T... doNotPassThisParameter) {
         if (null == doNotPassThisParameter || 0 != doNotPassThisParameter.length) {
             throw new IllegalArgumentException("second parameter must not be manually passed");
         }
@@ -83,17 +85,17 @@ public interface EventRegistry {
             throw new IllegalArgumentException("listener method has wrong parameter with type " + eventType.getName());
         }
 
-        this.getEventHandler((Class<T>) eventType).addListener((EventListener<? super Event>) listener);
+        this.getEventHandler((Class<T>) eventType).addListener((Consumer<? super Event>) (Object) listener);
     }
 
     /**
      * Triggers a {@link CancellableEvent}, which will run all its listeners in the order of {@link EventPriority}
      * and handling {@link CancellationState}, taking into account {@link EventListener#receiveCancelled()} and returning
-     * a {@link FinalCancellationState}.
+     * a {@link CancellationResult}.
      *
      * @param event The event.
      * @param <T>   The type of the event.
-     * @return The {@link FinalCancellationState}.
+     * @return The {@link CancellationResult}.
      */
     @NotNull
     default <T extends CancellableEvent> CancellationResult triggerEvent(@NotNull final T event) {

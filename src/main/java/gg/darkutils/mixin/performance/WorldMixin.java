@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 
 @Mixin(World.class)
-public final class WorldMixin {
+final class WorldMixin {
     @Final
     @Shadow
     @NotNull

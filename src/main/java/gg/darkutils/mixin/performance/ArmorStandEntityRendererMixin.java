@@ -2,11 +2,10 @@ package gg.darkutils.mixin.performance;
 
 import gg.darkutils.feat.performance.ArmorStandOptimizer;
 import net.minecraft.client.render.Frustum;
-import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.ArmorStandEntityRenderer;
+import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.state.ArmorStandEntityRenderState;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,16 +22,11 @@ abstract class ArmorStandEntityRendererMixin<T extends ArmorStandEntity, S exten
 
     @Redirect(method = "hasLabel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/decoration/ArmorStandEntity;isCustomNameVisible()Z"))
     private final boolean darkutils$skipRenderingLabelIfEnabled(@NotNull final ArmorStandEntity armorStand) {
-        return armorStand.isCustomNameVisible() && !ArmorStandOptimizer.shouldSkipRenderArmorStand(armorStand);
+        return armorStand.isCustomNameVisible() && ArmorStandOptimizer.shouldNotSkipRenderArmorStand(armorStand);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public final boolean shouldRender(@NotNull final T entity, @NotNull final Frustum frustum, final double x, final double y, final double z) {
-        if (ArmorStandOptimizer.shouldSkipRenderArmorStand(entity)) {
-            return false;
-        }
-
-        return super.shouldRender(entity, frustum, x, y, z);
+        return ArmorStandOptimizer.shouldNotSkipRenderArmorStand(entity) && super.shouldRender(entity, frustum, x, y, z);
     }
 }

@@ -1,7 +1,7 @@
 package gg.darkutils.mixin.performance;
 
-import gg.darkutils.DarkUtils;
 import com.llamalad7.mixinextras.sugar.Local;
+import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;

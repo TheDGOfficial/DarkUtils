@@ -20,6 +20,12 @@ public final class ServerTPSCalculator {
 
     private static @Nullable IntConsumer hook;
 
+    private ServerTPSCalculator() {
+        super();
+
+        throw new UnsupportedOperationException("static-only class");
+    }
+
     private static final void calculateTPS() {
         if (!ServerTPSCalculator.enableTPSCalculationTemporarily) {
             return;
@@ -43,12 +49,6 @@ public final class ServerTPSCalculator {
                 hook.accept(ServerTPSCalculator.lastTPS);
             }
         }
-    }
-
-    private ServerTPSCalculator() {
-        super();
-
-        throw new UnsupportedOperationException("static-only class");
     }
 
     public static final void init() {
