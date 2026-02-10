@@ -324,6 +324,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Block Entity Unload Lag Fix",
                 "Fixes a bug in Minecraft's bug tracker causing lag when unloading a large amount of block entities.",
                 config.blockEntityUnloadLagFix, newValue -> config.blockEntityUnloadLagFix = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Viewport Cache",
+                "Caches viewport GL calls if the viewport did not change, improving performance.",
+                config.viewportCache, newValue -> config.viewportCache = newValue);
     }
 
     private static final void addBugfixes(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

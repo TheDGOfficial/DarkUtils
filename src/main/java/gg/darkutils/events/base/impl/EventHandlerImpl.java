@@ -155,6 +155,8 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
             }
         }
 
+        // Fallback to slower path if 2 or more listeners
+
         // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
         for (var i = 0; size > i; ++i) {
             final var listener = localListeners.get(i);

@@ -58,7 +58,6 @@ import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.concurrent.CancellationException;
 
 public final class DarkUtils implements ClientModInitializer {
     public static final @NotNull String MOD_ID = "darkutils";
