@@ -10,6 +10,7 @@ import gg.darkutils.utils.chat.SimpleStyle;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Set;
@@ -47,10 +48,22 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * Creates a new {@link ReceiveGameMessageEvent} suitable for triggering the event.
      * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
      *
+     * @param cancellationState The cancellation state holder.
+     * @param message           The message.
+     * @param contentSupplier   The content supplier.
+     */
+    public ReceiveGameMessageEvent(@NotNull final CancellationState cancellationState, @NotNull final Text message, @NotNull final Supplier<String> contentSupplier) {
+        this(cancellationState, message, contentSupplier, LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(ReceiveGameMessageEvent.ALL_STYLE_COMBINATIONS, style -> ChatUtils.hasFormatting(message, style, contentSupplier))));
+    }
+
+    /**
+     * Creates a new {@link ReceiveGameMessageEvent} suitable for triggering the event.
+     * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
+     *
      * @param message The message.
      */
     public ReceiveGameMessageEvent(@NotNull final Text message) {
-        this(CancellationState.ofFresh(), message, LazyConstants.lazyConstantOf(message::getString), LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(ReceiveGameMessageEvent.ALL_STYLE_COMBINATIONS, style -> ChatUtils.hasFormatting(message, style))));
+        this(CancellationState.ofFresh(), message, LazyConstants.lazyConstantOf(() -> ChatUtils.removeControlCodes(message.getString())));
     }
 
     public static final void init() {
@@ -119,10 +132,41 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * event.matches("search") // same result
      *}
      *
+     * @param search The string that is being earched for exact equality.
      * @return Whether the received (plain) message matches the given search or not.
      */
     public final boolean matches(@NotNull final String search) {
         return search.equals(this.content());
+    }
+
+    /**
+     * Extracts a substring from the message, strictly starting after the given {@code strictStart}
+     * (exclusive) and ending before the first occurrence of the specified {@code end} delimiter
+     * (exclusive).
+     *
+     * <p>This method requires the message to start with {@code strictStart}. The {@code end}
+     * delimiter must appear after the prefix.</p>
+     *
+     * <p>This implementation is optimized for strict prefix-based extraction and is the
+     * fastest approach for this specific use case.</p>
+     *
+     * @param strictStart the required starting prefix (must match at index 0)
+     * @param end the delimiter marking the end of the extracted section
+     * @return the extracted substring, or {@code null} if the message does not start with
+     *         {@code strictStart} or if the {@code end} delimiter is not found after it
+     */
+    @Nullable
+    public final String extractPart(@NotNull final String strictStart, @NotNull final char end) {
+        final var content = this.content();
+
+        if (!content.startsWith(strictStart)) {
+            return null;
+        }
+
+        final int from = strictStart.length();
+        final int to = content.indexOf(end, from);
+
+        return -1 == to ? null : content.substring(from, to);
     }
 
     /**

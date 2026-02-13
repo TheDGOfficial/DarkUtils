@@ -11,6 +11,8 @@ buildscript {
 import javassist.bytecode.ClassFile
 import javassist.bytecode.MethodInfo
 
+//import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 plugins {
     id 'fabric-loom' version "${loom_version}"
     id 'maven-publish'
@@ -87,7 +89,35 @@ dependencies {
     modApi('net.hypixel:mod-api:1.0.1') {
         exclude(group: 'net.fabricmc.fabric-api')
     }
+
+    /*testImplementation('org.junit.jupiter:junit-jupiter:6.1.0-M1')
+    testImplementation('org.junit.jupiter:junit-jupiter-api:6.1.0-M1')
+
+    testRuntimeOnly('org.junit.platform:junit-platform-launcher:6.1.0-M1')*/
 }
+
+/*tasks {
+    test {
+        useJUnitPlatform()
+
+        testLogging {
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            outputs.upToDateWhen { false }
+            showStandardStreams = true
+        }
+    }
+}
+
+configurations {
+    testImplementation.extendsFrom compileOnly
+}
+
+tasks.withType(Test).configureEach {
+    reports {
+        html.required = false
+        junitXml.required = false
+    }
+}*/
 
 processResources {
     // Capture version at configuration time

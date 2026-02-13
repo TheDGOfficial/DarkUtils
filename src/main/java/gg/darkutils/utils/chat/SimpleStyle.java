@@ -1,6 +1,9 @@
 package gg.darkutils.utils.chat;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.text.Style;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,6 +15,18 @@ import java.util.Objects;
  * Provides composable style definitions that start from {@link Style#EMPTY}.
  */
 public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleStyle.ColoredStyle, SimpleStyle.FormattedStyle, SimpleStyle.CenteredStyle, SimpleStyle.CompositeStyle {
+    @NotNull
+    static final Int2ObjectMap<String> RGB_TO_LEGACY = SimpleStyle.createRgbLookup();
+
+    private static @NotNull Int2ObjectMap<String> createRgbLookup() {
+        final var values = SimpleColor.values();
+        final var map = new Int2ObjectOpenHashMap<String>(values.length);
+        for (final var color : values) {
+            map.put(color.toRgb(), color.toFormatting().toString());
+        }
+        return Int2ObjectMaps.unmodifiable(map);
+    }
+
     // === Static factory methods ===
 
     static @NotNull SimpleStyle.InheritedStyle inherited() {
@@ -97,6 +112,47 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
             return this.applyStyle(finalStyle);
         }
         return finalStyle;
+    }
+
+    /**
+     * Returns legacy raw formatting characters (e.g. "§6§l").
+     *
+     * CompositeStyle preserves insertion order.
+     * Non-composite styles use deterministic ordering (color first).
+     */
+    default @NotNull String getRawFormattingCharacters() {
+        if (this instanceof SimpleStyle.CompositeStyle(final var styles)) {
+            final var builder = new StringBuilder(styles.size() * 2);
+            for (final var style : styles) {
+                SimpleStyle.appendLegacyFormatting(builder, style);
+            }
+            return builder.toString();
+        }
+
+        // Non-composite: add color first, then formatting
+        final var builder = new StringBuilder(4);
+        SimpleStyle.appendLegacyFormatting(builder, this);
+
+        return builder.toString();
+    }
+
+    private static void appendLegacyFormatting(@NotNull final StringBuilder builder, @NotNull final SimpleStyle style) {
+        if (style instanceof SimpleStyle.ColoredStyle(final var rgb)) {
+            SimpleStyle.appendColor(builder, rgb);
+        } else if (style instanceof SimpleStyle.FormattedStyle(final var formatting)) {
+            builder.append(formatting.toFormatting());
+        }
+        // Ignore CenteredStyle & InheritedStyle
+    }
+
+    private static void appendColor(@NotNull final StringBuilder builder, final int rgb) {
+        // Match against SimpleColor values
+        final var legacy = SimpleStyle.RGB_TO_LEGACY.get(rgb);
+        if (null != legacy) {
+            builder.append(legacy);
+        }
+
+        // Unsupported RGB (no legacy equivalent) → do nothing
     }
 
     // === Implementations ===
