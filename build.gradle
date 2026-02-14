@@ -357,11 +357,10 @@ abstract class InstallToModFolderTask extends DefaultTask {
                 StandardCopyOption.REPLACE_EXISTING
         )
 
-        logger.lifecycle("DarkUtils jar installed successfully:")
-        logger.lifecycle("")
+        logger.lifecycle('DarkUtils jar installed successfully:')
         logger.lifecycle("${fileName} -> ${modsDir}")
-        logger.lifecycle("")
-        logger.lifecycle("You do not need to copy manually to your mod folder.")
+        logger.lifecycle('')
+        logger.lifecycle('You do not need to copy manually to your mod folder.')
     }
 }
 
