@@ -4,6 +4,7 @@
 build/
 out/
 classes/
+dev.properties
 
 # eclipse
 
