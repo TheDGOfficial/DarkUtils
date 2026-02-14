@@ -10,6 +10,7 @@ import net.minecraft.network.packet.s2c.play.PlaySoundFromEntityS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
+import net.minecraft.registry.Registries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -79,13 +80,13 @@ public final class SoundLagFix {
         @NotNull
         private static SoundLagFix.SoundData from(@NotNull final PlaySoundS2CPacket packet) {
             // Intentionally does not capture .getSeed() to the record as it's a random 64-bit long created for every packet, would make all sound data objects return a different hashCode and equals and our rate-limit would never work with it.
-            return SoundLagFix.SoundData.debug(new SoundLagFix.LocationOriginatingSoundData(packet.getX(), packet.getY(), packet.getZ(), packet.getVolume(), packet.getPitch(), packet.getCategory(), packet.getSound().value().id()));
+            return SoundLagFix.SoundData.debug(new SoundLagFix.LocationOriginatingSoundData(packet.getX(), packet.getY(), packet.getZ(), packet.getVolume(), packet.getPitch(), packet.getCategory(), Registries.SOUND_EVENT.getRawId(packet.getSound().value())));
         }
 
         @NotNull
         private static SoundLagFix.SoundData from(@NotNull final PlaySoundFromEntityS2CPacket packet) {
             // Intentionally does not capture .getSeed() to the record as it's a random 64-bit long created for every packet, would make all sound data objects return a different hashCode and equals and our rate-limit would never work with it.
-            return SoundLagFix.SoundData.debug(new SoundLagFix.EntityOriginatingSoundData(packet.getEntityId(), packet.getVolume(), packet.getPitch(), packet.getCategory(), packet.getSound().value().id()));
+            return SoundLagFix.SoundData.debug(new SoundLagFix.EntityOriginatingSoundData(packet.getEntityId(), packet.getVolume(), packet.getPitch(), packet.getCategory(), Registries.SOUND_EVENT.getRawId(packet.getSound().value())));
         }
 
         @NotNull
@@ -98,31 +99,31 @@ public final class SoundLagFix {
 
     private record LocationOriginatingSoundData(double x, double y, double z, float volume, float pitch,
                                                 @NotNull SoundCategory soundCategory,
-                                                @NotNull Identifier sound,
+                                                @NotNull int sound,
                                                 int cachedHashCode) implements SoundLagFix.SoundData {
 
         private LocationOriginatingSoundData(final double x, final double y, final double z, final float volume, final float pitch,
                                              @NotNull final SoundCategory soundCategory,
-                                             @NotNull final Identifier sound) {
+                                             @NotNull final int sound) {
             this(x, y, z, volume, pitch, soundCategory, sound, SoundLagFix.LocationOriginatingSoundData.computeHash(x, y, z, volume, pitch, soundCategory, sound));
         }
 
         private static final int computeHash(final double x, final double y, final double z, final float volume, final float pitch,
                                              @NotNull final SoundCategory soundCategory,
-                                             @NotNull final Identifier sound) {
-            var result = Double.hashCode(x);
-            result = 31 * result + Double.hashCode(y);
+                                             @NotNull final int sound) {
+            var result = sound; // same as Integer.hashCode, it returns the int value itself
+            result = 31 * result + soundCategory.hashCode();
+            result = 31 * result + Double.hashCode(x);
             result = 31 * result + Double.hashCode(z);
+            result = 31 * result + Double.hashCode(y);
             result = 31 * result + Float.hashCode(volume);
             result = 31 * result + Float.hashCode(pitch);
-            result = 31 * result + soundCategory.hashCode();
-            result = 31 * result + sound.hashCode();
             return result;
         }
 
         @Override
         public final boolean equals(@Nullable final Object obj) {
-            return this == obj || obj instanceof final SoundLagFix.LocationOriginatingSoundData losd && 0 == Double.compare(this.x, losd.x) && 0 == Double.compare(this.y, losd.y) && 0 == Double.compare(this.z, losd.z) && 0 == Float.compare(this.volume, losd.volume) && 0 == Float.compare(this.pitch, losd.pitch) && this.soundCategory == losd.soundCategory && this.sound.equals(losd.sound);
+            return this == obj || obj instanceof final SoundLagFix.LocationOriginatingSoundData losd && this.sound == losd.sound && this.soundCategory == losd.soundCategory && 0 == Double.compare(this.x, losd.x) && 0 == Double.compare(this.z, losd.z) && 0 == Double.compare(this.y, losd.y) && 0 == Float.compare(this.volume, losd.volume) && 0 == Float.compare(this.pitch, losd.pitch);
         }
 
         @Override
@@ -133,29 +134,29 @@ public final class SoundLagFix {
 
     private record EntityOriginatingSoundData(int entityId, float volume, float pitch,
                                               @NotNull SoundCategory soundCategory,
-                                              @NotNull Identifier sound,
+                                              @NotNull int sound,
                                               int cachedHashCode) implements SoundLagFix.SoundData {
 
         private EntityOriginatingSoundData(final int entityId, final float volume, final float pitch,
                                            @NotNull final SoundCategory soundCategory,
-                                           @NotNull final Identifier sound) {
+                                           @NotNull final int sound) {
             this(entityId, volume, pitch, soundCategory, sound, SoundLagFix.EntityOriginatingSoundData.computeHash(entityId, volume, pitch, soundCategory, sound));
         }
 
         private static final int computeHash(final int entityId, final float volume, final float pitch,
                                              @NotNull final SoundCategory soundCategory,
-                                             @NotNull final Identifier sound) {
-            var result = Integer.hashCode(entityId);
+                                             @NotNull final int sound) {
+            var result = sound;
+            result = 31 * result + soundCategory.hashCode();
+            result = 31 * result + entityId; // same as Integer.hashCode, it returns the int value itself
             result = 31 * result + Float.hashCode(volume);
             result = 31 * result + Float.hashCode(pitch);
-            result = 31 * result + soundCategory.hashCode();
-            result = 31 * result + sound.hashCode();
             return result;
         }
 
         @Override
         public final boolean equals(@Nullable final Object obj) {
-            return this == obj || obj instanceof final SoundLagFix.EntityOriginatingSoundData eosd && this.entityId == eosd.entityId && 0 == Float.compare(this.volume, eosd.volume) && 0 == Float.compare(this.pitch, eosd.pitch) && this.soundCategory == eosd.soundCategory && this.sound.equals(eosd.sound);
+            return this == obj || obj instanceof final SoundLagFix.EntityOriginatingSoundData eosd && this.sound == eosd.sound && this.soundCategory == eosd.soundCategory && this.entityId == eosd.entityId && 0 == Float.compare(this.volume, eosd.volume) && 0 == Float.compare(this.pitch, eosd.pitch);
         }
 
         @Override
