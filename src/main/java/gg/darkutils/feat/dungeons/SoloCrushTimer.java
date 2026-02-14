@@ -4,6 +4,7 @@ import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.Helpers;
+import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.minecraft.client.MinecraftClient;
@@ -31,7 +32,7 @@ public final class SoloCrushTimer {
     }
 
     private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
-        if (!DarkUtilsConfig.INSTANCE.soloCrushTimer) {
+        if (!DarkUtilsConfig.INSTANCE.soloCrushTimer || !LocationUtils.isInDungeons()) {
             return;
         }
 

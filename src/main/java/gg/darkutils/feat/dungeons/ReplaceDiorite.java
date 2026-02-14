@@ -1,6 +1,7 @@
 package gg.darkutils.feat.dungeons;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.utils.LocationUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -111,7 +112,7 @@ public final class ReplaceDiorite {
             return;
         }
 
-        if (DarkUtilsConfig.INSTANCE.replaceDiorite && DungeonTimer.isInBetweenPhases(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_2_CLEAR)) {
+        if (DarkUtilsConfig.INSTANCE.replaceDiorite && LocationUtils.isInDungeons() && DungeonTimer.isInBetweenPhases(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_2_CLEAR)) {
             ReplaceDiorite.replaceDiorite(world);
         }
     }

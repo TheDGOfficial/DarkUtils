@@ -80,21 +80,21 @@ public final class SoundLagFix {
         @NotNull
         private static SoundLagFix.SoundData from(@NotNull final PlaySoundS2CPacket packet) {
             // Intentionally does not capture .getSeed() to the record as it's a random 64-bit long created for every packet, would make all sound data objects return a different hashCode and equals and our rate-limit would never work with it.
-            return SoundLagFix.SoundData.debug(new SoundLagFix.LocationOriginatingSoundData(packet.getX(), packet.getY(), packet.getZ(), packet.getVolume(), packet.getPitch(), packet.getCategory(), Registries.SOUND_EVENT.getRawId(packet.getSound().value())));
+            return /*SoundLagFix.SoundData.debug(*/new SoundLagFix.LocationOriginatingSoundData(packet.getX(), packet.getY(), packet.getZ(), packet.getVolume(), packet.getPitch(), packet.getCategory(), Registries.SOUND_EVENT.getRawId(packet.getSound().value()))/*)*/;
         }
 
         @NotNull
         private static SoundLagFix.SoundData from(@NotNull final PlaySoundFromEntityS2CPacket packet) {
             // Intentionally does not capture .getSeed() to the record as it's a random 64-bit long created for every packet, would make all sound data objects return a different hashCode and equals and our rate-limit would never work with it.
-            return SoundLagFix.SoundData.debug(new SoundLagFix.EntityOriginatingSoundData(packet.getEntityId(), packet.getVolume(), packet.getPitch(), packet.getCategory(), Registries.SOUND_EVENT.getRawId(packet.getSound().value())));
+            return /*SoundLagFix.SoundData.debug(*/new SoundLagFix.EntityOriginatingSoundData(packet.getEntityId(), packet.getVolume(), packet.getPitch(), packet.getCategory(), Registries.SOUND_EVENT.getRawId(packet.getSound().value()))/*)*/;
         }
 
-        @NotNull
+        /*@NotNull
         private static SoundLagFix.SoundData debug(@NotNull final SoundLagFix.SoundData soundData) {
-            //DarkUtils.info(SoundLagFix.class, "Received a sound. Sound data: {}", soundData);
+            DarkUtils.info(SoundLagFix.class, "Received a sound. Sound data: {}", soundData);
 
             return soundData;
-        }
+        }*/
     }
 
     private record LocationOriginatingSoundData(double x, double y, double z, float volume, float pitch,

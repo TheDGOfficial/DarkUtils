@@ -183,7 +183,7 @@ public final class TickUtils {
      * If the calling thread is not the render thread, an exception will be thrown, as we call .update initially
      * on the caller thread to ensure no uninitialized reads happen.
      *
-     * @param condition The interval, in ticks. 20 ticks is considered equal to a second.
+     * @param condition The condition that will be updated one time initially and then 20 times every second.
      */
     @NotNull
     public static final BooleanSupplier queueUpdatingCondition(@NotNull final BooleanSupplier condition) {

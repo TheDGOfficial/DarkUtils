@@ -20,17 +20,6 @@ public interface EventRegistry {
         return EventRegistryImpl.getInstance();
     }
 
-    @SuppressWarnings("unchecked")
-    @NotNull
-    private static <T extends Event> Class<T> getEventClass(@NotNull final T event) {
-        return (Class<T>) event.getClass();
-    }
-
-    @NotNull
-    private <T extends Event> EventHandler<T> getEventHandler(@NotNull final T event) {
-        return this.getEventHandler(EventRegistry.getEventClass(event));
-    }
-
     /**
      * Gets the {@link EventHandler} for an event, allowing you to add listeners.
      *
@@ -97,9 +86,10 @@ public interface EventRegistry {
      * @param <T>   The type of the event.
      * @return The {@link CancellationResult}.
      */
+    @SuppressWarnings("unchecked")
     @NotNull
     default <T extends CancellableEvent> CancellationResult triggerEvent(@NotNull final T event) {
-        return this.getEventHandler(event).triggerCancellableEvent(event);
+        return this.getEventHandler((Class<T>) event.getClass()).triggerCancellableEvent(event);
     }
 
     /**
@@ -108,7 +98,8 @@ public interface EventRegistry {
      * @param event The event.
      * @param <T>   The type of the event.
      */
+    @SuppressWarnings("unchecked")
     default <T extends NonCancellableEvent> void triggerEvent(@NotNull final T event) {
-        this.getEventHandler(event).triggerNonCancellableEvent(event);
+        this.getEventHandler((Class<T>) event.getClass()).triggerNonCancellableEvent(event);
     }
 }

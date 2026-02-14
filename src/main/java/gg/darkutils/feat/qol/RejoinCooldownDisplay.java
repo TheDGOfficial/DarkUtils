@@ -50,7 +50,7 @@ public final class RejoinCooldownDisplay {
     }
 
     private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
-        if (!DarkUtilsConfig.INSTANCE.rejoinCooldownDisplay) {
+        if (!DarkUtilsConfig.INSTANCE.rejoinCooldownDisplay || !LocationUtils.isInHypixel()) {
             return;
         }
 

@@ -11,12 +11,30 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class LocationUtils {
+    private static boolean isInHypixel;
+    private static boolean isInSkyblock;
     @Nullable
-    private static String serverName;
-    @Nullable
-    private static ServerType serverType;
-    @Nullable
-    private static String mode;
+    private static SkyblockIsland skyblockIsland;
+
+    public enum SkyblockIsland {
+        DUNGEONS,
+        GALATEA;
+
+        private SkyblockIsland() {
+        }
+
+        public static final @Nullable LocationUtils.SkyblockIsland fromId(@Nullable final String id) {
+            if (null == id) {
+                return null;
+            }
+
+            return switch (id) {
+                case "dungeon"    -> LocationUtils.SkyblockIsland.DUNGEONS;
+                case "foraging_2" -> LocationUtils.SkyblockIsland.GALATEA;
+                default           -> null;
+            };
+        }
+    }
 
     private LocationUtils() {
         super();
@@ -32,34 +50,35 @@ public final class LocationUtils {
     }
 
     private static final void onLocationUpdate(@NotNull final ClientboundLocationPacket packet) {
-        LocationUtils.serverName = packet.getServerName();
-        LocationUtils.serverType = packet.getServerType().orElse(null);
-        LocationUtils.mode = packet.getMode().orElse(null);
+        LocationUtils.isInHypixel = null != packet.getServerName();
+        LocationUtils.isInSkyblock = GameType.SKYBLOCK == packet.getServerType().orElse(null);
+        LocationUtils.skyblockIsland = LocationUtils.SkyblockIsland.fromId(packet.getMode().orElse(null));
     }
 
     private static final void onQuit(@NotNull final ClientPlayNetworkHandler handler, @NotNull final MinecraftClient client) {
-        LocationUtils.serverName = null;
-        LocationUtils.serverType = null;
-        LocationUtils.mode = null;
+        LocationUtils.isInHypixel = false;
+        LocationUtils.isInSkyblock = false;
+        LocationUtils.skyblockIsland = null;
     }
 
     public static final boolean isInDungeons() {
-        return "dungeon".equals(LocationUtils.mode);
+        return LocationUtils.SkyblockIsland.DUNGEONS == LocationUtils.skyblockIsland;
     }
 
     public static final boolean isInGalatea() {
-        return "foraging_2".equals(LocationUtils.mode);
+        return LocationUtils.SkyblockIsland.GALATEA == LocationUtils.skyblockIsland;
     }
 
     public static final boolean isInSkyblock() {
-        return GameType.SKYBLOCK == LocationUtils.serverType;
+        return LocationUtils.isInSkyblock;
     }
 
     public static final boolean isInHypixel() {
-        return null != LocationUtils.serverName;
+        return LocationUtils.isInHypixel;
     }
 
     public static final boolean isInSingleplayer() {
         return MinecraftClient.getInstance().isConnectedToLocalServer();
     }
 }
+

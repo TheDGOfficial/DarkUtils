@@ -40,7 +40,7 @@ public final class AutoTip {
     }
 
     private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
-        if (!DarkUtilsConfig.INSTANCE.autoTip) {
+        if (!DarkUtilsConfig.INSTANCE.autoTip || !LocationUtils.isInHypixel()) {
             return;
         }
 
