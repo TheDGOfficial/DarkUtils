@@ -35,6 +35,20 @@ public interface EventRegistry {
      *
      * @param listener               The listener.
      * @param priority               The priority.
+     * @param doNotPassThisParameter Do not pass this parameter, it is automatically
+     *                               passed by the compiler and used for type inference.
+     * @param <T>                    The type of the event.
+     */
+    @SuppressWarnings("unchecked")
+    default <T extends Event> void addListener(@NotNull final Consumer<T> listener, @NotNull final EventPriority priority, @Nullable final T... doNotPassThisParameter) {
+        this.addListener(EventListener.create(listener, priority), doNotPassThisParameter); // Passing it here is OK
+    }
+
+    /**
+     * Adds the given listener to be run for the compiler inferred event type.
+     *
+     * @param listener               The listener.
+     * @param priority               The priority.
      * @param receiveCancelled       Whether the listener should receive canceled events or not.
      * @param doNotPassThisParameter Do not pass this parameter, it is automatically
      *                               passed by the compiler and used for type inference.
@@ -55,6 +69,19 @@ public interface EventRegistry {
      */
     @SuppressWarnings("unchecked")
     default <T extends Event> void addListener(@NotNull final Consumer<T> listener, @Nullable final T... doNotPassThisParameter) {
+        this.addListener(EventListener.create(listener), doNotPassThisParameter); // Passing it here is OK
+    }
+
+    /**
+     * Adds the given listener to be run for the compiler inferred event type.
+     *
+     * @param listener               The listener.
+     * @param doNotPassThisParameter Do not pass this parameter, it is automatically
+     *                               passed by the compiler and used for type inference.
+     * @param <T>                    The type of the event.
+     */
+    @SuppressWarnings("unchecked")
+    default <T extends Event> void addListener(@NotNull final EventListener<T> listener, @Nullable final T... doNotPassThisParameter) {
         if (null == doNotPassThisParameter || 0 != doNotPassThisParameter.length) {
             throw new IllegalArgumentException("second parameter must not be manually passed");
         }
@@ -74,7 +101,7 @@ public interface EventRegistry {
             throw new IllegalArgumentException("listener method has wrong parameter with type " + eventType.getName());
         }
 
-        this.getEventHandler((Class<T>) eventType).addListener((Consumer<? super Event>) (Object) listener);
+        this.getEventHandler((Class<T>) eventType).addListener((EventListener<? super Event>) listener);
     }
 
     /**

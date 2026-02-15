@@ -44,7 +44,10 @@ public interface EventHandler<T extends Event> {
      */
     @NotNull
     default EventListener<? super Event> addListener(final @NotNull Consumer<? super Event> listener) {
-        return this.addListener(listener, EventPriority.NORMAL, false);
+        final var eventListener = EventListener.create(listener);
+        this.addListener(eventListener);
+
+        return eventListener;
     }
 
     /**

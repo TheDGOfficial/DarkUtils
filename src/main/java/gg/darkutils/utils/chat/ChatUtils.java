@@ -120,14 +120,39 @@ public final class ChatUtils {
     }
 
     private static final boolean hasFormattingInsideComponent(@NotNull final Text text, @NotNull final SimpleStyle simpleStyle) {
-        final var vanillaStyle = LazyConstants.lazyConstantOf(simpleStyle::toStyle); // converts from our SimpleStyle wrapper to vanilla Style class
+        final var vanillaStyle = LazyConstants.lazyConstantOf(simpleStyle::toStyle);  // converts from our SimpleStyle wrapper to vanilla Style class
 
-        return !text.asOrderedText().accept((index, style, codePoint) -> {
-                final var vanilla = vanillaStyle.get();
-                TextColor color;
-                return style.isBold() != vanilla.isBold() || null == (color = style.getColor()) || !color.equals(vanilla.getColor());
+        return text.asOrderedText().accept((index, style, codePoint) -> {
+            final var expected = vanillaStyle.get();
+
+            if (style.isBold() != expected.isBold()) {
+                return true;
             }
-        );
+
+            if (style.isItalic() != expected.isItalic()) {
+                return true;
+            }
+
+            if (style.isUnderlined() != expected.isUnderlined()) {
+                return true;
+            }
+
+            if (style.isStrikethrough() != expected.isStrikethrough()) {
+                return true;
+            }
+
+            if (style.isObfuscated() != expected.isObfuscated()) {
+                return true;
+            }
+
+            final var expectedColor = expected.getColor();
+            if (null == expectedColor) {
+                return false;
+            }
+
+            final var actualColor = style.getColor();
+            return null == actualColor || !actualColor.equals(expectedColor);
+        });
     }
 
     /**

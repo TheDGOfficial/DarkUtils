@@ -8,8 +8,13 @@ import org.gradle.api.provider.Property
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.CompileClasspath
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
@@ -125,7 +130,6 @@ tasks {
 
         testLogging {
             exceptionFormat = TestExceptionFormat.FULL
-            outputs.upToDateWhen { false }
             showStandardStreams = true
         }
     }
@@ -214,9 +218,14 @@ publishing {
 }
 
 // Task class for full configuration-cache compatibility
+@CacheableTask
 abstract class CheckMethodSizesTask extends DefaultTask {
+    @CompileClasspath
     @InputFiles
     abstract ConfigurableFileCollection getClassesDirectories()
+
+    @OutputFile
+    abstract RegularFileProperty getReportFile()
 
     @TaskAction
     void checkMethods() {
@@ -249,6 +258,10 @@ abstract class CheckMethodSizesTask extends DefaultTask {
             }
         }
 
+        final def report = getReportFile().get().asFile
+        report.parentFile.mkdirs()
+        report.text = issues.join('\n')
+
         if (issues.empty) {
             println 'All methods are within size thresholds.'
         } else {
@@ -267,6 +280,10 @@ tasks.register('checkMethodSizes', CheckMethodSizesTask) {
     // Use a FileCollection as input (lazy, configuration-cache safe)
     classesDirectories.from(
         layout.buildDirectory.dir("classes/java/main")
+    )
+
+    reportFile.set(
+        layout.buildDirectory.file("reports/methodSizes.txt")
     )
 
     dependsOn tasks.named('classes')
@@ -317,6 +334,7 @@ static final Provider<File> resolveMinecraftDir(Project project) {
 }
 
 abstract class InstallToModFolderTask extends DefaultTask {
+    @Classpath
     @InputFile
     abstract RegularFileProperty getInputJar()
 
