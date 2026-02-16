@@ -144,6 +144,8 @@ tasks.withType(Test).configureEach {
         html.required = false
         junitXml.required = false
     }
+
+    it.systemProperty('inside.junit', 'true');
 }
 
 processResources {

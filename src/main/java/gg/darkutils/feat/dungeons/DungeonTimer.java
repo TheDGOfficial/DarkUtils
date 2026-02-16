@@ -418,6 +418,19 @@ public final class DungeonTimer {
         return null != floor && dungeonFloor == floor.floor();
     }
 
+    /**
+     * Gets the dungeon floor the player is on.
+     * <p>
+     * Returned value is nullable. Regular and master floors are different enum variants.
+     * <p>
+     * Prefer the methods {@link DungeonTimer#isOnDungeonFloor(DungeonFloor)} or {@link DungeonTimer#isOnDungeonFloor(int)}
+     * unless you need the actual enum.
+     */
+    @Nullable
+    public static final DungeonFloor getDungeonFloor() {
+        return DungeonTimer.dungeonFloor;
+    }
+
     public enum DungeonFloor {
         ENTRANCE,
         FLOOR_I,

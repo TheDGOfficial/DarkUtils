@@ -1,6 +1,7 @@
 package gg.darkutils.events.base.impl;
 
 import gg.darkutils.DarkUtils;
+import gg.darkutils.utils.JavaUtils;
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationResult;
 import gg.darkutils.events.base.Event;
@@ -207,6 +208,10 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
     }
 
     private static final void handleListenerError(@NotNull final EventListener<? extends Event> listener, @NotNull final Event event, @NotNull final Throwable error) {
+        if (DarkUtils.INSIDE_JUNIT) {
+            throw JavaUtils.sneakyThrow(error);
+        }
+
         final var actualListener = listener instanceof final EventListener.Impl<? extends Event> delegatingEventListener
                 ? delegatingEventListener.listener()
                 : listener;

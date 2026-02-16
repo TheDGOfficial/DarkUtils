@@ -7,6 +7,8 @@ import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.TextBuilder;
 
 import net.minecraft.text.Text;
+import net.minecraft.text.Style;
+import net.minecraft.util.Formatting;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -17,7 +19,7 @@ final class ChatUtilsHasFormattingTest {
         final var style = SimpleStyle.colored(SimpleColor.RED);
 
         final var text = TextBuilder
-                .withInitial("Hello", style)
+                .withInitial("Hello", SimpleStyle.colored(SimpleColor.RED))
                 .build();
 
         final var result = ChatUtils.hasFormatting(text, SimpleColor.RED);
@@ -43,7 +45,9 @@ final class ChatUtilsHasFormattingTest {
                 .also(SimpleStyle.formatted(SimpleFormatting.BOLD));
 
         final var text = TextBuilder
-                .withInitial("Hello", style)
+                .withInitial("Hello", SimpleStyle
+                    .colored(SimpleColor.GOLD)
+                    .also(SimpleStyle.formatted(SimpleFormatting.BOLD)))
                 .build();
 
         final var result = ChatUtils.hasFormatting(
@@ -125,7 +129,9 @@ final class ChatUtilsHasFormattingTest {
                 .also(SimpleStyle.formatted(SimpleFormatting.ITALIC));
 
         final var text = TextBuilder
-                .withInitial("Hello", style)
+                .withInitial("Hello", SimpleStyle
+                    .colored(SimpleColor.YELLOW)
+                    .also(SimpleStyle.formatted(SimpleFormatting.ITALIC)))
                 .build();
 
         final var result = ChatUtils.hasFormatting(
@@ -144,7 +150,9 @@ final class ChatUtilsHasFormattingTest {
                 .also(SimpleStyle.formatted(SimpleFormatting.UNDERLINE));
 
         final var text = TextBuilder
-                .withInitial("Hello", style)
+                .withInitial("Hello", SimpleStyle
+                    .colored(SimpleColor.AQUA)
+                    .also(SimpleStyle.formatted(SimpleFormatting.UNDERLINE)))
                 .build();
 
         final var result = ChatUtils.hasFormatting(
@@ -163,7 +171,9 @@ final class ChatUtilsHasFormattingTest {
                 .also(SimpleStyle.formatted(SimpleFormatting.STRIKETHROUGH));
 
         final var text = TextBuilder
-                .withInitial("Hello", style)
+                .withInitial("Hello", SimpleStyle
+                    .colored(SimpleColor.GREEN)
+                    .also(SimpleStyle.formatted(SimpleFormatting.STRIKETHROUGH)))
                 .build();
 
         final var result = ChatUtils.hasFormatting(
@@ -182,7 +192,9 @@ final class ChatUtilsHasFormattingTest {
                 .also(SimpleStyle.formatted(SimpleFormatting.OBFUSCATED));
 
         final var text = TextBuilder
-                .withInitial("Hello", style)
+                .withInitial("Hello", SimpleStyle
+                    .colored(SimpleColor.RED)
+                    .also(SimpleStyle.formatted(SimpleFormatting.OBFUSCATED)))
                 .build();
 
         final var result = ChatUtils.hasFormatting(
@@ -207,6 +219,19 @@ final class ChatUtilsHasFormattingTest {
         );
 
         Assertions.assertFalse(result);
+    }
+
+    @Test
+    void shouldDetectVanillaFormattingColorAgainstRgbConstructedStyle() {
+        final var text = Text.literal("Hello")
+                .setStyle(Style.EMPTY.withFormatting(Formatting.GREEN));
+
+        final var result = ChatUtils.hasFormatting(
+                text,
+                SimpleStyle.colored(SimpleColor.GREEN)
+        );
+
+        Assertions.assertTrue(result);
     }
 }
 

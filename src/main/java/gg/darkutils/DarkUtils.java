@@ -69,6 +69,12 @@ public final class DarkUtils implements ClientModInitializer {
      */
     private static final @NotNull Logger LOGGER = LoggerFactory.getLogger(DarkUtils.MOD_ID);
 
+    /**
+     * We must avoid loading some MC classes during test phase of Gradle build,
+     * because they cause exceptions when loaded outside of runtime.
+     */
+    public static final boolean INSIDE_JUNIT = "true".equals(System.getProperty("inside.junit", "false"));
+
     public DarkUtils() {
         super();
     }
@@ -144,7 +150,7 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final void logInGame(@NotNull final LogLevel level, @NotNull final String message) {
-        if (level.ordinal() < DarkUtilsConfig.INSTANCE.ingameLogLevel.ordinal()) {
+        if (DarkUtils.INSIDE_JUNIT || level.ordinal() < DarkUtilsConfig.INSTANCE.ingameLogLevel.ordinal()) {
             // Too low of a verbosity to log in-game (user preference) -
             // by default only WARN and above are logged in-game.
             return;
@@ -437,13 +443,75 @@ public final class DarkUtils implements ClientModInitializer {
         );
     }
 
+    private static final int debugState() {
+        final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
+        final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
+
+        final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, " Debug State ").replace(" Debug State ", ""));
+        final var footer = ChatUtils.fill('▬', true);
+
+        final var gradientStart = "#54daf4";
+        final var gradientEnd = "#545eb6";
+
+        final var text = TextBuilder
+                .withInitial(header.first(), headerFooterStyle)
+                .appendSpace()
+                .appendGradientText(gradientStart, gradientEnd, "Debug State", SimpleStyle.inherited())
+                .appendSpace()
+                .append(header.second(), headerFooterStyle)
+                .appendNewLine()
+                .appendNewLine()
+                .appendGradientText(gradientStart, gradientEnd, "Is in Hypixel: " + LocationUtils.isInHypixel()
+                        , SimpleStyle
+                        .centered()
+                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                )
+                .appendNewLine()
+                .appendGradientText(gradientStart, gradientEnd, "Is in Skyblock: " + LocationUtils.isInSkyblock()
+                        , SimpleStyle
+                        .centered()
+                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                )
+                .appendNewLine()
+                .appendGradientText(gradientStart, gradientEnd, "Is in Singleplayer: " + LocationUtils.isInSingleplayer()
+                        , SimpleStyle
+                        .centered()
+                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                )
+                .appendNewLine()
+                .appendGradientText(gradientStart, gradientEnd, "Is in Galatea: " + LocationUtils.isInGalatea()
+                        , SimpleStyle
+                        .centered()
+                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                )
+                .appendNewLine()
+                .appendGradientText(gradientStart, gradientEnd, "Is in Dungeons: " + LocationUtils.isInDungeons()
+                        , SimpleStyle
+                        .centered()
+                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                )
+                .appendNewLine()
+                .appendGradientText(gradientStart, gradientEnd, "Dungeon floor: " + DungeonTimer.getDungeonFloor()
+                        , SimpleStyle
+                        .centered()
+                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                )
+                .appendNewLine()
+                .appendNewLine()
+                .append(footer, headerFooterStyle)
+                .build();
+
+        ChatUtils.sendMessageToLocalPlayer(text);
+        return Command.SINGLE_SUCCESS;
+    }
     /**
      * This entrypoint is suitable for setting up client-specific logic, such as rendering.
      */
     @Override
     public final void onInitializeClient() {
         // Register mod commands
-        DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.openConfig(), "darkutil", "du");
+        DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.openConfig(), "darkutils", "darkutil", "du");
+        DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.debugState(), "darkutilsdebug", "darkutildebug", "dudbg");
 
         // Init custom events that wrap fabric events, other things depend on them
         DarkUtils.initEvents();

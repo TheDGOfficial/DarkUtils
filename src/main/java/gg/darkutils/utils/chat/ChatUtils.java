@@ -20,6 +20,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Contract;
 
+import java.util.Optional;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import java.util.function.Supplier;
@@ -106,7 +108,7 @@ public final class ChatUtils {
     }
 
     public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleStyle style, @NotNull final Supplier<String> textString) {
-        final var hasFormattingInComponent = ChatUtils.hasFormattingInsideComponent(text, style);
+        final var hasFormattingInComponent = ChatUtils.hasFormattingInsideRootComponent(text, style);
 
         if (hasFormattingInComponent) {
             return true;
@@ -119,40 +121,73 @@ public final class ChatUtils {
         return rawText.contains(style.getRawFormattingCharacters());
     }
 
-    private static final boolean hasFormattingInsideComponent(@NotNull final Text text, @NotNull final SimpleStyle simpleStyle) {
-        final var vanillaStyle = LazyConstants.lazyConstantOf(simpleStyle::toStyle);  // converts from our SimpleStyle wrapper to vanilla Style class
+    private static final boolean hasFormattingInsideRootComponent(@NotNull final Text text, @NotNull final SimpleStyle simpleStyle) {
+        return ChatUtils.hasFormattingInsideRootComponent(text, simpleStyle.toStyle()); // converts from our SimpleStyle wrapper to vanilla Style class
+    }
 
-        return text.asOrderedText().accept((index, style, codePoint) -> {
-            final var expected = vanillaStyle.get();
+    private static final boolean hasFormattingInsideRootComponent(@NotNull final Text text, @NotNull final Style expected) {
+        return text.visit((final Style resolved, final String ignored) ->
+            ChatUtils.matches(resolved, expected)
+                ? Optional.of(true)
+                : Optional.empty(),
+            Style.EMPTY
+        ).isPresent();
+    }
 
-            if (style.isBold() != expected.isBold()) {
-                return true;
-            }
+    private static final boolean matches(@NotNull final Style resolved, @NotNull final Style target) {
+        if (!ChatUtils.matchNullable(target.getColor(), resolved.getColor())) {
+            return false;
+        }
 
-            if (style.isItalic() != expected.isItalic()) {
-                return true;
-            }
+        if (!ChatUtils.matchFlag(target.isBold(), resolved.isBold())) {
+            return false;
+        }
 
-            if (style.isUnderlined() != expected.isUnderlined()) {
-                return true;
-            }
+        if (!ChatUtils.matchFlag(target.isItalic(), resolved.isItalic())) {
+            return false;
+        }
 
-            if (style.isStrikethrough() != expected.isStrikethrough()) {
-                return true;
-            }
+        if (!ChatUtils.matchFlag(target.isUnderlined(), resolved.isUnderlined())) {
+            return false;
+        }
 
-            if (style.isObfuscated() != expected.isObfuscated()) {
-                return true;
-            }
+        if (!ChatUtils.matchFlag(target.isStrikethrough(), resolved.isStrikethrough())) {
+            return false;
+        }
 
-            final var expectedColor = expected.getColor();
-            if (null == expectedColor) {
-                return false;
-            }
+        if (!ChatUtils.matchFlag(target.isObfuscated(), resolved.isObfuscated())) {
+            return false;
+        }
 
-            final var actualColor = style.getColor();
-            return null == actualColor || !actualColor.equals(expectedColor);
-        });
+        if (!ChatUtils.matchNullable(target.getClickEvent(), resolved.getClickEvent())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchNullable(target.getHoverEvent(), resolved.getHoverEvent())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchNullable(target.getInsertion(), resolved.getInsertion())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchNullable(target.getFont(), resolved.getFont())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchNullable(target.getShadowColor(), resolved.getShadowColor())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static final boolean matchFlag(final boolean target, final boolean resolved) {
+        return !target || resolved;
+    }
+
+    private static final <T> boolean matchNullable(@Nullable final T target, @Nullable final T resolved) {
+        return null == target || Objects.equals(target, resolved);
     }
 
     /**

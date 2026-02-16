@@ -30,6 +30,7 @@ import java.util.stream.Stream;
  */
 public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationState,
                                       @NotNull Text message,
+                                      @NotNull Supplier<String> rawContentSupplier,
                                       @NotNull Supplier<String> contentSupplier,
                                       @NotNull Supplier<Map<SimpleStyle, Boolean>> hasFormattingCache) implements CancellableEvent {
     @NotNull
@@ -48,12 +49,25 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * Creates a new {@link ReceiveGameMessageEvent} suitable for triggering the event.
      * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
      *
-     * @param cancellationState The cancellation state holder.
-     * @param message           The message.
-     * @param contentSupplier   The content supplier.
+     * @param cancellationState  The cancellation state holder.
+     * @param message            The message.
+     * @param rawContentSupplier The raw message.
+     * @param contentSupplier    The content supplier.
      */
-    public ReceiveGameMessageEvent(@NotNull final CancellationState cancellationState, @NotNull final Text message, @NotNull final Supplier<String> contentSupplier) {
-        this(cancellationState, message, contentSupplier, LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(ReceiveGameMessageEvent.ALL_STYLE_COMBINATIONS, style -> ChatUtils.hasFormatting(message, style, contentSupplier))));
+    public ReceiveGameMessageEvent(@NotNull final CancellationState cancellationState, @NotNull final Text message, @NotNull final Supplier<String> rawContentSupplier, @NotNull final Supplier<String> contentSupplier) {
+        this(cancellationState, message, rawContentSupplier, contentSupplier, LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(ReceiveGameMessageEvent.ALL_STYLE_COMBINATIONS, style -> ChatUtils.hasFormatting(message, style, rawContentSupplier))));
+    }
+
+    /**
+     * Creates a new {@link ReceiveGameMessageEvent} suitable for triggering the event.
+     * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
+     *
+     * @param cancellationState  The cancellation state holder.
+     * @param message            The message.
+     * @param rawContentSupplier The raw message.
+     */
+    public ReceiveGameMessageEvent(@NotNull final CancellationState cancellationState, @NotNull final Text message, @NotNull final Supplier<String> rawContentSupplier) {
+        this(cancellationState, message, rawContentSupplier, LazyConstants.lazyConstantOf(() -> ChatUtils.removeControlCodes(rawContentSupplier.get())));
     }
 
     /**
@@ -63,7 +77,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * @param message The message.
      */
     public ReceiveGameMessageEvent(@NotNull final Text message) {
-        this(CancellationState.ofFresh(), message, LazyConstants.lazyConstantOf(() -> ChatUtils.removeControlCodes(message.getString())));
+        this(CancellationState.ofFresh(), message, LazyConstants.lazyConstantOf(message::getString));
     }
 
     public static final void init() {
@@ -82,6 +96,17 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
     @NotNull
     public final String content() {
         return this.contentSupplier.get();
+    }
+
+    /**
+     * Returns the cached raw content of the message.
+     * For legacy formatting, this might have color characters.
+     *
+     * @return The cached raw content of the message.
+     */
+    @NotNull
+    public final String rawContent() {
+        return this.rawContentSupplier.get();
     }
 
     /**
