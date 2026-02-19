@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public final class AutoTip {
+    private static final long QUARTER_MINUTES_NANOS = TimeUnit.MINUTES.toNanos(15L);
     @NotNull
     private static final Consumer<ReceiveGameMessageEvent> MESSAGE_ACTION = event -> {
         if (event.isStyledWith(SimpleColor.RED)) {
@@ -54,7 +55,7 @@ public final class AutoTip {
 
         final var now = 0L == AutoTip.lastTipAt ? 0L : System.nanoTime();
 
-        if (0L == AutoTip.lastTipAt || now - AutoTip.lastTipAt > TimeUnit.MINUTES.toNanos(15L)) {
+        if (0L == AutoTip.lastTipAt || now - AutoTip.lastTipAt > AutoTip.QUARTER_MINUTES_NANOS) {
             AutoTip.lastTipAt = 0L == AutoTip.lastTipAt ? System.nanoTime() : now;
             ChatUtils.addToSendMessageQueue("/tip all");
         }

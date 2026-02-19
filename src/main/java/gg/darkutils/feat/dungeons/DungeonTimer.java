@@ -37,6 +37,7 @@ public final class DungeonTimer {
     private static final long SECONDS_PER_HOUR = TimeUnit.HOURS.toSeconds(1L);
     private static final long SECONDS_PER_MINUTE = TimeUnit.MINUTES.toSeconds(1L);
     private static final long HUNDRED_MS_AS_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
+    private static final long FIVE_SECOND_NANOS = TimeUnit.SECONDS.toNanos(5L);
     @NotNull
     private static final ArrayList<DungeonTimer.RenderableLine> lines = new ArrayList<>(32);
     private static long serverTickCounter;
@@ -67,8 +68,10 @@ public final class DungeonTimer {
                 if (event.isStyledWith(SimpleColor.RED)) {
                     DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.BLOOD_CLEAR);
 
-                    final var seconds = DungeonTimer.getPhaseTimeInSecondsForPhase(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, false);
-                    Helpers.notify(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, "§cBlood Cleared! (" + seconds + "s)", 60);
+                    if (DarkUtilsConfig.INSTANCE.bloodClearedNotification) {
+                        final var seconds = DungeonTimer.getPhaseTimeInSecondsForPhase(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, false);
+                        Helpers.notify(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, "§cBlood Cleared! (" + seconds + "s)", 60);
+                    }
                 }
             }),
             Map.entry("[BOSS] Sadan: ENOUGH!", event -> {
@@ -333,7 +336,7 @@ public final class DungeonTimer {
     ) {
         final long now = System.nanoTime();
 
-        if (TimeUnit.SECONDS.toNanos(5L) >
+        if (DungeonTimer.FIVE_SECOND_NANOS >
                 now - DungeonTimer.lastNegativeLagWarnNano) {
             return;
         }
@@ -350,7 +353,7 @@ public final class DungeonTimer {
                 "serverTick=" + serverTick
         );
 
-        if (TimeUnit.MILLISECONDS.toNanos(50L) < -rawLagNano) {
+        if (DungeonTimer.TICK_NANOS < -rawLagNano) {
             DarkUtils.warn(
                     DungeonTimer.class,
                     "Server predicted >1 tick into future!"
