@@ -156,7 +156,7 @@ processResources {
     inputs.property('version', modVersion)
 
     filesMatching('fabric.mod.json') {
-        expand(["version": modVersion])
+        expand(['version': modVersion])
     }
 }
 
@@ -281,11 +281,11 @@ tasks.register('checkMethodSizes', CheckMethodSizesTask) {
 
     // Use a FileCollection as input (lazy, configuration-cache safe)
     classesDirectories.from(
-        layout.buildDirectory.dir("classes/java/main")
+        layout.buildDirectory.dir('classes/java/main')
     )
 
     reportFile.set(
-        layout.buildDirectory.file("reports/methodSizes.txt")
+        layout.buildDirectory.file('reports/methodSizes.txt')
     )
 
     dependsOn tasks.named('classes')
