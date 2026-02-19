@@ -15,16 +15,44 @@ import java.util.function.Consumer;
  *
  * @param <T> The type of the event the listener is listening for.
  */
-public sealed interface EventListener<T extends Event> extends Consumer<T> permits EventListener.Impl {
+public sealed interface EventListener<T extends Event> permits EventListener.Impl {
+    /**
+     * Creates an event listener.
+     *
+     * @param listener         The basic event listener (consumer).
+     * @param <T>              The type of the event we are listening for.
+     * @return The new event listener that delegates to the passed consumer.
+     */
+    @NotNull
+    @SuppressWarnings("unchecked")
+    static <T extends Event> EventListener<T> create(@NotNull final Consumer<? super T> listener) {
+        return EventListener.create(listener, EventPriority.NORMAL);
+    }
+
+    /**
+     * Creates an event listener with custom priority.
+     *
+     * @param listener         The basic event listener (consumer).
+     * @param priority         The custom event priority.
+     * @param <T>              The type of the event we are listening for.
+     * @return The new event listener with custom priority set that delegates
+     * to the passed consumer.
+     */
+    @NotNull
+    @SuppressWarnings("unchecked")
+    static <T extends Event> EventListener<T> create(@NotNull final Consumer<? super T> listener, @NotNull final EventPriority priority) {
+        return EventListener.create(listener, priority, false);
+    }
+
     /**
      * Creates an event listener with custom priority and receiveCancelled behavior.
      *
-     * @param listener         The basic event listener.
+     * @param listener         The basic event listener (consumer).
      * @param priority         The custom event priority.
      * @param receiveCancelled The custom behavior on whether to accept canceled events.
      * @param <T>              The type of the event we are listening for.
      * @return The new event listener with custom priority and receiveCancelled set that delegates
-     * to the passed basic event listener.
+     * to the passed consumer.
      */
     @NotNull
     @SuppressWarnings("unchecked")
@@ -39,9 +67,7 @@ public sealed interface EventListener<T extends Event> extends Consumer<T> permi
      * @return The priority of this listener.
      */
     @NotNull
-    default EventPriority priority() {
-        return EventPriority.NORMAL;
-    }
+    EventPriority priority();
 
     /**
      * Whether this listener should still receive events that are already canceled.
@@ -49,9 +75,14 @@ public sealed interface EventListener<T extends Event> extends Consumer<T> permi
      *
      * @return Whether this listener should still receive events that are already canceled.
      */
-    default boolean receiveCancelled() {
-        return false;
-    }
+    boolean receiveCancelled();
+
+    /**
+     * Accepts the given event, running this listener.
+     *
+     * @param event The event.
+     */
+    void accept(@NotNull final T event);
 
     /**
      * An event listener implementation that delegates to a consumer with custom priority and receiveCancelled behavior.

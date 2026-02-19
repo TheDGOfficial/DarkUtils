@@ -59,6 +59,7 @@ public final class DarkUtilsConfig {
     public boolean arrowAlignmentDeviceSolverPredev;
     public boolean arrowAlignmentDeviceSolverBlockIncorrectClicks;
     public boolean arrowStackWaypoints;
+    public boolean dungeonTimer;
 
     // === Visual Tweaks ===
     public boolean hideEffectsHud;

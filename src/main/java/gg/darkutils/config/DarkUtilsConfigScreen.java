@@ -179,6 +179,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Arrow Stack Waypoints",
                 "Displays arrow stack waypoints in the Wither King dragon fight showing where to shoot your Last Breath arrows for optimal stacking.",
                 config.arrowStackWaypoints, newValue -> config.arrowStackWaypoints = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Dungeon Timer",
+                "Displays dungeon timer on left side of the screen, showing time took to finish each phase. Shows live time if not finished yet, and shows how much time is lost to server lag, with fancy item icons, seperate colors, and non-phase informational splits, like Boss Total.",
+                config.dungeonTimer, newValue -> config.dungeonTimer = newValue);
     }
 
     private static final void addVisualTweaks(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

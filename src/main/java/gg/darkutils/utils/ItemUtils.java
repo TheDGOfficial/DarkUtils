@@ -1,5 +1,7 @@
 package gg.darkutils.utils;
 
+import gg.darkutils.utils.chat.ChatUtils;
+
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
@@ -24,7 +26,7 @@ public final class ItemUtils {
     @Nullable
     private static final String getRightClickAbility(@NotNull final ItemStack stack) {
         for (final var line : ItemUtils.getLoreLines(stack)) {
-            final var plain = line.getString();
+            final var plain = ChatUtils.removeControlCodes(line.getString());
 
             if (!plain.contains("Ability: ")) {
                 continue;

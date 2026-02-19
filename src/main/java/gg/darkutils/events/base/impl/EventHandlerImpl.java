@@ -1,6 +1,7 @@
 package gg.darkutils.events.base.impl;
 
 import gg.darkutils.DarkUtils;
+import gg.darkutils.utils.JavaUtils;
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationResult;
 import gg.darkutils.events.base.Event;
@@ -109,9 +110,31 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                 }
                 return CancellationResult.of(cancellationState.isCancelled());
             }
+            case 2 -> {
+                // Only two listeners - fast path
+                // We don't need to check initial isCancelled or receiveCancelled for listener1 here as the event shouldn't be canceled yet.
+                final var listener1 = localListeners.getFirst();
+                final var listener2 = localListeners.getLast();
+                try {
+                    listener1.accept(event);
+                } catch (final Throwable error) {
+                    EventHandlerImpl.handleListenerError(listener1, event, error);
+                }
+                // Now check needed for isCancelled for listener2 in case listener1 cancelled it.
+                var cancelled = cancellationState.isCancelled();
+                if (!cancelled || listener2.receiveCancelled()) { // Need to check if listener2 wants to receiveCancelled
+                    try {
+                        listener2.accept(event);
+                    } catch (final Throwable error) {
+                        EventHandlerImpl.handleListenerError(listener2, event, error);
+                    }
+                    cancelled = cancellationState.isCancelled(); // Assign cancelled status in case listener2 cancelled or uncancelled it post listener1.
+                }
+                return CancellationResult.of(cancelled);
+            }
         }
 
-        // Fallback to slower path if 2 or more listeners
+        // Fallback to slower path if 3 or more listeners
         var cancelled = false;
 
         // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
@@ -153,9 +176,25 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                 }
                 return;
             }
+            case 2 -> {
+                // Only two listeners - fast path
+                final var listener1 = localListeners.getFirst();
+                final var listener2 = localListeners.getLast();
+                try {
+                    listener1.accept(event);
+                } catch (final Throwable error) {
+                    EventHandlerImpl.handleListenerError(listener1, event, error);
+                }
+                try {
+                    listener2.accept(event);
+                } catch (final Throwable error) {
+                    EventHandlerImpl.handleListenerError(listener2, event, error);
+                }
+                return;
+            }
         }
 
-        // Fallback to slower path if 2 or more listeners
+        // Fallback to slower path if 3 or more listeners
 
         // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
         for (var i = 0; size > i; ++i) {
@@ -169,6 +208,10 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
     }
 
     private static final void handleListenerError(@NotNull final EventListener<? extends Event> listener, @NotNull final Event event, @NotNull final Throwable error) {
+        if (DarkUtils.INSIDE_JUNIT) {
+            throw JavaUtils.sneakyThrow(error);
+        }
+
         final var actualListener = listener instanceof final EventListener.Impl<? extends Event> delegatingEventListener
                 ? delegatingEventListener.listener()
                 : listener;

@@ -1,6 +1,7 @@
 package gg.darkutils.feat.dungeons;
 
 import gg.darkutils.DarkUtils;
+import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.Helpers;
@@ -16,10 +17,12 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,7 +51,11 @@ public final class DungeonTimer {
     private static final Map<String, Consumer<ReceiveGameMessageEvent>> MESSAGE_HANDLERS = Map.ofEntries(
             Map.entry("Starting in 1 second.", event -> {
                 if (event.isStyledWith(SimpleColor.GREEN)) {
-                    TickUtils.queueServerTickTask(() -> DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.DUNGEON_START), 20);
+                    TickUtils.queueServerTickTask(() -> {
+                        DungeonTimer.resetLagModel();
+                        DungeonTimer.DungeonTimingState.resetAll();
+                        DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.DUNGEON_START);
+                    }, 20);
                 }
             }),
             Map.entry("The BLOOD DOOR has been opened!", event -> {
@@ -64,9 +71,14 @@ public final class DungeonTimer {
                     Helpers.notify(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, "§cBlood Cleared! (" + seconds + "s)", 60);
                 }
             }),
-            Map.entry("[BOSS] Maxor: WELL! WELL! WELL! LOOK WHO'S HERE!", event -> {
-                if (event.isStyledWith(SimpleColor.DARK_RED)) {
-                    DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.BOSS_ENTRY);
+            Map.entry("[BOSS] Sadan: ENOUGH!", event -> {
+                if (event.isStyledWith(SimpleColor.RED)) {
+                    DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.TERRAS_CLEAR);
+                }
+            }),
+            Map.entry("[BOSS] Sadan: You did it. I understand now, you have earned my respect.", event -> {
+                if (event.isStyledWith(SimpleColor.RED)) {
+                    DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.GIANTS_CLEAR);
                 }
             }),
             Map.entry("[BOSS] Storm: Pathetic Maxor, just like expected.", event -> {
@@ -101,6 +113,8 @@ public final class DungeonTimer {
     private static long lastMonotonicGlobalLagNano;
     private static int linesSize;
     private static boolean skipRender = true;
+    @Nullable
+    private static DungeonFloor dungeonFloor;
 
     private DungeonTimer() {
         super();
@@ -117,6 +131,19 @@ public final class DungeonTimer {
     }
 
     public static final boolean isInBetweenPhases(@NotNull final DungeonTimer.DungeonPhase started, @NotNull final DungeonTimer.DungeonPhase notYetFinished) {
+        if (notYetFinished.ordinal() <= started.ordinal()) {
+            throw new IllegalArgumentException(
+                    "notYetFinished (" + notYetFinished + ") must come after started (" + started + ')'
+            );
+        }
+
+        if (!DungeonTimer.DungeonPhase.areCompatible(started, notYetFinished)) {
+            throw new IllegalArgumentException(
+                    "Incompatible phase pair: "
+                            + started + " ↔ " + notYetFinished
+            );
+        }
+
         return DungeonTimer.isPhaseFinished(started) && DungeonTimer.isPhaseNotFinished(notYetFinished);
     }
 
@@ -126,6 +153,7 @@ public final class DungeonTimer {
 
         TickUtils.queueRepeatingServerTickTask(DungeonTimer::onServerTick, 1);
 
+        TickUtils.queueRepeatingTickTask(DungeonTimer::updateDungeonFloor, 1);
         TickUtils.queueRepeatingTickTask(DungeonTimer::updateDungeonTimer, 1);
         HudElementRegistry.addLast(Identifier.of(DarkUtils.MOD_ID, "dungeon_timer"), (context, tickCounter) -> DungeonTimer.renderDungeonTimer(context));
     }
@@ -296,9 +324,42 @@ public final class DungeonTimer {
         );
     }
 
+    private static long lastNegativeLagWarnNano;
+
+    private static final void handleNegativeLag(
+            final long rawLagNano,
+            final long serverTick,
+            final long clientNow
+    ) {
+        final long now = System.nanoTime();
+
+        if (TimeUnit.SECONDS.toNanos(5L) >
+                now - DungeonTimer.lastNegativeLagWarnNano) {
+            return;
+        }
+
+        DungeonTimer.lastNegativeLagWarnNano = now;
+
+        final long aheadMillis =
+                TimeUnit.NANOSECONDS.toMillis(-rawLagNano);
+
+        DarkUtils.warn(
+                DungeonTimer.class,
+                "Server tick model predicted FUTURE time! " +
+                "ahead=" + aheadMillis + "ms " +
+                "serverTick=" + serverTick
+        );
+
+        if (TimeUnit.MILLISECONDS.toNanos(50L) < -rawLagNano) {
+            DarkUtils.warn(
+                    DungeonTimer.class,
+                    "Server predicted >1 tick into future!"
+            );
+        }
+    }
+
     private static final void updateDungeonTimer() {
-        // TODO add config option
-        if (null == MinecraftClient.getInstance().player || !LocationUtils.isInDungeons()) {
+        if (!DarkUtilsConfig.INSTANCE.dungeonTimer || null == MinecraftClient.getInstance().player || null == MinecraftClient.getInstance().world || !LocationUtils.isInDungeons()) {
             DungeonTimer.skipRender = true;
             return;
         }
@@ -309,29 +370,168 @@ public final class DungeonTimer {
         final var expectedServerNano =
                 DungeonTimer.lastServerTickNow * DungeonTimer.TICK_NANOS;
 
+        final var rawLagNano =
+                DungeonTimer.lastClientNow - expectedServerNano;
+
+        if (0L > rawLagNano) {
+            DungeonTimer.handleNegativeLag(
+                    rawLagNano,
+                    DungeonTimer.lastServerTickNow,
+                    DungeonTimer.lastClientNow
+            );
+        }
+
         final var globalLagNow =
-                Math.max(0L, DungeonTimer.lastClientNow - expectedServerNano);
+                Math.max(0L, rawLagNano);
 
         DungeonTimer.lastMonotonicGlobalLagNano =
                 Math.max(DungeonTimer.lastMonotonicGlobalLagNano, globalLagNow);
 
         DungeonTimer.lines.clear();
 
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BLOOD_OPEN, "Blood Open", Formatting.WHITE, Items.SUGAR);
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, "Blood Done", Formatting.RED, Items.REDSTONE);
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_ENTRY, "Boss Entry", Formatting.DARK_GREEN, Items.END_PORTAL_FRAME);
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_1_CLEAR, "Maxor", Formatting.AQUA, Items.END_CRYSTAL);
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.PHASE_1_CLEAR, DungeonTimer.DungeonPhase.PHASE_2_CLEAR, "Storm", Formatting.DARK_PURPLE, Items.BLAZE_ROD);
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.PHASE_2_CLEAR, DungeonTimer.DungeonPhase.TERMINALS_CLEAR, "Terminals", Formatting.YELLOW, Items.COMMAND_BLOCK);
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.TERMINALS_CLEAR, DungeonTimer.DungeonPhase.PHASE_3_CLEAR, "Goldor", Formatting.GOLD, Items.GOLDEN_SWORD);
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.PHASE_3_CLEAR, DungeonTimer.DungeonPhase.PHASE_4_CLEAR, "Necron", Formatting.DARK_RED, Items.STICK);
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.PHASE_4_CLEAR, DungeonTimer.DungeonPhase.PHASE_5_CLEAR, "Wither King", Formatting.GRAY, Items.WITHER_SKELETON_SKULL); // FIXME this shown in F7 once necron dies
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_5_CLEAR, "Boss Total", Formatting.LIGHT_PURPLE, Items.DRAGON_HEAD); // TODO add BOSS_CLEAR phase TODO sometimes is 1s off from the sum of all phases, maybe because BOSS_ENTRY lag lost time is also included in the boss total?
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.PHASE_5_CLEAR, "Total", Formatting.GREEN, Items.CLOCK); // TODO add DUNGEON_END phase
+        DungeonTimer.addLines();
 
         DungeonTimer.linesSize = DungeonTimer.lines.size();
 
         DungeonTimer.skipRender = DungeonTimer.lines.isEmpty();
+    }
+
+    /**
+     * Checks that the user is on given dungeon floor.
+     * <p>
+     * This an exact comparision. See {@link DungeonTimer#isOnDungeonFloor(int)} instead for more relaxed comparision.
+     * <p>
+     * If you pass a regular floor and user is in a master floor, it won't match.
+     * Vice-versa is also true, of course, if you pass a master floor and user is on regular, it won't return true.
+     */
+    public static final boolean isOnDungeonFloor(@NotNull final DungeonTimer.DungeonFloor dungeonFloor) {
+        return dungeonFloor == DungeonTimer.dungeonFloor; // enum-to-enum reference equality is safe. We don't need to call .equals or check that .floor() and .isMaster() is equal on both.
+    }
+
+    /**
+     * Checks that the user is on given dungeon floor.
+     * <p>
+     * This will match both master and regular floors.
+     */
+    public static final boolean isOnDungeonFloor(final int dungeonFloor) {
+        final var floor = DungeonTimer.dungeonFloor;
+        return null != floor && dungeonFloor == floor.floor();
+    }
+
+    /**
+     * Gets the dungeon floor the player is on.
+     * <p>
+     * Returned value is nullable. Regular and master floors are different enum variants.
+     * <p>
+     * Prefer the methods {@link DungeonTimer#isOnDungeonFloor(DungeonFloor)} or {@link DungeonTimer#isOnDungeonFloor(int)}
+     * unless you need the actual enum.
+     */
+    @Nullable
+    public static final DungeonFloor getDungeonFloor() {
+        return DungeonTimer.dungeonFloor;
+    }
+
+    public enum DungeonFloor {
+        ENTRANCE,
+        FLOOR_I,
+        FLOOR_II,
+        FLOOR_III,
+        FLOOR_IV,
+        FLOOR_V,
+        FLOOR_VI,
+        FLOOR_VII,
+        MASTER_FLOOR_I,
+        MASTER_FLOOR_II,
+        MASTER_FLOOR_III,
+        MASTER_FLOOR_IV,
+        MASTER_FLOOR_V,
+        MASTER_FLOOR_VI,
+        MASTER_FLOOR_VII;
+
+        private static final DungeonFloor @NotNull [] VALUES = DungeonFloor.values();
+
+        private final boolean master = this.name().startsWith("MASTER");
+        private final int floor = master ? this.ordinal() - 7 : this.ordinal();
+
+        @Nullable
+        public static final DungeonFloor from(final boolean masterModeFloor, final int rawFloorNumber) {
+            // TODO potential out of bound access if hypixel ever adds a new floor
+            // suggested fix: if (index >= VALUES.length), then do .warn() that floor is unsupported or unknown and return null.
+            return DungeonFloor.VALUES[masterModeFloor ? rawFloorNumber + 7 : rawFloorNumber];
+        }
+
+        public final int floor() {
+            return this.floor;
+        }
+
+        public final boolean isMaster() {
+            return this.master;
+        }
+    }
+
+    private static final void updateDungeonFloor() {
+        if (null == MinecraftClient.getInstance().player || null == MinecraftClient.getInstance().world || !LocationUtils.isInDungeons()) {
+            return;
+        }
+
+        // If you join an F7 and then join M7 with the command without leaving the F7, the world change event triggers while the scoreboard still says F7, and so you will be in a bugged state in M7 with the floor being detected as F7. To fix this rare bug, we keep re-assigning the dungeon floor till the dungeon starts in addition to the null check.
+        if (null == DungeonTimer.dungeonFloor || DungeonTimer.isPhaseNotFinished(DungeonTimer.DungeonPhase.DUNGEON_START)) {
+            // TODO Extract to a ScoreboardUtil class later
+            final var scoreboard = MinecraftClient.getInstance().player.networkHandler.getScoreboard();
+            final var objective = scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.FROM_ID.apply(1)); // TODO check if this can be anything other than 1 and that the method does not return null in that case
+            for (final var scoreHolder : scoreboard.getKnownScoreHolders()) {
+                if (scoreboard.getScoreHolderObjectives(scoreHolder).containsKey(objective)) {
+                    final var team = scoreboard.getScoreHolderTeam(scoreHolder.getNameForScoreboard());
+                    if (null != team) {
+                        final var line = Formatting.strip(team.getPrefix().getString() + team.getSuffix().getString());
+                        if (line.contains("The Catacombs (")) {
+                            final var dungeonFloor = StringUtils.substringBetween(line, "(", ")");
+                            // TODO confirm number format exception not possible
+                            // suggested fix: catch the exception and do a .warn() call.
+                            DungeonTimer.dungeonFloor = DungeonTimer.DungeonFloor.from(dungeonFloor.startsWith("M"), "E".equals(dungeonFloor) ? 0 : Integer.parseInt(dungeonFloor.substring(1)));
+
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static final void addLines() {
+        final var floor = DungeonTimer.dungeonFloor;
+
+        if (null == floor) {
+            return;
+        }
+
+        DungeonTimer.addLine(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BLOOD_OPEN, "Blood Open", Formatting.WHITE, Items.SUGAR);
+        DungeonTimer.addLine(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, "Blood Done", Formatting.RED, Items.REDSTONE);
+        DungeonTimer.addLine(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_ENTRY, "Boss Entry", Formatting.DARK_GREEN, Items.END_PORTAL_FRAME);
+
+        // Floor 6
+        if (floor.floor() == 6) {
+            DungeonTimer.addLine(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.TERRAS_CLEAR, "Terracottas", Formatting.GOLD, Items.BROWN_TERRACOTTA);
+            DungeonTimer.addLine(DungeonTimer.DungeonPhase.TERRAS_CLEAR, DungeonTimer.DungeonPhase.GIANTS_CLEAR, "Giants", Formatting.AQUA, Items.DIAMOND_SWORD);
+        }
+
+        // Floor 7 & Master Floor 7
+        if (floor.floor() == 7) {
+            // Both regular and master 7 have those phases
+            DungeonTimer.addLine(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_1_CLEAR, "Maxor", Formatting.AQUA, Items.END_CRYSTAL);
+            DungeonTimer.addLine(DungeonTimer.DungeonPhase.PHASE_1_CLEAR, DungeonTimer.DungeonPhase.PHASE_2_CLEAR, "Storm", Formatting.DARK_PURPLE, Items.BLAZE_ROD);
+            DungeonTimer.addLine(DungeonTimer.DungeonPhase.PHASE_2_CLEAR, DungeonTimer.DungeonPhase.TERMINALS_CLEAR, "Terminals", Formatting.YELLOW, Items.COMMAND_BLOCK);
+            DungeonTimer.addLine(DungeonTimer.DungeonPhase.TERMINALS_CLEAR, DungeonTimer.DungeonPhase.PHASE_3_CLEAR, "Goldor", Formatting.GOLD, Items.GOLDEN_SWORD);
+            DungeonTimer.addLine(DungeonTimer.DungeonPhase.PHASE_3_CLEAR, DungeonTimer.DungeonPhase.PHASE_4_CLEAR, "Necron", Formatting.DARK_RED, Items.STICK);
+
+            // Master Floor 7 specific phase
+            if (floor.isMaster()) {
+                DungeonTimer.addLine(DungeonTimer.DungeonPhase.PHASE_4_CLEAR, DungeonTimer.DungeonPhase.PHASE_5_CLEAR, "Wither King", Formatting.GRAY, Items.WITHER_SKELETON_SKULL);
+            }
+        }
+
+        DungeonTimer.addLine(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.BOSS_CLEAR, "Boss Total", Formatting.LIGHT_PURPLE, Items.DRAGON_HEAD); // TODO sometimes is 1s off from the sum of all phases, maybe because BOSS_ENTRY lag lost time is also included in the boss total?
+        DungeonTimer.addLine(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_CLEAR, "Total", Formatting.GREEN, Items.CLOCK); // TODO add DUNGEON_END phase for clarity (semantically same as BOSS_CLEAR, as thats where dungeon ends)
     }
 
     private static final void renderDungeonTimer(@NotNull final DrawContext context) {
@@ -379,28 +579,146 @@ public final class DungeonTimer {
         }
     }
 
+    private static final void finishAllOpenApplicablePhases() {
+        final var timings = DungeonTimingState.timings;
+        final var now = PhaseTiming.now();
+        final var runFloor = DungeonTimer.dungeonFloor;
+        final var values = DungeonTimer.DungeonPhase.values();
+
+        for (var i = 0; i < timings.length; ++i) {
+            if (null != timings[i]) {
+                continue;
+            }
+
+            final var phase = values[i];
+
+            if (!phase.appliesTo(runFloor)) {
+                continue;
+            }
+
+            timings[i] = now;
+        }
+    }
+
     private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
+        if (!LocationUtils.isInDungeons()) {
+            return;
+        }
+
         event.match(DungeonTimer.MESSAGE_HANDLERS);
+
+        final var noLeadingWhitespace = event.content().stripLeading(); // target matches has leading spaces to center the text added by hypixel
+
+        if ("> EXTRA STATS <".equals(noLeadingWhitespace)) {
+            // Sent after Defeated, but failed runs do not send the Defeated one, while they send the Extra Stats text, so we need this in addition.
+            if (event.isStyledWith(SimpleColor.GOLD) && DungeonTimer.isPhaseNotFinished(DungeonTimer.DungeonPhase.BOSS_CLEAR)) {
+                DungeonTimer.finishAllOpenApplicablePhases(); // implicitly finishes BOSS_CLEAR
+            }
+        } else if (noLeadingWhitespace.startsWith("☠ Defeated ")) {
+            if (event.isStyledWith(SimpleColor.RED)) {
+                DungeonTimer.finishAllOpenApplicablePhases(); // implicitly finishes BOSS_CLEAR
+            }
+        } else {
+            final var bossName = event.extractPart("[BOSS] ", ':');
+
+            if (null != bossName && DungeonTimer.ensureCorrectBossForTheFloor(DungeonTimer.dungeonFloor, bossName) && DungeonTimer.isPhaseNotFinished(DungeonTimer.DungeonPhase.BOSS_ENTRY)) {
+                DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.BOSS_ENTRY);
+            }
+        }
+    }
+
+    /**
+     * This is necessary to avoid detecting boss messages from The Watcher, Bonzo, Scarf or Livid (in their blood room forms).
+     * Only Maxor is checked for Floor 7 as this is currently only used for boss entry detection on first boss dialogue.
+     */
+    private static final boolean ensureCorrectBossForTheFloor(@Nullable DungeonTimer.DungeonFloor floor, @NotNull final String bossName) {
+        if (null == floor) {
+            return false;
+        }
+
+        final var floorNumber = floor.floor();
+
+        final var correctBoss = switch (floorNumber) {
+            case 0 -> "The Watcher";
+            case 1 -> "Bonzo";
+            case 2 -> "Scarf";
+            case 3 -> "The Professor";
+            case 4 -> "Thorn";
+            case 5 -> "Livid";
+            case 6 -> "Sadan";
+            case 7 -> "Maxor";
+            default -> null;
+        };
+
+        return null != correctBoss && correctBoss.equals(bossName);
+    }
+
+    private static final void resetLagModel() {
+        DungeonTimer.serverTickCounter = 0L;
+        DungeonTimer.lastServerTickNow = 0L;
+        DungeonTimer.lastMonotonicGlobalLagNano = 0L;
+        DungeonTimer.lastClientNow = System.nanoTime();
     }
 
     private static final void reset(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
-        DungeonTimer.serverTickCounter = 0L;
-        DungeonTimer.lastClientNow = System.nanoTime();
-        DungeonTimer.lastServerTickNow = 0L;
+        DungeonTimer.resetLagModel();
+
+        DungeonTimer.dungeonFloor = null;
+        DungeonTimer.lines.clear();
+        DungeonTimer.linesSize = 0;
+        DungeonTimer.skipRender = true;
+
         DungeonTimer.DungeonTimingState.resetAll();
     }
 
     public enum DungeonPhase {
-        DUNGEON_START,
-        BLOOD_OPEN,
-        BLOOD_CLEAR,
-        BOSS_ENTRY,
-        PHASE_1_CLEAR,
-        PHASE_2_CLEAR,
-        TERMINALS_CLEAR,
-        PHASE_3_CLEAR,
-        PHASE_4_CLEAR,
-        PHASE_5_CLEAR
+        // Floor-agnostic
+        DUNGEON_START(),
+        BLOOD_OPEN(),
+        BLOOD_CLEAR(),
+        BOSS_ENTRY(),
+
+        // Floor 6
+        TERRAS_CLEAR(DungeonFloor.FLOOR_VI),
+        GIANTS_CLEAR(DungeonFloor.FLOOR_VI),
+
+        // Floor 7
+        PHASE_1_CLEAR(DungeonFloor.FLOOR_VII),
+        PHASE_2_CLEAR(DungeonFloor.FLOOR_VII),
+        TERMINALS_CLEAR(DungeonFloor.FLOOR_VII),
+        PHASE_3_CLEAR(DungeonFloor.FLOOR_VII),
+        PHASE_4_CLEAR(DungeonFloor.FLOOR_VII),
+
+        // Master Floor 7
+        PHASE_5_CLEAR(DungeonFloor.MASTER_FLOOR_VII),
+
+        // Floor-agnostic
+        BOSS_CLEAR();
+
+        @Nullable
+        private final DungeonFloor floor;
+
+        private DungeonPhase() {
+            this.floor = null;
+        }
+
+        private DungeonPhase(@NotNull final DungeonFloor floor) {
+            this.floor = floor;
+        }
+
+        public final boolean appliesTo(@Nullable final DungeonFloor runFloor) {
+            if (null == this.floor) return true;
+            if (null == runFloor) return false;
+
+            return this.floor.floor() == runFloor.floor();
+        }
+
+        private static final boolean areCompatible(@NotNull final DungeonTimer.DungeonPhase a, @NotNull final DungeonTimer.DungeonPhase b) {
+            final var aFloor = a.floor;
+            final var bFloor = b.floor;
+
+            return null == aFloor || null == bFloor || aFloor == bFloor;
+        }
     }
 
     private static final class PhaseTiming {
@@ -425,7 +743,17 @@ public final class DungeonTimer {
             final var serverTickNow = DungeonTimer.serverTickCounter;
 
             final var expectedServerNano = serverTickNow * DungeonTimer.TICK_NANOS;
-            final var lagNano = Math.max(0L, clientNow - expectedServerNano);
+            final var rawLagNano = clientNow - expectedServerNano;
+
+            if (0L > rawLagNano) {
+                DungeonTimer.handleNegativeLag(
+                        rawLagNano,
+                        serverTickNow,
+                        clientNow
+                );
+            }
+
+            final var lagNano = Math.max(0L, rawLagNano);
 
             return new DungeonTimer.PhaseTiming(
                     clientNow,
@@ -457,9 +785,31 @@ public final class DungeonTimer {
         private static final void finishedPhase(@NotNull final DungeonTimer.DungeonPhase phase) {
             final var timings = DungeonTimer.DungeonTimingState.timings;
             final var ordinal = phase.ordinal();
+
             if (null != timings[ordinal]) {
                 DarkUtils.warn(DungeonTimer.DungeonTimingState.class, "Phase " + phase.name() + " was finished multiple times");
                 return;
+            }
+
+            final var runFloor = DungeonTimer.dungeonFloor;
+            final var values = DungeonTimer.DungeonPhase.values();
+
+            for (var i = 0; i < ordinal; ++i) {
+                final var earlier = values[i];
+
+                if (!earlier.appliesTo(runFloor)) {
+                    continue;
+                }
+
+                if (null == timings[i]) {
+                    DarkUtils.warn(
+                            DungeonTimer.DungeonTimingState.class,
+                            "Phase ordering anomaly: "
+                                    + phase.name()
+                                    + " finished before "
+                                    + earlier.name()
+                    );
+                }
             }
 
             timings[ordinal] = DungeonTimer.PhaseTiming.now();

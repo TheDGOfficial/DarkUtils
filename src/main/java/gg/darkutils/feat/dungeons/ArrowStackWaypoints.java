@@ -45,16 +45,21 @@ public final class ArrowStackWaypoints {
         return DarkUtilsConfig.INSTANCE.arrowStackWaypoints;
     }
 
-    private static final boolean shouldRender() {
-        final ClientPlayerEntity player;
+    private static final boolean isInM7() {
+        return DungeonTimer.isOnDungeonFloor(DungeonTimer.DungeonFloor.MASTER_FLOOR_VII);
+    }
 
-        return ArrowStackWaypoints.isEnabled()
-                && (
-                DungeonTimer.isPhaseFinished(DungeonTimer.DungeonPhase.PHASE_4_CLEAR)
-                        || null != (player = MinecraftClient.getInstance().player) && 45.0D >= player.getY()
-        )
-                && DungeonTimer.isPhaseNotFinished(DungeonTimer.DungeonPhase.PHASE_5_CLEAR)
-                && DungeonTimer.isPhaseFinished(DungeonTimer.DungeonPhase.BOSS_ENTRY)/* && LocationUtils.isInM7() */;
+    private static final boolean isPlayerBelowNecronPlatformHeight() {
+        final var player = MinecraftClient.getInstance().player;
+        return null != player && 45.0D >= player.getY();
+    }
+
+    private static final boolean isP3FinishedWhileP5IsNot() {
+        return DungeonTimer.isInBetweenPhases(DungeonTimer.DungeonPhase.PHASE_3_CLEAR, DungeonTimer.DungeonPhase.PHASE_5_CLEAR);
+    }
+
+    private static final boolean shouldRender() {
+        return ArrowStackWaypoints.isEnabled() && ArrowStackWaypoints.isInM7() && ArrowStackWaypoints.isP3FinishedWhileP5IsNot() && ArrowStackWaypoints.isPlayerBelowNecronPlatformHeight();
     }
 
     private static final void renderArrowStackWaypoints(@NotNull final WorldRenderContext context) {

@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Set;
@@ -87,7 +88,7 @@ public final class TickUtils {
         if (condition.getAsBoolean()) {
             action.run();
         } else {
-            TickUtils.tasks.add(new TickUtils.ConditionalTask(condition, action));
+            TickUtils.tasks.add(new TickUtils.Task(condition, action));
         }
     }
 
@@ -173,7 +174,7 @@ public final class TickUtils {
         if (0 == interval) {
             throw new IllegalArgumentException("Queueing a repeating tick task with interval zero is prohibited");
         }
-        (client ? TickUtils.tasks : TickUtils.serverTasks).add(new TickUtils.RepeatingTask(task, interval));
+        (client ? TickUtils.tasks : TickUtils.serverTasks).add(new TickUtils.Task(task, interval, true));
     }
 
     /**
@@ -183,7 +184,7 @@ public final class TickUtils {
      * If the calling thread is not the render thread, an exception will be thrown, as we call .update initially
      * on the caller thread to ensure no uninitialized reads happen.
      *
-     * @param condition The interval, in ticks. 20 ticks is considered equal to a second.
+     * @param condition The condition that will be updated one time initially and then 20 times every second.
      */
     @NotNull
     public static final BooleanSupplier queueUpdatingCondition(@NotNull final BooleanSupplier condition) {
@@ -262,7 +263,7 @@ public final class TickUtils {
             TickUtils.checkCallerThread();
             task.run();
         } else {
-            (client ? TickUtils.tasks : TickUtils.serverTasks).add(new TickUtils.OneShotTask(task, delay));
+            (client ? TickUtils.tasks : TickUtils.serverTasks).add(new TickUtils.Task(task, delay, false));
         }
     }
 
@@ -280,85 +281,82 @@ public final class TickUtils {
     // Task system
     // ============================================================
 
-    private sealed interface Task
-            permits TickUtils.OneShotTask, TickUtils.RepeatingTask, TickUtils.ConditionalTask {
-        boolean tick();
-    }
-
-    private static final class OneShotTask implements TickUtils.Task {
+    private static final class Task {
         private final @NotNull Runnable action;
+        private final int initialTicks;
+        private final boolean repeats;
+        private final @Nullable BooleanSupplier condition;
         private int ticks;
 
-        private OneShotTask(@NotNull final Runnable action, final int delay) {
+        /**
+         * Condition-based constructor.
+         */
+        private Task(@NotNull final BooleanSupplier condition, @NotNull final Runnable action) {
             super();
 
-            if (0 >= delay) {
-                throw new IllegalArgumentException("delay must be > 0");
-            }
+            this.condition = condition;
             this.action = action;
-            this.ticks = delay;
+            this.initialTicks = -1;
+            this.ticks = -1;
+            this.repeats = false;
         }
 
-        @Override
-        public final boolean tick() {
-            if (0 >= --this.ticks) {
-                this.action.run();
-                return true; // remove
+        /**
+         * Time-based constructor.
+         */
+        private Task(@NotNull final Runnable action, final int initialTicks, final boolean repeats) {
+            super();
+
+            if (0 >= initialTicks) {
+                throw new IllegalArgumentException("Task interval must be greater than zero");
             }
+
+            this.condition = null;
+            this.action = action;
+            this.initialTicks = initialTicks;
+            this.ticks = initialTicks;
+            this.repeats = repeats;
+        }
+
+        /**
+         * Ticks the task, running it if it should.
+         *
+         * @return true If the task should be removed.
+         */
+        private final boolean tick() {
+            if (null != this.condition) {
+                if (this.condition.getAsBoolean()) {
+                    this.action.run();
+                    return true; // remove once condition passes
+                }
+
+                return false; // keep until condition is true
+            }
+
+            if (1 >= this.ticks) {
+                this.action.run();
+
+                if (this.repeats) {
+                    this.ticks = this.initialTicks;
+                    return false; // keep repeating
+                }
+
+                return true; // one-shot, remove
+            }
+
+            --this.ticks;
             return false;
         }
 
         @Override
         public final String toString() {
-            return "OneShotTask{ticks=" + this.ticks + ", action=" + this.action + '}';
-        }
-    }
-
-    private static final class RepeatingTask implements TickUtils.Task {
-        private final @NotNull Runnable action;
-        private final int interval;
-        private int ticks;
-
-        private RepeatingTask(@NotNull final Runnable action, final int interval) {
-            super();
-
-            if (0 >= interval) {
-                throw new IllegalArgumentException("interval must be > 0");
-            }
-            this.action = action;
-            this.interval = interval;
-            this.ticks = interval;
-        }
-
-        @Override
-        public final boolean tick() {
-            if (0 >= --this.ticks) {
-                this.action.run();
-                this.ticks = this.interval;
-            }
-            return false; // never removed
-        }
-
-        @Override
-        public final String toString() {
-            return "RepeatingTask{ticks=" + this.ticks + ", interval=" + this.interval + ", action=" + this.action + '}';
-        }
-    }
-
-    private record ConditionalTask(@NotNull BooleanSupplier condition,
-                                   @NotNull Runnable action) implements TickUtils.Task {
-        @Override
-        public final boolean tick() {
-            if (this.condition.getAsBoolean()) {
-                this.action.run();
-                return true; // remove once condition passes
-            }
-            return false;
-        }
-
-        @Override
-        public final @NotNull String toString() {
-            return "ConditionalTask{condition=" + this.condition + ", action=" + this.action + '}';
+            return "Task{" +
+                    "action=" + this.action +
+                    ", initialTicks=" + this.initialTicks +
+                    ", repeats=" + this.repeats +
+                    ", condition=" + this.condition +
+                    ", ticks=" + this.ticks +
+                    '}';
         }
     }
 }

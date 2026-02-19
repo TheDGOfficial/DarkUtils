@@ -1,5 +1,7 @@
 package gg.darkutils.utils;
 
+import gg.darkutils.utils.chat.ChatUtils;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -142,7 +144,7 @@ public final class Helpers {
                 final var cached = Helpers.targetedEntityName;
                 if (null == cached) {
                     final var customName = entity.getCustomName();
-                    name = null == customName ? "" : customName.getString();
+                    name = null == customName ? "" : ChatUtils.removeControlCodes(customName.getString());
                 } else {
                     name = cached;
                 }
@@ -206,7 +208,7 @@ public final class Helpers {
             return false;
         }
 
-        final var plain = customName.getString();
+        final var plain = ChatUtils.removeControlCodes(customName.getString());
         Helpers.mainHandHeldItemStackName = plain;
 
         return matcher.test(plain);

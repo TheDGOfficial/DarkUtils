@@ -16,11 +16,27 @@ import net.minecraft.text.HoverEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Contract;
 
+import java.util.Optional;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import java.util.function.Supplier;
+
 public final class ChatUtils {
+    /**
+     * The character used to signal the start of a formatting code.
+     * <p>
+     * We store this as a {@link String} since that has higher performance
+     * than an unboxed {@link Character}, although primitive char is more
+     * performant, we need the {@link Character} for string operations.
+     */
+    @NotNull
+    private static final String CONTROL_START = "§";
     /**
      * Represents new line character suitable to be used in chat to switch to a new line.
      * This does not depend on any operating system and thus platform-agnostic (implementation detail in Minecraft chat handling).
@@ -88,10 +104,138 @@ public final class ChatUtils {
         return ChatUtils.hasFormatting(text, SimpleStyle.colored(color).also(SimpleStyle.formatted(formatting)));
     }
 
-    public static final boolean hasFormatting(final Text text, @NotNull final SimpleStyle color) {
-        final var colorStyle = LazyConstants.lazyConstantOf(color::toStyle);
-        return !text.asOrderedText().accept((index, style, codePoint) -> style.isBold() != colorStyle.get().isBold() ||
-                null == style.getColor() || !style.getColor().equals(colorStyle.get().getColor()));
+    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleStyle style) {
+        return ChatUtils.hasFormatting(text, style, text::getString);
+    }
+
+    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleStyle style, @NotNull final Supplier<String> textString) {
+        final var hasFormattingInComponent = ChatUtils.hasFormattingInsideRootComponent(text, style);
+
+        if (hasFormattingInComponent) {
+            return true;
+        }
+
+        return ChatUtils.hasFormattingInsideTextRaw(textString.get(), style);
+    }
+
+    private static final boolean hasFormattingInsideTextRaw(@NotNull final String rawText, @NotNull final SimpleStyle style) {
+        return rawText.contains(style.getRawFormattingCharacters());
+    }
+
+    private static final boolean hasFormattingInsideRootComponent(@NotNull final Text text, @NotNull final SimpleStyle simpleStyle) {
+        return ChatUtils.hasFormattingInsideRootComponent(text, simpleStyle.toStyle()); // converts from our SimpleStyle wrapper to vanilla Style class
+    }
+
+    private static final boolean hasFormattingInsideRootComponent(@NotNull final Text text, @NotNull final Style expected) {
+        return text.visit((final Style resolved, final String ignored) ->
+            ChatUtils.matches(resolved, expected)
+                ? Optional.of(true)
+                : Optional.empty(),
+            Style.EMPTY
+        ).isPresent();
+    }
+
+    private static final boolean matches(@NotNull final Style resolved, @NotNull final Style target) {
+        if (!ChatUtils.matchNullable(target.getColor(), resolved.getColor())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchFlag(target.isBold(), resolved.isBold())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchFlag(target.isItalic(), resolved.isItalic())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchFlag(target.isUnderlined(), resolved.isUnderlined())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchFlag(target.isStrikethrough(), resolved.isStrikethrough())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchFlag(target.isObfuscated(), resolved.isObfuscated())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchNullable(target.getClickEvent(), resolved.getClickEvent())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchNullable(target.getHoverEvent(), resolved.getHoverEvent())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchNullable(target.getInsertion(), resolved.getInsertion())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchNullable(target.getFont(), resolved.getFont())) {
+            return false;
+        }
+
+        if (!ChatUtils.matchNullable(target.getShadowColor(), resolved.getShadowColor())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static final boolean matchFlag(final boolean target, final boolean resolved) {
+        return !target || resolved;
+    }
+
+    private static final <T> boolean matchNullable(@Nullable final T target, @Nullable final T resolved) {
+        return null == target || Objects.equals(target, resolved);
+    }
+
+    /**
+     * Removes Minecraft color and formatting codes from the given string.
+     * <p>
+     * Note that unlike other methods this doesn't utilize a
+     * {@link java.util.regex.Pattern} or {@link java.util.regex.Matcher} and
+     * just uses simple {@link StringBuilder} and thus will be much faster.
+     *
+     * @param text The text to remove Minecraft control codes from.
+     * @return Empty string if the given text is null, or the given text
+     * without control codes otherwise.
+     */
+    @Contract("null -> null")
+    public static final String removeControlCodes(@Nullable final String text) {
+        if (null == text) {
+            return null;
+        }
+
+        final var length = text.length();
+
+        if (0 == length) {
+            return "";
+        }
+
+        var nextFormattingSequence = text.indexOf(ChatUtils.CONTROL_START);
+
+        if (-1 == nextFormattingSequence) {
+            return text;
+        }
+
+        final var cleanedString = new StringBuilder(length - 1);
+
+        var readIndex = 0;
+
+        while (-1 != nextFormattingSequence) {
+            cleanedString.append(text, readIndex, nextFormattingSequence);
+
+            readIndex = nextFormattingSequence + 2;
+            nextFormattingSequence = text.indexOf(ChatUtils.CONTROL_START, readIndex);
+
+            readIndex = Math.min(length, readIndex);
+        }
+
+        cleanedString.append(text, readIndex, length);
+
+        return cleanedString.toString();
     }
 
     @NotNull

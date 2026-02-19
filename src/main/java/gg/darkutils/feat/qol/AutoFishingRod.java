@@ -174,7 +174,7 @@ public final class AutoFishingRod {
         final var armorStand = AutoFishingRod.getOrFindCountdownArmorStand(client);
         if (null != armorStand) {
             final var customName = armorStand.getCustomName();
-            if (null != customName && AutoFishingRod.READY.equals(customName.getString()) && ChatUtils.hasFormatting(customName, SimpleColor.RED, SimpleFormatting.BOLD)) {
+            if (null != customName && AutoFishingRod.READY.equals(ChatUtils.removeControlCodes(customName.getString())) && ChatUtils.hasFormatting(customName, SimpleColor.RED, SimpleFormatting.BOLD)) {
                 AutoFishingRod.hook(client);
             }
         }

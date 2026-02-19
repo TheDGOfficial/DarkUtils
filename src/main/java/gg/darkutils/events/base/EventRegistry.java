@@ -20,17 +20,6 @@ public interface EventRegistry {
         return EventRegistryImpl.getInstance();
     }
 
-    @SuppressWarnings("unchecked")
-    @NotNull
-    private static <T extends Event> Class<T> getEventClass(@NotNull final T event) {
-        return (Class<T>) event.getClass();
-    }
-
-    @NotNull
-    private <T extends Event> EventHandler<T> getEventHandler(@NotNull final T event) {
-        return this.getEventHandler(EventRegistry.getEventClass(event));
-    }
-
     /**
      * Gets the {@link EventHandler} for an event, allowing you to add listeners.
      *
@@ -40,6 +29,20 @@ public interface EventRegistry {
      */
     @NotNull
     <T extends Event> EventHandler<T> getEventHandler(@NotNull final Class<T> event);
+
+    /**
+     * Adds the given listener to be run for the compiler inferred event type.
+     *
+     * @param listener               The listener.
+     * @param priority               The priority.
+     * @param doNotPassThisParameter Do not pass this parameter, it is automatically
+     *                               passed by the compiler and used for type inference.
+     * @param <T>                    The type of the event.
+     */
+    @SuppressWarnings("unchecked")
+    default <T extends Event> void addListener(@NotNull final Consumer<T> listener, @NotNull final EventPriority priority, @Nullable final T... doNotPassThisParameter) {
+        this.addListener(EventListener.create(listener, priority), doNotPassThisParameter); // Passing it here is OK
+    }
 
     /**
      * Adds the given listener to be run for the compiler inferred event type.
@@ -66,6 +69,19 @@ public interface EventRegistry {
      */
     @SuppressWarnings("unchecked")
     default <T extends Event> void addListener(@NotNull final Consumer<T> listener, @Nullable final T... doNotPassThisParameter) {
+        this.addListener(EventListener.create(listener), doNotPassThisParameter); // Passing it here is OK
+    }
+
+    /**
+     * Adds the given listener to be run for the compiler inferred event type.
+     *
+     * @param listener               The listener.
+     * @param doNotPassThisParameter Do not pass this parameter, it is automatically
+     *                               passed by the compiler and used for type inference.
+     * @param <T>                    The type of the event.
+     */
+    @SuppressWarnings("unchecked")
+    default <T extends Event> void addListener(@NotNull final EventListener<T> listener, @Nullable final T... doNotPassThisParameter) {
         if (null == doNotPassThisParameter || 0 != doNotPassThisParameter.length) {
             throw new IllegalArgumentException("second parameter must not be manually passed");
         }
@@ -85,7 +101,7 @@ public interface EventRegistry {
             throw new IllegalArgumentException("listener method has wrong parameter with type " + eventType.getName());
         }
 
-        this.getEventHandler((Class<T>) eventType).addListener((Consumer<? super Event>) (Object) listener);
+        this.getEventHandler((Class<T>) eventType).addListener((EventListener<? super Event>) listener);
     }
 
     /**
@@ -97,9 +113,10 @@ public interface EventRegistry {
      * @param <T>   The type of the event.
      * @return The {@link CancellationResult}.
      */
+    @SuppressWarnings("unchecked")
     @NotNull
     default <T extends CancellableEvent> CancellationResult triggerEvent(@NotNull final T event) {
-        return this.getEventHandler(event).triggerCancellableEvent(event);
+        return this.getEventHandler((Class<T>) event.getClass()).triggerCancellableEvent(event);
     }
 
     /**
@@ -108,7 +125,8 @@ public interface EventRegistry {
      * @param event The event.
      * @param <T>   The type of the event.
      */
+    @SuppressWarnings("unchecked")
     default <T extends NonCancellableEvent> void triggerEvent(@NotNull final T event) {
-        this.getEventHandler(event).triggerNonCancellableEvent(event);
+        this.getEventHandler((Class<T>) event.getClass()).triggerNonCancellableEvent(event);
     }
 }

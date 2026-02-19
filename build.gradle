@@ -1,3 +1,36 @@
+import javassist.bytecode.ClassFile
+import javassist.bytecode.MethodInfo
+
+import org.gradle.api.specs.Spec
+import org.gradle.api.DefaultTask
+import org.gradle.api.provider.Provider
+import org.gradle.api.provider.Property
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.CompileClasspath
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.file.FileSystemOperations
+
+import javax.inject.Inject
+
+import java.io.StringReader
+
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
+import java.util.Properties
+
 buildscript {
     repositories {
         mavenCentral()
@@ -7,9 +40,6 @@ buildscript {
         classpath 'org.javassist:javassist:3.30.2-GA'
     }
 }
-
-import javassist.bytecode.ClassFile
-import javassist.bytecode.MethodInfo
 
 plugins {
     id 'fabric-loom' version "${loom_version}"
@@ -87,6 +117,35 @@ dependencies {
     modApi('net.hypixel:mod-api:1.0.1') {
         exclude(group: 'net.fabricmc.fabric-api')
     }
+
+    testImplementation('org.junit.jupiter:junit-jupiter:6.1.0-M1')
+    testImplementation('org.junit.jupiter:junit-jupiter-api:6.1.0-M1')
+
+    testRuntimeOnly('org.junit.platform:junit-platform-launcher:6.1.0-M1')
+}
+
+tasks {
+    test {
+        useJUnitPlatform()
+
+        testLogging {
+            exceptionFormat = TestExceptionFormat.FULL
+            showStandardStreams = true
+        }
+    }
+}
+
+configurations {
+    testImplementation.extendsFrom compileOnly
+}
+
+tasks.withType(Test).configureEach {
+    reports {
+        html.required = false
+        junitXml.required = false
+    }
+
+    it.systemProperty('inside.junit', 'true');
 }
 
 processResources {
@@ -97,7 +156,7 @@ processResources {
     inputs.property('version', modVersion)
 
     filesMatching('fabric.mod.json') {
-        expand(["version": modVersion])
+        expand(['version': modVersion])
     }
 }
 
@@ -161,9 +220,14 @@ publishing {
 }
 
 // Task class for full configuration-cache compatibility
+@CacheableTask
 abstract class CheckMethodSizesTask extends DefaultTask {
+    @CompileClasspath
     @InputFiles
     abstract ConfigurableFileCollection getClassesDirectories()
+
+    @OutputFile
+    abstract RegularFileProperty getReportFile()
 
     @TaskAction
     void checkMethods() {
@@ -196,6 +260,10 @@ abstract class CheckMethodSizesTask extends DefaultTask {
             }
         }
 
+        final def report = getReportFile().get().asFile
+        report.parentFile.mkdirs()
+        report.text = issues.join('\n')
+
         if (issues.empty) {
             println 'All methods are within size thresholds.'
         } else {
@@ -213,7 +281,11 @@ tasks.register('checkMethodSizes', CheckMethodSizesTask) {
 
     // Use a FileCollection as input (lazy, configuration-cache safe)
     classesDirectories.from(
-        layout.buildDirectory.dir("classes/java/main")
+        layout.buildDirectory.dir('classes/java/main')
+    )
+
+    reportFile.set(
+        layout.buildDirectory.file('reports/methodSizes.txt')
     )
 
     dependsOn tasks.named('classes')
@@ -222,5 +294,129 @@ tasks.register('checkMethodSizes', CheckMethodSizesTask) {
 // Make it run after check
 tasks.named('check') {
     finalizedBy tasks.named('checkMethodSizes')
+}
+
+static final Provider<File> resolveMinecraftDir(Project project) {
+    final def providers = project.providers
+    final def layout = project.layout
+
+    final def devPropsFile = layout.projectDirectory.file('dev.properties')
+
+    final Provider<String> fromProps =
+            providers.fileContents(devPropsFile)
+                    .asText
+                    .map { text ->
+                        final def props = new Properties()
+                        props.load(new StringReader(text))
+                        props.getProperty('minecraftDir')
+                    }
+
+    final def envFile = layout.projectDirectory.file('.env')
+
+    final Provider<String> fromEnv =
+            providers.fileContents(envFile)
+                    .asText
+                    .map { text ->
+                        text.readLines()
+                                .find { it.startsWith('MINECRAFT_DIR=') }
+                                ?.split('=', 2)
+                                ?.getAt(1)
+                    }
+
+    final Provider<String> defaultDir =
+            providers.systemProperty('user.home')
+                    .map { it + '/.minecraft' }
+
+    final Provider<String> finalPath =
+            fromProps
+                    .orElse(fromEnv)
+                    .orElse(defaultDir)
+
+    return finalPath.map { new File(it) }
+}
+
+abstract class InstallToModFolderTask extends DefaultTask {
+    @Classpath
+    @InputFile
+    abstract RegularFileProperty getInputJar()
+
+    @Input
+    abstract Property<String> getModVersion()
+
+    @OutputDirectory
+    abstract DirectoryProperty getTargetModsDir()
+
+    @Inject
+    abstract FileSystemOperations getFs()
+
+    @TaskAction
+    final void install() {
+        final def input = getInputJar().get().asFile.toPath()
+        final def modsDir = getTargetModsDir().get().asFile.toPath()
+
+        if (!Files.exists(modsDir)) return
+
+        final def fileName = input.fileName.toString()
+        final def baseName =
+                fileName.replaceFirst("-${getModVersion().get()}\\.jar\$", '')
+
+        // Delete previous versions of this mod
+        Files.list(modsDir)
+                .filter { it.fileName.toString().startsWith(baseName + '-') }
+                .filter { it.fileName.toString().endsWith('.jar') }
+                .forEach {
+                    logger.lifecycle("Removing old mod jar: ${it.fileName}")
+                    Files.deleteIfExists(it)
+                }
+
+        final def target = modsDir.resolve(fileName)
+
+        Files.copy(
+                input,
+                target,
+                StandardCopyOption.REPLACE_EXISTING
+        )
+
+        logger.lifecycle('DarkUtils jar installed successfully:')
+        logger.lifecycle("${fileName} -> ${modsDir}")
+        logger.lifecycle('')
+        logger.lifecycle('You do not need to copy manually to your mod folder.')
+    }
+}
+
+tasks.register('installToModFolder', InstallToModFolderTask) {
+    dependsOn tasks.named('remapJar')
+
+    inputJar.set(
+        tasks.named('remapJar').flatMap { it.archiveFile }
+    )
+
+    modVersion.set(project.version.toString())
+
+    targetModsDir.set(
+            project.layout.dir(
+                    resolveMinecraftDir(project)
+                            .map { new File(it, 'mods') }
+            )
+    )
+}
+
+tasks.named('checkMethodSizes') {
+    finalizedBy tasks.named('installToModFolder')
+}
+
+tasks.named('installToModFolder', InstallToModFolderTask).configure {
+    onlyIf(new Spec<Task>() {
+        @Override
+        boolean isSatisfiedBy(final Task t) {
+            final def dir = ((InstallToModFolderTask) t)
+                    .getTargetModsDir()
+                    .getOrNull()
+
+            return null == System.getenv('CI') &&
+                   null != dir &&
+                   dir.getAsFile().exists()
+        }
+    })
 }
 

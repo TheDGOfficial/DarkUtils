@@ -5,6 +5,7 @@ import gg.darkutils.events.ObtainTreeGiftEvent;
 import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.TickUtils;
+import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.SimpleFormatting;
 import org.jetbrains.annotations.NotNull;
@@ -61,7 +62,7 @@ public final class TreeGiftFeatures {
     }
 
     private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
-        if (!DarkUtilsConfig.INSTANCE.treeGiftConfirmation && !DarkUtilsConfig.INSTANCE.treeGiftsPerHour) {
+        if ((!DarkUtilsConfig.INSTANCE.treeGiftConfirmation && !DarkUtilsConfig.INSTANCE.treeGiftsPerHour) || !LocationUtils.isInGalatea()) {
             // Reset state to prevent bugs when feature is turned off
             TreeGiftFeatures.endMessageReceived = false;
             TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.NONE;

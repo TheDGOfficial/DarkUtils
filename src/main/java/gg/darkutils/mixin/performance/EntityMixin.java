@@ -22,4 +22,11 @@ final class EntityMixin {
             cir.setReturnValue(false);
         }
     }
+
+    @Inject(method = "doesRenderOnFire", at = @At("HEAD"), cancellable = true)
+    public final void darkutils$doesRenderOnFire$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
+        if (DarkUtilsConfig.INSTANCE.noBurningEntities) {
+            cir.setReturnValue(false);
+        }
+    }
 }
