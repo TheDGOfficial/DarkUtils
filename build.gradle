@@ -1,35 +1,12 @@
 import javassist.bytecode.ClassFile
 import javassist.bytecode.MethodInfo
 
-import org.gradle.api.specs.Spec
-import org.gradle.api.DefaultTask
-import org.gradle.api.provider.Provider
-import org.gradle.api.provider.Property
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.file.Directory
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.CompileClasspath
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.file.FileSystemOperations
 
-import javax.inject.Inject
-
-import java.io.StringReader
-
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
-import java.util.Properties
+import org.apache.tools.ant.filters.ReplaceTokens
 
 buildscript {
     repositories {
@@ -160,6 +137,37 @@ processResources {
     }
 }
 
+tasks.register('preprocessMixinNames', Copy) {
+    from(layout.projectDirectory.dir('src/main/java'))
+    into(layout.buildDirectory.dir('preprocessed/java'))
+
+    include('**/*.java')
+
+    // declare file names as task inputs for cache correctness
+    inputs.files(
+        fileTree('src/main/java') {
+            include('**/mixin/**/*.java')
+        }
+    ).withPropertyName('mixinSources')
+     .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    filesMatching('**/mixin/**/*.java') {
+        final def name = it.name.substring(0, it.name.lastIndexOf('.'))
+
+        // create a per-file filter instance
+        it.filter(ReplaceTokens, tokens: [
+            fileName: name
+        ])
+    }
+}
+
+tasks.named('compileJava', JavaCompile).configure {
+    dependsOn(tasks.named('preprocessMixinNames'))
+    source = layout.buildDirectory.dir('preprocessed/java').map {
+        fileTree(it)
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     it.options.release = 21
 }
@@ -230,7 +238,7 @@ abstract class CheckMethodSizesTask extends DefaultTask {
     abstract RegularFileProperty getReportFile()
 
     @TaskAction
-    void checkMethods() {
+    final void checkMethods() {
         final def thresholds = [huge: 8000, large: 2000, nonsmall: 325]
         final def issues = []
 
@@ -302,7 +310,7 @@ static final Provider<File> resolveMinecraftDir(Project project) {
 
     final def devPropsFile = layout.projectDirectory.file('dev.properties')
 
-    final Provider<String> fromProps =
+    final def fromProps =
             providers.fileContents(devPropsFile)
                     .asText
                     .map { text ->
@@ -313,7 +321,7 @@ static final Provider<File> resolveMinecraftDir(Project project) {
 
     final def envFile = layout.projectDirectory.file('.env')
 
-    final Provider<String> fromEnv =
+    final def fromEnv =
             providers.fileContents(envFile)
                     .asText
                     .map { text ->
@@ -323,11 +331,11 @@ static final Provider<File> resolveMinecraftDir(Project project) {
                                 ?.getAt(1)
                     }
 
-    final Provider<String> defaultDir =
+    final def defaultDir =
             providers.systemProperty('user.home')
                     .map { it + '/.minecraft' }
 
-    final Provider<String> finalPath =
+    final def finalPath =
             fromProps
                     .orElse(fromEnv)
                     .orElse(defaultDir)
@@ -408,7 +416,7 @@ tasks.named('checkMethodSizes') {
 tasks.named('installToModFolder', InstallToModFolderTask).configure {
     onlyIf(new Spec<Task>() {
         @Override
-        boolean isSatisfiedBy(final Task t) {
+        final boolean isSatisfiedBy(final Task t) {
             final def dir = ((InstallToModFolderTask) t)
                     .getTargetModsDir()
                     .getOrNull()
