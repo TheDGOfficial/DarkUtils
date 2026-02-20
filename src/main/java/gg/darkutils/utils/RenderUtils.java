@@ -1,14 +1,12 @@
 package gg.darkutils.utils;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import gg.darkutils.DarkUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderPhase;
-import net.minecraft.client.render.VertexRendering;
+import net.minecraft.client.render.RenderLayers;
+import net.minecraft.client.render.DrawStyle;
+import net.minecraft.world.debug.gizmo.GizmoDrawing;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.OrderedText;
@@ -38,29 +36,6 @@ public final class RenderUtils {
      * Middle aligned y position, calculating based on current window size.
      */
     public static final @NotNull IntSupplier MIDDLE_ALIGNED_Y = RenderUtils::getMiddleOfScreenYCoordinate;
-    /**
-     * Represents the render pipeline that does culling to hide when out of screen and suitable for rendering lines.
-     */
-    private static final @NotNull RenderPipeline OUTLINE_CULL_RENDER_PIPELINE = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.RENDERTYPE_LINES_SNIPPET)
-            .withLocation(Identifier.of(DarkUtils.MOD_ID, "pipeline/" + DarkUtils.MOD_ID + "_outline_cull"))
-            .build());
-    /**
-     * Represents the custom line width parameter.
-     */
-    private static final @NotNull RenderLayer.MultiPhaseParameters.Builder LINES_PARAMETER = RenderLayer.MultiPhaseParameters.builder()
-            .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
-            .lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(3.69)));
-    /**
-     * Represents the box outline layer.
-     */
-    private static final @NotNull RenderLayer.MultiPhase BOX_OUTLINE_LAYER = RenderLayer.of(
-            DarkUtils.MOD_ID + "_box_outline",
-            RenderLayer.DEFAULT_BUFFER_SIZE,
-            false,
-            false,
-            RenderUtils.OUTLINE_CULL_RENDER_PIPELINE,
-            RenderUtils.LINES_PARAMETER.build(false)
-    );
     /**
      * Holds the formatting to text color cache.
      */
@@ -177,6 +152,15 @@ public final class RenderUtils {
         return 0xFF00_0000 | RenderUtils.convertFormattingToRGBA(color);
     }
 
+    private static final int toARGB(final double alpha, final double red, final double green, final double blue) {
+        final int a = (int) Math.round(alpha * 255.0D) & 0xFF;
+        final int r = (int) Math.round(red * 255.0D) & 0xFF;
+        final int g = (int) Math.round(green * 255.0D) & 0xFF;
+        final int b = (int) Math.round(blue * 255.0D) & 0xFF;
+
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
     public static final void renderText(@NotNull final DrawContext context, @NotNull final RenderingText text, final int x, final int y, @NotNull final Formatting color) {
         RenderUtils.renderText(context, text, x, () -> y, color);
     }
@@ -212,49 +196,20 @@ public final class RenderUtils {
     public static final void drawBlockOutline(@NotNull final WorldRenderContext context,
                                               @NotNull final BlockPos pos,
                                               @NotNull final Formatting color) {
-        final var matrices = context.matrices();
-
-        if (null == matrices) {
-            return;
-        }
-
-        final var consumers = context.consumers();
-
-        if (null == consumers) {
-            return;
-        }
-
-        final var buffer = consumers.getBuffer(RenderUtils.BOX_OUTLINE_LAYER);
-
         // Convert Formatting to RGBA floats
         final var rgb = RenderUtils.convertFormattingToRGBA(color);
-
-        // Translate block position relative to camera
-        matrices.push();
-
-        final var camPos = context.gameRenderer().getCamera().getPos().negate();
-
-        matrices.translate(
-                camPos.x,
-                camPos.y,
-                camPos.z
-        );
-
-        final var immutablePos = pos.toImmutable();
 
         final var red = (rgb >> 16 & 0xFF) / 255.0D;
         final var green = (rgb >> 8 & 0xFF) / 255.0D;
         final var blue = (rgb & 0xFF) / 255.0D;
         final var alpha = 1.0D; // fully opaque
 
-        // Draw outline for a single block using RGBA color
-        VertexRendering.drawBox(
-                matrices.peek(),
-                buffer,
-                Box.enclosing(immutablePos, immutablePos),
-                (float) red, (float) green, (float) blue, (float) alpha
-        );
+        final int argb = RenderUtils.toARGB(alpha, red, green, blue);
 
-        matrices.pop();
+        DrawStyle style = DrawStyle.stroked(argb);
+
+        final var immutablePos = pos.toImmutable();
+
+        GizmoDrawing.box(Box.enclosing(immutablePos, immutablePos), style);
     }
 }

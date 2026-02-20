@@ -1,6 +1,7 @@
 package gg.darkutils.mixin.visuals;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.StatusEffectsDisplay;
 import org.jetbrains.annotations.NotNull;
@@ -8,6 +9,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Collection;
 
 @Mixin(StatusEffectsDisplay.class)
 final class StatusEffectsDisplayMixin {
@@ -18,14 +21,7 @@ final class StatusEffectsDisplayMixin {
     }
 
     @Inject(method = "drawStatusEffects", at = @At("HEAD"), cancellable = true)
-    private final void darkutils$cancelDrawIfEnabled(@NotNull final DrawContext context, final int mouseX, final int mouseY, @NotNull final CallbackInfo ci) {
-        if (DarkUtilsConfig.INSTANCE.hideEffectsInInventory) {
-            ci.cancel();
-        }
-    }
-
-    @Inject(method = "drawStatusEffectTooltip", at = @At("HEAD"), cancellable = true)
-    private final void darkutils$cancelDrawTooltipIfEnabled(@NotNull final DrawContext context, final int mouseX, final int mouseY, @NotNull final CallbackInfo ci) {
+    private final void darkutils$cancelDrawIfEnabled(@NotNull final DrawContext context, @NotNull final Collection<StatusEffectInstance> effects, final int x, final int height, final int mouseX, final int mouseY, final int width, @NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.hideEffectsInInventory) {
             ci.cancel();
         }

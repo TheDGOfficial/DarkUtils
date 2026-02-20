@@ -1,5 +1,6 @@
 package gg.darkutils.utils.chat;
 
+import gg.darkutils.mixin.accessors.ChatHudAccessor;
 import gg.darkutils.events.SentCommandEvent;
 import gg.darkutils.events.SentMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
@@ -285,6 +286,10 @@ public final class ChatUtils {
         return text;
     }
 
+    private static final int getChatWidth(@NotNull final MinecraftClient mc) {
+        return ((ChatHudAccessor) mc.inGameHud.getChatHud()).callGetWidth();
+    }
+
     @NotNull
     public static final String center(@NotNull final String text, final boolean bold) {
         final var mc = MinecraftClient.getInstance();
@@ -292,7 +297,7 @@ public final class ChatUtils {
         final var width = mc.textRenderer.getWidth(Text.literal(text).setStyle(Style.EMPTY.withBold(bold)));
         final var halvedWidth = width >> 1;
 
-        final var toCompensate = (mc.inGameHud.getChatHud().getWidth() >> 1) - halvedWidth;
+        final var toCompensate = (ChatUtils.getChatWidth(mc) >> 1) - halvedWidth;
         final var fillerWidth = mc.textRenderer.getWidth(Text.literal(" ").setStyle(Style.EMPTY.withBold(bold))) + 1;
 
         final var builder = new StringBuilder(text.length());
@@ -317,7 +322,7 @@ public final class ChatUtils {
         final var mc = MinecraftClient.getInstance();
         final var style = Style.EMPTY.withBold(bold);
 
-        final var chatWidth = mc.inGameHud.getChatHud().getWidth();
+        final var chatWidth = ChatUtils.getChatWidth(mc);
         final var middleWidth = mc.textRenderer.getWidth(Text.literal(middleText).setStyle(style));
         final var toCompensate = chatWidth - middleWidth;
 
