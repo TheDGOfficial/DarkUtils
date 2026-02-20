@@ -118,6 +118,7 @@ public final class DungeonTimer {
     private static boolean skipRender = true;
     @Nullable
     private static DungeonFloor dungeonFloor;
+    private static boolean warningLogged;
 
     private DungeonTimer() {
         super();
@@ -434,6 +435,15 @@ public final class DungeonTimer {
         return DungeonTimer.dungeonFloor;
     }
 
+    private static final void warnFloorDetectionIssue(@NotNull final String message) {
+        if (DungeonTimer.warningLogged) {
+            return;
+        }
+
+        DarkUtils.warn(DungeonTimer.class, message);
+        DungeonTimer.warningLogged = true;
+    }
+
     public enum DungeonFloor {
         ENTRANCE,
         FLOOR_I,
@@ -458,9 +468,14 @@ public final class DungeonTimer {
 
         @Nullable
         public static final DungeonFloor from(final boolean masterModeFloor, final int rawFloorNumber) {
-            // TODO potential out of bound access if hypixel ever adds a new floor
-            // suggested fix: if (index >= VALUES.length), then do .warn() that floor is unsupported or unknown and return null.
-            return DungeonFloor.VALUES[masterModeFloor ? rawFloorNumber + 7 : rawFloorNumber];
+            final int index = masterModeFloor ? rawFloorNumber + 7 : rawFloorNumber;
+
+            if (0 > index || DungeonFloor.VALUES.length <= index) {
+                DungeonTimer.warnFloorDetectionIssue("Unsupported or unknown dungeon floor: " + (masterModeFloor ? 'M' : 'F') + rawFloorNumber);
+                return null;
+            }
+
+            return DungeonFloor.VALUES[index];
         }
 
         public final int floor() {
@@ -472,31 +487,76 @@ public final class DungeonTimer {
         }
     }
 
+    @Nullable
+    private static final DungeonFloor parseFloorFromScoreboard(@NotNull final String line) {
+        final var dungeonFloor = StringUtils.substringBetween(line, "(", ")");
+
+        if (null == dungeonFloor || dungeonFloor.isEmpty()) {
+            return null;
+        }
+
+        if ("E".equals(dungeonFloor)) {
+            return DungeonTimer.DungeonFloor.ENTRANCE;
+        }
+
+        if (dungeonFloor.length() < 2) {
+            return null;
+        }
+
+        final char mode = dungeonFloor.charAt(0);
+
+        if ('M' != mode && 'F' != mode) {
+            DungeonTimer.warnFloorDetectionIssue("Unknown dungeon floor prefix: " + dungeonFloor + " (extracted from scoreboard line: " + line + ')');
+            return null;
+        }
+
+        final var floorPendingParse = dungeonFloor.substring(1);
+        final int floor;
+
+        try {
+            floor = Integer.parseInt(floorPendingParse);
+        } catch (final NumberFormatException nfe) {
+            DungeonTimer.warnFloorDetectionIssue("Unexpected floor number " + floorPendingParse + " (extracted from scoreboard line: " + line + ')');
+            return null;
+        }
+
+        final var isMaster = 'M' == mode;
+
+        return DungeonTimer.DungeonFloor.from(isMaster, floor);
+    }
+
     private static final void updateDungeonFloor() {
-        if (null == MinecraftClient.getInstance().player || null == MinecraftClient.getInstance().world || !LocationUtils.isInDungeons()) {
+        final var mc = MinecraftClient.getInstance();
+
+        if (null == mc.player || null == mc.world || !LocationUtils.isInDungeons() || (null != DungeonTimer.dungeonFloor && DungeonTimer.isPhaseFinished(DungeonTimer.DungeonPhase.DUNGEON_START))) { // If you join an F7 and then join M7 with the command without leaving the F7, the world change event triggers while the scoreboard still says F7, and so you will be in a bugged state in M7 with the floor being detected as F7. To fix this rare bug, we keep re-assigning the dungeon floor till the dungeon starts in addition to the null check.
             return;
         }
 
-        // If you join an F7 and then join M7 with the command without leaving the F7, the world change event triggers while the scoreboard still says F7, and so you will be in a bugged state in M7 with the floor being detected as F7. To fix this rare bug, we keep re-assigning the dungeon floor till the dungeon starts in addition to the null check.
-        if (null == DungeonTimer.dungeonFloor || DungeonTimer.isPhaseNotFinished(DungeonTimer.DungeonPhase.DUNGEON_START)) {
-            // TODO Extract to a ScoreboardUtil class later
-            final var scoreboard = MinecraftClient.getInstance().player.networkHandler.getScoreboard();
-            final var objective = scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.FROM_ID.apply(1)); // TODO check if this can be anything other than 1 and that the method does not return null in that case
-            for (final var scoreHolder : scoreboard.getKnownScoreHolders()) {
-                if (scoreboard.getScoreHolderObjectives(scoreHolder).containsKey(objective)) {
-                    final var team = scoreboard.getScoreHolderTeam(scoreHolder.getNameForScoreboard());
-                    if (null != team) {
-                        final var line = Formatting.strip(team.getPrefix().getString() + team.getSuffix().getString());
-                        if (line.contains("The Catacombs (")) {
-                            final var dungeonFloor = StringUtils.substringBetween(line, "(", ")");
-                            // TODO confirm number format exception not possible
-                            // suggested fix: catch the exception and do a .warn() call.
-                            DungeonTimer.dungeonFloor = DungeonTimer.DungeonFloor.from(dungeonFloor.startsWith("M"), "E".equals(dungeonFloor) ? 0 : Integer.parseInt(dungeonFloor.substring(1)));
+        // TODO Extract to a ScoreboardUtil class later
+        final var scoreboard = mc.player.networkHandler.getScoreboard();
+        final var objective = scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR);
 
-                            return;
-                        }
-                    }
+        if (null == objective) {
+            return;
+        }
+
+        for (final var scoreHolder : scoreboard.getKnownScoreHolders()) {
+            final var team = scoreboard.getScoreHolderTeam(scoreHolder.getNameForScoreboard());
+
+            if (null == team) {
+                continue;
+            }
+
+            final var line = Formatting.strip(team.getPrefix().getString() + team.getSuffix().getString());
+
+            if (line.contains("The Catacombs (")) {
+                final var floor = DungeonTimer.parseFloorFromScoreboard(line);
+
+                if (null != floor) {
+                    DungeonTimer.dungeonFloor = floor;
                 }
+
+                return;
             }
         }
     }
@@ -670,6 +730,7 @@ public final class DungeonTimer {
         DungeonTimer.lines.clear();
         DungeonTimer.linesSize = 0;
         DungeonTimer.skipRender = true;
+        DungeonTimer.warningLogged = false;
 
         DungeonTimer.DungeonTimingState.resetAll();
     }
