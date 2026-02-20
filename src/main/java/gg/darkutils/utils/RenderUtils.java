@@ -76,13 +76,85 @@ public final class RenderUtils {
      */
     private static final @NotNull Map<Item, ItemStack> ITEM_TO_ITEM_STACK = HashMap.newHashMap(16);
     /**
-     * Holds the string to ordered text cache.
+     * Holds the empty OrderedText.
      */
-    private static final @NotNull Map<String, OrderedText> ORDERED_TEXT_CACHE = HashMap.newHashMap(32);
+    private static final @NotNull OrderedText EMPTY_ORDERED_TEXT = Text.of("").asOrderedText();
 
-    static {
-        // Clear the cache 2 tick after every other second
-        TickUtils.queueRepeatingTickTask(RenderUtils.ORDERED_TEXT_CACHE::clear, 42);
+    public static final class RenderingText {
+        @NotNull
+        private String text;
+
+        @NotNull
+        private OrderedText orderedText;
+
+        private WidthHolder widthHolder;
+
+        private RenderingText() {
+            this("", RenderUtils.EMPTY_ORDERED_TEXT);
+        }
+
+        private RenderingText(@NotNull final String text) {
+            this(text, Text.of(text).asOrderedText());
+        }
+
+        private RenderingText(@NotNull final String text, @NotNull final OrderedText orderedText) {
+            super();
+
+            this.text = text;
+            this.orderedText = orderedText;
+
+            this.widthHolder = new WidthHolder(this);
+        }
+
+        public final void setText(@NotNull final String newText) {
+            if (this.text.equals(newText)) {
+                return;
+            }
+
+            this.text = newText;
+            this.orderedText = Text.of(newText).asOrderedText();
+
+            this.widthHolder.markDirty();
+        }
+    }
+
+    private static final class WidthHolder {
+        @NotNull
+        private final RenderingText renderingText;
+
+        private WidthHolder(@NotNull final RenderingText renderingText) {
+            this.renderingText = renderingText;
+        }
+
+        private int width;
+        private boolean dirty = true;
+
+        private final int getWidth() {
+            final int width;
+
+            if (this.dirty) {
+                width = this.width = MinecraftClient.getInstance().textRenderer.getWidth(renderingText.text);
+                this.dirty = false;
+            } else {
+                width = this.width;
+            }
+
+            return width;
+        }
+
+        private final void markDirty() {
+            this.dirty = true;
+        }
+    }
+
+    @NotNull
+    public static final RenderingText createRenderingText() {
+        return new RenderingText();
+    }
+
+    @NotNull
+    public static final RenderingText createRenderingText(@NotNull final String initial) {
+        return new RenderingText(initial);
     }
 
     private RenderUtils() {
@@ -105,29 +177,24 @@ public final class RenderUtils {
         return 0xFF00_0000 | RenderUtils.convertFormattingToRGBA(color);
     }
 
-    public static final void renderText(@NotNull final DrawContext context, @NotNull final String text, final int x, final int y, @NotNull final Formatting color) {
+    public static final void renderText(@NotNull final DrawContext context, @NotNull final RenderingText text, final int x, final int y, @NotNull final Formatting color) {
         RenderUtils.renderText(context, text, x, () -> y, color);
     }
 
-    public static final void renderText(@NotNull final DrawContext context, @NotNull final String text, final int x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
+    public static final void renderText(@NotNull final DrawContext context, @NotNull final RenderingText text, final int x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
         RenderUtils.renderText(context, text, () -> x, y, color);
     }
 
-    private static final void renderText(@NotNull final DrawContext context, @NotNull final String text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
-        context.drawText(MinecraftClient.getInstance().textRenderer, RenderUtils.ORDERED_TEXT_CACHE.computeIfAbsent(text, t -> Text.of(t).asOrderedText()), x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
+    private static final void renderText(@NotNull final DrawContext context, @NotNull final RenderingText text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
+        context.drawText(MinecraftClient.getInstance().textRenderer, text.orderedText, x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
-    public static final int middleAlignedXForText(@NotNull final String text) {
-        final var client = MinecraftClient.getInstance();
-        final var textRenderer = client.textRenderer;
-
-        final var textWidth = textRenderer.getWidth(text);
-
-        return (client.getWindow().getScaledWidth() >> 1) - (textWidth >> 1);
+    public static final int middleAlignedXForText(@NotNull final RenderingText text) {
+        return (MinecraftClient.getInstance().getWindow().getScaledWidth() >> 1) - (text.widthHolder.getWidth() >> 1);
     }
 
-    public static final void renderCenteredText(@NotNull final DrawContext context, @NotNull final String text, @NotNull final IntSupplier y, @NotNull final Formatting color) {
-        context.drawText(MinecraftClient.getInstance().textRenderer, RenderUtils.ORDERED_TEXT_CACHE.computeIfAbsent(text, t -> Text.of(t).asOrderedText()), RenderUtils.middleAlignedXForText(text), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
+    public static final void renderCenteredText(@NotNull final DrawContext context, @NotNull final RenderingText text, @NotNull final IntSupplier y, @NotNull final Formatting color) {
+        context.drawText(MinecraftClient.getInstance().textRenderer, text.orderedText, RenderUtils.middleAlignedXForText(text), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
     public static final void renderItem(@NotNull final DrawContext context, @NotNull final Item item, final int x, final int y) {

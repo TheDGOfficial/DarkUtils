@@ -37,6 +37,9 @@ public final class RejoinCooldownDisplay {
             "There was a problem joining SkyBlock, try again in a moment!", RejoinCooldownDisplay.MESSAGE_ACTION
     );
 
+    private static final RenderUtils.RenderingText TEXT =
+            RenderUtils.createRenderingText();
+
     private RejoinCooldownDisplay() {
         super();
 
@@ -78,8 +81,10 @@ public final class RejoinCooldownDisplay {
             return;
         }
 
-        final var text = 0L == timeLeftSeconds ? "Try rejoining SkyBlock now!" : "Can rejoin SkyBlock in " + timeLeftSeconds + 's';
         final var color = 0L == timeLeftSeconds ? Formatting.GREEN : Formatting.RED;
+
+        final var text = RejoinCooldownDisplay.TEXT;
+        text.setText(0L == timeLeftSeconds ? "Try rejoining SkyBlock now!" : "Can rejoin SkyBlock in " + timeLeftSeconds + 's');
 
         RenderUtils.renderItem(
                 context,

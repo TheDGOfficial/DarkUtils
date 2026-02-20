@@ -21,10 +21,16 @@ import java.util.concurrent.TimeUnit;
 
 public final class TreeGiftsPerHour {
     private static final int SAMPLE_SIZE = 5;
-    private static final long @NotNull [] giftTimes = new long[TreeGiftsPerHour.SAMPLE_SIZE];
+
     private static final long ONE_MINUTE_NANOS = TimeUnit.MINUTES.toNanos(1L);
     private static final long ONE_HOUR_MILLIS = TimeUnit.HOURS.toMillis(1L);
     private static final long ONE_MILLIS_NANOS = TimeUnit.MILLISECONDS.toNanos(1L);
+
+    private static final RenderUtils.RenderingText TEXT =
+            RenderUtils.createRenderingText();
+
+    private static final long @NotNull [] giftTimes = new long[TreeGiftsPerHour.SAMPLE_SIZE];
+
     private static int giftCount; // how many valid entries
     private static int giftIndex; // next index to write
     private static long lastGiftTime;
@@ -104,7 +110,8 @@ public final class TreeGiftsPerHour {
             return;
         }
 
-        final var text = "Tree Gifts/Hour: " + MathUtils.round(perHour, RoundingMode.HALF_DOWN);
+        final var text = TreeGiftsPerHour.TEXT;
+        text.setText("Tree Gifts/Hour: " + MathUtils.round(perHour, RoundingMode.HALF_DOWN));
 
         RenderUtils.renderItem(
                 context,

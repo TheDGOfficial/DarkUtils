@@ -38,8 +38,11 @@ public final class DungeonTimer {
     private static final long SECONDS_PER_MINUTE = TimeUnit.MINUTES.toSeconds(1L);
     private static final long HUNDRED_MS_AS_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
     private static final long FIVE_SECOND_NANOS = TimeUnit.SECONDS.toNanos(5L);
+    private static final RenderableLine @NotNull [] PHASE_LINES =
+        new RenderableLine[DungeonPhase.values().length];
     @NotNull
-    private static final ArrayList<DungeonTimer.RenderableLine> lines = new ArrayList<>(32);
+    private static final ArrayList<RenderableLine> activeLines =
+            new ArrayList<>(16);
     private static long serverTickCounter;
     @NotNull
     private static final Consumer<ReceiveGameMessageEvent> PHASE_5_FINISH = event -> {
@@ -296,7 +299,7 @@ public final class DungeonTimer {
         return DungeonTimer.formatSeconds(wholeSeconds);
     }
 
-    private static final void addLine(@NotNull final DungeonTimer.DungeonPhase start, @NotNull final DungeonTimer.DungeonPhase end, @NotNull final String prettyName, @NotNull final Formatting color, @Nullable final Item optionalItemIcon) {
+    private static final void line(@NotNull final DungeonTimer.DungeonPhase start, @NotNull final DungeonTimer.DungeonPhase end, @NotNull final String prettyName, @NotNull final Formatting color, @Nullable final Item optionalItemIcon) {
         final var startTime = DungeonTimer.DungeonTimingState.getPhase(start);
 
         if (null == startTime) {
@@ -319,13 +322,19 @@ public final class DungeonTimer {
                 + " (-" + DungeonTimer.formatNanosAsSeconds(lagNano) + " lag)"
                 : prettyName + ": " + DungeonTimer.formatSeconds(phaseTime);
 
-        DungeonTimer.lines.add(
-                new DungeonTimer.RenderableLine(
-                        text,
-                        color,
-                        optionalItemIcon
-                )
-        );
+        final int slot = end.ordinal();
+        final var existing = DungeonTimer.PHASE_LINES[slot];
+
+        if (null == existing) {
+            final var renderingText = RenderUtils.createRenderingText(text);
+            final var line = PHASE_LINES[slot] = new RenderableLine(renderingText, color, optionalItemIcon);
+
+            activeLines.add(line);
+            return;
+        }
+
+        existing.renderingText().setText(text);
+        activeLines.add(existing);
     }
 
     private static long lastNegativeLagWarnNano;
@@ -391,13 +400,13 @@ public final class DungeonTimer {
         DungeonTimer.lastMonotonicGlobalLagNano =
                 Math.max(DungeonTimer.lastMonotonicGlobalLagNano, globalLagNow);
 
-        DungeonTimer.lines.clear();
+        DungeonTimer.activeLines.clear();
 
-        DungeonTimer.addLines();
+        DungeonTimer.updateLines();
 
-        DungeonTimer.linesSize = DungeonTimer.lines.size();
+        DungeonTimer.linesSize = DungeonTimer.activeLines.size();
 
-        DungeonTimer.skipRender = DungeonTimer.lines.isEmpty();
+        DungeonTimer.skipRender = DungeonTimer.activeLines.isEmpty();
     }
 
     /**
@@ -561,40 +570,40 @@ public final class DungeonTimer {
         }
     }
 
-    private static final void addLines() {
+    private static final void updateLines() {
         final var floor = DungeonTimer.dungeonFloor;
 
         if (null == floor) {
             return;
         }
 
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BLOOD_OPEN, "Blood Open", Formatting.WHITE, Items.SUGAR);
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, "Blood Done", Formatting.RED, Items.REDSTONE);
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_ENTRY, "Boss Entry", Formatting.DARK_GREEN, Items.END_PORTAL_FRAME);
+        DungeonTimer.line(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BLOOD_OPEN, "Blood Open", Formatting.WHITE, Items.SUGAR);
+        DungeonTimer.line(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, "Blood Done", Formatting.RED, Items.REDSTONE);
+        DungeonTimer.line(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_ENTRY, "Boss Entry", Formatting.DARK_GREEN, Items.END_PORTAL_FRAME);
 
         // Floor 6
         if (floor.floor() == 6) {
-            DungeonTimer.addLine(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.TERRAS_CLEAR, "Terracottas", Formatting.GOLD, Items.BROWN_TERRACOTTA);
-            DungeonTimer.addLine(DungeonTimer.DungeonPhase.TERRAS_CLEAR, DungeonTimer.DungeonPhase.GIANTS_CLEAR, "Giants", Formatting.AQUA, Items.DIAMOND_SWORD);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.TERRAS_CLEAR, "Terracottas", Formatting.GOLD, Items.BROWN_TERRACOTTA);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.TERRAS_CLEAR, DungeonTimer.DungeonPhase.GIANTS_CLEAR, "Giants", Formatting.AQUA, Items.DIAMOND_SWORD);
         }
 
         // Floor 7 & Master Floor 7
         if (floor.floor() == 7) {
             // Both regular and master 7 have those phases
-            DungeonTimer.addLine(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_1_CLEAR, "Maxor", Formatting.AQUA, Items.END_CRYSTAL);
-            DungeonTimer.addLine(DungeonTimer.DungeonPhase.PHASE_1_CLEAR, DungeonTimer.DungeonPhase.PHASE_2_CLEAR, "Storm", Formatting.DARK_PURPLE, Items.BLAZE_ROD);
-            DungeonTimer.addLine(DungeonTimer.DungeonPhase.PHASE_2_CLEAR, DungeonTimer.DungeonPhase.TERMINALS_CLEAR, "Terminals", Formatting.YELLOW, Items.COMMAND_BLOCK);
-            DungeonTimer.addLine(DungeonTimer.DungeonPhase.TERMINALS_CLEAR, DungeonTimer.DungeonPhase.PHASE_3_CLEAR, "Goldor", Formatting.GOLD, Items.GOLDEN_SWORD);
-            DungeonTimer.addLine(DungeonTimer.DungeonPhase.PHASE_3_CLEAR, DungeonTimer.DungeonPhase.PHASE_4_CLEAR, "Necron", Formatting.DARK_RED, Items.STICK);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_1_CLEAR, "Maxor", Formatting.AQUA, Items.END_CRYSTAL);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_1_CLEAR, DungeonTimer.DungeonPhase.PHASE_2_CLEAR, "Storm", Formatting.DARK_PURPLE, Items.BLAZE_ROD);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_2_CLEAR, DungeonTimer.DungeonPhase.TERMINALS_CLEAR, "Terminals", Formatting.YELLOW, Items.COMMAND_BLOCK);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.TERMINALS_CLEAR, DungeonTimer.DungeonPhase.PHASE_3_CLEAR, "Goldor", Formatting.GOLD, Items.GOLDEN_SWORD);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_3_CLEAR, DungeonTimer.DungeonPhase.PHASE_4_CLEAR, "Necron", Formatting.DARK_RED, Items.STICK);
 
             // Master Floor 7 specific phase
             if (floor.isMaster()) {
-                DungeonTimer.addLine(DungeonTimer.DungeonPhase.PHASE_4_CLEAR, DungeonTimer.DungeonPhase.PHASE_5_CLEAR, "Wither King", Formatting.GRAY, Items.WITHER_SKELETON_SKULL);
+                DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_4_CLEAR, DungeonTimer.DungeonPhase.PHASE_5_CLEAR, "Wither King", Formatting.GRAY, Items.WITHER_SKELETON_SKULL);
             }
         }
 
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.BOSS_CLEAR, "Boss Total", Formatting.LIGHT_PURPLE, Items.DRAGON_HEAD); // TODO sometimes is 1s off from the sum of all phases, maybe because BOSS_ENTRY lag lost time is also included in the boss total?
-        DungeonTimer.addLine(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_CLEAR, "Total", Formatting.GREEN, Items.CLOCK); // TODO add DUNGEON_END phase for clarity (semantically same as BOSS_CLEAR, as thats where dungeon ends)
+        DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.BOSS_CLEAR, "Boss Total", Formatting.LIGHT_PURPLE, Items.DRAGON_HEAD); // TODO sometimes is 1s off from the sum of all phases, maybe because BOSS_ENTRY lag lost time is also included in the boss total?
+        DungeonTimer.line(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_CLEAR, "Total", Formatting.GREEN, Items.CLOCK); // TODO add DUNGEON_END phase for clarity (semantically same as BOSS_CLEAR, as thats where dungeon ends)
     }
 
     private static final void renderDungeonTimer(@NotNull final DrawContext context) {
@@ -618,7 +627,7 @@ public final class DungeonTimer {
         final var baseY = RenderUtils.MIDDLE_ALIGNED_Y.getAsInt() - (totalHeight >> 1);
 
         for (int i = 0, len = DungeonTimer.linesSize; i < len; ++i) {
-            final var line = DungeonTimer.lines.get(i);
+            final var line = DungeonTimer.activeLines.get(i);
             final var y = baseY + i * (lineHeight + lineSpacing);
 
             final var textX = null == line.optionalItemIcon() ? baseTextX - (iconSize + iconTextGap) : baseTextX;
@@ -634,7 +643,7 @@ public final class DungeonTimer {
 
             RenderUtils.renderText(
                     context,
-                    line.plaintext(),
+                    line.renderingText(),
                     textX,
                     y,
                     line.color()
@@ -727,7 +736,8 @@ public final class DungeonTimer {
         DungeonTimer.resetLagModel();
 
         DungeonTimer.dungeonFloor = null;
-        DungeonTimer.lines.clear();
+        DungeonTimer.activeLines.clear();
+        Arrays.fill(DungeonTimer.PHASE_LINES, null);
         DungeonTimer.linesSize = 0;
         DungeonTimer.skipRender = true;
         DungeonTimer.warningLogged = false;
@@ -890,7 +900,7 @@ public final class DungeonTimer {
     }
 
     private record RenderableLine(
-            String plaintext,
+            RenderUtils.RenderingText renderingText,
             Formatting color,
             @Nullable Item optionalItemIcon
     ) {
