@@ -44,6 +44,8 @@ public final class ChatUtils {
     @NotNull
     public static final String NEW_LINE = "\n";
 
+    private static final long QUARTER_SECOND_NANOS = TimeUnit.MILLISECONDS.toNanos(250L);
+
     private static final @NotNull ObjectArrayFIFOQueue<String> sendMessageQueue = new ObjectArrayFIFOQueue<>(1);
     private static long lastSentMessageOrCommandAt;
 
@@ -76,7 +78,7 @@ public final class ChatUtils {
 
         final var lastSentAt = ChatUtils.lastSentMessageOrCommandAt;
         if (0L != lastSentAt &&
-                System.nanoTime() - lastSentAt <= TimeUnit.MILLISECONDS.toNanos(250L)) {
+                System.nanoTime() - lastSentAt <= ChatUtils.QUARTER_SECOND_NANOS) {
             return;
         }
 

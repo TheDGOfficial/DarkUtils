@@ -183,6 +183,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Dungeon Timer",
                 "Displays dungeon timer on left side of the screen, showing time took to finish each phase. Shows live time if not finished yet, and shows how much time is lost to server lag, with fancy item icons, seperate colors, and non-phase informational splits, like Boss Total.",
                 config.dungeonTimer, newValue -> config.dungeonTimer = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Blood Cleared Notification",
+                "Shows a message on screen when the blood room is cleared with how much time it took for it.",
+                config.bloodClearedNotification, newValue -> config.bloodClearedNotification = newValue);
     }
 
     private static final void addVisualTweaks(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

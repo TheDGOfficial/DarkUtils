@@ -107,11 +107,47 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.error(source, message, error, (Object[]) null);
     }
 
+    public static final void info(@NotNull final String source, @NotNull final String message) {
+        DarkUtils.info(source, message, (Object[]) null);
+    }
+
+    public static final void info(@NotNull final String source, @NotNull final String message, @Nullable final Object @Nullable ... args) {
+        DarkUtils.log(source, LogLevel.INFO, message, null, args);
+    }
+
+    public static final void warn(@NotNull final String source, @NotNull final String message) {
+        DarkUtils.warn(source, message, (Object[]) null);
+    }
+
+    public static final void warn(@NotNull final String source, @NotNull final String message, @Nullable final Object @Nullable ... args) {
+        DarkUtils.log(source, LogLevel.WARN, message, null, args);
+    }
+
+    public static final void error(@NotNull final String source, @NotNull final String message) {
+        DarkUtils.error(source, message, null, (Object[]) null);
+    }
+
+    public static final void error(@NotNull final String source, @NotNull final String message, @Nullable final Object @Nullable ... args) {
+        DarkUtils.error(source, message, null, args);
+    }
+
+    public static final void error(@NotNull final String source, @NotNull final String message, @Nullable final Throwable error) {
+        DarkUtils.error(source, message, error, (Object[]) null);
+    }
+
     private static final void error(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
         DarkUtils.log(source, LogLevel.ERROR, message, error, args);
     }
 
+    private static final void error(@NotNull final String source, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
+        DarkUtils.log(source, LogLevel.ERROR, message, error, args);
+    }
+
     private static final void log(@NotNull final Class<?> source, @NotNull final LogLevel level, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
+        DarkUtils.log(source.getSimpleName(), level, message, error, args);
+    }
+
+    private static final void log(@NotNull final String source, @NotNull final LogLevel level, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
         final var finalMessage = DarkUtils.addPrefixToLogEntry(source, message);
         var formattedMessage = null == args || 0 == args.length ? finalMessage : MessageFormatter.arrayFormat(finalMessage, args).getMessage();
 
@@ -173,8 +209,8 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     @NotNull
-    private static final String addPrefixToLogEntry(@NotNull final Class<?> source, @NotNull final String message) {
-        return '[' + DarkUtils.class.getSimpleName() + "]: " + (DarkUtils.class == source ? "" : '[' + source.getSimpleName() + "]: ") + message;
+    private static final String addPrefixToLogEntry(@NotNull final String source, @NotNull final String message) {
+        return '[' + DarkUtils.class.getSimpleName() + "]: " + (DarkUtils.class.getSimpleName().equals(source) ? "" : '[' + source + "]: ") + message;
     }
 
     @NotNull

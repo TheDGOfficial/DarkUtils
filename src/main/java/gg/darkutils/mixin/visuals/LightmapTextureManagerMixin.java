@@ -101,6 +101,6 @@ final class LightmapTextureManagerMixin {
         }
 
         // Won't be the case unless vanilla moved hasStatusEffect around messing with our ordinal
-        throw new IllegalStateException(LightmapTextureManagerMixin.class.getName() + " needs updating, ordinal for hasStatusEffect did not match");
+        throw new IllegalStateException("@fileName@ needs updating, ordinal for hasStatusEffect did not match");
     }
 }
