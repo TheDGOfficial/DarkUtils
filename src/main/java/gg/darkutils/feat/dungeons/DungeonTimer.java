@@ -38,8 +38,9 @@ public final class DungeonTimer {
     private static final long SECONDS_PER_MINUTE = TimeUnit.MINUTES.toSeconds(1L);
     private static final long HUNDRED_MS_AS_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
     private static final long FIVE_SECOND_NANOS = TimeUnit.SECONDS.toNanos(5L);
-    private static final RenderableLine @NotNull [] PHASE_LINES =
-        new RenderableLine[DungeonPhase.values().length];
+    @NotNull
+    private static final ArrayList<RenderableLine> PHASE_LINES =
+            new ArrayList<>(16);
     @NotNull
     private static final ArrayList<RenderableLine> activeLines =
             new ArrayList<>(16);
@@ -118,6 +119,7 @@ public final class DungeonTimer {
     private static long lastServerTickNow;
     private static long lastMonotonicGlobalLagNano;
     private static int linesSize;
+    private static int slotIndex;
     private static boolean skipRender = true;
     @Nullable
     private static DungeonFloor dungeonFloor;
@@ -299,7 +301,34 @@ public final class DungeonTimer {
         return DungeonTimer.formatSeconds(wholeSeconds);
     }
 
+    private static final int nextRenderSlot() {
+        return DungeonTimer.slotIndex++;
+    }
+
     private static final void line(@NotNull final DungeonTimer.DungeonPhase start, @NotNull final DungeonTimer.DungeonPhase end, @NotNull final String prettyName, @NotNull final Formatting color, @Nullable final Item optionalItemIcon) {
+        final int slot = DungeonTimer.nextRenderSlot();
+
+        final RenderableLine line;
+
+        if (slot >= DungeonTimer.PHASE_LINES.size()) {
+            line = new RenderableLine(RenderUtils.createRenderingText(), color, optionalItemIcon);
+            DungeonTimer.PHASE_LINES.add(line);
+        } else {
+            final var existing = DungeonTimer.PHASE_LINES.get(slot);
+
+            if (existing.optionalItemIcon() != optionalItemIcon || existing.color() != color) {
+                line = new RenderableLine(
+                    existing.renderingText(),
+                    color,
+                    optionalItemIcon
+                );
+
+                DungeonTimer.PHASE_LINES.set(slot, line);
+            } else {
+                line = existing;
+            }
+        }
+
         final var startTime = DungeonTimer.DungeonTimingState.getPhase(start);
 
         if (null == startTime) {
@@ -322,19 +351,8 @@ public final class DungeonTimer {
                 + " (-" + DungeonTimer.formatNanosAsSeconds(lagNano) + " lag)"
                 : prettyName + ": " + DungeonTimer.formatSeconds(phaseTime);
 
-        final int slot = end.ordinal();
-        final var existing = DungeonTimer.PHASE_LINES[slot];
-
-        if (null == existing) {
-            final var renderingText = RenderUtils.createRenderingText(text);
-            final var line = PHASE_LINES[slot] = new RenderableLine(renderingText, color, optionalItemIcon);
-
-            activeLines.add(line);
-            return;
-        }
-
-        existing.renderingText().setText(text);
-        activeLines.add(existing);
+        line.renderingText().setText(text);
+        DungeonTimer.activeLines.add(line);
     }
 
     private static long lastNegativeLagWarnNano;
@@ -402,10 +420,10 @@ public final class DungeonTimer {
 
         DungeonTimer.activeLines.clear();
 
+        DungeonTimer.slotIndex = 0;
         DungeonTimer.updateLines();
 
         DungeonTimer.linesSize = DungeonTimer.activeLines.size();
-
         DungeonTimer.skipRender = DungeonTimer.activeLines.isEmpty();
     }
 
@@ -737,8 +755,9 @@ public final class DungeonTimer {
 
         DungeonTimer.dungeonFloor = null;
         DungeonTimer.activeLines.clear();
-        Arrays.fill(DungeonTimer.PHASE_LINES, null);
+        DungeonTimer.PHASE_LINES.clear();
         DungeonTimer.linesSize = 0;
+        DungeonTimer.slotIndex = 0;
         DungeonTimer.skipRender = true;
         DungeonTimer.warningLogged = false;
 

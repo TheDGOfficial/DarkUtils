@@ -36,21 +36,6 @@ final class PacketApplyBatcherEntryMixin<T extends PacketListener> {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Unique
-    private static final boolean darkutils$onPacketReceiveShouldNotAllowPacket(@NotNull final Packet<?> packet, final boolean bundle) {
-        if (!bundle && packet instanceof final CommonPingS2CPacket p) {
-            final var id = p.getParameter();
-
-            if (0 > id && id != PacketApplyBatcherEntryMixin.lastId) {
-                PacketApplyBatcherEntryMixin.lastId = id;
-
-                ServerTickEvent.INSTANCE.trigger();
-            }
-        }
-
-        return new ReceiveMainThreadPacketEvent(packet).triggerAndCancelled(); // prevent executing original packet handler
-    }
-
     @Inject(
             method = "apply",
             at = @At(
@@ -67,17 +52,17 @@ final class PacketApplyBatcherEntryMixin<T extends PacketListener> {
 
         final var packet = this.packet;
 
-        if (packet instanceof final BundleS2CPacket bundle) {
-            for (final var p : bundle.getPackets()) {
-                if (PacketApplyBatcherEntryMixin.darkutils$onPacketReceiveShouldNotAllowPacket(p, true)) {
-                    // TODO Use a different injection point to handle cancellation of bundle packets.
-                    // Most likely net.minecraft.client.network.ClientPlayNetworkHandler.onBundle()
-                    DarkUtils.warn("@fileName@", "Tried to cancel a packet inside a bundle packet. This would cancel the whole bundle and so is not supported. Packet type: " + p.getClass().getName());
-                }
+        if (packet instanceof final CommonPingS2CPacket p) {
+            final var id = p.getParameter();
+
+            if (0 > id && id != PacketApplyBatcherEntryMixin.lastId) {
+                PacketApplyBatcherEntryMixin.lastId = id;
+
+                ServerTickEvent.INSTANCE.trigger();
             }
         }
 
-        if (PacketApplyBatcherEntryMixin.darkutils$onPacketReceiveShouldNotAllowPacket(packet, false)) {
+        if (new ReceiveMainThreadPacketEvent(packet).triggerAndCancelled()) {
             ci.cancel(); // prevent executing original packet handler
         }
     }
