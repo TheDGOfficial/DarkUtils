@@ -2,6 +2,7 @@ package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.ReceiveGameMessageEvent;
+import gg.darkutils.events.base.EventPriority;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.chat.ChatUtils;
@@ -36,7 +37,7 @@ public final class AutoTip {
     }
 
     public static final void init() {
-        EventRegistry.centralRegistry().addListener(AutoTip::onChat);
+        EventRegistry.centralRegistry().addListener(AutoTip::onChat, EventPriority.ABOVE_NORMAL);
         ClientTickEvents.END_CLIENT_TICK.register(AutoTip::onTick);
     }
 
