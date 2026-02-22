@@ -146,10 +146,10 @@ public final class DungeonTimer {
             );
         }
 
-        if (!DungeonTimer.DungeonPhase.areCompatible(started, notYetFinished)) {
+        if (null != started.floor && null != notYetFinished.floor && started.floor.floor() != notYetFinished.floor.floor()) {
             throw new IllegalArgumentException(
                     "Incompatible phase pair: "
-                            + started + " ↔ " + notYetFinished
+                            + started + " <-> " + notYetFinished
             );
         }
 
@@ -800,17 +800,15 @@ public final class DungeonTimer {
         }
 
         public final boolean appliesTo(@Nullable final DungeonFloor runFloor) {
-            if (null == this.floor) return true;
-            if (null == runFloor) return false;
+            if (null == this.floor) {
+                return true;
+            }
+
+            if (null == runFloor) {
+                return false;
+            }
 
             return this.floor.floor() == runFloor.floor();
-        }
-
-        private static final boolean areCompatible(@NotNull final DungeonTimer.DungeonPhase a, @NotNull final DungeonTimer.DungeonPhase b) {
-            final var aFloor = a.floor;
-            final var bFloor = b.floor;
-
-            return null == aFloor || null == bFloor || aFloor == bFloor;
         }
     }
 
