@@ -6,7 +6,21 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+
 import org.apache.tools.ant.filters.ReplaceTokens
+
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.tree.AnnotationNode
+import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.tree.MethodNode
+import org.objectweb.asm.tree.FieldNode
+
+import java.util.jar.JarFile;
 
 buildscript {
     repositories {
@@ -15,6 +29,10 @@ buildscript {
 
     dependencies {
         classpath 'org.javassist:javassist:3.30.2-GA'
+
+        classpath 'org.ow2.asm:asm:9.9.1'
+        classpath 'org.ow2.asm:asm-tree:9.9.1'
+        classpath 'org.ow2.asm:asm-commons:9.9.1'
     }
 }
 
@@ -100,7 +118,7 @@ dependencies {
 
     testRuntimeOnly('org.junit.platform:junit-platform-launcher:6.1.0-M1')
 
-    compileOnly("com.google.errorprone:error_prone_annotations:2.47.0")
+    compileOnly('com.google.errorprone:error_prone_annotations:2.47.0')
 }
 
 tasks {
@@ -233,6 +251,537 @@ publishing {
     }
 }
 
+@CacheableTask
+abstract class AsmPreprocessTask extends DefaultTask {
+    static final def NAME_DESC               = 'Lgg/darkutils/annotations/Name;'
+    static final def SYNTHETIC_DESC          = 'Lgg/darkutils/annotations/Synthetic;'
+    static final def BRIDGE_DESC             = 'Lgg/darkutils/annotations/Bridge;'
+    static final def PRIVATE_DESC            = 'Lgg/darkutils/annotations/Private;'
+    static final def PACKAGE_PRIVATE_DESC    = 'Lgg/darkutils/annotations/PackagePrivate;'
+    static final def PRIVATE_FIELDS_DESC     = 'Lgg/darkutils/annotations/PrivateFields;'
+
+    static final def MIXIN_OVERWRITE_DESC    = 'Lorg/spongepowered/asm/mixin/Overwrite;'
+
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract DirectoryProperty getInputClassesDir()
+
+    @Classpath
+    public abstract ConfigurableFileCollection getProcessorClasspath()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputClassesDir()
+
+    @Inject
+    protected abstract FileSystemOperations getFs()
+
+    private final void copyFile(final File from, final File to) {
+        getFs().copy {
+            it.from(from)
+            it.into(to.parentFile)
+
+            it.rename { to.name }
+        }
+    }
+
+    private static final boolean overridesSomething(final ClassNode owner, final MethodNode method, final Set<File> classpath) {
+        final def name = method.name
+        final def desc = method.desc
+
+        return AsmPreprocessTask.hierarchyHasMethod(owner, name, desc, classpath)
+    }
+
+    private static final boolean hierarchyHasMethod(final ClassNode owner, final String name, final String desc, final Set<File> classpath) {
+        final def queue   = new ArrayDeque<String>()
+        final def visited = new HashSet<String>()
+
+        if (null != owner.superName) {
+            queue.add(owner.superName)
+        }
+
+        queue.addAll(owner.interfaces)
+
+        while (!queue.isEmpty()) {
+            final def internalName = queue.removeFirst()
+
+            if (!visited.add(internalName)) {
+                continue
+            }
+
+            final def cn = AsmPreprocessTask.loadClassNode(internalName, classpath)
+
+            if (null == cn) {
+                //System.err.println("Failed to load class: $internalName from classpath")
+                continue
+            }
+
+            for (final def m : cn.methods) {
+                if (m.name == name && m.desc == desc) {
+                    return true
+                }
+            }
+
+            if (null != cn.superName) {
+                queue.add(cn.superName)
+            }
+
+            queue.addAll(cn.interfaces)
+        }
+
+        return false
+    }
+
+    private static final ClassNode loadClassNode(final String internalName, final Set<File> classpath) {
+        final def entry = internalName + '.class'
+
+        for (final def root : classpath) {
+            if (root.isDirectory()) {
+                final def file = new File(root, entry)
+
+                if (!file.exists()) {
+                    continue
+                }
+
+                return AsmPreprocessTask.readNode(file.bytes)
+            }
+
+            if (root.name.endsWith('.jar')) {
+                new JarFile(root).withCloseable { jar ->
+                    final def e = jar.getJarEntry(entry)
+
+                    if (null != e) {
+                        return AsmPreprocessTask.readNode(jar.getInputStream(e).bytes)
+                    }
+                }
+            }
+        }
+
+        /*
+         * ---------- JDK MODULE FALLBACK ----------
+         */
+
+        final FileSystem jrt = FileSystems.getFileSystem(URI.create('jrt:/'))
+        final Path modules = jrt.getPath('/modules')
+
+        try (final def stream = Files.walk(modules)) {
+            final def found = stream.filter { it.toString().endsWith(entry) }.findFirst()
+
+            if (found.isPresent()) {
+                return AsmPreprocessTask.readNode(Files.readAllBytes(found.get()))
+            }
+        }
+
+        return null
+    }
+
+    private static final ClassNode readNode(final byte[] bytes) {
+        final def cr = new ClassReader(bytes)
+        final def cn = new ClassNode()
+
+        cr.accept(cn, ClassReader.SKIP_CODE)
+
+        return cn
+    }
+
+    private static final boolean hasAnnotation(final MethodNode mn, final String desc) {
+        final def anns = mn.visibleAnnotations
+
+        if (null != anns) {
+            for (final def a : anns) {
+                if (a.desc == desc) {
+                    return true
+                }
+            }
+        }
+
+        final def ianns = mn.invisibleAnnotations
+
+        if (null != ianns) {
+            for (final def a : ianns) {
+                if (a.desc == desc) {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+    private static final String methodAccessToString(final MethodNode method) {
+        final def flags = []
+        if ((method.access & Opcodes.ACC_PUBLIC) != 0) flags << 'public'
+        if ((method.access & Opcodes.ACC_PRIVATE) != 0) flags << 'private'
+        if ((method.access & Opcodes.ACC_PROTECTED) != 0) flags << 'protected'
+        if ((method.access & Opcodes.ACC_STATIC) != 0) flags << 'static'
+        if ((method.access & Opcodes.ACC_FINAL) != 0) flags << 'final'
+        if ((method.access & Opcodes.ACC_SYNCHRONIZED) != 0) flags << 'synchronized'
+        if ((method.access & Opcodes.ACC_BRIDGE) != 0) flags << 'bridge'
+        if ((method.access & Opcodes.ACC_VARARGS) != 0) flags << 'varargs'
+        if ((method.access & Opcodes.ACC_NATIVE) != 0) flags << 'native'
+        if ((method.access & Opcodes.ACC_ABSTRACT) != 0) flags << 'abstract'
+        if ((method.access & Opcodes.ACC_STRICT) != 0) flags << 'strictfp'
+        if ((method.access & Opcodes.ACC_SYNTHETIC) != 0) flags << 'synthetic'
+        return flags.join(' ')
+    }
+
+    @TaskAction
+    final void run() {
+        final File inputDir = getInputClassesDir().get().asFile
+        final File outputDir = getOutputClassesDir().get().asFile
+
+        getFs().delete {
+            it.delete(outputDir)
+        }
+
+        inputDir.eachFileRecurse { final File inputFile ->
+            if (!inputFile.isFile()) {
+                return
+            }
+
+            final def relative = inputDir.toPath().relativize(inputFile.toPath())
+            final File outputFile = new File(outputDir, relative.toString())
+
+            /*
+             * Non-class files must be copied as-is
+             */
+            if (!inputFile.name.endsWith('.class')) {
+                getFs().copy {
+                    it.from(inputFile)
+                    it.into(outputFile.parentFile)
+                    it.rename { outputFile.name }
+                }
+                return
+            }
+
+            final def bytes = inputFile.bytes
+
+            final def cr = new ClassReader(bytes)
+            final def cn = new ClassNode()
+
+            cr.accept(cn, ClassReader.EXPAND_FRAMES)
+
+            def changed = false
+            def renamed = false
+
+            final def classPublic = 0 != (cn.access & Opcodes.ACC_PUBLIC)
+
+            /*
+             * -----------------------------
+             * CLASS PROCESSING
+             * -----------------------------
+             */
+            if (0 != (cn.access & Opcodes.ACC_SYNTHETIC)) {
+                changed = true
+                cn.access |= Opcodes.ACC_FINAL
+                //logger.lifecycle("Made ${cn.name} final")
+            }
+
+            if (!classPublic) {
+                for (final def fn : cn.fields) {
+                    if (0 != (fn.access & Opcodes.ACC_PUBLIC)) {
+                        changed = true
+                        fn.access &= ~Opcodes.ACC_PUBLIC
+                        //logger.lifecycle("Removed public from field ${cn.name}#${fn.name}")
+                    }
+
+                    if (0 != (fn.access & Opcodes.ACC_PROTECTED)) {
+                        changed = true
+                        fn.access &= ~Opcodes.ACC_PROTECTED
+                        //logger.lifecycle("Removed protected from field ${cn.name}#${fn.name}")
+                    }
+                }
+
+                for (final def mn : cn.methods) {
+                    if ('<clinit>' == mn.name || '<init>' == mn.name || 0 != (mn.access & Opcodes.ACC_PRIVATE) || AsmPreprocessTask.hasAnnotation(mn, MIXIN_OVERWRITE_DESC)) {
+                        continue
+                    }
+
+                    if (0 == (mn.access & Opcodes.ACC_STATIC) && AsmPreprocessTask.overridesSomething(cn, mn, getProcessorClasspath().getFiles())) {
+                        continue
+                    }
+
+                    if (0 == (mn.access & Opcodes.ACC_BRIDGE) && mn.name.contains('mixin')) {
+                        logger.warn("Method ${cn.name}#${mn.name} should be package-private or private")
+                    }
+
+                    if (0 != (mn.access & Opcodes.ACC_PUBLIC) && 0 == (mn.access & Opcodes.ACC_BRIDGE) && 0 == (cn.access & Opcodes.ACC_INTERFACE)) {
+                        changed = true
+                        mn.access &= ~Opcodes.ACC_PUBLIC
+                        //logger.lifecycle("Removed public from method ${cn.name}#${mn.name}")
+                    }
+
+                    if (0 != (mn.access & Opcodes.ACC_PROTECTED) && 0 == (mn.access & Opcodes.ACC_BRIDGE)) {
+                        changed = true
+                        mn.access &= ~Opcodes.ACC_PROTECTED
+                        //logger.lifecycle("Removed protected from method ${cn.name}#${mn.name}")
+                    }
+                }
+            } else if (cn.name.contains('mixin') && !cn.name.contains('accessor')) {
+                logger.warn('Non-accessor mixin class declared public')
+            }
+
+            /*
+             * -----------------------------
+             * METHOD PROCESSING
+             * -----------------------------
+             */
+            final def isInterface = 0 != (cn.access & Opcodes.ACC_INTERFACE)
+            final def isRecord = 0 != (cn.access & Opcodes.ACC_RECORD)
+
+            final def clsAnns = cn.invisibleAnnotations
+
+            def privateFields = false
+
+            if (null != clsAnns) {
+                for (final def an : clsAnns) {
+                    if (PRIVATE_FIELDS_DESC == an.desc) {
+                        privateFields = true
+                    } else if (SYNTHETIC_DESC == an.desc) {
+                        changed = true
+                        cn.access |= Opcodes.ACC_SYNTHETIC
+                        //logger.lifecycle("Added ACC_SYNTHETIC to ${cn.name}")
+                    } else if (PACKAGE_PRIVATE_DESC == an.desc) {
+                        changed = true
+                        cn.access &= ~Opcodes.ACC_PUBLIC
+                        cn.access &= ~Opcodes.ACC_PROTECTED
+                        //logger.lifecycle("Added package-private to ${cn.name}")
+                    } else if (PRIVATE_DESC == an.desc) {
+                        changed = true
+                        cn.access &= ~Opcodes.ACC_PUBLIC
+                        cn.access &= ~Opcodes.ACC_PROTECTED
+                        cn.access |= Opcodes.ACC_PRIVATE
+                        //logger.lifecycle("Added private to ${cn.name}")
+                    } else if (NAME_DESC == an.desc) {
+                        final def vals = an.values
+
+                        for (def i = 0; i < vals.size(); i += 2) {
+                            if ('value' != vals.get(i)) {
+                                continue
+                            }
+
+                            final def oldName = mn.name
+                            final def newName = vals.get(i + 1)
+
+                            if (oldName != newName) {
+                                changed = true
+                                cn.name = newName
+                                //logger.lifecycle("Renamed ${oldName} into ${cn.name}")
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (final def fn : cn.fields) {
+                final def fnAnns = fn.invisibleAnnotations
+
+                for (final def an : fnAnns) {
+                    if (SYNTHETIC_DESC == an.desc) {
+                        changed = true
+                        fn.access |= Opcodes.ACC_SYNTHETIC
+                        //logger.lifecycle("Added ACC_SYNTHETIC to ${cn.name}#${fn.name}")
+                    } else if (PACKAGE_PRIVATE_DESC == an.desc) {
+                        changed = true
+                        fn.access &= ~Opcodes.ACC_PUBLIC
+                        fn.access &= ~Opcodes.ACC_PROTECTED
+                        //logger.lifecycle("Added package-private to ${cn.name}#${fn.name}")
+                    } else if (PRIVATE_DESC == an.desc) {
+                        changed = true
+                        fn.access &= ~Opcodes.ACC_PUBLIC
+                        fn.access &= ~Opcodes.ACC_PROTECTED
+                        fn.access |= Opcodes.ACC_PRIVATE
+                        //logger.lifecycle("Added private to ${cn.name}#${fn.name}")
+                    } else if (NAME_DESC == an.desc) {
+                        final def vals = an.values
+
+                        for (def i = 0; i < vals.size(); i += 2) {
+                            if ('value' != vals.get(i)) {
+                                continue
+                            }
+
+                            final def oldName = mn.name
+                            final def newName = vals.get(i + 1)
+
+                            if (oldName != newName) {
+                                changed = true
+                                fn.name = newName
+                                //logger.lifecycle("Renamed ${cn.name}#${oldName} into ${cn.name}#${fn.name}")
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (privateFields) {
+                for (final def fn : cn.fields) {
+                    if (0 != (fn.access & Opcodes.ACC_PUBLIC)) {
+                        changed = true
+                        fn.access &= ~Opcodes.ACC_PUBLIC
+                        //logger.lifecycle("Removed public from field ${cn.name}#${fn.name}")
+                    }
+
+                    if (0 != (fn.access & Opcodes.ACC_PROTECTED)) {
+                        changed = true
+                        fn.access &= ~Opcodes.ACC_PROTECTED
+                        //logger.lifecycle("Removed protected from field ${cn.name}#${fn.name}")
+                    }
+
+                    if (0 == (fn.access & Opcodes.ACC_PRIVATE)) {
+                        changed = true
+                        fn.access |= Opcodes.ACC_PRIVATE
+                        //logger.lifecycle("Add private to field ${cn.name}#${fn.name}")
+                    }
+                }
+            }
+
+            for (final def mn : cn.methods) {
+                /*
+                 * FINALIZATION
+                 */
+                final def abstractMethod = 0 != (mn.access & Opcodes.ACC_ABSTRACT)
+
+                if (!isInterface && !abstractMethod && '<clinit>' != mn.name && '<init>' != mn.name && 0 == (mn.access & Opcodes.ACC_FINAL)) {
+                    if ((isRecord || 0 != (mn.access & Opcodes.ACC_BRIDGE) || 0 != (mn.access & Opcodes.ACC_SYNTHETIC) || mn.name.contains('$') || 'values' == mn.name || 'valueOf' == mn.name)) {
+                        changed = true
+                        mn.access |= Opcodes.ACC_FINAL
+                        if (!isRecord && 0 == (mn.access & Opcodes.ACC_BRIDGE) && 0 == (mn.access & Opcodes.ACC_SYNTHETIC) && 'values' != mn.name && 'valueOf' != mn.name) {
+                            logger.warn("Method ${cn.name}#${mn.name} should be final")
+                        }
+                        //logger.lifecycle("Added final to ${cn.name}#${mn.name}")
+                    } else {
+                        logger.warn("Method ${cn.name}#${mn.name} should be final")
+                    }
+                }
+
+                /*
+                 * METHOD ANNOTATIONS
+                 */
+                final def anns =
+                        mn.invisibleAnnotations
+
+                if (null != anns) {
+                    for (final def an : anns) {
+                        if (NAME_DESC == an.desc) {
+                            final def vals = an.values
+
+                            for (def i = 0; i < vals.size(); i += 2) {
+                                if ('value' != vals.get(i)) {
+                                    continue
+                                }
+
+                                final def oldName = mn.name
+                                final def newName = vals.get(i + 1)
+
+                                if (oldName != newName) {
+                                    changed = true
+                                    renamed = true
+                                    mn.name = newName
+                                    //logger.lifecycle("Renamed ${cn.name}#${oldName} into ${cn.name}#${mn.name}")
+                                }
+                            }
+                        }
+
+                        if (SYNTHETIC_DESC == an.desc) {
+                            changed = true
+                            mn.access |= Opcodes.ACC_SYNTHETIC
+                            //logger.lifecycle("Added ACC_SYNTHETIC to ${cn.name}#${mn.name}")
+                        }
+
+                        if (PACKAGE_PRIVATE_DESC == an.desc && 0 == (mn.access & Opcodes.ACC_BRIDGE)) {
+                            changed = true
+                            mn.access &= ~Opcodes.ACC_PUBLIC
+                            mn.access &= ~Opcodes.ACC_PROTECTED
+                            //logger.lifecycle("Made method package-private: ${cn.name}#${mn.name}")
+                        }
+
+                        if (PRIVATE_DESC == an.desc && 0 == (mn.access & Opcodes.ACC_BRIDGE)) {
+                            changed = true
+                            mn.access &= ~Opcodes.ACC_PUBLIC
+                            mn.access &= ~Opcodes.ACC_PROTECTED
+                            mn.access |= Opcodes.ACC_PRIVATE
+                            //logger.lifecycle("Made method private: ${cn.name}#${mn.name}")
+                        }
+
+                        if (BRIDGE_DESC == an.desc) {
+                            changed = true
+                            mn.access |= Opcodes.ACC_BRIDGE
+                            //logger.lifecycle("Added ACC_BRIDGE to ${cn.name}#${mn.name}")
+                        }
+                    }
+                }
+
+                /*if (0 != (mn.access & Opcodes.ACC_BRIDGE) || 0 != (mn.access & Opcodes.ACC_SYNTHETIC)) {
+                    def mod = AsmPreprocessTask.methodAccessToString(mn)
+                    mod += " ${cn.name}.${mn.name}()"
+
+                    logger.lifecycle(mod)
+                }*/
+            }
+
+            def output = bytes
+
+            if (changed) {
+                def cw = new ClassWriter(0)
+
+                if (renamed) {
+                    cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
+                        @Override
+                        protected final String getCommonSuperClass(final String type1, final String type2) {
+                            return 'java/lang/Object'
+                        }
+                    }
+                }
+
+                cn.accept(cw)
+
+                output = cw.toByteArray()
+            }
+
+            if (!changed) {
+                getFs().copy {
+                    it.from(inputFile)
+                    it.into(outputFile.parentFile)
+                    it.rename { outputFile.name }
+                }
+                return
+            }
+
+            outputFile.parentFile.mkdirs() // allowed here: we're writing declared @OutputDirectory
+
+            outputFile.newOutputStream().withCloseable {
+                it.write(output)
+            }
+        }
+    }
+}
+
+tasks.register('asmPreprocess', AsmPreprocessTask) {
+    inputClassesDir.set(tasks.named('compileJava', JavaCompile).flatMap { it.destinationDirectory })
+    outputClassesDir.set(layout.buildDirectory.dir('asmProcessedClasses'))
+}
+
+tasks.named('asmPreprocess', AsmPreprocessTask).configure {
+    processorClasspath.from(sourceSets.main.runtimeClasspath)
+}
+
+final def compileOutputDirProvider = tasks.named('compileJava', JavaCompile).flatMap(JavaCompile::getDestinationDirectory)
+final def asmOutputProvider = tasks.named('asmPreprocess').flatMap(AsmPreprocessTask::getOutputClassesDir)
+
+tasks.named('jar', Jar).configure { jarTask ->
+    dependsOn(tasks.named('asmPreprocess'))
+
+    // include ASM-processed classes
+    from(asmOutputProvider)
+
+    // exclude ORIGINAL compiled classes from jar
+    exclude { details ->
+        final def compileDir = compileOutputDirProvider.get().asFile.toPath()
+        final def filePath = details.file.toPath()
+
+        return filePath.startsWith(compileDir)
+    }
+}
+
 // Task class for full configuration-cache compatibility
 @CacheableTask
 abstract class CheckMethodSizesTask extends DefaultTask {
@@ -305,8 +854,8 @@ tasks.register('checkMethodSizes', CheckMethodSizesTask) {
     dependsOn tasks.named('classes')
 }
 
-// Make it run after check
-tasks.named('check') {
+// Make it run after asmPreprocess
+tasks.named('asmPreprocess') {
     finalizedBy tasks.named('checkMethodSizes')
 }
 

@@ -24,7 +24,7 @@ final class ParticleManagerMixin {
             at = @At("HEAD"),
             cancellable = true
     )
-    private void darkutils$disableCampfireSmokeParticlesIfEnabled(
+    private final void darkutils$disableCampfireSmokeParticlesIfEnabled(
             @NotNull final ParticleEffect effect, final double x, final double y, final double z,
             final double velocityX, final double velocityY, final double velocityZ,
             @NotNull final CallbackInfoReturnable<Particle> cir

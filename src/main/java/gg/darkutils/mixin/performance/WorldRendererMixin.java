@@ -17,7 +17,7 @@ final class WorldRendererMixin {
     }
 
     @Inject(method = "drawEntityOutlinesFramebuffer", at = @At("HEAD"), cancellable = true)
-    public final void darkutils$drawEntityOutlinesFramebuffer$disableIfEnabled(@NotNull final CallbackInfo ci) {
+    private final void darkutils$drawEntityOutlinesFramebuffer$disableIfEnabled(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.disableGlowing) {
             ci.cancel();
         }

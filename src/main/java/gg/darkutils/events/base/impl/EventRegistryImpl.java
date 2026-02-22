@@ -1,5 +1,6 @@
 package gg.darkutils.events.base.impl;
 
+import gg.darkutils.annotations.Private;
 import gg.darkutils.events.base.Event;
 import gg.darkutils.events.base.EventHandler;
 import gg.darkutils.events.base.EventRegistry;
@@ -61,6 +62,7 @@ public final class EventRegistryImpl implements EventRegistry {
 
         @Override
         @NotNull
+        @Private // safe, compiler generates us a bridge method that is public and conforms to the override
         protected final EventHandler<? extends Event> computeValue(@NotNull final Class<?> type) {
             if (!Event.class.isAssignableFrom(type)) {
                 throw new IllegalStateException(

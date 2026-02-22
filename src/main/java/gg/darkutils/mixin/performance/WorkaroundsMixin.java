@@ -24,7 +24,7 @@ final class WorkaroundsMixin {
             at = @At(value = "INVOKE", target = "Ljava/util/EnumSet;add(Ljava/lang/Object;)Z", remap = false),
             remap = false
     )
-    private static boolean darkutils$skipAddIfEnabled(
+    private static final boolean darkutils$skipAddIfEnabled(
             @NotNull @Coerce final AbstractCollection<Object> enumSet,
             @NotNull final Object value
     ) {

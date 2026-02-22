@@ -83,7 +83,7 @@ final class MinecraftClientMixin {
     }
 
     @Inject(method = "hasOutline", at = @At("HEAD"), cancellable = true)
-    public final void darkutils$hasOutline$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
+    private final void darkutils$hasOutline$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
         if (DarkUtilsConfig.INSTANCE.disableGlowing) {
             cir.setReturnValue(false);
         }

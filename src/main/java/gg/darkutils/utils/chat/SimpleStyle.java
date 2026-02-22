@@ -188,7 +188,7 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         }
 
         @Override
-        public @NotNull Style applyStyle(final @NotNull Style style) {
+        public final @NotNull Style applyStyle(final @NotNull Style style) {
             return style; // no change
         }
     }
@@ -206,7 +206,7 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         }
 
         @Override
-        public @NotNull Style applyStyle(final @NotNull Style style) {
+        public final @NotNull Style applyStyle(final @NotNull Style style) {
             return style; // no change
         }
     }
