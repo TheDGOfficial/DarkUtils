@@ -24,6 +24,49 @@ public final class LazyConstants {
         throw new UnsupportedOperationException("static utility class");
     }
 
+    private static final class LazyMap<K, V> extends AbstractMap<K, V> {
+        @NotNull
+        private final ConcurrentHashMap<K, Supplier<V>> lazyValues;
+
+        private LazyMap(@NotNull final ConcurrentHashMap<K, Supplier<V>> lazyValues) {
+            super();
+
+            this.lazyValues = lazyValues;
+        }
+
+        @Override
+        @NotNull
+        public final V get(@NotNull final Object key) {
+            Objects.requireNonNull(key, "key");
+
+            final var lazyValue = Objects.requireNonNull(
+                    lazyValues.get(key),
+                    "Unknown key passed to lazy map: " + key
+            );
+
+            return Objects.requireNonNull(
+                    lazyValue.get(),
+                    "Lazy value supplier returned null for key: " + key
+            );
+        }
+
+        @Override
+        @NotNull
+        public final V getOrDefault(@NotNull final Object key, @NotNull final V def) {
+            throw new UnsupportedOperationException(
+                    "getOrDefault over lazy map is not supported, use get instead"
+            );
+        }
+
+        @Override
+        @NotNull
+        public final Set<Map.Entry<K, V>> entrySet() {
+            throw new UnsupportedOperationException(
+                    "Iteration over lazy map is not supported"
+            );
+        }
+    }
+
     @NotNull
     public static final <K, V> Map<K, V> lazyMapOf(@NotNull final Set<@NotNull K> allPossibleKeys, @NotNull final Function<? super K, ? extends V> valueMapper) {
         // J26 EA preview
@@ -44,39 +87,7 @@ public final class LazyConstants {
             lazyValues.put(key, LazyConstants.lazyConstantOf(() -> valueMapper.apply(key)));
         }
 
-        return Collections.unmodifiableMap(new AbstractMap<>() {
-            @Override
-            @NotNull
-            public final V get(@NotNull final Object key) {
-                Objects.requireNonNull(key, "key");
-
-                final var lazyValue = Objects.requireNonNull(
-                        lazyValues.get(key),
-                        "Unknown key passed to lazy map: " + key
-                );
-
-                return Objects.requireNonNull(
-                        lazyValue.get(),
-                        "Lazy value supplier returned null for key: " + key
-                );
-            }
-
-            @Override
-            @NotNull
-            public final V getOrDefault(@NotNull final Object key, @NotNull final V def) {
-                throw new UnsupportedOperationException(
-                        "getOrDefault over lazy map is not supported, use get instead"
-                );
-            }
-
-            @Override
-            @NotNull
-            public final Set<Map.Entry<K, V>> entrySet() {
-                throw new UnsupportedOperationException(
-                        "Iteration over lazy map is not supported"
-                );
-            }
-        });
+        return Collections.unmodifiableMap(new LazyMap<>(lazyValues));
     }
 
     @NotNull
