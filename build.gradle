@@ -3,24 +3,24 @@ import javassist.bytecode.MethodInfo
 
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.util.CheckClassAdapter
 
-import java.nio.file.FileSystem;
+import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.tree.MethodNode
+
+import java.util.jar.JarFile;
+
 import java.nio.file.FileSystems;
-import java.nio.file.Path;
+import java.nio.file.Files
+
+import java.nio.file.StandardCopyOption
 
 import org.apache.tools.ant.filters.ReplaceTokens
 
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.Opcodes
-import org.objectweb.asm.tree.AnnotationNode
-import org.objectweb.asm.tree.ClassNode
-import org.objectweb.asm.tree.MethodNode
-import org.objectweb.asm.tree.FieldNode
-
-import java.util.jar.JarFile;
+import java.util.HashMap
 
 buildscript {
     repositories {
@@ -251,6 +251,26 @@ publishing {
     }
 }
 
+final class MessageCollector {
+    private final HashMap<Integer, ArrayList<String>> messages = new HashMap<>();
+
+    private final void put(final int messageCategory, final String message) {
+        messages.computeIfAbsent(messageCategory, c -> new ArrayList<>()).add(message)
+    }
+
+    private final void logAll(final Logger logger) {
+        for (final def entry : messages.entrySet()) {
+            final def category = entry.getKey()
+            final def messages = entry.getValue()
+
+            logger.lifecycle("Category: ${category}")
+            for (final def message : messages) {
+                logger.lifecycle(message)
+            }
+        }
+    }
+}
+
 @CacheableTask
 abstract class AsmPreprocessTask extends DefaultTask {
     static final def NAME_DESC               = 'Lgg/darkutils/annotations/Name;'
@@ -346,7 +366,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
             }
 
             if (root.name.endsWith('.jar')) {
-                new JarFile(root).withCloseable { jar ->
+                try (final def jar = new JarFile(root)) {
                     final def e = jar.getJarEntry(entry)
 
                     if (null != e) {
@@ -360,8 +380,8 @@ abstract class AsmPreprocessTask extends DefaultTask {
          * ---------- JDK MODULE FALLBACK ----------
          */
 
-        final FileSystem jrt = FileSystems.getFileSystem(URI.create('jrt:/'))
-        final Path modules = jrt.getPath('/modules')
+        final def jrt = FileSystems.getFileSystem(URI.create('jrt:/'))
+        final def modules = jrt.getPath('/modules')
 
         try (final def stream = Files.walk(modules)) {
             final def found = stream.filter { it.toString().endsWith(entry) }.findFirst()
@@ -428,20 +448,25 @@ abstract class AsmPreprocessTask extends DefaultTask {
     final void run() {
         logger.lifecycle("Performing ASM preprocessing...")
 
-        final File inputDir = getInputClassesDir().get().asFile
-        final File outputDir = getOutputClassesDir().get().asFile
+        final def inputDir = getInputClassesDir().get().asFile
+        final def outputDir = getOutputClassesDir().get().asFile
 
         getFs().delete {
             it.delete(outputDir)
         }
 
-        inputDir.eachFileRecurse { final File inputFile ->
+        final def messages = new MessageCollector();
+        final def privatizedMethodsByClass = new HashMap<String, Set<String>>()
+
+        final def verbose = false
+
+        inputDir.eachFileRecurse { final inputFile ->
             if (!inputFile.isFile()) {
                 return
             }
 
             final def relative = inputDir.toPath().relativize(inputFile.toPath())
-            final File outputFile = new File(outputDir, relative.toString())
+            final def outputFile = new File(outputDir, relative.toString())
 
             /*
              * Non-class files must be copied as-is
@@ -465,71 +490,6 @@ abstract class AsmPreprocessTask extends DefaultTask {
             def changed = false
             def renamed = false
 
-            final def classPublic = 0 != (cn.access & Opcodes.ACC_PUBLIC)
-
-            /*
-             * -----------------------------
-             * CLASS PROCESSING
-             * -----------------------------
-             */
-            if (0 != (cn.access & Opcodes.ACC_SYNTHETIC)) {
-                changed = true
-                cn.access |= Opcodes.ACC_FINAL
-                //logger.lifecycle("Made ${cn.name} final")
-            }
-
-            if (!classPublic) {
-                for (final def fn : cn.fields) {
-                    if (0 != (fn.access & Opcodes.ACC_PUBLIC)) {
-                        changed = true
-                        fn.access &= ~Opcodes.ACC_PUBLIC
-                        //logger.lifecycle("Removed public from field ${cn.name}#${fn.name}")
-                    }
-
-                    if (0 != (fn.access & Opcodes.ACC_PROTECTED)) {
-                        changed = true
-                        fn.access &= ~Opcodes.ACC_PROTECTED
-                        //logger.lifecycle("Removed protected from field ${cn.name}#${fn.name}")
-                    }
-                }
-
-                for (final def mn : cn.methods) {
-                    if ('<clinit>' == mn.name || '<init>' == mn.name || 0 != (mn.access & Opcodes.ACC_PRIVATE) || AsmPreprocessTask.hasAnnotation(mn, MIXIN_OVERWRITE_DESC)) {
-                        continue
-                    }
-
-                    if (0 == (mn.access & Opcodes.ACC_STATIC) && AsmPreprocessTask.overridesSomething(cn, mn, getProcessorClasspath().getFiles())) {
-                        continue
-                    }
-
-                    if (0 == (mn.access & Opcodes.ACC_BRIDGE) && mn.name.contains('mixin')) {
-                        logger.warn("Method ${cn.name}#${mn.name} should be package-private or private")
-                    }
-
-                    if (0 != (mn.access & Opcodes.ACC_PUBLIC) && 0 == (mn.access & Opcodes.ACC_BRIDGE) && 0 == (cn.access & Opcodes.ACC_INTERFACE)) {
-                        changed = true
-                        mn.access &= ~Opcodes.ACC_PUBLIC
-                        //logger.lifecycle("Removed public from method ${cn.name}#${mn.name}")
-                    }
-
-                    if (0 != (mn.access & Opcodes.ACC_PROTECTED) && 0 == (mn.access & Opcodes.ACC_BRIDGE)) {
-                        changed = true
-                        mn.access &= ~Opcodes.ACC_PROTECTED
-                        //logger.lifecycle("Removed protected from method ${cn.name}#${mn.name}")
-                    }
-                }
-            } else if (cn.name.contains('mixin') && !cn.name.contains('accessor')) {
-                logger.warn('Non-accessor mixin class declared public')
-            }
-
-            /*
-             * -----------------------------
-             * METHOD PROCESSING
-             * -----------------------------
-             */
-            final def isInterface = 0 != (cn.access & Opcodes.ACC_INTERFACE)
-            final def isRecord = 0 != (cn.access & Opcodes.ACC_RECORD)
-
             final def clsAnns = cn.invisibleAnnotations
 
             def privateFields = false
@@ -541,18 +501,21 @@ abstract class AsmPreprocessTask extends DefaultTask {
                     } else if (SYNTHETIC_DESC == an.desc) {
                         changed = true
                         cn.access |= Opcodes.ACC_SYNTHETIC
-                        //logger.lifecycle("Added ACC_SYNTHETIC to ${cn.name}")
+                        messages.put(0, "Added ACC_SYNTHETIC to ${cn.name}")
                     } else if (PACKAGE_PRIVATE_DESC == an.desc) {
                         changed = true
                         cn.access &= ~Opcodes.ACC_PUBLIC
                         cn.access &= ~Opcodes.ACC_PROTECTED
-                        //logger.lifecycle("Added package-private to ${cn.name}")
+                        if (0 != (cn.access & Opcodes.ACC_PRIVATE)) {
+                            logger.error("Already private member annotated with @PackagePrivate")
+                        }
+                        messages.put(1, "Added package-private to ${cn.name}")
                     } else if (PRIVATE_DESC == an.desc) {
                         changed = true
                         cn.access &= ~Opcodes.ACC_PUBLIC
                         cn.access &= ~Opcodes.ACC_PROTECTED
                         cn.access |= Opcodes.ACC_PRIVATE
-                        //logger.lifecycle("Added private to ${cn.name}")
+                        messages.put(2, "Added private to ${cn.name}")
                     } else if (NAME_DESC == an.desc) {
                         final def vals = an.values
 
@@ -567,7 +530,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
                             if (oldName != newName) {
                                 changed = true
                                 cn.name = newName
-                                //logger.lifecycle("Renamed ${oldName} into ${cn.name}")
+                                messages.put(3, "Renamed ${oldName} into ${cn.name}")
                             }
                         }
                     }
@@ -581,18 +544,21 @@ abstract class AsmPreprocessTask extends DefaultTask {
                     if (SYNTHETIC_DESC == an.desc) {
                         changed = true
                         fn.access |= Opcodes.ACC_SYNTHETIC
-                        //logger.lifecycle("Added ACC_SYNTHETIC to ${cn.name}#${fn.name}")
+                        messages.put(4, "Added ACC_SYNTHETIC to ${cn.name}#${fn.name}")
                     } else if (PACKAGE_PRIVATE_DESC == an.desc) {
                         changed = true
                         fn.access &= ~Opcodes.ACC_PUBLIC
                         fn.access &= ~Opcodes.ACC_PROTECTED
-                        //logger.lifecycle("Added package-private to ${cn.name}#${fn.name}")
+                        if (0 != (fn.access & Opcodes.ACC_PRIVATE)) {
+                            logger.error("Already private member annotated with @PackagePrivate")
+                        }
+                        messages.put(5, "Added package-private to ${cn.name}#${fn.name}")
                     } else if (PRIVATE_DESC == an.desc) {
                         changed = true
                         fn.access &= ~Opcodes.ACC_PUBLIC
                         fn.access &= ~Opcodes.ACC_PROTECTED
                         fn.access |= Opcodes.ACC_PRIVATE
-                        //logger.lifecycle("Added private to ${cn.name}#${fn.name}")
+                        messages.put(6, "Added private to ${cn.name}#${fn.name}")
                     } else if (NAME_DESC == an.desc) {
                         final def vals = an.values
 
@@ -607,7 +573,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
                             if (oldName != newName) {
                                 changed = true
                                 fn.name = newName
-                                //logger.lifecycle("Renamed ${cn.name}#${oldName} into ${cn.name}#${fn.name}")
+                                messages.put(7, "Renamed ${cn.name}#${oldName} into ${cn.name}#${fn.name}")
                             }
                         }
                     }
@@ -619,42 +585,24 @@ abstract class AsmPreprocessTask extends DefaultTask {
                     if (0 != (fn.access & Opcodes.ACC_PUBLIC)) {
                         changed = true
                         fn.access &= ~Opcodes.ACC_PUBLIC
-                        //logger.lifecycle("Removed public from field ${cn.name}#${fn.name}")
+                        messages.put(8, "Removed public from field ${cn.name}#${fn.name}")
                     }
 
                     if (0 != (fn.access & Opcodes.ACC_PROTECTED)) {
                         changed = true
                         fn.access &= ~Opcodes.ACC_PROTECTED
-                        //logger.lifecycle("Removed protected from field ${cn.name}#${fn.name}")
+                        messages.put(9, "Removed protected from field ${cn.name}#${fn.name}")
                     }
 
                     if (0 == (fn.access & Opcodes.ACC_PRIVATE)) {
                         changed = true
                         fn.access |= Opcodes.ACC_PRIVATE
-                        //logger.lifecycle("Add private to field ${cn.name}#${fn.name}")
+                        messages.put(10, "Add private to field ${cn.name}#${fn.name}")
                     }
                 }
             }
 
             for (final def mn : cn.methods) {
-                /*
-                 * FINALIZATION
-                 */
-                final def abstractMethod = 0 != (mn.access & Opcodes.ACC_ABSTRACT)
-
-                if (!isInterface && !abstractMethod && '<clinit>' != mn.name && '<init>' != mn.name && 0 == (mn.access & Opcodes.ACC_FINAL)) {
-                    if ((isRecord || 0 != (mn.access & Opcodes.ACC_BRIDGE) || 0 != (mn.access & Opcodes.ACC_SYNTHETIC) || mn.name.contains('$') || 'values' == mn.name || 'valueOf' == mn.name)) {
-                        changed = true
-                        mn.access |= Opcodes.ACC_FINAL
-                        if (!isRecord && 0 == (mn.access & Opcodes.ACC_BRIDGE) && 0 == (mn.access & Opcodes.ACC_SYNTHETIC) && 'values' != mn.name && 'valueOf' != mn.name) {
-                            logger.warn("Method ${cn.name}#${mn.name} should be final")
-                        }
-                        //logger.lifecycle("Added final to ${cn.name}#${mn.name}")
-                    } else {
-                        logger.warn("Method ${cn.name}#${mn.name} should be final")
-                    }
-                }
-
                 /*
                  * METHOD ANNOTATIONS
                  */
@@ -678,7 +626,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
                                     changed = true
                                     renamed = true
                                     mn.name = newName
-                                    //logger.lifecycle("Renamed ${cn.name}#${oldName} into ${cn.name}#${mn.name}")
+                                    messages.put(11, "Renamed ${cn.name}#${oldName} into ${cn.name}#${mn.name}")
                                 }
                             }
                         }
@@ -686,14 +634,14 @@ abstract class AsmPreprocessTask extends DefaultTask {
                         if (SYNTHETIC_DESC == an.desc) {
                             changed = true
                             mn.access |= Opcodes.ACC_SYNTHETIC
-                            //logger.lifecycle("Added ACC_SYNTHETIC to ${cn.name}#${mn.name}")
+                            messages.put(12, "Added ACC_SYNTHETIC to ${cn.name}#${mn.name}")
                         }
 
                         if (PACKAGE_PRIVATE_DESC == an.desc && 0 == (mn.access & Opcodes.ACC_BRIDGE)) {
                             changed = true
                             mn.access &= ~Opcodes.ACC_PUBLIC
                             mn.access &= ~Opcodes.ACC_PROTECTED
-                            //logger.lifecycle("Made method package-private: ${cn.name}#${mn.name}")
+                            messages.put(13, "Made method package-private: ${cn.name}#${mn.name}")
                         }
 
                         if (PRIVATE_DESC == an.desc && 0 == (mn.access & Opcodes.ACC_BRIDGE)) {
@@ -701,14 +649,100 @@ abstract class AsmPreprocessTask extends DefaultTask {
                             mn.access &= ~Opcodes.ACC_PUBLIC
                             mn.access &= ~Opcodes.ACC_PROTECTED
                             mn.access |= Opcodes.ACC_PRIVATE
-                            //logger.lifecycle("Made method private: ${cn.name}#${mn.name}")
+                            privatizedMethodsByClass.computeIfAbsent(cn.name, className -> new HashSet<String>()).add("${mn.name}${mn.desc}")
+                            messages.put(14, "Made method private: ${cn.name}#${mn.name}")
                         }
 
                         if (BRIDGE_DESC == an.desc) {
                             changed = true
                             mn.access |= Opcodes.ACC_BRIDGE
-                            //logger.lifecycle("Added ACC_BRIDGE to ${cn.name}#${mn.name}")
+                            messages.put(15, "Added ACC_BRIDGE to ${cn.name}#${mn.name}")
                         }
+                    }
+                }
+            }
+
+            final def classPublic = 0 != (cn.access & Opcodes.ACC_PUBLIC)
+
+            /*
+             * -----------------------------
+             * CLASS PROCESSING
+             * -----------------------------
+             */
+            if (0 != (cn.access & Opcodes.ACC_SYNTHETIC)) {
+                changed = true
+                cn.access |= Opcodes.ACC_FINAL
+                messages.put(16, "Made ${cn.name} final")
+            }
+
+            if (!classPublic) {
+                for (final def fn : cn.fields) {
+                    if (0 != (fn.access & Opcodes.ACC_PUBLIC)) {
+                        changed = true
+                        fn.access &= ~Opcodes.ACC_PUBLIC
+                        messages.put(17, "Removed public from field ${cn.name}#${fn.name}")
+                    }
+
+                    if (0 != (fn.access & Opcodes.ACC_PROTECTED)) {
+                        changed = true
+                        fn.access &= ~Opcodes.ACC_PROTECTED
+                        messages.put(18, "Removed protected from field ${cn.name}#${fn.name}")
+                    }
+                }
+
+                for (final def mn : cn.methods) {
+                    if ('<clinit>' == mn.name || 0 != (mn.access & Opcodes.ACC_PRIVATE) || AsmPreprocessTask.hasAnnotation(mn, MIXIN_OVERWRITE_DESC)) {
+                        continue
+                    }
+
+                    if (0 == (mn.access & Opcodes.ACC_STATIC) && '<init>' != mn.name && AsmPreprocessTask.overridesSomething(cn, mn, getProcessorClasspath().getFiles())) {
+                        continue
+                    }
+
+                    if (0 == (mn.access & Opcodes.ACC_BRIDGE) && mn.name.contains('mixin')) {
+                        logger.warn("Method ${cn.name}#${mn.name} should be package-private or private")
+                    }
+
+                    if (0 != (mn.access & Opcodes.ACC_PUBLIC) && 0 == (mn.access & Opcodes.ACC_BRIDGE) && 0 == (cn.access & Opcodes.ACC_INTERFACE)) {
+                        changed = true
+                        mn.access &= ~Opcodes.ACC_PUBLIC
+                        messages.put(19, "Removed public from method ${cn.name}#${mn.name}")
+                    }
+
+                    if (0 != (mn.access & Opcodes.ACC_PROTECTED) && 0 == (mn.access & Opcodes.ACC_BRIDGE)) {
+                        changed = true
+                        mn.access &= ~Opcodes.ACC_PROTECTED
+                        messages.put(20, "Removed protected from method ${cn.name}#${mn.name}")
+                    }
+                }
+            } else if (cn.name.contains('mixin') && !cn.name.contains('accessor')) {
+                logger.warn('Non-accessor mixin class declared public')
+            }
+
+            /*
+             * -----------------------------
+             * METHOD PROCESSING
+             * -----------------------------
+             */
+            final def isInterface = 0 != (cn.access & Opcodes.ACC_INTERFACE)
+            final def isRecord = 0 != (cn.access & Opcodes.ACC_RECORD)
+
+            for (final def mn : cn.methods) {
+                /*
+                 * FINALIZATION
+                 */
+                final def abstractMethod = 0 != (mn.access & Opcodes.ACC_ABSTRACT)
+
+                if (!isInterface && !abstractMethod && '<clinit>' != mn.name && '<init>' != mn.name && 0 == (mn.access & Opcodes.ACC_FINAL)) {
+                    if ((isRecord || 0 != (mn.access & Opcodes.ACC_BRIDGE) || 0 != (mn.access & Opcodes.ACC_SYNTHETIC) || mn.name.contains('$') || 'values' == mn.name || 'valueOf' == mn.name)) {
+                        changed = true
+                        mn.access |= Opcodes.ACC_FINAL
+                        if (!isRecord && 0 == (mn.access & Opcodes.ACC_BRIDGE) && 0 == (mn.access & Opcodes.ACC_SYNTHETIC) && 'values' != mn.name && 'valueOf' != mn.name) {
+                            logger.warn("Method ${cn.name}#${mn.name} should be final")
+                        }
+                        messages.put(21, "Added final to ${cn.name}#${mn.name}")
+                    } else {
+                        logger.warn("Method ${cn.name}#${mn.name} should be final")
                     }
                 }
 
@@ -720,11 +754,77 @@ abstract class AsmPreprocessTask extends DefaultTask {
                 }*/
             }
 
+            // Verification pass
+            if (0 == (cn.access & Opcodes.ACC_FINAL) && 0 == (cn.access & Opcodes.ACC_INTERFACE) && 0 == (cn.access & Opcodes.ACC_ABSTRACT)) {
+                logger.warn("Non-final class: ${cn.name}")
+            }
+
+            /*if (0 != (cn.access & Opcodes.ACC_PUBLIC) && cn.name.contains('$')) {
+                logger.warn("Public inner class: ${cn.name}")
+            }*/
+
+            for (final def mn : cn.methods) {
+                if (0 == (mn.access & Opcodes.ACC_FINAL) && '<init>' != mn.name && '<clinit>' != mn.name && 0 == (cn.access & Opcodes.ACC_INTERFACE)) {
+                    logger.warn("Non-final method: ${cn.name}#${mn.name}")
+                }
+            }
+
+            final def privatized = privatizedMethodsByClass.getOrDefault(cn.name, Collections.emptySet())
+
+            for (final def ownerMethod : cn.methods) {
+                if (null == ownerMethod.instructions) {
+                    continue
+                }
+
+                for (def insn = ownerMethod.instructions.getFirst(); null != insn; insn = insn.getNext()) {
+                    if (insn.opcode != Opcodes.INVOKEVIRTUAL) {
+                        continue
+                    }
+
+                    final def mInsn = (org.objectweb.asm.tree.MethodInsnNode) insn
+
+                    if (mInsn.owner != cn.name) {
+                        continue
+                    }
+
+                    final def key = "${mInsn.name}${mInsn.desc}"
+                    final def target = cn.methods.find { it.name == mInsn.name && it.desc == mInsn.desc }
+
+                    if (null == target) {
+                        continue
+                    }
+
+                    final def isPrivate = 0 != (target.access & Opcodes.ACC_PRIVATE)
+                    final def isStatic  = 0 != (target.access & Opcodes.ACC_STATIC)
+
+                    if (!isPrivate || isStatic) {
+                        continue
+                    }
+
+                    if (privatized.contains(key)) {
+                        ownerMethod.instructions.set(mInsn, new org.objectweb.asm.tree.MethodInsnNode(Opcodes.INVOKESPECIAL, mInsn.owner, mInsn.name, mInsn.desc, mInsn.itf))
+                        changed = true
+
+                        messages.put(22, "Fixed invokevirtual --> invokespecial for ASM-privatized method: ${cn.name}#${mInsn.name}${mInsn.desc}")
+                    } else {
+                        ownerMethod.instructions.set(mInsn, new org.objectweb.asm.tree.MethodInsnNode(Opcodes.INVOKESPECIAL, mInsn.owner, mInsn.name, mInsn.desc, mInsn.itf))
+                        final def wasChanged = changed
+                        changed = true
+
+                        if (wasChanged) {
+                            messages.put(23, "Fixed invokevirtual --> invokespecial for javac generated method: ${cn.name}#${mInsn.name}${mInsn.desc}")
+                        } else {
+                            messages.put(24, "Fixed invokevirtual --> invokespecial for javac generated method: ${cn.name}#${mInsn.name}${mInsn.desc} - the ASM processor did not touch this class before.")
+                        }
+                    }
+                }
+            }
+            // Verification pass
+
             def output = bytes
+            def cw = new ClassWriter(0)
 
             if (changed) {
-                def cw = new ClassWriter(0)
-
                 if (renamed) {
                     cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
                         @Override
@@ -735,8 +835,14 @@ abstract class AsmPreprocessTask extends DefaultTask {
                 }
 
                 cn.accept(cw)
-
                 output = cw.toByteArray()
+            }
+
+            try {
+                messages.put(25, "Checking class ${cn.name} changed=${changed},renamed=${renamed}")
+                cn.accept(new CheckClassAdapter(cw, true))
+            } catch (final Throwable error) {
+                throw new RuntimeException("class ${cn.name} has error: ${error.getMessage()}")
             }
 
             if (!changed) {
@@ -754,6 +860,10 @@ abstract class AsmPreprocessTask extends DefaultTask {
                 it.write(output)
             }
         }
+
+        if (verbose) {
+            messages.logAll(logger)
+        }
     }
 }
 
@@ -769,14 +879,14 @@ tasks.named('asmPreprocess', AsmPreprocessTask).configure {
 final def compileOutputDirProvider = tasks.named('compileJava', JavaCompile).flatMap(JavaCompile::getDestinationDirectory)
 final def asmOutputProvider = tasks.named('asmPreprocess').flatMap(AsmPreprocessTask::getOutputClassesDir)
 
-tasks.named('jar', Jar).configure { jarTask ->
+tasks.named('jar', Jar).configure { final jarTask ->
     dependsOn(tasks.named('asmPreprocess'))
 
     // include ASM-processed classes
     from(asmOutputProvider)
 
     // exclude ORIGINAL compiled classes from jar
-    exclude { details ->
+    exclude { final details ->
         final def compileDir = compileOutputDirProvider.get().asFile.toPath()
         final def filePath = details.file.toPath()
 
@@ -799,10 +909,10 @@ abstract class CheckMethodSizesTask extends DefaultTask {
         final def thresholds = [huge: 8000, large: 2000, nonsmall: 325]
         final def issues = []
 
-        getClassesDirectories().each { final File directory ->
+        getClassesDirectories().each { final directory ->
             if (!directory.exists()) return
 
-            directory.eachFileRecurse { final File file ->
+            directory.eachFileRecurse { final file ->
                 if (!file.name.endsWith('.class')) return
 
                 final def relativePath = directory.toPath().relativize(file.toPath()).toString()
@@ -811,7 +921,7 @@ abstract class CheckMethodSizesTask extends DefaultTask {
                 file.withInputStream { final inputStream ->
                     new DataInputStream(inputStream).withCloseable { final dataInputStream ->
                         final def classFile = new ClassFile(dataInputStream)
-                        classFile.methods.each { final MethodInfo methodInfo ->
+                        classFile.methods.each { final methodInfo ->
                             final def codeAttribute = methodInfo.codeAttribute
                             if (codeAttribute == null) return
                             final def size = codeAttribute.code.length
@@ -870,7 +980,7 @@ static final Provider<File> resolveMinecraftDir(Project project) {
     final def fromProps =
             providers.fileContents(devPropsFile)
                     .asText
-                    .map { text ->
+                    .map { final text ->
                         final def props = new Properties()
                         props.load(new StringReader(text))
                         props.getProperty('minecraftDir')
@@ -881,7 +991,7 @@ static final Provider<File> resolveMinecraftDir(Project project) {
     final def fromEnv =
             providers.fileContents(envFile)
                     .asText
-                    .map { text ->
+                    .map { final text ->
                         text.readLines()
                                 .find { it.startsWith('MINECRAFT_DIR=') }
                                 ?.split('=', 2)

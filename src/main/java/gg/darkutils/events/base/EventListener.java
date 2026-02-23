@@ -1,5 +1,7 @@
 package gg.darkutils.events.base;
 
+import gg.darkutils.annotations.PackagePrivate;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
@@ -92,6 +94,7 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
      * @param receiveCancelled The custom receiveCancelled behavior.
      * @param <T>              The type of the event.
      */
+    @PackagePrivate
     public record Impl<T extends Event>(@NotNull Consumer<T> listener, @NotNull EventPriority priority,
                                         boolean receiveCancelled) implements EventListener<T> {
         @Override

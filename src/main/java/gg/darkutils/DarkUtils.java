@@ -54,6 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -479,6 +480,18 @@ public final class DarkUtils implements ClientModInitializer {
         );
     }
 
+    @NotNull
+    private static final List<String> collectDebugInformation() {
+        return List.of(
+            "Is in Hypixel: " + LocationUtils.isInHypixel(),
+            "Is in Skyblock: " + LocationUtils.isInSkyblock(),
+            "Is in Singleplayer: " + LocationUtils.isInSingleplayer(),
+            "Is in Galatea: " + LocationUtils.isInGalatea(),
+            "Is in Dungeons: " + LocationUtils.isInDungeons(),
+            "Dungeon floor: " + DungeonTimer.getDungeonFloor()
+        );
+    }
+
     private static final int debugState() {
         final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
         final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
@@ -489,57 +502,34 @@ public final class DarkUtils implements ClientModInitializer {
         final var gradientStart = "#54daf4";
         final var gradientEnd = "#545eb6";
 
-        final var text = TextBuilder
-                .withInitial(header.first(), headerFooterStyle)
-                .appendSpace()
-                .appendGradientText(gradientStart, gradientEnd, "Debug State", SimpleStyle.inherited())
-                .appendSpace()
-                .append(header.second(), headerFooterStyle)
+        final var textBuilder = TextBuilder
+            .withInitial(header.first(), headerFooterStyle)
+            .appendSpace()
+            .appendGradientText(gradientStart, gradientEnd, "Debug State", SimpleStyle.inherited())
+            .appendSpace()
+            .append(header.second(), headerFooterStyle)
+            .appendNewLine()
+        ;
+
+        for (final var line : DarkUtils.collectDebugInformation()) {
+            textBuilder
                 .appendNewLine()
-                .appendNewLine()
-                .appendGradientText(gradientStart, gradientEnd, "Is in Hypixel: " + LocationUtils.isInHypixel()
-                        , SimpleStyle
-                        .centered()
-                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
-                )
-                .appendNewLine()
-                .appendGradientText(gradientStart, gradientEnd, "Is in Skyblock: " + LocationUtils.isInSkyblock()
-                        , SimpleStyle
-                        .centered()
-                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
-                )
-                .appendNewLine()
-                .appendGradientText(gradientStart, gradientEnd, "Is in Singleplayer: " + LocationUtils.isInSingleplayer()
-                        , SimpleStyle
-                        .centered()
-                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
-                )
-                .appendNewLine()
-                .appendGradientText(gradientStart, gradientEnd, "Is in Galatea: " + LocationUtils.isInGalatea()
-                        , SimpleStyle
-                        .centered()
-                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
-                )
-                .appendNewLine()
-                .appendGradientText(gradientStart, gradientEnd, "Is in Dungeons: " + LocationUtils.isInDungeons()
-                        , SimpleStyle
-                        .centered()
-                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
-                )
-                .appendNewLine()
-                .appendGradientText(gradientStart, gradientEnd, "Dungeon floor: " + DungeonTimer.getDungeonFloor()
-                        , SimpleStyle
-                        .centered()
-                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
-                )
-                .appendNewLine()
-                .appendNewLine()
-                .append(footer, headerFooterStyle)
-                .build();
+                .appendGradientText(gradientStart, gradientEnd, line, SimpleStyle.centered().also(SimpleStyle.formatted(SimpleFormatting.BOLD)))
+            ;
+        }
+
+        textBuilder
+            .appendNewLine()
+            .appendNewLine()
+            .append(footer, headerFooterStyle)
+        ;
+
+        final var text = textBuilder.build();
 
         ChatUtils.sendMessageToLocalPlayer(text);
         return Command.SINGLE_SUCCESS;
     }
+
     /**
      * This entrypoint is suitable for setting up client-specific logic, such as rendering.
      */

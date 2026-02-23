@@ -16,14 +16,14 @@ public final class LocationUtils {
     @Nullable
     private static SkyblockIsland skyblockIsland;
 
-    public enum SkyblockIsland {
+    private enum SkyblockIsland {
         DUNGEONS,
         GALATEA;
 
         private SkyblockIsland() {
         }
 
-        public static final @Nullable LocationUtils.SkyblockIsland fromId(@Nullable final String id) {
+        private static final @Nullable LocationUtils.SkyblockIsland fromId(@Nullable final String id) {
             if (null == id) {
                 return null;
             }
