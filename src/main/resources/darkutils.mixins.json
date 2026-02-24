@@ -12,6 +12,8 @@
 
     "bugfixes.HandledScreenMixin",
     "bugfixes.InactivityFpsLimiterMixin",
+    "bugfixes.GLFWMixin",
+    "bugfixes.InputUtilMixin",
 
     "misc.ClientPlayNetworkHandlerMixin",
     "misc.GameRendererMixin",

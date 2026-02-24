@@ -1,8 +1,8 @@
 package gg.darkutils.mixin.misc;
 
+import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
-import gg.darkutils.utils.LazyConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Window;
 import org.jetbrains.annotations.NotNull;
@@ -16,14 +16,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.function.Supplier;
-
 @Mixin(Window.class)
 final class WindowMixin {
-    @Unique
-    @Final
-    @NotNull
-    private static final Supplier<String> darkutils$platform = LazyConstants.lazyConstantOf(Window::getGlfwPlatform);
     @Shadow
     private boolean fullscreen;
     @Shadow
@@ -44,15 +38,10 @@ final class WindowMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Unique
-    private static final boolean darkutils$isWayland() {
-        return "wayland".equals(WindowMixin.darkutils$platform.get());
-    }
-
     @Inject(method = "onFramebufferSizeChanged", at = @At("RETURN"))
     private final void darkutils$fixGuiScaleIfEnabled(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.fixGuiScaleAfterFullscreen) {
-            final var wayland = WindowMixin.darkutils$isWayland();
+            final var wayland = DarkUtils.isWindowPlatformWayland();
 
             if (!wayland && 480 > this.framebufferHeight) {
                 this.darkutils$fixFramebufferHeight(true);

@@ -106,10 +106,12 @@ public final class DarkUtilsConfig {
     public boolean itemFrameSoundFix;
     public boolean cursorFix;
     public boolean middleClickFix;
+    public boolean cursorPosWaylandGLErrorFix;
 
     // === Development ===
     @NotNull
     public LogLevel ingameLogLevel = LogLevel.WARN;
+    public boolean debugMode;
 
     private DarkUtilsConfig() {
         super();

@@ -359,6 +359,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Middle Click Fix",
                 "Allows you to middle click when hovering over items like in 1.8, such as to disable Witherborn ability of your armor.",
                 config.middleClickFix, newValue -> config.middleClickFix = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Cursor Pos Wayland GL Error Fix",
+                "Fixes a bug where Minecraft tries to call glfwSetCursorPos in Wayland desktop environment, where setting the cursor position is not supported, by cancelling the call. This prevents the GL error while preserving behaviour, as setting the position fails with the GL error anyways.",
+                config.cursorPosWaylandGLErrorFix, newValue -> config.cursorPosWaylandGLErrorFix = newValue);
     }
 
     private static final void addDevelopment(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
@@ -371,6 +375,10 @@ public final class DarkUtilsConfigScreen {
             default ->
                     throw new IllegalStateException("Unexpected " + LogLevel.class.getSimpleName() + " value: " + logLevel.name());
         });
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, development, "Debug Mode",
+                "Prints additional details like the full call stack in some code paths for debugging purposes. Might incur a performance penalty. Do not enable unless instructed to do so.",
+                config.debugMode, newValue -> config.debugMode = newValue);
     }
 
     public static final @NotNull Screen create(@Nullable final Screen parent) {

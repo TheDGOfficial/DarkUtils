@@ -157,7 +157,7 @@ processResources {
     }
 }
 
-tasks.register('preprocessMixinNames', Copy) {
+tasks.register('preprocessMixinNames', Sync) {
     from(layout.projectDirectory.dir('src/main/java'))
     into(layout.buildDirectory.dir('preprocessed/java'))
 
@@ -171,6 +171,12 @@ tasks.register('preprocessMixinNames', Copy) {
     ).withPropertyName('mixinSources')
      .withPathSensitivity(PathSensitivity.RELATIVE)
 
+    outputs.dir(layout.buildDirectory.dir('preprocessed/java'))
+
+    doFirst {
+        logger.lifecycle("Preprocessing Mixin names...")
+    }
+
     filesMatching('**/mixin/**/*.java') {
         final def name = it.name.substring(0, it.name.lastIndexOf('.'))
 
@@ -181,10 +187,13 @@ tasks.register('preprocessMixinNames', Copy) {
     }
 }
 
-tasks.named('compileJava', JavaCompile).configure {
-    dependsOn(tasks.named('preprocessMixinNames'))
-    source = layout.buildDirectory.dir('preprocessed/java').map {
-        fileTree(it)
+sourceSets {
+    main {
+        java {
+            setSrcDirs([])
+
+            srcDir(tasks.named('preprocessMixinNames'))
+        }
     }
 }
 

@@ -34,6 +34,7 @@ import gg.darkutils.feat.qol.VanillaMode;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
+import gg.darkutils.utils.LazyConstants;
 import gg.darkutils.utils.chat.ButtonData;
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleFormatting;
@@ -45,6 +46,7 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.Window;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
@@ -56,25 +58,51 @@ import org.slf4j.helpers.MessageFormatter;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Supplier;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public final class DarkUtils implements ClientModInitializer {
+    /**
+     * Represents the modid. Used for the logger among other things.
+     * Must and will be the same value specified in fabric.mod.json.
+     * <p>
+     * Can be used tu uniqely identify the mod from other mods.
+     */
     public static final @NotNull String MOD_ID = "darkutils";
 
     /**
      * This logger is used to write text to the console and the log file.
      * It is considered best practice to use your mod id as the logger's name.
      * That way, it's clear which mod wrote info, warnings, and errors.
+     * <p>
+     * This class has methods to use for logging so this is field is private.
+     * The custom methods log errors in-game to the chat as well with a
+     * user-friendly short string representation of the error.
      */
     private static final @NotNull Logger LOGGER = LoggerFactory.getLogger(DarkUtils.MOD_ID);
 
     /**
      * We must avoid loading some MC classes during test phase of Gradle build,
      * because they cause exceptions when loaded outside of runtime.
+     * <p>
+     * This system property is set to true from build.gradle when running tests.
      */
-    public static final boolean INSIDE_JUNIT = "true".equals(System.getProperty("inside.junit", "false"));
+    public static final boolean INSIDE_JUNIT = "true".equals(System.getProperty("inside.junit")); // roughly same as Boolean#getBoolean but this is case sensitive
+
+    /**
+     * Lazy-initialized non-changing constant-foldable (depending on LazyConstants
+     * impl if the JEP is stabilized) value of the current Windowing platform.
+     * <p>
+     * This value will be used for some features like gui scale fix and auto
+     * diagnostic features like disallowing setting cursor position in wayland.
+     */
+    private static final Supplier<String> WINDOW_PLATFORM = LazyConstants.lazyConstantOf(Window::getGlfwPlatform);
+
+    public static final boolean isWindowPlatformWayland() {
+        return "wayland".equals(DarkUtils.WINDOW_PLATFORM.get());
+    }
 
     public DarkUtils() {
         super();
