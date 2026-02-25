@@ -357,11 +357,7 @@ public final class DungeonTimer {
 
     private static long lastNegativeLagWarnNano;
 
-    private static final void handleNegativeLag(
-            final long rawLagNano,
-            final long serverTick,
-            final long clientNow
-    ) {
+    private static final void handleNegativeLag(final long rawLagNano, final long serverTick) {
         final long now = System.nanoTime();
 
         if (DungeonTimer.FIVE_SECOND_NANOS >
@@ -405,11 +401,7 @@ public final class DungeonTimer {
                 DungeonTimer.lastClientNow - expectedServerNano;
 
         if (0L > rawLagNano) {
-            DungeonTimer.handleNegativeLag(
-                    rawLagNano,
-                    DungeonTimer.lastServerTickNow,
-                    DungeonTimer.lastClientNow
-            );
+            DungeonTimer.handleNegativeLag(rawLagNano, DungeonTimer.lastServerTickNow);
         }
 
         final var globalLagNow =
@@ -837,11 +829,7 @@ public final class DungeonTimer {
             final var rawLagNano = clientNow - expectedServerNano;
 
             if (0L > rawLagNano) {
-                DungeonTimer.handleNegativeLag(
-                        rawLagNano,
-                        serverTickNow,
-                        clientNow
-                );
+                DungeonTimer.handleNegativeLag(rawLagNano, serverTickNow);
             }
 
             final var lagNano = Math.max(0L, rawLagNano);

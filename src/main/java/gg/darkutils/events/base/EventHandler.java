@@ -100,7 +100,7 @@ public interface EventHandler<T extends Event> {
      * @return The {@link CancellationResult} of the event after going through all listeners mutations to the state.
      */
     @NotNull
-    <E extends Event & CancellableEvent> CancellationResult triggerCancellableEvent(final @NotNull E event);
+    <E extends CancellableEvent> CancellationResult triggerCancellableEvent(final @NotNull E event);
 
     /**
      * Triggers a non-cancellable event, calling all listeners {@link EventListener#accept(Object)} sequentially in the calling thread,
@@ -111,5 +111,5 @@ public interface EventHandler<T extends Event> {
      *
      * @param event The event to trigger.
      */
-    <E extends Event & NonCancellableEvent> void triggerNonCancellableEvent(final @NotNull E event);
+    <E extends NonCancellableEvent> void triggerNonCancellableEvent(final @NotNull E event);
 }

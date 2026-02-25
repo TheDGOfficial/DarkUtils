@@ -88,7 +88,7 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
 
     @Override
     @NotNull
-    public final <E extends Event & CancellableEvent> CancellationResult triggerCancellableEvent(@NotNull final E event) {
+    public final <E extends CancellableEvent> CancellationResult triggerCancellableEvent(@NotNull final E event) {
         final var cancellationState = event.cancellationState();
 
         final var localListeners = this.listeners;
@@ -157,7 +157,7 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
     }
 
     @Override
-    public final <E extends Event & NonCancellableEvent> void triggerNonCancellableEvent(@NotNull final E event) {
+    public final <E extends NonCancellableEvent> void triggerNonCancellableEvent(@NotNull final E event) {
         final var localListeners = this.listeners;
         final var size = localListeners.size();
 

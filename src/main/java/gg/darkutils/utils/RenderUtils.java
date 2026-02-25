@@ -74,7 +74,7 @@ public final class RenderUtils {
     /**
      * Holds the item to empty ItemStack cache.
      */
-    private static final @NotNull Map<Item, ItemStack> ITEM_TO_ITEM_STACK = HashMap.newHashMap(16);
+    private static final @NotNull HashMap<Item, ItemStack> ITEM_TO_ITEM_STACK = HashMap.newHashMap(16);
     /**
      * Holds the empty OrderedText.
      */

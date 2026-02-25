@@ -22,7 +22,7 @@ public final class EventRegistryImpl implements EventRegistry {
      * Static is safe since we use a singleton instance, but in future remove the static if multiple event registries.
      */
     @NotNull
-    private static final ClassValue<EventHandler<? extends Event>> handlers = new EventRegistryImpl.EventHandlerClassValue();
+    private static final EventRegistryImpl.EventHandlerClassValue handlers = new EventRegistryImpl.EventHandlerClassValue();
 
     /**
      * Creates the singleton {@link EventRegistryImpl} instance.

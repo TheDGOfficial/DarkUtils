@@ -144,7 +144,7 @@ public final class Helpers {
                 final var cached = Helpers.targetedEntityName;
                 if (null == cached) {
                     final var customName = entity.getCustomName();
-                    name = null == customName ? "" : ChatUtils.removeControlCodes(customName.getString());
+                    Helpers.targetedEntityName = name = null == customName ? "" : ChatUtils.removeControlCodes(customName.getString());
                 } else {
                     name = cached;
                 }
