@@ -46,13 +46,13 @@ public final class DarkUtilsConfigScreen {
     }
 
     @SuppressWarnings("unchecked") // safe
-    private static final <T extends Enum<T>> void addEnumSetting(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, @NotNull final T value, @NotNull final Consumer<T> setter, @NotNull final T defaultValue, @NotNull final Function<Enum<T>, String> namePrettifier) {
+    private static final <T extends Enum<T>> void addEnumSetting(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, @NotNull final T value, @NotNull final Consumer<T> setter, @NotNull final T defaultValue, @NotNull final Function<T, String> namePrettifier) {
         configCategory.addEntry(configEntryBuilder
                 .startEnumSelector(Text.of(name), defaultValue.getDeclaringClass(), value)
                 .setDefaultValue(defaultValue)
                 .setSaveConsumer(setter)
                 .setTooltip(Text.of(desc))
-                .setEnumNameProvider(v -> Text.of(namePrettifier.apply(v)))
+                .setEnumNameProvider(v -> Text.of(namePrettifier.apply((T) v)))
                 .build());
     }
 
@@ -296,18 +296,7 @@ public final class DarkUtilsConfigScreen {
                 "Optimizes memory allocation rate by eliminating enum values array copying in some places, currently a single place.",
                 config.optimizeEnumValues, newValue -> config.optimizeEnumValues = newValue);
 
-        DarkUtilsConfigScreen.addEnumSetting(entryBuilder, performance, "OpenGL Version Override", "Allows you to forcefully modify the OpenGL version Minecraft requests during Window context creation to a modern OpenGL version. By default Minecraft requests OpenGL 3.3. This does not magically make Minecraft take advantage of new additions from later OpenGL specifications, but it will ensure its future-proof. Note however, your game might become unbootable if you set this to a higher value than what your GPU supports. Generally speaking, GPUs from the last decade should all support OpenGL 4.6 with latest drivers installed.", config.openGLVersionOverride, newValue -> config.openGLVersionOverride = newValue, OpenGLVersionOverride.NO_OVERRIDE, openGLVersionOverride -> switch (openGLVersionOverride) {
-            case OpenGLVersionOverride.NO_OVERRIDE -> "No Override";
-            case OpenGLVersionOverride.GL4_0 -> "OpenGL 4.0";
-            case OpenGLVersionOverride.GL4_1 -> "OpenGL 4.1";
-            case OpenGLVersionOverride.GL4_2 -> "OpenGL 4.2";
-            case OpenGLVersionOverride.GL4_3 -> "OpenGL 4.3";
-            case OpenGLVersionOverride.GL4_4 -> "OpenGL 4.4";
-            case OpenGLVersionOverride.GL4_5 -> "OpenGL 4.5";
-            case OpenGLVersionOverride.GL4_6 -> "OpenGL 4.6";
-            default ->
-                    throw new IllegalStateException("Unexpected " + OpenGLVersionOverride.class.getSimpleName() + " value: " + openGLVersionOverride.name());
-        });
+        DarkUtilsConfigScreen.addEnumSetting(entryBuilder, performance, "OpenGL Version Override", "Allows you to forcefully modify the OpenGL version Minecraft requests during Window context creation to a modern OpenGL version. By default Minecraft requests OpenGL 3.3. This does not magically make Minecraft take advantage of new additions from later OpenGL specifications, but it will ensure its future-proof. Note however, your game might become unbootable if you set this to a higher value than what your GPU supports. Generally speaking, GPUs from the last decade should all support OpenGL 4.6 with latest drivers installed.", config.openGLVersionOverride, newValue -> config.openGLVersionOverride = newValue, OpenGLVersionOverride.NO_OVERRIDE, OpenGLVersionOverride::prettyName);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Use Virtual Threads for Texture Downloading",
                 "Makes Minecraft use Java's new (Lightweight) Virtual Threads over Platform (OS) Threads. Normally, Minecraft uses a Cached Thread Pool which ends up creating hundreds of texture downloading threads in texture-heavy game-modes like Hypixel SkyBlock where items have a player skull model. Those hundreds of texture downloading threads all have their separate stack, and there is a limit to how many platform threads you can create in the OS level at which point it will crash. Virtual Threads are a lightweight new technology replacement that only creates threads when tasks are blocked and this also made texture loading speedier during tests due to creating a new (platform/OS) thread not being a free operation.",
@@ -368,13 +357,7 @@ public final class DarkUtilsConfigScreen {
     private static final void addDevelopment(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var development = builder.getOrCreateCategory(Text.of("Development"));
 
-        DarkUtilsConfigScreen.addEnumSetting(entryBuilder, development, "Ingame Log Level", "Allows you to change at what threshold log messages should also be printed to in-game chat for development. Do not change unless instructed or know what you are doing.", config.ingameLogLevel, newValue -> config.ingameLogLevel = newValue, LogLevel.WARN, logLevel -> switch (logLevel) {
-            case LogLevel.INFO -> "Info";
-            case LogLevel.WARN -> "Warning";
-            case LogLevel.ERROR -> "Error";
-            default ->
-                    throw new IllegalStateException("Unexpected " + LogLevel.class.getSimpleName() + " value: " + logLevel.name());
-        });
+        DarkUtilsConfigScreen.addEnumSetting(entryBuilder, development, "Ingame Log Level", "Allows you to change at what threshold log messages should also be printed to in-game chat for development. Do not change unless instructed or know what you are doing.", config.ingameLogLevel, newValue -> config.ingameLogLevel = newValue, LogLevel.WARN, LogLevel::prettyName);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, development, "Debug Mode",
                 "Prints additional details like the full call stack in some code paths for debugging purposes. Might incur a performance penalty. Do not enable unless instructed to do so.",
