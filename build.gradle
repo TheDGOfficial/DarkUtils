@@ -22,6 +22,18 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 import java.util.HashMap
 
+import proguard.gradle.ProGuardTask
+
+import java.util.jar.JarOutputStream
+
+import java.util.jar.JarEntry
+
+import org.objectweb.asm.tree.LdcInsnNode
+import org.objectweb.asm.tree.FieldInsnNode
+import org.objectweb.asm.tree.MethodInsnNode
+
+import java.util.concurrent.TimeUnit
+
 buildscript {
     repositories {
         mavenCentral()
@@ -33,6 +45,8 @@ buildscript {
         classpath 'org.ow2.asm:asm:9.9.1'
         classpath 'org.ow2.asm:asm-tree:9.9.1'
         classpath 'org.ow2.asm:asm-commons:9.9.1'
+
+        classpath 'com.guardsquare:proguard-gradle:7.8.2'
     }
 }
 
@@ -282,27 +296,27 @@ final class MessageCollector {
 
 @CacheableTask
 abstract class AsmPreprocessTask extends DefaultTask {
-    static final def NAME_DESC               = 'Lgg/darkutils/annotations/Name;'
-    static final def SYNTHETIC_DESC          = 'Lgg/darkutils/annotations/Synthetic;'
-    static final def BRIDGE_DESC             = 'Lgg/darkutils/annotations/Bridge;'
-    static final def PRIVATE_DESC            = 'Lgg/darkutils/annotations/Private;'
-    static final def PACKAGE_PRIVATE_DESC    = 'Lgg/darkutils/annotations/PackagePrivate;'
-    static final def PRIVATE_FIELDS_DESC     = 'Lgg/darkutils/annotations/PrivateFields;'
+    private static final def NAME_DESC               = 'Lgg/darkutils/annotations/Name;'
+    private static final def SYNTHETIC_DESC          = 'Lgg/darkutils/annotations/Synthetic;'
+    private static final def BRIDGE_DESC             = 'Lgg/darkutils/annotations/Bridge;'
+    private static final def PRIVATE_DESC            = 'Lgg/darkutils/annotations/Private;'
+    private static final def PACKAGE_PRIVATE_DESC    = 'Lgg/darkutils/annotations/PackagePrivate;'
+    private static final def PRIVATE_FIELDS_DESC     = 'Lgg/darkutils/annotations/PrivateFields;'
 
-    static final def MIXIN_OVERWRITE_DESC    = 'Lorg/spongepowered/asm/mixin/Overwrite;'
+    private static final def MIXIN_OVERWRITE_DESC    = 'Lorg/spongepowered/asm/mixin/Overwrite;'
 
     @InputDirectory
     @PathSensitive(PathSensitivity.RELATIVE)
     abstract DirectoryProperty getInputClassesDir()
 
     @Classpath
-    public abstract ConfigurableFileCollection getProcessorClasspath()
+    abstract ConfigurableFileCollection getProcessorClasspath()
 
     @OutputDirectory
     abstract DirectoryProperty getOutputClassesDir()
 
     @Inject
-    protected abstract FileSystemOperations getFs()
+    abstract FileSystemOperations getFs()
 
     private final void copyFile(final File from, final File to) {
         getFs().copy {
@@ -498,6 +512,138 @@ abstract class AsmPreprocessTask extends DefaultTask {
 
             def changed = false
             def renamed = false
+
+            final def constantFields = new HashMap<>()
+
+            for (def mn : cn.methods) {
+                if (!'<clinit>'.equals(mn.name) || mn.instructions == null) continue
+
+                for (def insn = mn.instructions.getFirst(); insn != null; ) {
+                    final def next = insn.getNext()
+
+                    if (insn.opcode == Opcodes.INVOKEVIRTUAL) {
+                        final def mInsn = (MethodInsnNode) insn
+
+                        if (mInsn.owner == 'java/util/concurrent/TimeUnit'
+                                && mInsn.desc == '(J)J'
+                                && mInsn.name.startsWith('to')) {
+                            final def constNode = insn.getPrevious()
+                            final def enumNode  = constNode?.getPrevious()
+
+                            if (enumNode instanceof FieldInsnNode
+                                    && enumNode.opcode == Opcodes.GETSTATIC
+                                    && enumNode.owner == 'java/util/concurrent/TimeUnit') {
+                                final def enumName = enumNode.name
+                                long value = -1
+
+                                // Read the constant properly
+                                switch (constNode.opcode) {
+                                    case Opcodes.LCONST_0: value = 0L; break
+                                    case Opcodes.LCONST_1: value = 1L; break
+                                    case Opcodes.LDC:
+                                        if (constNode instanceof LdcInsnNode && constNode.cst instanceof Long) {
+                                            value = constNode.cst
+                                        } else {
+                                            insn = next
+                                            continue
+                                        }
+                                        break
+                                    default:
+                                        insn = next
+                                        continue
+                                }
+
+                                // Compute the actual value
+                                final def timeUnit = TimeUnit.valueOf(enumName)
+                                long result
+                                switch (mInsn.name) {
+                                    case 'toNanos':  result = timeUnit.toNanos(value); break
+                                    case 'toMicros': result = timeUnit.toMicros(value); break
+                                    case 'toMillis': result = timeUnit.toMillis(value); break
+                                    case 'toSeconds':result = timeUnit.toSeconds(value); break
+                                    case 'toMinutes':result = timeUnit.toMinutes(value); break
+                                    case 'toHours':  result = timeUnit.toHours(value); break
+                                    case 'toDays':   result = timeUnit.toDays(value); break
+                                    default: insn = next; continue
+                                }
+
+                                // Replace GETSTATIC + CONST + INVOKEVIRTUAL with single LDC
+                                final def ldc = new LdcInsnNode(result)
+                                mn.instructions.insert(insn, ldc)
+                                mn.instructions.remove(enumNode)
+                                mn.instructions.remove(constNode)
+                                mn.instructions.remove(insn)
+
+                                changed = true
+                                insn = ldc
+                                continue
+                            }
+                        }
+                    }
+
+                    insn = next
+                }
+            }
+
+            for (final def mn : cn.methods) {
+                if (!'<clinit>'.equals(mn.name)) continue
+
+                for (def insn = mn.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+                    if (insn.opcode != Opcodes.PUTSTATIC) continue
+
+                    final def put = (FieldInsnNode) insn
+                    final def prev = put.getPrevious()
+
+                    if (prev instanceof LdcInsnNode) {
+                        final def key = put.owner + '.' + put.name + ':' + put.desc
+                        constantFields.put(key, prev.cst)
+                    }
+                }
+            }
+
+            for (final def mn : cn.methods) {
+                if (null == mn.instructions) continue
+
+                for (def insn = mn.instructions.getFirst(); insn != null; ) {
+                    final def next = insn.getNext()
+
+                    if (insn.opcode == Opcodes.GETSTATIC) {
+                        final def fieldInsn = (FieldInsnNode) insn
+                        final def key = fieldInsn.owner + '.' + fieldInsn.name + ':' + fieldInsn.desc
+
+                        if (constantFields.containsKey(key)) {
+                            final def ldc = new LdcInsnNode(constantFields.get(key))
+                            mn.instructions.set(insn, ldc)
+                            changed = true
+                            insn = ldc
+                            continue
+                        }
+                    }
+
+                    insn = next
+                }
+            }
+
+            for (final def mn : cn.methods) {
+                if (!'<clinit>'.equals(mn.name)) continue
+
+                for (def insn = mn.instructions.getFirst(); insn != null; ) {
+                    final def next = insn.getNext()
+
+                    if (insn.opcode == Opcodes.PUTSTATIC) {
+                        final def put = (FieldInsnNode) insn
+                        final def key = put.owner + '.' + put.name + ':' + put.desc
+
+                        if (constantFields.containsKey(key)) {
+                            mn.instructions.remove(insn.getPrevious()) // LDC
+                            mn.instructions.remove(insn)               // PUTSTATIC
+                            changed = true
+                        }
+                    }
+
+                    insn = next
+                }
+            }
 
             final def clsAnns = cn.invisibleAnnotations
 
@@ -980,6 +1126,67 @@ tasks.named('asmPreprocess') {
     finalizedBy tasks.named('checkMethodSizes')
 }
 
+final def jdk = layout.buildDirectory.file('proguard/java-base-from-jrt.jar')
+
+tasks.register('createJavaBaseLibraryJar') {
+    final def outputJar = jdk
+
+    outputs.file(outputJar)
+
+    doLast {
+        final def jrtFs = FileSystems.getFileSystem(URI.create('jrt:/'))
+        final def modulePath = jrtFs.getPath('/modules/java.base')
+
+        final def outFile = outputJar.get().asFile
+        outFile.parentFile.mkdirs()
+
+        try (final def jos = new JarOutputStream(new FileOutputStream(outFile))) {
+            Files.walk(modulePath).forEach { final def path ->
+                if (!Files.isRegularFile(path) || !path.toString().endsWith('.class')) {
+                    return
+                }
+
+                final def entryName = modulePath.relativize(path).toString().replace('\\', '/')
+
+                jos.putNextEntry(new JarEntry(entryName))
+                Files.copy(path, jos)
+
+                jos.closeEntry()
+            }
+        }
+    }
+}
+
+final def proguardOutput = layout.buildDirectory.file("libs/${project.archives_base_name}-${project.version}-dev.jar")
+
+tasks.register('proguard', ProGuardTask) {
+    dependsOn jar
+    dependsOn tasks.named('createJavaBaseLibraryJar')
+
+    injars jar.archiveFile.get().asFile
+    outjars proguardOutput.get().asFile
+
+    libraryjars jdk
+    libraryjars configurations.compileClasspath
+
+    configuration 'configuration.pro'
+}
+
+tasks.named('remapJar') {
+    enabled = false
+}
+
+tasks.register('remapProguardJar', net.fabricmc.loom.task.RemapJarTask) {
+    dependsOn proguard
+
+    inputFile.set(proguardOutput)
+    archiveClassifier.set('')
+}
+
+tasks.build {
+    dependsOn remapProguardJar
+}
+
 static final Provider<File> resolveMinecraftDir(Project project) {
     final def providers = project.providers
     final def layout = project.layout
@@ -1069,10 +1276,10 @@ abstract class InstallToModFolderTask extends DefaultTask {
 }
 
 tasks.register('installToModFolder', InstallToModFolderTask) {
-    dependsOn tasks.named('remapJar')
+    dependsOn tasks.named('remapProguardJar')
 
     inputJar.set(
-        tasks.named('remapJar').flatMap { it.archiveFile }
+        tasks.named('remapProguardJar').flatMap { it.archiveFile }
     )
 
     modVersion.set(project.version.toString())
