@@ -513,30 +513,34 @@ abstract class AsmPreprocessTask extends DefaultTask {
             def changed = false
             def renamed = false
 
-            final def constantFields = new HashMap<>()
+            final def constantFields = new HashMap<String, Object>()
 
-            for (def mn : cn.methods) {
-                if (!'<clinit>'.equals(mn.name) || mn.instructions == null) continue
+            for (final def mn : cn.methods) {
+                if (!'<clinit>'.equals(mn.name) || null == mn.instructions) continue
 
                 for (def insn = mn.instructions.getFirst(); insn != null; ) {
                     final def next = insn.getNext()
 
-                    if (insn.opcode == Opcodes.INVOKEVIRTUAL) {
+                    /*
+                     * --------------------------------------------------
+                     * 1. TimeUnit constant folding
+                     * --------------------------------------------------
+                     */
+                    if (Opcodes.INVOKEVIRTUAL == insn.opcode) {
                         final def mInsn = (MethodInsnNode) insn
 
-                        if (mInsn.owner == 'java/util/concurrent/TimeUnit'
-                                && mInsn.desc == '(J)J'
+                        if ('java/util/concurrent/TimeUnit' == mInsn.owner
+                                && '(J)J' == mInsn.desc
                                 && mInsn.name.startsWith('to')) {
+
                             final def constNode = insn.getPrevious()
                             final def enumNode  = constNode?.getPrevious()
 
                             if (enumNode instanceof FieldInsnNode
-                                    && enumNode.opcode == Opcodes.GETSTATIC
-                                    && enumNode.owner == 'java/util/concurrent/TimeUnit') {
-                                final def enumName = enumNode.name
-                                long value = -1
+                                    && Opcodes.GETSTATIC == enumNode.opcode
+                                    && 'java/util/concurrent/TimeUnit' == enumNode.owner) {
+                                long value = -1L
 
-                                // Read the constant properly
                                 switch (constNode.opcode) {
                                     case Opcodes.LCONST_0: value = 0L; break
                                     case Opcodes.LCONST_1: value = 1L; break
@@ -544,30 +548,28 @@ abstract class AsmPreprocessTask extends DefaultTask {
                                         if (constNode instanceof LdcInsnNode && constNode.cst instanceof Long) {
                                             value = constNode.cst
                                         } else {
-                                            insn = next
-                                            continue
+                                            insn = next; continue
                                         }
                                         break
                                     default:
-                                        insn = next
-                                        continue
+                                        insn = next; continue
                                 }
 
-                                // Compute the actual value
-                                final def timeUnit = TimeUnit.valueOf(enumName)
+                                final def timeUnit = TimeUnit.valueOf(enumNode.name)
                                 long result
+
                                 switch (mInsn.name) {
-                                    case 'toNanos':  result = timeUnit.toNanos(value); break
-                                    case 'toMicros': result = timeUnit.toMicros(value); break
-                                    case 'toMillis': result = timeUnit.toMillis(value); break
-                                    case 'toSeconds':result = timeUnit.toSeconds(value); break
-                                    case 'toMinutes':result = timeUnit.toMinutes(value); break
-                                    case 'toHours':  result = timeUnit.toHours(value); break
-                                    case 'toDays':   result = timeUnit.toDays(value); break
-                                    default: insn = next; continue
+                                    case 'toNanos':   result = timeUnit.toNanos(value); break
+                                    case 'toMicros':  result = timeUnit.toMicros(value); break
+                                    case 'toMillis':  result = timeUnit.toMillis(value); break
+                                    case 'toSeconds': result = timeUnit.toSeconds(value); break
+                                    case 'toMinutes': result = timeUnit.toMinutes(value); break
+                                    case 'toHours':   result = timeUnit.toHours(value); break
+                                    case 'toDays':    result = timeUnit.toDays(value); break
+                                    default:
+                                        logger.warn("unsupported TimeUnit method for compile-time evaluation used: ${mInsn.name}"); insn = next; continue
                                 }
 
-                                // Replace GETSTATIC + CONST + INVOKEVIRTUAL with single LDC
                                 final def ldc = new LdcInsnNode(result)
                                 mn.instructions.insert(insn, ldc)
                                 mn.instructions.remove(enumNode)
@@ -576,67 +578,27 @@ abstract class AsmPreprocessTask extends DefaultTask {
 
                                 changed = true
                                 insn = ldc
+                                if (verbose) messages.put(26, "Replaced TimeUnit conversion with evaluated value: TimeUnit.${enumNode.name}.${mInsn.name}(${value}) = ${result} inlined.")
                                 continue
                             }
                         }
                     }
 
-                    insn = next
-                }
-            }
-
-            for (final def mn : cn.methods) {
-                if (!'<clinit>'.equals(mn.name)) continue
-
-                for (def insn = mn.instructions.getFirst(); insn != null; insn = insn.getNext()) {
-                    if (insn.opcode != Opcodes.PUTSTATIC) continue
-
-                    final def put = (FieldInsnNode) insn
-                    final def prev = put.getPrevious()
-
-                    if (prev instanceof LdcInsnNode) {
-                        final def key = put.owner + '.' + put.name + ':' + put.desc
-                        constantFields.put(key, prev.cst)
-                    }
-                }
-            }
-
-            for (final def mn : cn.methods) {
-                if (null == mn.instructions) continue
-
-                for (def insn = mn.instructions.getFirst(); insn != null; ) {
-                    final def next = insn.getNext()
-
-                    if (insn.opcode == Opcodes.GETSTATIC) {
-                        final def fieldInsn = (FieldInsnNode) insn
-                        final def key = fieldInsn.owner + '.' + fieldInsn.name + ':' + fieldInsn.desc
-
-                        if (constantFields.containsKey(key)) {
-                            final def ldc = new LdcInsnNode(constantFields.get(key))
-                            mn.instructions.set(insn, ldc)
-                            changed = true
-                            insn = ldc
-                            continue
-                        }
-                    }
-
-                    insn = next
-                }
-            }
-
-            for (final def mn : cn.methods) {
-                if (!'<clinit>'.equals(mn.name)) continue
-
-                for (def insn = mn.instructions.getFirst(); insn != null; ) {
-                    final def next = insn.getNext()
-
-                    if (insn.opcode == Opcodes.PUTSTATIC) {
+                    /*
+                     * --------------------------------------------------
+                     * 2 + 3. Collect & remove constant PUTSTATIC
+                     * --------------------------------------------------
+                     */
+                    if (Opcodes.PUTSTATIC == insn.opcode) {
                         final def put = (FieldInsnNode) insn
-                        final def key = put.owner + '.' + put.name + ':' + put.desc
+                        final def prev = put.getPrevious()
 
-                        if (constantFields.containsKey(key)) {
-                            mn.instructions.remove(insn.getPrevious()) // LDC
-                            mn.instructions.remove(insn)               // PUTSTATIC
+                        if (prev instanceof LdcInsnNode) {
+                            constantFields.put(put.owner + put.name + put.desc, prev.cst)
+
+                            mn.instructions.remove(prev)
+                            mn.instructions.remove(insn)
+
                             changed = true
                         }
                     }
@@ -646,6 +608,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
             }
 
             final def clsAnns = cn.invisibleAnnotations
+            final def privateClass = 0 != (cn.access & Opcodes.ACC_PRIVATE)
 
             def privateFields = false
 
@@ -656,21 +619,21 @@ abstract class AsmPreprocessTask extends DefaultTask {
                     } else if (SYNTHETIC_DESC == an.desc) {
                         changed = true
                         cn.access |= Opcodes.ACC_SYNTHETIC
-                        messages.put(0, "Added ACC_SYNTHETIC to ${cn.name}")
+                        if (verbose) messages.put(0, "Added ACC_SYNTHETIC to ${cn.name}")
                     } else if (PACKAGE_PRIVATE_DESC == an.desc) {
                         changed = true
                         cn.access &= ~Opcodes.ACC_PUBLIC
                         cn.access &= ~Opcodes.ACC_PROTECTED
-                        if (0 != (cn.access & Opcodes.ACC_PRIVATE)) {
+                        if (privateClass) {
                             logger.error("Already private member annotated with @PackagePrivate")
                         }
-                        messages.put(1, "Added package-private to ${cn.name}")
+                        if (verbose) messages.put(1, "Added package-private to ${cn.name}")
                     } else if (PRIVATE_DESC == an.desc) {
                         changed = true
                         cn.access &= ~Opcodes.ACC_PUBLIC
                         cn.access &= ~Opcodes.ACC_PROTECTED
                         cn.access |= Opcodes.ACC_PRIVATE
-                        messages.put(2, "Added private to ${cn.name}")
+                        if (verbose) messages.put(2, "Added private to ${cn.name}")
                     } else if (NAME_DESC == an.desc) {
                         final def vals = an.values
 
@@ -685,7 +648,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
                             if (oldName != newName) {
                                 changed = true
                                 cn.name = newName
-                                messages.put(3, "Renamed ${oldName} into ${cn.name}")
+                                if (verbose) messages.put(3, "Renamed ${oldName} into ${cn.name}")
                             }
                         }
                     }
@@ -693,71 +656,65 @@ abstract class AsmPreprocessTask extends DefaultTask {
             }
 
             for (final def fn : cn.fields) {
-                final def fnAnns = fn.invisibleAnnotations
+                final def anns = fn.invisibleAnnotations
 
-                for (final def an : fnAnns) {
-                    if (SYNTHETIC_DESC == an.desc) {
-                        changed = true
-                        fn.access |= Opcodes.ACC_SYNTHETIC
-                        messages.put(4, "Added ACC_SYNTHETIC to ${cn.name}#${fn.name}")
-                    } else if (PACKAGE_PRIVATE_DESC == an.desc) {
-                        changed = true
-                        fn.access &= ~Opcodes.ACC_PUBLIC
-                        fn.access &= ~Opcodes.ACC_PROTECTED
-                        if (0 != (fn.access & Opcodes.ACC_PRIVATE)) {
-                            logger.error("Already private member annotated with @PackagePrivate")
-                        }
-                        messages.put(5, "Added package-private to ${cn.name}#${fn.name}")
-                    } else if (PRIVATE_DESC == an.desc) {
-                        changed = true
-                        fn.access &= ~Opcodes.ACC_PUBLIC
-                        fn.access &= ~Opcodes.ACC_PROTECTED
-                        fn.access |= Opcodes.ACC_PRIVATE
-                        messages.put(6, "Added private to ${cn.name}#${fn.name}")
-                    } else if (NAME_DESC == an.desc) {
-                        final def vals = an.values
-
-                        for (def i = 0; i < vals.size(); i += 2) {
-                            if ('value' != vals.get(i)) {
-                                continue
-                            }
-
-                            final def oldName = mn.name
-                            final def newName = vals.get(i + 1)
-
-                            if (oldName != newName) {
+                if (null != anns) {
+                    for (final def an : anns) {
+                        switch (an.desc) {
+                            case SYNTHETIC_DESC:
+                                fn.access |= Opcodes.ACC_SYNTHETIC
                                 changed = true
-                                fn.name = newName
-                                messages.put(7, "Renamed ${cn.name}#${oldName} into ${cn.name}#${fn.name}")
-                            }
+                                if (verbose) messages.put(4, "Added ACC_SYNTHETIC to ${cn.name}#${fn.name}")
+                                break
+
+                            case PACKAGE_PRIVATE_DESC:
+                                fn.access &= ~Opcodes.ACC_PUBLIC
+                                fn.access &= ~Opcodes.ACC_PROTECTED
+                                changed = true
+                                if (0 != (fn.access & Opcodes.ACC_PRIVATE)) {
+                                    logger.error("Already private member annotated with @PackagePrivate")
+                                }
+                                if (verbose) messages.put(5, "Added package-private to ${cn.name}#${fn.name}")
+                                break
+
+                            case PRIVATE_DESC:
+                                fn.access &= ~Opcodes.ACC_PUBLIC
+                                fn.access &= ~Opcodes.ACC_PROTECTED
+                                fn.access |= Opcodes.ACC_PRIVATE
+                                changed = true
+                                if (verbose) messages.put(6, "Added private to ${cn.name}#${fn.name}")
+                                break
+
+                            case NAME_DESC:
+                                final def vals = an.values
+                                for (def i = 0; i < vals.size(); i += 2) {
+                                    if ('value' == vals.get(i)) {
+                                        final def oldName = fn.name
+                                        final def newName = vals.get(i + 1)
+                                        fn.name = newName
+                                        changed = true
+                                        if (verbose) messages.put(7, "Renamed ${cn.name}#${oldName} into ${cn.name}#${fn.name}")
+                                    }
+                                }
+                                break
                         }
                     }
                 }
-            }
 
-            if (privateFields) {
-                for (final def fn : cn.fields) {
-                    if (0 != (fn.access & Opcodes.ACC_PUBLIC)) {
-                        changed = true
-                        fn.access &= ~Opcodes.ACC_PUBLIC
-                        messages.put(8, "Removed public from field ${cn.name}#${fn.name}")
-                    }
-
-                    if (0 != (fn.access & Opcodes.ACC_PROTECTED)) {
-                        changed = true
-                        fn.access &= ~Opcodes.ACC_PROTECTED
-                        messages.put(9, "Removed protected from field ${cn.name}#${fn.name}")
-                    }
-
-                    if (0 == (fn.access & Opcodes.ACC_PRIVATE)) {
-                        changed = true
-                        fn.access |= Opcodes.ACC_PRIVATE
-                        messages.put(10, "Add private to field ${cn.name}#${fn.name}")
-                    }
+                if (privateFields) {
+                    fn.access &= ~Opcodes.ACC_PUBLIC
+                    fn.access &= ~Opcodes.ACC_PROTECTED
+                    fn.access |= Opcodes.ACC_PRIVATE
+                    changed = true
+                    if (verbose) messages.put(8, "Removed public from field ${cn.name}#${fn.name}")
+                    if (verbose) messages.put(9, "Removed protected from field ${cn.name}#${fn.name}")
+                    if (verbose) messages.put(10, "Add private to field ${cn.name}#${fn.name}")
                 }
             }
 
             for (final def mn : cn.methods) {
+                final def isBridge = 0 != (mn.access & Opcodes.ACC_BRIDGE)
+
                 /*
                  * METHOD ANNOTATIONS
                  */
@@ -781,7 +738,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
                                     changed = true
                                     renamed = true
                                     mn.name = newName
-                                    messages.put(11, "Renamed ${cn.name}#${oldName} into ${cn.name}#${mn.name}")
+                                    if (verbose) messages.put(11, "Renamed ${cn.name}#${oldName} into ${cn.name}#${mn.name}")
                                 }
                             }
                         }
@@ -789,29 +746,29 @@ abstract class AsmPreprocessTask extends DefaultTask {
                         if (SYNTHETIC_DESC == an.desc) {
                             changed = true
                             mn.access |= Opcodes.ACC_SYNTHETIC
-                            messages.put(12, "Added ACC_SYNTHETIC to ${cn.name}#${mn.name}")
+                            if (verbose) messages.put(12, "Added ACC_SYNTHETIC to ${cn.name}#${mn.name}")
                         }
 
-                        if (PACKAGE_PRIVATE_DESC == an.desc && 0 == (mn.access & Opcodes.ACC_BRIDGE)) {
+                        if (PACKAGE_PRIVATE_DESC == an.desc && !isBridge) {
                             changed = true
                             mn.access &= ~Opcodes.ACC_PUBLIC
                             mn.access &= ~Opcodes.ACC_PROTECTED
-                            messages.put(13, "Made method package-private: ${cn.name}#${mn.name}")
+                            if (verbose) messages.put(13, "Made method package-private: ${cn.name}#${mn.name}")
                         }
 
-                        if (PRIVATE_DESC == an.desc && 0 == (mn.access & Opcodes.ACC_BRIDGE)) {
+                        if (PRIVATE_DESC == an.desc && !isBridge) {
                             changed = true
                             mn.access &= ~Opcodes.ACC_PUBLIC
                             mn.access &= ~Opcodes.ACC_PROTECTED
                             mn.access |= Opcodes.ACC_PRIVATE
                             privatizedMethodsByClass.computeIfAbsent(cn.name, className -> new HashSet<String>()).add("${mn.name}${mn.desc}")
-                            messages.put(14, "Made method private: ${cn.name}#${mn.name}")
+                            if (verbose) messages.put(14, "Made method private: ${cn.name}#${mn.name}")
                         }
 
                         if (BRIDGE_DESC == an.desc) {
                             changed = true
                             mn.access |= Opcodes.ACC_BRIDGE
-                            messages.put(15, "Added ACC_BRIDGE to ${cn.name}#${mn.name}")
+                            if (verbose) messages.put(15, "Added ACC_BRIDGE to ${cn.name}#${mn.name}")
                         }
                     }
                 }
@@ -827,25 +784,29 @@ abstract class AsmPreprocessTask extends DefaultTask {
             if (0 != (cn.access & Opcodes.ACC_SYNTHETIC)) {
                 changed = true
                 cn.access |= Opcodes.ACC_FINAL
-                messages.put(16, "Made ${cn.name} final")
+                if (verbose) messages.put(16, "Made ${cn.name} final")
             }
+
+            final def isInterface = 0 != (cn.access & Opcodes.ACC_INTERFACE)
 
             if (!classPublic) {
                 for (final def fn : cn.fields) {
                     if (0 != (fn.access & Opcodes.ACC_PUBLIC)) {
                         changed = true
                         fn.access &= ~Opcodes.ACC_PUBLIC
-                        messages.put(17, "Removed public from field ${cn.name}#${fn.name}")
+                        if (verbose) messages.put(17, "Removed public from field ${cn.name}#${fn.name}")
                     }
 
                     if (0 != (fn.access & Opcodes.ACC_PROTECTED)) {
                         changed = true
                         fn.access &= ~Opcodes.ACC_PROTECTED
-                        messages.put(18, "Removed protected from field ${cn.name}#${fn.name}")
+                        if (verbose) messages.put(18, "Removed protected from field ${cn.name}#${fn.name}")
                     }
                 }
 
                 for (final def mn : cn.methods) {
+                    final def isBridge = 0 != (mn.access & Opcodes.ACC_BRIDGE)
+
                     if ('<clinit>' == mn.name || 0 != (mn.access & Opcodes.ACC_PRIVATE) || AsmPreprocessTask.hasAnnotation(mn, MIXIN_OVERWRITE_DESC)) {
                         continue
                     }
@@ -858,16 +819,16 @@ abstract class AsmPreprocessTask extends DefaultTask {
                         logger.warn("Method ${cn.name}#${mn.name} should be package-private or private")
                     }
 
-                    if (0 != (mn.access & Opcodes.ACC_PUBLIC) && 0 == (mn.access & Opcodes.ACC_BRIDGE) && 0 == (cn.access & Opcodes.ACC_INTERFACE)) {
+                    if (0 != (mn.access & Opcodes.ACC_PUBLIC) && !isBridge && !isInterface) {
                         changed = true
                         mn.access &= ~Opcodes.ACC_PUBLIC
-                        messages.put(19, "Removed public from method ${cn.name}#${mn.name}")
+                        if (verbose) messages.put(19, "Removed public from method ${cn.name}#${mn.name}")
                     }
 
-                    if (0 != (mn.access & Opcodes.ACC_PROTECTED) && 0 == (mn.access & Opcodes.ACC_BRIDGE)) {
+                    if (0 != (mn.access & Opcodes.ACC_PROTECTED) && !isBridge) {
                         changed = true
                         mn.access &= ~Opcodes.ACC_PROTECTED
-                        messages.put(20, "Removed protected from method ${cn.name}#${mn.name}")
+                        if (verbose) messages.put(20, "Removed protected from method ${cn.name}#${mn.name}")
                     }
                 }
             } else if (cn.name.contains('mixin') && !cn.name.contains('accessor')) {
@@ -879,7 +840,6 @@ abstract class AsmPreprocessTask extends DefaultTask {
              * METHOD PROCESSING
              * -----------------------------
              */
-            final def isInterface = 0 != (cn.access & Opcodes.ACC_INTERFACE)
             final def isRecord = 0 != (cn.access & Opcodes.ACC_RECORD)
 
             for (final def mn : cn.methods) {
@@ -887,21 +847,23 @@ abstract class AsmPreprocessTask extends DefaultTask {
                  * FINALIZATION
                  */
                 final def abstractMethod = 0 != (mn.access & Opcodes.ACC_ABSTRACT)
+                final def bridge = 0 != (mn.access & Opcodes.ACC_BRIDGE)
+                final def synthetic = 0 != (mn.access & Opcodes.ACC_SYNTHETIC)
 
                 if (!isInterface && !abstractMethod && '<clinit>' != mn.name && '<init>' != mn.name && 0 == (mn.access & Opcodes.ACC_FINAL)) {
-                    if ((isRecord || 0 != (mn.access & Opcodes.ACC_BRIDGE) || 0 != (mn.access & Opcodes.ACC_SYNTHETIC) || mn.name.contains('$') || 'values' == mn.name || 'valueOf' == mn.name)) {
+                    if ((isRecord || bridge || synthetic || mn.name.contains('$') || 'values' == mn.name || 'valueOf' == mn.name)) {
                         changed = true
                         mn.access |= Opcodes.ACC_FINAL
-                        if (!isRecord && 0 == (mn.access & Opcodes.ACC_BRIDGE) && 0 == (mn.access & Opcodes.ACC_SYNTHETIC) && 'values' != mn.name && 'valueOf' != mn.name) {
+                        if (!isRecord && !bridge && !synthetic && 'values' != mn.name && 'valueOf' != mn.name) {
                             logger.warn("Method ${cn.name}#${mn.name} should be final")
                         }
-                        messages.put(21, "Added final to ${cn.name}#${mn.name}")
+                        if (verbose) messages.put(21, "Added final to ${cn.name}#${mn.name}")
                     } else {
                         logger.warn("Method ${cn.name}#${mn.name} should be final")
                     }
                 }
 
-                /*if (0 != (mn.access & Opcodes.ACC_BRIDGE) || 0 != (mn.access & Opcodes.ACC_SYNTHETIC)) {
+                /*if (bridge || synthetic) {
                     def mod = AsmPreprocessTask.methodAccessToString(mn)
                     mod += " ${cn.name}.${mn.name}()"
 
@@ -909,72 +871,85 @@ abstract class AsmPreprocessTask extends DefaultTask {
                 }*/
             }
 
-            // Verification pass
-            if (0 == (cn.access & Opcodes.ACC_FINAL) && 0 == (cn.access & Opcodes.ACC_INTERFACE) && 0 == (cn.access & Opcodes.ACC_ABSTRACT)) {
+            if (0 == (cn.access & Opcodes.ACC_FINAL) && !isInterface && 0 == (cn.access & Opcodes.ACC_ABSTRACT)) {
                 logger.warn("Non-final class: ${cn.name}")
             }
 
-            /*if (0 != (cn.access & Opcodes.ACC_PUBLIC) && cn.name.contains('$')) {
+            /*if (classPublic && cn.name.contains('$')) {
                 logger.warn("Public inner class: ${cn.name}")
             }*/
 
             for (final def mn : cn.methods) {
-                if (0 == (mn.access & Opcodes.ACC_FINAL) && '<init>' != mn.name && '<clinit>' != mn.name && 0 == (cn.access & Opcodes.ACC_INTERFACE)) {
+                if (0 == (mn.access & Opcodes.ACC_FINAL) && '<init>' != mn.name && '<clinit>' != mn.name && !isInterface) {
                     logger.warn("Non-final method: ${cn.name}#${mn.name}")
                 }
             }
 
             final def privatized = privatizedMethodsByClass.getOrDefault(cn.name, Collections.emptySet())
 
+            final def methodsBySig = new HashMap<String, MethodNode>(cn.methods.size())
+
+            for (final def m : cn.methods) {
+                methodsBySig.put(m.name + m.desc, m)
+            }
+
             for (final def ownerMethod : cn.methods) {
-                if (null == ownerMethod.instructions) {
-                    continue
-                }
+                if (null == ownerMethod.instructions) continue
 
-                for (def insn = ownerMethod.instructions.getFirst(); null != insn; insn = insn.getNext()) {
-                    if (insn.opcode != Opcodes.INVOKEVIRTUAL) {
-                        continue
+                for (def insn = ownerMethod.instructions.getFirst(); insn != null;) {
+                    final def next = insn.getNext()
+
+                    switch (insn.opcode) {
+                        /*
+                         * ------------------------------
+                         * GETSTATIC constant folding
+                         * ------------------------------
+                         */
+                        case Opcodes.GETSTATIC:
+                            final def fieldInsn = (FieldInsnNode) insn
+                            final def value = constantFields.get(fieldInsn.owner + fieldInsn.name + fieldInsn.desc)
+
+                            if (null != value) {
+                                ownerMethod.instructions.set(insn, new LdcInsnNode(value))
+                                changed = true
+                            }
+                            break
+
+                        /*
+                         * ------------------------------
+                         * invokevirtual to invokespecial conversion
+                         * ------------------------------
+                         */
+                        case Opcodes.INVOKEVIRTUAL:
+                            final def mInsn = (MethodInsnNode) insn
+                            if (cn.name != mInsn.owner) break
+
+                            final def key = mInsn.name + mInsn.desc
+                            final def target = methodsBySig.get(key)
+                            if (null == target) break
+
+                            if (0 == (target.access & Opcodes.ACC_PRIVATE)) break
+                            if (0 != (target.access & Opcodes.ACC_STATIC)) break
+
+                            if (privatized.contains(key)) {
+                                if (!changed) logger.error("changed != true shouldn't happen here")
+                                if (verbose) messages.put(22, "Fixed invokevirtual --> invokespecial for ASM-privatized method: ${cn.name}#${mInsn.name}${mInsn.desc}")
+                            } else {
+                                if (changed) {
+                                    if (verbose) messages.put(23, "Fixed invokevirtual --> invokespecial for javac generated method: ${cn.name}#${mInsn.name}${mInsn.desc}")
+                                } else {
+                                    if (verbose) messages.put(24, "Fixed invokevirtual --> invokespecial for javac generated method: ${cn.name}#${mInsn.name}${mInsn.desc} - the ASM processor did not touch this class before.")
+                                }
+                            }
+
+                            ownerMethod.instructions.set(mInsn, new MethodInsnNode(Opcodes.INVOKESPECIAL, mInsn.owner, mInsn.name, mInsn.desc, mInsn.itf))
+                            changed = true
+                            break
                     }
 
-                    final def mInsn = (org.objectweb.asm.tree.MethodInsnNode) insn
-
-                    if (mInsn.owner != cn.name) {
-                        continue
-                    }
-
-                    final def key = "${mInsn.name}${mInsn.desc}"
-                    final def target = cn.methods.find { it.name == mInsn.name && it.desc == mInsn.desc }
-
-                    if (null == target) {
-                        continue
-                    }
-
-                    final def isPrivate = 0 != (target.access & Opcodes.ACC_PRIVATE)
-                    final def isStatic  = 0 != (target.access & Opcodes.ACC_STATIC)
-
-                    if (!isPrivate || isStatic) {
-                        continue
-                    }
-
-                    if (privatized.contains(key)) {
-                        ownerMethod.instructions.set(mInsn, new org.objectweb.asm.tree.MethodInsnNode(Opcodes.INVOKESPECIAL, mInsn.owner, mInsn.name, mInsn.desc, mInsn.itf))
-                        changed = true
-
-                        messages.put(22, "Fixed invokevirtual --> invokespecial for ASM-privatized method: ${cn.name}#${mInsn.name}${mInsn.desc}")
-                    } else {
-                        ownerMethod.instructions.set(mInsn, new org.objectweb.asm.tree.MethodInsnNode(Opcodes.INVOKESPECIAL, mInsn.owner, mInsn.name, mInsn.desc, mInsn.itf))
-                        final def wasChanged = changed
-                        changed = true
-
-                        if (wasChanged) {
-                            messages.put(23, "Fixed invokevirtual --> invokespecial for javac generated method: ${cn.name}#${mInsn.name}${mInsn.desc}")
-                        } else {
-                            messages.put(24, "Fixed invokevirtual --> invokespecial for javac generated method: ${cn.name}#${mInsn.name}${mInsn.desc} - the ASM processor did not touch this class before.")
-                        }
-                    }
+                    insn = next
                 }
             }
-            // Verification pass
 
             def output = bytes
             def cw = new ClassWriter(0)
@@ -994,7 +969,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
             }
 
             try {
-                messages.put(25, "Checking class ${cn.name} changed=${changed},renamed=${renamed}")
+                if (verbose) messages.put(25, "Checking class ${cn.name} changed=${changed},renamed=${renamed}")
                 cn.accept(new CheckClassAdapter(cw, true))
             } catch (final Throwable error) {
                 throw new RuntimeException("class ${cn.name} has error: ${error.getMessage()}")
@@ -1133,6 +1108,10 @@ tasks.register('createJavaBaseLibraryJar') {
 
     outputs.file(outputJar)
 
+    doFirst {
+        logger.lifecycle('Generating java.base jrt libraryjar...')
+    }
+
     doLast {
         final def jrtFs = FileSystems.getFileSystem(URI.create('jrt:/'))
         final def modulePath = jrtFs.getPath('/modules/java.base')
@@ -1163,6 +1142,10 @@ tasks.register('proguard', ProGuardTask) {
     dependsOn jar
     dependsOn tasks.named('createJavaBaseLibraryJar')
 
+    doFirst {
+        logger.lifecycle('Creating optimized JAR...')
+    }
+
     injars jar.archiveFile.get().asFile
     outjars proguardOutput.get().asFile
 
@@ -1177,10 +1160,13 @@ tasks.named('remapJar') {
 }
 
 tasks.register('remapProguardJar', net.fabricmc.loom.task.RemapJarTask) {
+    doFirst {
+        logger.lifecycle('Remapping optimized JAR...')
+    }
+
     dependsOn proguard
 
     inputFile.set(proguardOutput)
-    archiveClassifier.set('')
 }
 
 tasks.build {
