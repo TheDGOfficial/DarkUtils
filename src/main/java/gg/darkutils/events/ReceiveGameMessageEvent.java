@@ -157,7 +157,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * event.matches("search") // same result
      *}
      *
-     * @param search The string that is being earched for exact equality.
+     * @param search The string that is being searched for exact equality.
      * @return Whether the received (plain) message matches the given search or not.
      */
     public final boolean matches(@NotNull final String search) {
@@ -176,20 +176,20 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * fastest approach for this specific use case.</p>
      *
      * @param strictStart the required starting prefix (must match at index 0)
-     * @param end the delimiter marking the end of the extracted section
+     * @param end         the delimiter marking the end of the extracted section
      * @return the extracted substring, or {@code null} if the message does not start with
-     *         {@code strictStart} or if the {@code end} delimiter is not found after it
+     * {@code strictStart} or if the {@code end} delimiter is not found after it
      */
     @Nullable
-    public final String extractPart(@NotNull final String strictStart, @NotNull final char end) {
+    public final String extractPart(@NotNull final String strictStart, final char end) {
         final var content = this.content();
 
         if (!content.startsWith(strictStart)) {
             return null;
         }
 
-        final int from = strictStart.length();
-        final int to = content.indexOf(end, from);
+        final var from = strictStart.length();
+        final var to = content.indexOf(end, from);
 
         return -1 == to ? null : content.substring(from, to);
     }

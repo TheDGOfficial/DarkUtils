@@ -80,87 +80,20 @@ public final class RenderUtils {
      */
     private static final @NotNull OrderedText EMPTY_ORDERED_TEXT = Text.of("").asOrderedText();
 
-    public static final class RenderingText {
-        @NotNull
-        private String text;
-
-        @NotNull
-        private OrderedText orderedText;
-
-        private WidthHolder widthHolder;
-
-        private RenderingText() {
-            this("", RenderUtils.EMPTY_ORDERED_TEXT);
-        }
-
-        private RenderingText(@NotNull final String text) {
-            this(text, Text.of(text).asOrderedText());
-        }
-
-        private RenderingText(@NotNull final String text, @NotNull final OrderedText orderedText) {
-            super();
-
-            this.text = text;
-            this.orderedText = orderedText;
-
-            this.widthHolder = new WidthHolder(this);
-        }
-
-        public final void setText(@NotNull final String newText) {
-            if (this.text.equals(newText)) {
-                return;
-            }
-
-            this.text = newText;
-            this.orderedText = Text.of(newText).asOrderedText();
-
-            this.widthHolder.markDirty();
-        }
-    }
-
-    private static final class WidthHolder {
-        @NotNull
-        private final RenderingText renderingText;
-
-        private WidthHolder(@NotNull final RenderingText renderingText) {
-            this.renderingText = renderingText;
-        }
-
-        private int width;
-        private boolean dirty = true;
-
-        private final int getWidth() {
-            final int width;
-
-            if (this.dirty) {
-                width = this.width = MinecraftClient.getInstance().textRenderer.getWidth(renderingText.text);
-                this.dirty = false;
-            } else {
-                width = this.width;
-            }
-
-            return width;
-        }
-
-        private final void markDirty() {
-            this.dirty = true;
-        }
-    }
-
-    @NotNull
-    public static final RenderingText createRenderingText() {
-        return new RenderingText();
-    }
-
-    @NotNull
-    public static final RenderingText createRenderingText(@NotNull final String initial) {
-        return new RenderingText(initial);
-    }
-
     private RenderUtils() {
         super();
 
         throw new UnsupportedOperationException("static utility class");
+    }
+
+    @NotNull
+    public static final RenderUtils.RenderingText createRenderingText() {
+        return new RenderUtils.RenderingText();
+    }
+
+    @NotNull
+    public static final RenderUtils.RenderingText createRenderingText(@NotNull final String initial) {
+        return new RenderUtils.RenderingText(initial);
     }
 
     private static final int getMiddleOfScreenYCoordinate() {
@@ -177,23 +110,23 @@ public final class RenderUtils {
         return 0xFF00_0000 | RenderUtils.convertFormattingToRGBA(color);
     }
 
-    public static final void renderText(@NotNull final DrawContext context, @NotNull final RenderingText text, final int x, final int y, @NotNull final Formatting color) {
+    public static final void renderText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, final int x, final int y, @NotNull final Formatting color) {
         RenderUtils.renderText(context, text, x, () -> y, color);
     }
 
-    public static final void renderText(@NotNull final DrawContext context, @NotNull final RenderingText text, final int x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
+    public static final void renderText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, final int x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
         RenderUtils.renderText(context, text, () -> x, y, color);
     }
 
-    private static final void renderText(@NotNull final DrawContext context, @NotNull final RenderingText text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
+    private static final void renderText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
         context.drawText(MinecraftClient.getInstance().textRenderer, text.orderedText, x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
-    public static final int middleAlignedXForText(@NotNull final RenderingText text) {
+    public static final int middleAlignedXForText(@NotNull final RenderUtils.RenderingText text) {
         return (MinecraftClient.getInstance().getWindow().getScaledWidth() >> 1) - (text.widthHolder.getWidth() >> 1);
     }
 
-    public static final void renderCenteredText(@NotNull final DrawContext context, @NotNull final RenderingText text, @NotNull final IntSupplier y, @NotNull final Formatting color) {
+    public static final void renderCenteredText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, @NotNull final IntSupplier y, @NotNull final Formatting color) {
         context.drawText(MinecraftClient.getInstance().textRenderer, text.orderedText, RenderUtils.middleAlignedXForText(text), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
@@ -256,5 +189,88 @@ public final class RenderUtils {
         );
 
         matrices.pop();
+    }
+
+    public static final class RenderingText {
+        @NotNull
+        private String text;
+
+        @NotNull
+        private OrderedText orderedText;
+
+        @NotNull
+        private final RenderUtils.WidthHolder widthHolder;
+
+        private RenderingText() {
+            this("", RenderUtils.EMPTY_ORDERED_TEXT);
+        }
+
+        private RenderingText(@NotNull final String text) {
+            this(text, Text.of(text).asOrderedText());
+        }
+
+        private RenderingText(@NotNull final String text, @NotNull final OrderedText orderedText) {
+            super();
+
+            this.text = text;
+            this.orderedText = orderedText;
+
+            this.widthHolder = new RenderUtils.WidthHolder(this);
+        }
+
+        public final void setText(@NotNull final String newText) {
+            if (this.text.equals(newText)) {
+                return;
+            }
+
+            this.text = newText;
+            this.orderedText = Text.of(newText).asOrderedText();
+
+            this.widthHolder.markDirty();
+        }
+
+        @Override
+        public final String toString() {
+            return "RenderingText{" +
+                    "text='" + this.text + '\'' +
+                    ", orderedText=" + this.orderedText +
+                    ", widthHolder=" + this.widthHolder +
+                    '}';
+        }
+    }
+
+    private static final class WidthHolder {
+        @NotNull
+        private final RenderUtils.RenderingText renderingText;
+        private int width;
+        private boolean dirty = true;
+
+        private WidthHolder(@NotNull final RenderUtils.RenderingText renderingText) {
+            super();
+
+            this.renderingText = renderingText;
+        }
+
+        private final int getWidth() {
+            if (this.dirty) {
+                this.dirty = false;
+                return this.width = MinecraftClient.getInstance().textRenderer.getWidth(this.renderingText.text);
+            }
+
+            return this.width;
+        }
+
+        private final void markDirty() {
+            this.dirty = true;
+        }
+
+        @Override
+        public final String toString() {
+            return "WidthHolder{" +
+                    "text=" + this.renderingText.text + // cannot use this.renderingText in toString as it would create infinite recursion, since renderingText's toString() calls toString on WidthHolder
+                    ", width=" + this.width +
+                    ", dirty=" + this.dirty +
+                    '}';
+        }
     }
 }

@@ -14,6 +14,12 @@ import org.jetbrains.annotations.NotNull;
 
 @Mixin(value = GLFW.class, priority = 1_001)
 final class GLFWMixin {
+    private GLFWMixin() {
+        super();
+
+        throw new UnsupportedOperationException("mixin class");
+    }
+
     @Inject(method = "glfwSetCursorPos", at = @At("HEAD"), cancellable = true)
     private static final void darkutils$onGlfwSetCursorPos(final long window, final double xpos, final double ypos, @NotNull final CallbackInfo ci) {
         final var config = DarkUtilsConfig.INSTANCE;

@@ -101,7 +101,7 @@ public interface EventRegistry {
             throw new IllegalArgumentException("listener method has wrong parameter with type " + eventType.getName());
         }
 
-        this.getEventHandler((Class<T>) eventType).addListener((EventListener<? super Event>) listener);
+        this.getEventHandler((Class<T>) eventType).addListener((EventListener<? super Event>) (Object) listener);
     }
 
     /**

@@ -83,7 +83,7 @@ public interface EventHandler<T extends Event> {
     void removeListener(final @NotNull EventListener<T> listener);
 
     /**
-     * Triggers a cancellable event, calling all listeners {@link EventListener#accept(Object)} sequentially in the calling thread,
+     * Triggers a cancellable event, calling all listeners {@link EventListener#accept(Event)} sequentially in the calling thread,
      * ordered based on {@link EventPriority}.
      * <p>
      * If any {@link EventListener} cancels the event, the further event listeners
@@ -103,7 +103,7 @@ public interface EventHandler<T extends Event> {
     <E extends CancellableEvent> CancellationResult triggerCancellableEvent(final @NotNull E event);
 
     /**
-     * Triggers a non-cancellable event, calling all listeners {@link EventListener#accept(Object)} sequentially in the calling thread,
+     * Triggers a non-cancellable event, calling all listeners {@link EventListener#accept(Event)} sequentially in the calling thread,
      * ordered based on {@link EventPriority}.
      * <p>
      * Implementors must ensure that even if any of the listeners at any point throw any exceptions, it should not stop the further

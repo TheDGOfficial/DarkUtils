@@ -27,10 +27,8 @@ public final class DisableCellsAlignment {
 
         final var itemStack = event.itemStack();
 
-        if (itemStack.isOf(Items.BLAZE_ROD)) {
-            if (Helpers.isHoldingAGyrokineticWand()) {
-                event.cancellationState().cancel();
-            }
+        if (itemStack.isOf(Items.BLAZE_ROD) && Helpers.isHoldingAGyrokineticWand()) {
+            event.cancellationState().cancel();
         }
     }
 }

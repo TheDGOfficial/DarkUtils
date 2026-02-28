@@ -107,7 +107,7 @@ public final class DarkUtilsConfigScreen {
                 config.autoClickerWorkInLevers, newValue -> config.autoClickerWorkInLevers = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker Work With AOTV",
-                "Makes Auto Clicker work when holding AOTV, causing you to teleport rapidly/faster. Might make you teleport more than you intended to even if you click a single time, even when etherwarping, but it usually makes you teleport through longer distances much, much faster.",
+                "Makes Auto Clicker work when holding AOTV, causing you to teleport rapidly/faster. Might make you teleport more than you intended to even if you click a single time, even when ether warping, but it usually makes you teleport through longer distances much, much faster.",
                 config.autoClickerWorkWithAOTV, newValue -> config.autoClickerWorkWithAOTV = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Disable Cells Alignment",
@@ -181,7 +181,7 @@ public final class DarkUtilsConfigScreen {
                 config.arrowStackWaypoints, newValue -> config.arrowStackWaypoints = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Dungeon Timer",
-                "Displays dungeon timer on left side of the screen, showing time took to finish each phase. Shows live time if not finished yet, and shows how much time is lost to server lag, with fancy item icons, seperate colors, and non-phase informational splits, like Boss Total.",
+                "Displays dungeon timer on left side of the screen, showing time took to finish each phase. Shows live time if not finished yet, and shows how much time is lost to server lag, with fancy item icons, separate colors, and non-phase informational splits, like Boss Total.",
                 config.dungeonTimer, newValue -> config.dungeonTimer = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Blood Cleared Notification",
@@ -357,7 +357,7 @@ public final class DarkUtilsConfigScreen {
     private static final void addDevelopment(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var development = builder.getOrCreateCategory(Text.of("Development"));
 
-        DarkUtilsConfigScreen.addEnumSetting(entryBuilder, development, "Ingame Log Level", "Allows you to change at what threshold log messages should also be printed to in-game chat for development. Do not change unless instructed or know what you are doing.", config.ingameLogLevel, newValue -> config.ingameLogLevel = newValue, LogLevel.WARN, LogLevel::prettyName);
+        DarkUtilsConfigScreen.addEnumSetting(entryBuilder, development, "In-Game Log Level", "Allows you to change at what threshold log messages should also be printed to in-game chat for development. Do not change unless instructed or know what you are doing.", config.ingameLogLevel, newValue -> config.ingameLogLevel = newValue, LogLevel.WARN, LogLevel::prettyName);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, development, "Debug Mode",
                 "Prints additional details like the full call stack in some code paths for debugging purposes. Might incur a performance penalty. Do not enable unless instructed to do so.",

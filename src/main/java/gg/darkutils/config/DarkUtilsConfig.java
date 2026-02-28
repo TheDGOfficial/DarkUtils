@@ -131,7 +131,7 @@ public final class DarkUtilsConfig {
                 DarkUtils.error(DarkUtilsConfig.class, "Unable to load config", e);
                 DarkUtils.warn(DarkUtilsConfig.class, "Backing up corrupted config due to load failure as the next save will revert to the default config. If you wish to restore your settings manually, check the file ending with .corrupted extension.");
 
-                // This saves to a seperate file with the same name but .corrupted at the end, e.g., config.json.corrupted.
+                // This saves to a separate file with the same name but .corrupted at the end, e.g., config.json.corrupted.
                 DarkUtilsConfig.save(DarkUtilsConfig.FILE.toPath().resolveSibling(DarkUtilsConfig.FILE.toPath().getFileName() + ".corrupted"));
             }
         }

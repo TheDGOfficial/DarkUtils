@@ -62,7 +62,7 @@ public final class TreeGiftFeatures {
     }
 
     private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
-        if ((!DarkUtilsConfig.INSTANCE.treeGiftConfirmation && !DarkUtilsConfig.INSTANCE.treeGiftsPerHour) || !LocationUtils.isInGalatea()) {
+        if (!DarkUtilsConfig.INSTANCE.treeGiftConfirmation && !DarkUtilsConfig.INSTANCE.treeGiftsPerHour || !LocationUtils.isInGalatea()) {
             // Reset state to prevent bugs when feature is turned off
             TreeGiftFeatures.endMessageReceived = false;
             TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.NONE;

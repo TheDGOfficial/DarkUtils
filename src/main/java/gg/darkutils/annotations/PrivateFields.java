@@ -10,11 +10,11 @@ import java.lang.annotation.Target;
  * <p>
  * This is useful when javac generates fields that you can't control for such as
  * inner classes or method local classes capturing local variables, javac generates those
- * as package-private, even if you never access the field outside of the class itself (in
+ * as package-private, even if you never access the field outside the class itself (in
  * which case it can be made private safely).
  */
 @Retention(RetentionPolicy.CLASS)
-@Target({ElementType.TYPE})
+@Target(ElementType.TYPE)
 public @interface PrivateFields {
 }
 

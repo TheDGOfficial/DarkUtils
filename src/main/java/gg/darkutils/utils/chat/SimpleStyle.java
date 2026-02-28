@@ -37,6 +37,26 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         return SimpleStyle.CenteredStyle.INSTANCE;
     }
 
+    private static void appendLegacyFormatting(@NotNull final StringBuilder builder, @NotNull final SimpleStyle style) {
+        switch (style) {
+            case SimpleStyle.ColoredStyle(final var rgb) -> SimpleStyle.appendColor(builder, rgb);
+            case SimpleStyle.FormattedStyle(final var formatting) -> builder.append(formatting.toFormatting());
+            default -> {
+                // Ignore CenteredStyle & InheritedStyle
+            }
+        }
+    }
+
+    private static void appendColor(@NotNull final StringBuilder builder, final int rgb) {
+        // Match against SimpleColor values
+        final var legacy = SimpleStyle.LegacyRgb.RGB_TO_LEGACY.get(rgb);
+        if (null != legacy) {
+            builder.append(legacy);
+        }
+
+        // Unsupported RGB (likely HEX color code, no legacy equivalent) - do nothing
+    }
+
     default boolean isCentered() {
         return this instanceof SimpleStyle.CenteredStyle || this instanceof SimpleStyle.CompositeStyle(
                 final var styles
@@ -104,13 +124,13 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
 
     /**
      * Returns legacy raw formatting characters (e.g. "§6§l").
-     *
+     * <p>
      * CompositeStyle preserves insertion order.
      * Non-composite styles use deterministic ordering (color first).
      */
     default @NotNull String getRawFormattingCharacters() {
         if (this instanceof SimpleStyle.CompositeStyle(final var styles)) {
-            final var builder = new StringBuilder(styles.size() * 2);
+            final var builder = new StringBuilder(styles.size() << 1);
             for (final var style : styles) {
                 SimpleStyle.appendLegacyFormatting(builder, style);
             }
@@ -124,19 +144,16 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         return builder.toString();
     }
 
-    private static void appendLegacyFormatting(@NotNull final StringBuilder builder, @NotNull final SimpleStyle style) {
-        if (style instanceof SimpleStyle.ColoredStyle(final var rgb)) {
-            SimpleStyle.appendColor(builder, rgb);
-        } else if (style instanceof SimpleStyle.FormattedStyle(final var formatting)) {
-            builder.append(formatting.toFormatting());
-        }
-        // Ignore CenteredStyle & InheritedStyle
-    }
-
     @PackagePrivate
     final class LegacyRgb {
         @NotNull
         private static final Int2ObjectMap<String> RGB_TO_LEGACY = SimpleStyle.LegacyRgb.createRgbLookup();
+
+        private LegacyRgb() {
+            super();
+
+            throw new UnsupportedOperationException("static utility class");
+        }
 
         private static final @NotNull Int2ObjectMap<String> createRgbLookup() {
             final var values = SimpleColor.values();
@@ -146,16 +163,6 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
             }
             return Int2ObjectMaps.unmodifiable(map);
         }
-    }
-
-    private static void appendColor(@NotNull final StringBuilder builder, final int rgb) {
-        // Match against SimpleColor values
-        final var legacy = SimpleStyle.LegacyRgb.RGB_TO_LEGACY.get(rgb);
-        if (null != legacy) {
-            builder.append(legacy);
-        }
-
-        // Unsupported RGB (likely HEX color code, no legacy equivalent) - do nothing
     }
 
     // === Implementations ===

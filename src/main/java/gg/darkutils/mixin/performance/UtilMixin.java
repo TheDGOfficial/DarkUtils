@@ -17,21 +17,21 @@ import java.util.concurrent.ThreadFactory;
 
 @Mixin(Util.class)
 final class UtilMixin {
+    @Unique
+    private static boolean overrideSuccessful;
+
+    static {
+        TickUtils.awaitLocalPlayer(player -> { // Player will only be available after all Mixins are applied and executors are created.
+            if (DarkUtilsConfig.INSTANCE.useVirtualThreadsForTextureDownloading && !UtilMixin.overrideSuccessful) {
+                DarkUtils.warn("@fileName@", "Overriding texture downloading executor from cached thread pool to virtual thread per task executor failed. Please notify developers to update the necessary mixin(s).");
+            }
+        });
+    }
+
     private UtilMixin() {
         super();
 
         throw new UnsupportedOperationException("mixin class");
-    }
-
-    @Unique
-    private static boolean overrideSuccessfull;
-
-    static {
-        TickUtils.awaitLocalPlayer((player) -> { // Player will only be available after all Mixins are applied and executors are created.
-            if (DarkUtilsConfig.INSTANCE.useVirtualThreadsForTextureDownloading && !UtilMixin.overrideSuccessfull) {
-                DarkUtils.warn("@fileName@", "Overriding texture downloading executor from cached thread pool to virtual thread per task executor failed. Please notify developers to update the necessary mixin(s).");
-            }
-        });
     }
 
     /**
@@ -54,7 +54,7 @@ final class UtilMixin {
             final var vtExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
             DarkUtils.info("@fileName@", "Overriding texture downloading executor from cached thread pool to virtual thread per task executor");
-            UtilMixin.overrideSuccessfull = true;
+            UtilMixin.overrideSuccessful = true;
 
             return vtExecutor;
         }

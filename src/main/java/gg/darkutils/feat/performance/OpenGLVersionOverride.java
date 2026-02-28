@@ -28,11 +28,6 @@ public enum OpenGLVersionOverride {
     }
 
     @NotNull
-    public final String prettyName() {
-        return this.prettyName;
-    }
-
-    @NotNull
     private static final OpenGLVersionOverride getGLVersionOverride() {
         return DarkUtilsConfig.INSTANCE.openGLVersionOverride;
     }
@@ -63,5 +58,10 @@ public enum OpenGLVersionOverride {
         }
 
         return newVersion;
+    }
+
+    @NotNull
+    public final String prettyName() {
+        return this.prettyName;
     }
 }

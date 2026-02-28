@@ -26,6 +26,7 @@ public final class TreeGiftsPerHour {
     private static final long ONE_HOUR_MILLIS = TimeUnit.HOURS.toMillis(1L);
     private static final long ONE_MILLIS_NANOS = TimeUnit.MILLISECONDS.toNanos(1L);
 
+    @NotNull
     private static final RenderUtils.RenderingText TEXT =
             RenderUtils.createRenderingText();
 
@@ -62,7 +63,7 @@ public final class TreeGiftsPerHour {
         }
         var sumNanos = 0L;
         for (var i = 0; TreeGiftsPerHour.giftCount > i; ++i) {
-            sumNanos += TreeGiftsPerHour.giftTimes[(TreeGiftsPerHour.giftIndex + TreeGiftsPerHour.SAMPLE_SIZE - TreeGiftsPerHour.giftCount + i) % TreeGiftsPerHour.SAMPLE_SIZE];
+            sumNanos = Math.addExact(sumNanos, TreeGiftsPerHour.giftTimes[(TreeGiftsPerHour.giftIndex + TreeGiftsPerHour.SAMPLE_SIZE - TreeGiftsPerHour.giftCount + i) % TreeGiftsPerHour.SAMPLE_SIZE]);
         }
         final var avgNanos = (double) sumNanos / TreeGiftsPerHour.giftCount;
         return avgNanos / TreeGiftsPerHour.ONE_MILLIS_NANOS;
@@ -70,7 +71,7 @@ public final class TreeGiftsPerHour {
 
     private static final double getGiftsPerHour() {
         final var avgMillis = TreeGiftsPerHour.getAvgGiftTimeMillis();
-        return 0.0 >= avgMillis ? 0.0 : TreeGiftsPerHour.ONE_HOUR_MILLIS / avgMillis;
+        return 0.0D >= avgMillis ? 0.0D : TreeGiftsPerHour.ONE_HOUR_MILLIS / avgMillis;
     }
 
     public static final void init() {

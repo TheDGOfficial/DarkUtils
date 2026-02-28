@@ -23,8 +23,9 @@ public final class JavaUtils {
     }
 
     @NotNull
-    public static final Optional<? extends Class<?>> getImmediateCallerClass() {
-        return JavaUtils.STACK_WALKER.walk(stream ->
+    @SuppressWarnings("unchecked")
+    public static final Optional<Class<?>> getImmediateCallerClass() {
+        return (Optional<Class<?>>) (Object) JavaUtils.STACK_WALKER.walk(stream ->
                 stream.skip(2L) // [0]=getImmediateCallerClass, [1]=callerOfThisMethod, [2]=callerOfTheMethodCallingThisMethod
                         .map(StackWalker.StackFrame::getDeclaringClass)
                         .findFirst()
@@ -45,13 +46,13 @@ public final class JavaUtils {
      * with the help of the varargs feature, we can accomplish it with a small wrapper method.
      *
      * @param values The values to create a generic array of.
+     * @param <T>    The type of the generic array.
      * @return A generic array from the given values, created by the compiler at call site.
-     * @param <T> The type of the generic array.
      */
     @SuppressWarnings("varargs")
     @SafeVarargs
     @NotNull
-    public static final <T> T[] createGenericArray(@NotNull final T... values) {
+    public static final <T> T @NotNull [] createGenericArray(@NotNull final T @NotNull ... values) {
         return values;
     }
 
@@ -62,7 +63,7 @@ public final class JavaUtils {
      * <p>
      * This is possible since all exceptions extend from the {@link Throwable} class.
      *
-     * @param t The exception to throw, bypassing the checked exception check on Java compiler.
+     * @param t   The exception to throw, bypassing the checked exception check on Java compiler.
      * @param <T> The type of the exception to throw.
      * @return Nothing, this method always throws. This only for your convenience, so you can use throw yourself
      * to not have to return a value from your method.
@@ -82,8 +83,8 @@ public final class JavaUtils {
      *
      * @param doNotPassThisParameter Do not pass this parameter. It will be passed by compiler.
      *                               The compiler creates an empty array at call site with the inferred type.
+     * @param <T>                    The type to get the class of.
      * @return The class of the given type parameter.
-     * @param <T> The type to get the class of.
      */
     @SuppressWarnings("unchecked")
     @SafeVarargs

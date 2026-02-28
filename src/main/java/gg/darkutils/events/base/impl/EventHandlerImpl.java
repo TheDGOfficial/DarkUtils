@@ -45,6 +45,20 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
         }
     }
 
+    private static final void handleListenerError(@NotNull final EventListener<? extends Event> listener, @NotNull final Event event, @NotNull final Throwable error) {
+        if (DarkUtils.INSIDE_JUNIT) {
+            throw JavaUtils.sneakyThrow(error);
+        }
+
+        final var actualListener = listener instanceof final EventListener.Impl<? extends Event> delegatingEventListener
+                ? delegatingEventListener.listener()
+                : listener;
+        DarkUtils.error(EventHandlerImpl.class,
+                "Error when executing listener " + actualListener.getClass().getName() +
+                        " with priority " + listener.priority().name() +
+                        " for event " + event.getClass().getName(), error);
+    }
+
     @Override
     @NotNull
     public final Iterable<EventListener<? super Event>> getListeners() {
@@ -52,6 +66,7 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public final void addListener(@NotNull final EventListener<? super Event> listener) {
         final var current = this.listeners;
 
@@ -120,7 +135,7 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                 } catch (final Throwable error) {
                     EventHandlerImpl.handleListenerError(listener1, event, error);
                 }
-                // Now check needed for isCancelled for listener2 in case listener1 cancelled it.
+                // Now check needed for isCancelled for listener2 in case listener1 canceled it.
                 var cancelled = cancellationState.isCancelled();
                 if (!cancelled || listener2.receiveCancelled()) { // Need to check if listener2 wants to receiveCancelled
                     try {
@@ -128,32 +143,33 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                     } catch (final Throwable error) {
                         EventHandlerImpl.handleListenerError(listener2, event, error);
                     }
-                    cancelled = cancellationState.isCancelled(); // Assign cancelled status in case listener2 cancelled or uncancelled it post listener1.
+                    cancelled = cancellationState.isCancelled(); // Assign canceled status in case listener2 canceled or uncanceled it post listener1.
                 }
                 return CancellationResult.of(cancelled);
             }
-        }
+            default -> {
+                // Fallback to slower path if 3 or more listeners
+                var cancelled = false;
 
-        // Fallback to slower path if 3 or more listeners
-        var cancelled = false;
+                // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
+                for (var i = 0; size > i; ++i) {
+                    final var listener = localListeners.get(i);
 
-        // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
-        for (var i = 0; size > i; ++i) {
-            final var listener = localListeners.get(i);
+                    if (cancelled && !listener.receiveCancelled()) {
+                        continue;
+                    }
 
-            if (cancelled && !listener.receiveCancelled()) {
-                continue;
+                    try {
+                        listener.accept(event);
+                    } catch (final Throwable error) {
+                        EventHandlerImpl.handleListenerError(listener, event, error);
+                    }
+                    cancelled = cancellationState.isCancelled();
+                }
+
+                return CancellationResult.of(cancelled); // Returning CancellationResult instead of CancellationState ensures the caller can only inspect a finalized immutable canceled status, and can't mutate it. Furthermore, this avoids the state from escaping to the callers, potentially helping C2 optimize the mutable cancellation state object allocation. It seems to not fully optimize out the allocation at the moment, though, sadly, but in theory it should be able to.
             }
-
-            try {
-                listener.accept(event);
-            } catch (final Throwable error) {
-                EventHandlerImpl.handleListenerError(listener, event, error);
-            }
-            cancelled = cancellationState.isCancelled();
         }
-
-        return CancellationResult.of(cancelled); // Returning CancellationResult instead of CancellationState ensures the caller can only inspect a finalized immutable canceled status, and can't mutate it. Furthermore, this avoids the state from escaping to the callers, potentially helping C2 optimize the mutable cancellation state object allocation. It seems to not fully optimize out the allocation at the moment, though, sadly, but in theory it should be able to.
     }
 
     @Override
@@ -164,7 +180,6 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
         switch (size) {
             case 0 -> {
                 // No listeners - fast path
-                return;
             }
             case 1 -> {
                 // Only one listener - fast path
@@ -174,7 +189,6 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                 } catch (final Throwable error) {
                     EventHandlerImpl.handleListenerError(listener, event, error);
                 }
-                return;
             }
             case 2 -> {
                 // Only two listeners - fast path
@@ -190,35 +204,21 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                 } catch (final Throwable error) {
                     EventHandlerImpl.handleListenerError(listener2, event, error);
                 }
-                return;
+            }
+            default -> {
+                // Fallback to slower path if 3 or more listeners
+
+                // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
+                for (var i = 0; size > i; ++i) {
+                    final var listener = localListeners.get(i);
+                    try {
+                        listener.accept(event);
+                    } catch (final Throwable error) {
+                        EventHandlerImpl.handleListenerError(listener, event, error);
+                    }
+                }
             }
         }
-
-        // Fallback to slower path if 3 or more listeners
-
-        // Using plain for loop instead of enhanced for loop prevents temporary iterator object allocation. Increases throughput if lots of events are triggered.
-        for (var i = 0; size > i; ++i) {
-            final var listener = localListeners.get(i);
-            try {
-                listener.accept(event);
-            } catch (final Throwable error) {
-                EventHandlerImpl.handleListenerError(listener, event, error);
-            }
-        }
-    }
-
-    private static final void handleListenerError(@NotNull final EventListener<? extends Event> listener, @NotNull final Event event, @NotNull final Throwable error) {
-        if (DarkUtils.INSIDE_JUNIT) {
-            throw JavaUtils.sneakyThrow(error);
-        }
-
-        final var actualListener = listener instanceof final EventListener.Impl<? extends Event> delegatingEventListener
-                ? delegatingEventListener.listener()
-                : listener;
-        DarkUtils.error(EventHandlerImpl.class,
-                "Error when executing listener " + actualListener.getClass().getName() +
-                        " with priority " + listener.priority().name() +
-                        " for event " + event.getClass().getName(), error);
     }
 
     @Override

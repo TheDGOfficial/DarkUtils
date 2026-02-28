@@ -3,7 +3,6 @@ package gg.darkutils.utils.chat;
 import gg.darkutils.events.SentCommandEvent;
 import gg.darkutils.events.SentMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
-import gg.darkutils.utils.LazyConstants;
 import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RoundingMode;
 import gg.darkutils.utils.TickUtils;
@@ -15,18 +14,21 @@ import net.minecraft.text.HoverEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Contract;
 
 import java.util.Optional;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import java.util.function.Supplier;
 
 public final class ChatUtils {
+    /**
+     * Represents new line character suitable to be used in chat to switch to a new line.
+     * This does not depend on any operating system and thus platform-agnostic (implementation detail in Minecraft chat handling).
+     */
+    @NotNull
+    public static final String NEW_LINE = "\n";
     /**
      * The character used to signal the start of a formatting code.
      * <p>
@@ -36,13 +38,6 @@ public final class ChatUtils {
      */
     @NotNull
     private static final String CONTROL_START = "§";
-    /**
-     * Represents new line character suitable to be used in chat to switch to a new line.
-     * This does not depend on any operating system and thus platform-agnostic (implementation detail in Minecraft chat handling).
-     */
-    @NotNull
-    public static final String NEW_LINE = "\n";
-
     private static final long QUARTER_SECOND_NANOS = TimeUnit.MILLISECONDS.toNanos(250L);
 
     private static final @NotNull ObjectArrayFIFOQueue<String> sendMessageQueue = new ObjectArrayFIFOQueue<>(1);
@@ -112,11 +107,7 @@ public final class ChatUtils {
     public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleStyle style, @NotNull final Supplier<String> textString) {
         final var hasFormattingInComponent = ChatUtils.hasFormattingInsideRootComponent(text, style);
 
-        if (hasFormattingInComponent) {
-            return true;
-        }
-
-        return ChatUtils.hasFormattingInsideTextRaw(textString.get(), style);
+        return hasFormattingInComponent || ChatUtils.hasFormattingInsideTextRaw(textString.get(), style);
     }
 
     private static final boolean hasFormattingInsideTextRaw(@NotNull final String rawText, @NotNull final SimpleStyle style) {
@@ -128,11 +119,11 @@ public final class ChatUtils {
     }
 
     private static final boolean hasFormattingInsideRootComponent(@NotNull final Text text, @NotNull final Style expected) {
-        return text.visit((final Style resolved, final String ignored) ->
-            ChatUtils.matches(resolved, expected)
-                ? Optional.of(true)
-                : Optional.empty(),
-            Style.EMPTY
+        return text.visit((resolved, ignored) ->
+                        ChatUtils.matches(resolved, expected)
+                                ? Optional.of(true)
+                                : Optional.empty(),
+                Style.EMPTY
         ).isPresent();
     }
 
@@ -169,19 +160,7 @@ public final class ChatUtils {
             return false;
         }
 
-        if (!ChatUtils.matchNullable(target.getInsertion(), resolved.getInsertion())) {
-            return false;
-        }
-
-        if (!ChatUtils.matchNullable(target.getFont(), resolved.getFont())) {
-            return false;
-        }
-
-        if (!ChatUtils.matchNullable(target.getShadowColor(), resolved.getShadowColor())) {
-            return false;
-        }
-
-        return true;
+        return ChatUtils.matchNullable(target.getInsertion(), resolved.getInsertion()) && ChatUtils.matchNullable(target.getFont(), resolved.getFont()) && ChatUtils.matchNullable(target.getShadowColor(), resolved.getShadowColor());
     }
 
     private static final boolean matchFlag(final boolean target, final boolean resolved) {
@@ -189,7 +168,7 @@ public final class ChatUtils {
     }
 
     private static final <T> boolean matchNullable(@Nullable final T target, @Nullable final T resolved) {
-        return null == target || Objects.equals(target, resolved);
+        return null == target || target.equals(resolved);
     }
 
     /**
@@ -200,15 +179,10 @@ public final class ChatUtils {
      * just uses simple {@link StringBuilder} and thus will be much faster.
      *
      * @param text The text to remove Minecraft control codes from.
-     * @return Empty string if the given text is null, or the given text
-     * without control codes otherwise.
+     * @return The given text without control codes.
      */
-    @Contract("null -> null")
-    public static final String removeControlCodes(@Nullable final String text) {
-        if (null == text) {
-            return null;
-        }
-
+    @NotNull
+    public static final String removeControlCodes(@NotNull final String text) {
         final var length = text.length();
 
         if (0 == length) {

@@ -66,7 +66,7 @@ public final class LaggyServerDetector {
             var totalTicksOver30Seconds = 0;
 
             for (final var ticks : LaggyServerDetector.TPS_SAMPLES) {
-                totalTicksOver30Seconds += ticks;
+                totalTicksOver30Seconds = Math.addExact(totalTicksOver30Seconds, ticks);
             }
 
             // Required or else would display too much precision, bad for human readability.

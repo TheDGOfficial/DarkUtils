@@ -46,8 +46,8 @@ final class ChatUtilsHasFormattingTest {
 
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle
-                    .colored(SimpleColor.GOLD)
-                    .also(SimpleStyle.formatted(SimpleFormatting.BOLD)))
+                        .colored(SimpleColor.GOLD)
+                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD)))
                 .build();
 
         final var result = ChatUtils.hasFormatting(
@@ -130,8 +130,8 @@ final class ChatUtilsHasFormattingTest {
 
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle
-                    .colored(SimpleColor.YELLOW)
-                    .also(SimpleStyle.formatted(SimpleFormatting.ITALIC)))
+                        .colored(SimpleColor.YELLOW)
+                        .also(SimpleStyle.formatted(SimpleFormatting.ITALIC)))
                 .build();
 
         final var result = ChatUtils.hasFormatting(
@@ -151,8 +151,8 @@ final class ChatUtilsHasFormattingTest {
 
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle
-                    .colored(SimpleColor.AQUA)
-                    .also(SimpleStyle.formatted(SimpleFormatting.UNDERLINE)))
+                        .colored(SimpleColor.AQUA)
+                        .also(SimpleStyle.formatted(SimpleFormatting.UNDERLINE)))
                 .build();
 
         final var result = ChatUtils.hasFormatting(
@@ -172,8 +172,8 @@ final class ChatUtilsHasFormattingTest {
 
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle
-                    .colored(SimpleColor.GREEN)
-                    .also(SimpleStyle.formatted(SimpleFormatting.STRIKETHROUGH)))
+                        .colored(SimpleColor.GREEN)
+                        .also(SimpleStyle.formatted(SimpleFormatting.STRIKETHROUGH)))
                 .build();
 
         final var result = ChatUtils.hasFormatting(
@@ -193,8 +193,8 @@ final class ChatUtilsHasFormattingTest {
 
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle
-                    .colored(SimpleColor.RED)
-                    .also(SimpleStyle.formatted(SimpleFormatting.OBFUSCATED)))
+                        .colored(SimpleColor.RED)
+                        .also(SimpleStyle.formatted(SimpleFormatting.OBFUSCATED)))
                 .build();
 
         final var result = ChatUtils.hasFormatting(

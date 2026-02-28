@@ -13,6 +13,7 @@ import gg.darkutils.feat.dungeons.ArrowStackWaypoints;
 import gg.darkutils.feat.dungeons.AutoCloseSecretChests;
 import gg.darkutils.feat.dungeons.DialogueSkipTimer;
 import gg.darkutils.feat.dungeons.DungeonTimer;
+import gg.darkutils.feat.dungeons.RagnarockHelper;
 import gg.darkutils.feat.dungeons.ReplaceDiorite;
 import gg.darkutils.feat.dungeons.SoloCrushTimer;
 import gg.darkutils.feat.foraging.TreeGiftConfirmation;
@@ -63,15 +64,34 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+/*
+import gg.darkutils.utils.chat.SimpleColor;
+
+import java.util.stream.StreamSupport;
+
+import java.util.WeakHashMap;
+import java.util.Set;
+import java.util.Collections;
+import java.util.Objects;
+
+import net.minecraft.client.world.ClientWorld;
+*/
+
 public final class DarkUtils implements ClientModInitializer {
     /**
      * Represents the modid. Used for the logger among other things.
      * Must and will be the same value specified in fabric.mod.json.
      * <p>
-     * Can be used tu uniqely identify the mod from other mods.
+     * Can be used tu uniquely identify the mod from other mods.
      */
     public static final @NotNull String MOD_ID = "darkutils";
-
+    /**
+     * We must avoid loading some MC classes during test phase of Gradle build,
+     * because they cause exceptions when loaded outside of runtime.
+     * <p>
+     * This system property is set to true from build.gradle when running tests.
+     */
+    public static final boolean INSIDE_JUNIT = "true".equals(System.getProperty("inside.junit")); // roughly same as Boolean#getBoolean but this is case-sensitive
     /**
      * This logger is used to write text to the console and the log file.
      * It is considered best practice to use your mod id as the logger's name.
@@ -82,15 +102,6 @@ public final class DarkUtils implements ClientModInitializer {
      * user-friendly short string representation of the error.
      */
     private static final @NotNull Logger LOGGER = LoggerFactory.getLogger(DarkUtils.MOD_ID);
-
-    /**
-     * We must avoid loading some MC classes during test phase of Gradle build,
-     * because they cause exceptions when loaded outside of runtime.
-     * <p>
-     * This system property is set to true from build.gradle when running tests.
-     */
-    public static final boolean INSIDE_JUNIT = "true".equals(System.getProperty("inside.junit")); // roughly same as Boolean#getBoolean but this is case sensitive
-
     /**
      * Lazy-initialized non-changing constant-foldable (depending on LazyConstants
      * impl if the JEP is stabilized) value of the current Windowing platform.
@@ -98,14 +109,14 @@ public final class DarkUtils implements ClientModInitializer {
      * This value will be used for some features like gui scale fix and auto
      * diagnostic features like disallowing setting cursor position in wayland.
      */
-    private static final Supplier<String> WINDOW_PLATFORM = LazyConstants.lazyConstantOf(Window::getGlfwPlatform);
-
-    public static final boolean isWindowPlatformWayland() {
-        return "wayland".equals(DarkUtils.WINDOW_PLATFORM.get());
-    }
+    private static final @NotNull Supplier<String> WINDOW_PLATFORM = LazyConstants.lazyConstantOf(Window::getGlfwPlatform);
 
     public DarkUtils() {
         super();
+    }
+
+    public static final boolean isWindowPlatformWayland() {
+        return "wayland".equals(DarkUtils.WINDOW_PLATFORM.get());
     }
 
     public static final void info(@NotNull final Class<?> source, @NotNull final String message) {
@@ -140,7 +151,7 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.info(source, message, (Object[]) null);
     }
 
-    public static final void info(@NotNull final String source, @NotNull final String message, @Nullable final Object @Nullable ... args) {
+    private static final void info(@NotNull final String source, @NotNull final String message, @Nullable final Object @Nullable ... args) {
         DarkUtils.log(source, LogLevel.INFO, message, null, args);
     }
 
@@ -148,7 +159,7 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.warn(source, message, (Object[]) null);
     }
 
-    public static final void warn(@NotNull final String source, @NotNull final String message, @Nullable final Object @Nullable ... args) {
+    private static final void warn(@NotNull final String source, @NotNull final String message, @Nullable final Object @Nullable ... args) {
         DarkUtils.log(source, LogLevel.WARN, message, null, args);
     }
 
@@ -504,19 +515,20 @@ public final class DarkUtils implements ClientModInitializer {
                 ThreadPriorityTweaker::init,
                 ArrowStackWaypoints::init,
                 VanillaMode::init,
-                CursorFix::init
+                CursorFix::init,
+                RagnarockHelper::init
         );
     }
 
     @NotNull
     private static final List<String> collectDebugInformation() {
         return List.of(
-            "Is in Hypixel: " + LocationUtils.isInHypixel(),
-            "Is in Skyblock: " + LocationUtils.isInSkyblock(),
-            "Is in Singleplayer: " + LocationUtils.isInSingleplayer(),
-            "Is in Galatea: " + LocationUtils.isInGalatea(),
-            "Is in Dungeons: " + LocationUtils.isInDungeons(),
-            "Dungeon floor: " + DungeonTimer.getDungeonFloor()
+                "Is in Hypixel: " + LocationUtils.isInHypixel(),
+                "Is in Skyblock: " + LocationUtils.isInSkyblock(),
+                "Is in Singleplayer: " + LocationUtils.isInSingleplayer(),
+                "Is in Galatea: " + LocationUtils.isInGalatea(),
+                "Is in Dungeons: " + LocationUtils.isInDungeons(),
+                "Dungeon floor: " + DungeonTimer.getDungeonFloor()
         );
     }
 
@@ -531,25 +543,24 @@ public final class DarkUtils implements ClientModInitializer {
         final var gradientEnd = "#545eb6";
 
         final var textBuilder = TextBuilder
-            .withInitial(header.first(), headerFooterStyle)
-            .appendSpace()
-            .appendGradientText(gradientStart, gradientEnd, "Debug State", SimpleStyle.inherited())
-            .appendSpace()
-            .append(header.second(), headerFooterStyle)
-            .appendNewLine()
-        ;
+                .withInitial(header.first(), headerFooterStyle)
+                .appendSpace()
+                .appendGradientText(gradientStart, gradientEnd, "Debug State", SimpleStyle.inherited())
+                .appendSpace()
+                .append(header.second(), headerFooterStyle)
+                .appendNewLine();
 
         for (final var line : DarkUtils.collectDebugInformation()) {
             textBuilder
-                .appendNewLine()
-                .appendGradientText(gradientStart, gradientEnd, line, SimpleStyle.centered().also(SimpleStyle.formatted(SimpleFormatting.BOLD)))
+                    .appendNewLine()
+                    .appendGradientText(gradientStart, gradientEnd, line, SimpleStyle.centered().also(SimpleStyle.formatted(SimpleFormatting.BOLD)))
             ;
         }
 
         textBuilder
-            .appendNewLine()
-            .appendNewLine()
-            .append(footer, headerFooterStyle)
+                .appendNewLine()
+                .appendNewLine()
+                .append(footer, headerFooterStyle)
         ;
 
         final var text = textBuilder.build();
@@ -558,14 +569,70 @@ public final class DarkUtils implements ClientModInitializer {
         return Command.SINGLE_SUCCESS;
     }
 
+    /*@NotNull
+    private static final Set<ClientWorld> oldWorlds = Collections.newSetFromMap(new WeakHashMap<>(64));
+
+    @Nullable
+    private static ClientWorld previous;
+    
+    private static final void onTick() {
+        final var curr = MinecraftClient.getInstance().world;
+        final var prev = previous;
+
+        if (null != prev && curr != prev) {
+            // World changed
+            oldWorlds.add(prev);
+        }
+
+        DarkUtils.previous = curr;
+    }
+
+    private static final int dumpLeaks() {
+        final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
+        final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
+
+        final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, " Leak Statistics ").replace(" Leak Statistics ", ""));
+        final var footer = ChatUtils.fill('▬', true);
+
+        final var gradientStart = "#54daf4";
+        final var gradientEnd = "#545eb6";
+
+        final var text = TextBuilder
+                .withInitial(header.first(), headerFooterStyle)
+                .appendSpace()
+                .appendGradientText(gradientStart, gradientEnd, "Leak Statistics", SimpleStyle.inherited())
+                .appendSpace()
+                .append(header.second(), headerFooterStyle)
+                .appendNewLine()
+                .appendNewLine()
+                .appendGradientText(gradientStart, gradientEnd, "Worlds leaked or pending GC: " + StreamSupport.stream(oldWorlds.spliterator(), false)
+                            .filter(Objects::nonNull)
+                            .filter(world -> world != MinecraftClient.getInstance().world)
+                            .count()
+                        , SimpleStyle
+                        .centered()
+                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                )
+                .appendNewLine()
+                .appendNewLine()
+                .append(footer, headerFooterStyle)
+                .build();
+
+        ChatUtils.sendMessageToLocalPlayer(text);
+        return Command.SINGLE_SUCCESS;
+    }*/
+
     /**
      * This entrypoint is suitable for setting up client-specific logic, such as rendering.
      */
     @Override
     public final void onInitializeClient() {
+        //TickUtils.queueRepeatingTickTask(DarkUtils::onTick, 1);
+
         // Register mod commands
-        DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.openConfig(), "darkutils", "darkutil", "du");
+        DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.openConfig(), DarkUtils.MOD_ID, "darkutil", "du");
         DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.debugState(), "darkutilsdebug", "darkutildebug", "dudbg");
+        //DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.dumpLeaks(), "dumpleaks");
 
         // Init custom events that wrap fabric events, other things depend on them
         DarkUtils.initEvents();

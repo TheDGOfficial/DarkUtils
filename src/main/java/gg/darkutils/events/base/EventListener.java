@@ -1,7 +1,5 @@
 package gg.darkutils.events.base;
 
-import gg.darkutils.annotations.PackagePrivate;
-
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
@@ -21,12 +19,11 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
     /**
      * Creates an event listener.
      *
-     * @param listener         The basic event listener (consumer).
-     * @param <T>              The type of the event we are listening for.
+     * @param listener The basic event listener (consumer).
+     * @param <T>      The type of the event we are listening for.
      * @return The new event listener that delegates to the passed consumer.
      */
     @NotNull
-    @SuppressWarnings("unchecked")
     static <T extends Event> EventListener<T> create(@NotNull final Consumer<? super T> listener) {
         return EventListener.create(listener, EventPriority.NORMAL);
     }
@@ -34,14 +31,13 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
     /**
      * Creates an event listener with custom priority.
      *
-     * @param listener         The basic event listener (consumer).
-     * @param priority         The custom event priority.
-     * @param <T>              The type of the event we are listening for.
+     * @param listener The basic event listener (consumer).
+     * @param priority The custom event priority.
+     * @param <T>      The type of the event we are listening for.
      * @return The new event listener with custom priority set that delegates
      * to the passed consumer.
      */
     @NotNull
-    @SuppressWarnings("unchecked")
     static <T extends Event> EventListener<T> create(@NotNull final Consumer<? super T> listener, @NotNull final EventPriority priority) {
         return EventListener.create(listener, priority, false);
     }

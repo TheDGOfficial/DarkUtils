@@ -27,7 +27,8 @@ abstract class ArmorStandEntityRendererMixin<T extends ArmorStandEntity, S exten
     }
 
     @Override
-    @Private // safe, javac generates a public bridge method for us that delegates to this, so this method is technically not an override in bytecode
+    @Private
+    // safe, javac generates a public bridge method for us that delegates to this, so this method is technically not an override in bytecode
     public final boolean shouldRender(@NotNull final T entity, @NotNull final Frustum frustum, final double x, final double y, final double z) {
         return ArmorStandOptimizer.shouldNotSkipRenderArmorStand(entity) && super.shouldRender(entity, frustum, x, y, z);
     }

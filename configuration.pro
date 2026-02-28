@@ -1,5 +1,5 @@
-# Let's get as much output as possible to detect any mistake as this an uncommon environment with Mixins.
--verbose
+# There's some notes which we can't fix about duplicate module-info class since we include the compileClasspath as libraryjars
+-dontnote
 
 # Let's do a good amount of passes to get the most out of optimization.
 -optimizationpasses 10
@@ -30,6 +30,11 @@
 # Mixin code is also all effectively dead code as it's only referenced by darkutils.mixins.json so we don't want allowshrinking either.
 -keep class gg.darkutils.mixin.** {
     *;
+}
+
+# We use it in the config with GSON serialization.
+-keepclassmembers enum gg.darkutils.feat.performance.OpenGLVersionOverride {
+    private static synthetic final ***[] $VALUES;
 }
 
 # Disable some of the possibly problematic optimizations.

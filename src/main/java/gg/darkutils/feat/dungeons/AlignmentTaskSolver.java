@@ -161,7 +161,7 @@ public final class AlignmentTaskSolver {
     }
 
     private static final boolean isWithinTopLeftDistance(final double x, final double y, final double z) {
-        return 25.0D * 25.0D >= AlignmentTaskSolver.topLeft.getSquaredDistanceFromCenter(x, y, z);
+        return 625.0D >= AlignmentTaskSolver.topLeft.getSquaredDistanceFromCenter(x, y, z);
     }
 
     private static final void computeGrid() {

@@ -85,9 +85,9 @@
  *}
  *
  * <p>
- * <b>Receiving cancelled events</b><br>
+ * <b>Receiving canceled events</b><br>
  * Listeners can optionally be registered to receive events that have already
- * been cancelled by earlier listeners using
+ * been canceled by earlier listeners using
  * {@link gg.darkutils.events.base.EventRegistry#addListener(java.util.function.Consumer, gg.darkutils.events.base.EventPriority, boolean, gg.darkutils.events.base.Event[])}:
  * {@snippet :
  * EventRegistry.centralRegistry().addListener(
@@ -97,10 +97,10 @@
  * );
  *}
  * The {@code receiveCancelled} parameter determines whether the listener should still be
- * invoked if the event has already been cancelled by a previously executed listener.
+ * invoked if the event has already been canceled by a previously executed listener.
  * <p>
  * Cancellation is not terminal. If a listener with {@code receiveCancelled = true}
- * receives a cancelled event and subsequently uncancels it, then the remaining
+ * receives a canceled event and subsequently uncancels it, then the remaining
  * listeners (those with lower priority, or later registration order if
  * {@link gg.darkutils.events.base.EventPriority#NORMAL}) will receive the event
  * normally, even if they were registered with {@code receiveCancelled = false}.
