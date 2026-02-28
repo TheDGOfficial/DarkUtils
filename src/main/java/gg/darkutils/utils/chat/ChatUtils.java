@@ -128,39 +128,7 @@ public final class ChatUtils {
     }
 
     private static final boolean matches(@NotNull final Style resolved, @NotNull final Style target) {
-        if (!ChatUtils.matchNullable(target.getColor(), resolved.getColor())) {
-            return false;
-        }
-
-        if (!ChatUtils.matchFlag(target.isBold(), resolved.isBold())) {
-            return false;
-        }
-
-        if (!ChatUtils.matchFlag(target.isItalic(), resolved.isItalic())) {
-            return false;
-        }
-
-        if (!ChatUtils.matchFlag(target.isUnderlined(), resolved.isUnderlined())) {
-            return false;
-        }
-
-        if (!ChatUtils.matchFlag(target.isStrikethrough(), resolved.isStrikethrough())) {
-            return false;
-        }
-
-        if (!ChatUtils.matchFlag(target.isObfuscated(), resolved.isObfuscated())) {
-            return false;
-        }
-
-        if (!ChatUtils.matchNullable(target.getClickEvent(), resolved.getClickEvent())) {
-            return false;
-        }
-
-        if (!ChatUtils.matchNullable(target.getHoverEvent(), resolved.getHoverEvent())) {
-            return false;
-        }
-
-        return ChatUtils.matchNullable(target.getInsertion(), resolved.getInsertion()) && ChatUtils.matchNullable(target.getFont(), resolved.getFont()) && ChatUtils.matchNullable(target.getShadowColor(), resolved.getShadowColor());
+        return ChatUtils.matchNullable(target.getColor(), resolved.getColor()) && ChatUtils.matchFlag(target.isBold(), resolved.isBold()) && ChatUtils.matchFlag(target.isItalic(), resolved.isItalic()) && ChatUtils.matchFlag(target.isUnderlined(), resolved.isUnderlined()) && ChatUtils.matchFlag(target.isStrikethrough(), resolved.isStrikethrough()) && ChatUtils.matchFlag(target.isObfuscated(), resolved.isObfuscated()) && ChatUtils.matchNullable(target.getClickEvent(), resolved.getClickEvent()) && ChatUtils.matchNullable(target.getHoverEvent(), resolved.getHoverEvent()) && ChatUtils.matchNullable(target.getInsertion(), resolved.getInsertion()) && ChatUtils.matchNullable(target.getFont(), resolved.getFont()) && ChatUtils.matchNullable(target.getShadowColor(), resolved.getShadowColor());
     }
 
     private static final boolean matchFlag(final boolean target, final boolean resolved) {
