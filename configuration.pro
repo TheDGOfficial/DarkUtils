@@ -35,6 +35,7 @@
 # We use it in the config with GSON serialization.
 -keepclassmembers enum gg.darkutils.feat.performance.OpenGLVersionOverride {
     private static synthetic final ***[] $VALUES;
+    public static ***[] values();
 }
 
 # Disable some of the possibly problematic optimizations.
