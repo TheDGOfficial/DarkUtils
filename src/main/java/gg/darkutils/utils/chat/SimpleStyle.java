@@ -38,13 +38,12 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
     }
 
     private static void appendLegacyFormatting(@NotNull final StringBuilder builder, @NotNull final SimpleStyle style) {
-        switch (style) {
-            case SimpleStyle.ColoredStyle(final var rgb) -> SimpleStyle.appendColor(builder, rgb);
-            case SimpleStyle.FormattedStyle(final var formatting) -> builder.append(formatting.toFormatting());
-            default -> {
-                // Ignore CenteredStyle & InheritedStyle
-            }
+        if (style instanceof SimpleStyle.ColoredStyle(final var rgb)) {
+            SimpleStyle.appendColor(builder, rgb);
+        } else if (style instanceof SimpleStyle.FormattedStyle(final var formatting)) {
+            builder.append(formatting.toFormatting());
         }
+        // Ignore CenteredStyle & InheritedStyle
     }
 
     private static void appendColor(@NotNull final StringBuilder builder, final int rgb) {
