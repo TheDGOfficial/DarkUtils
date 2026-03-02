@@ -999,6 +999,8 @@ abstract class AsmPreprocessTask extends DefaultTask {
                     cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
                         @Override
                         protected final String getCommonSuperClass(final String type1, final String type2) {
+                            // We get class not found errors with default ASM implementation of this method, so override it to always return Object
+                            // Does not seem to cause any problems, but might be fixed later if we tweak compileClasspath passed to the task.
                             return 'java/lang/Object'
                         }
                     }
@@ -1087,6 +1089,8 @@ abstract class AsmPreprocessTask extends DefaultTask {
                         cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
                             @Override
                             protected final String getCommonSuperClass(final String type1, final String type2) {
+                                // We get class not found errors with default ASM implementation of this method, so override it to always return Object
+                                // Does not seem to cause any problems, but might be fixed later if we tweak compileClasspath passed to the task.
                                 return 'java/lang/Object'
                             }
                         }
