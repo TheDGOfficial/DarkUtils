@@ -7,6 +7,7 @@ import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.world.dimension.DimensionType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -89,9 +90,14 @@ final class LightmapTextureManagerMixin {
         }
     }
 
+    @Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/dimension/DimensionType;ambientLight()F"))
+    private final float darkutils$getAmbientLight(@NotNull final DimensionType dimensionType) {
+        return DarkUtilsConfig.INSTANCE.fullbright ? 1.0F : dimensionType.ambientLight();
+    }
+
     @Redirect(method = "update", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F", ordinal = 0))
     private final float darkutils$fullbrightIfEnabled(final float first, final float second) {
-        return Math.max(first, DarkUtilsConfig.INSTANCE.fullbright ? 1_500.0F : second);
+        return Math.max(first, DarkUtilsConfig.INSTANCE.fullbright ? 1_600.0F : second);
     }
 
     @Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z", ordinal = 0))

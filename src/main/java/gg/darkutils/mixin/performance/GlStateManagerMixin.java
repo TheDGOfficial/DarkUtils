@@ -9,23 +9,20 @@ import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(GlStateManager.class)
 final class GlStateManagerMixin {
+    @Unique
+    private static int viewportX = -1;
+    @Unique
+    private static int viewportY = -1;
+    @Unique
+    private static int viewportWidth = -1;
+    @Unique
+    private static int viewportHeight = -1;
+
     private GlStateManagerMixin() {
         super();
 
         throw new UnsupportedOperationException("mixin class");
     }
-
-    @Unique
-    private static int viewportX = -1;
-
-    @Unique
-    private static int viewportY = -1;
-
-    @Unique
-    private static int viewportWidth = -1;
-
-    @Unique
-    private static int viewportHeight = -1;
 
     @Overwrite
     public static final void _viewport(final int x, final int y, final int width, final int height) {
@@ -40,7 +37,7 @@ final class GlStateManagerMixin {
             GL11.glViewport(x, y, width, height);
         }
 
-        // Still update the tracked last viewport values in case user enables the feature in runtime to not cause undefined behaviour
+        // Still update the tracked last viewport values in case user enables the feature in runtime to not cause undefined behavior
         GlStateManagerMixin.viewportX = x;
         GlStateManagerMixin.viewportY = y;
         GlStateManagerMixin.viewportWidth = width;

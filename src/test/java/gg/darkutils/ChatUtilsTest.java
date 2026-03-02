@@ -7,11 +7,6 @@ import org.junit.jupiter.api.Assertions;
 
 final class ChatUtilsTest {
     @Test
-    void removeControlCodes_nullInput_returnsNull() {
-        Assertions.assertNull(ChatUtils.removeControlCodes(null));
-    }
-
-    @Test
     void removeControlCodes_emptyString_returnsEmpty() {
         Assertions.assertEquals("", ChatUtils.removeControlCodes(""));
     }

@@ -21,16 +21,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 final class EventSystemTest {
-    record TestEvent(int value) implements NonCancellableEvent {}
-
-    record TestCancellableEvent(@NotNull CancellationState cancellationState)
-            implements CancellableEvent {
-
-        TestCancellableEvent() {
-            this(CancellationState.ofFresh());
-        }
-    }
-
     @BeforeEach
     void resetRegistry() {
         clearListeners(TestEvent.class);
@@ -211,6 +201,17 @@ final class EventSystemTest {
         latch.await();
 
         Assertions.assertEquals(threads * iterations, counter.get());
+    }
+
+    record TestEvent(int value) implements NonCancellableEvent {
+    }
+
+    record TestCancellableEvent(@NotNull CancellationState cancellationState)
+            implements CancellableEvent {
+
+        TestCancellableEvent() {
+            this(CancellationState.ofFresh());
+        }
     }
 }
 

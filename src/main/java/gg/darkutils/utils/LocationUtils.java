@@ -2,7 +2,6 @@ package gg.darkutils.utils;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.hypixel.data.type.GameType;
-import net.hypixel.data.type.ServerType;
 import net.hypixel.modapi.HypixelModAPI;
 import net.hypixel.modapi.packet.impl.clientbound.event.ClientboundLocationPacket;
 import net.minecraft.client.MinecraftClient;
@@ -14,27 +13,7 @@ public final class LocationUtils {
     private static boolean isInHypixel;
     private static boolean isInSkyblock;
     @Nullable
-    private static SkyblockIsland skyblockIsland;
-
-    public enum SkyblockIsland {
-        DUNGEONS,
-        GALATEA;
-
-        private SkyblockIsland() {
-        }
-
-        public static final @Nullable LocationUtils.SkyblockIsland fromId(@Nullable final String id) {
-            if (null == id) {
-                return null;
-            }
-
-            return switch (id) {
-                case "dungeon"    -> LocationUtils.SkyblockIsland.DUNGEONS;
-                case "foraging_2" -> LocationUtils.SkyblockIsland.GALATEA;
-                default           -> null;
-            };
-        }
-    }
+    private static LocationUtils.SkyblockIsland skyblockIsland;
 
     private LocationUtils() {
         super();
@@ -79,6 +58,22 @@ public final class LocationUtils {
 
     public static final boolean isInSingleplayer() {
         return MinecraftClient.getInstance().isConnectedToLocalServer();
+    }
+
+    private enum SkyblockIsland {
+        DUNGEONS,
+        GALATEA;
+
+        private SkyblockIsland() {
+        }
+
+        private static final @Nullable LocationUtils.SkyblockIsland fromId(@Nullable final String id) {
+            return null == id ? null : switch (id) {
+                case "dungeon" -> LocationUtils.SkyblockIsland.DUNGEONS;
+                case "foraging_2" -> LocationUtils.SkyblockIsland.GALATEA;
+                default -> null;
+            };
+        }
     }
 }
 

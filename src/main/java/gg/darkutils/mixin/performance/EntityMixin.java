@@ -17,14 +17,14 @@ final class EntityMixin {
     }
 
     @Inject(method = "isGlowing", at = @At("HEAD"), cancellable = true)
-    public final void darkutils$isGlowing$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
+    private final void darkutils$isGlowing$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
         if (DarkUtilsConfig.INSTANCE.disableGlowing) {
             cir.setReturnValue(false);
         }
     }
 
     @Inject(method = "doesRenderOnFire", at = @At("HEAD"), cancellable = true)
-    public final void darkutils$doesRenderOnFire$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
+    private final void darkutils$doesRenderOnFire$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
         if (DarkUtilsConfig.INSTANCE.noBurningEntities) {
             cir.setReturnValue(false);
         }

@@ -5,21 +5,26 @@ import gg.darkutils.config.DarkUtilsConfig;
 import org.jetbrains.annotations.NotNull;
 
 public enum OpenGLVersionOverride {
-    NO_OVERRIDE(0, 0),
-    GL4_0(4, 0),
-    GL4_1(4, 1),
-    GL4_2(4, 2),
-    GL4_3(4, 3),
-    GL4_4(4, 4),
-    GL4_5(4, 5),
-    GL4_6(4, 6);
+    NO_OVERRIDE(0, 0, "No Override"),
+    GL4_0(4, 0, "OpenGL 4.0"),
+    GL4_1(4, 1, "OpenGL 4.1"),
+    GL4_2(4, 2, "OpenGL 4.2"),
+    GL4_3(4, 3, "OpenGL 4.3"),
+    GL4_4(4, 4, "OpenGL 4.4"),
+    GL4_5(4, 5, "OpenGL 4.5"),
+    GL4_6(4, 6, "OpenGL 4.6");
 
     private final int major;
     private final int minor;
 
-    private OpenGLVersionOverride(final int major, final int minor) {
+    @NotNull
+    private final String prettyName;
+
+    private OpenGLVersionOverride(final int major, final int minor, @NotNull final String prettyName) {
         this.major = major;
         this.minor = minor;
+
+        this.prettyName = prettyName;
     }
 
     @NotNull
@@ -53,5 +58,10 @@ public enum OpenGLVersionOverride {
         }
 
         return newVersion;
+    }
+
+    @NotNull
+    public final String prettyName() {
+        return this.prettyName;
     }
 }

@@ -9,7 +9,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.network.packet.s2c.play.PlaySoundFromEntityS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -99,18 +98,18 @@ public final class SoundLagFix {
 
     private record LocationOriginatingSoundData(double x, double y, double z, float volume, float pitch,
                                                 @NotNull SoundCategory soundCategory,
-                                                @NotNull int sound,
+                                                int sound,
                                                 int cachedHashCode) implements SoundLagFix.SoundData {
 
         private LocationOriginatingSoundData(final double x, final double y, final double z, final float volume, final float pitch,
                                              @NotNull final SoundCategory soundCategory,
-                                             @NotNull final int sound) {
+                                             final int sound) {
             this(x, y, z, volume, pitch, soundCategory, sound, SoundLagFix.LocationOriginatingSoundData.computeHash(x, y, z, volume, pitch, soundCategory, sound));
         }
 
         private static final int computeHash(final double x, final double y, final double z, final float volume, final float pitch,
                                              @NotNull final SoundCategory soundCategory,
-                                             @NotNull final int sound) {
+                                             final int sound) {
             var result = sound; // same as Integer.hashCode, it returns the int value itself
             result = 31 * result + soundCategory.hashCode();
             result = 31 * result + Double.hashCode(x);
@@ -134,18 +133,18 @@ public final class SoundLagFix {
 
     private record EntityOriginatingSoundData(int entityId, float volume, float pitch,
                                               @NotNull SoundCategory soundCategory,
-                                              @NotNull int sound,
+                                              int sound,
                                               int cachedHashCode) implements SoundLagFix.SoundData {
 
         private EntityOriginatingSoundData(final int entityId, final float volume, final float pitch,
                                            @NotNull final SoundCategory soundCategory,
-                                           @NotNull final int sound) {
+                                           final int sound) {
             this(entityId, volume, pitch, soundCategory, sound, SoundLagFix.EntityOriginatingSoundData.computeHash(entityId, volume, pitch, soundCategory, sound));
         }
 
         private static final int computeHash(final int entityId, final float volume, final float pitch,
                                              @NotNull final SoundCategory soundCategory,
-                                             @NotNull final int sound) {
+                                             final int sound) {
             var result = sound;
             result = 31 * result + soundCategory.hashCode();
             result = 31 * result + entityId; // same as Integer.hashCode, it returns the int value itself

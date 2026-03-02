@@ -1,11 +1,16 @@
 package gg.darkutils.utils;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import gg.darkutils.annotations.PrivateFields;
 import gg.darkutils.events.ServerTickEvent;
 import gg.darkutils.events.base.EventRegistry;
+
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -192,6 +197,7 @@ public final class TickUtils {
 
         TickUtils.checkCallerThread();
 
+        @PrivateFields
         final class CachedCondition implements BooleanSupplier {
             private boolean value;
 

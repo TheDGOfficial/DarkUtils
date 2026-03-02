@@ -21,24 +21,21 @@ import java.util.function.Consumer;
 
 public final class RejoinCooldownDisplay {
     private static final long COOLDOWN_MS = TimeUnit.MINUTES.toMillis(1L);
-
+    @NotNull
+    private static final RenderUtils.RenderingText TEXT =
+            RenderUtils.createRenderingText();
     private static long kickCooldownEnd;
-
     @NotNull
     private static final Consumer<ReceiveGameMessageEvent> MESSAGE_ACTION = event -> {
         if (event.isStyledWith(SimpleColor.RED)) {
             RejoinCooldownDisplay.kickCooldownEnd = System.currentTimeMillis() + RejoinCooldownDisplay.COOLDOWN_MS;
         }
     };
-
     @NotNull
     private static final Map<String, Consumer<ReceiveGameMessageEvent>> MESSAGE_HANDLERS = Map.of(
             "You were kicked while joining that server!", RejoinCooldownDisplay.MESSAGE_ACTION,
             "There was a problem joining SkyBlock, try again in a moment!", RejoinCooldownDisplay.MESSAGE_ACTION
     );
-
-    private static final RenderUtils.RenderingText TEXT =
-            RenderUtils.createRenderingText();
 
     private RejoinCooldownDisplay() {
         super();

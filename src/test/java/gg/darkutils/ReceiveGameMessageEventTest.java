@@ -109,8 +109,8 @@ final class ReceiveGameMessageEventTest {
 
         EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
             e.match(Map.of(
-                "Lorem ipsum dolor sit amet",
-                (ev) -> counter.incrementAndGet()
+                    "Lorem ipsum dolor sit amet",
+                    (ev) -> counter.incrementAndGet()
             ));
         });
 

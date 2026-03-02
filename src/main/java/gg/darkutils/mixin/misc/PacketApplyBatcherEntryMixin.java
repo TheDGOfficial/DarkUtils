@@ -1,13 +1,11 @@
 package gg.darkutils.mixin.misc;
 
-import gg.darkutils.DarkUtils;
 import gg.darkutils.events.ReceiveMainThreadPacketEvent;
 import gg.darkutils.events.ServerTickEvent;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket;
-import net.minecraft.network.packet.s2c.play.BundleS2CPacket;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

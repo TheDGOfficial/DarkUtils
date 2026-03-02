@@ -17,7 +17,7 @@ final class LivingEntityMixin {
     }
 
     @Inject(method = "isGlowing", at = @At("HEAD"), cancellable = true)
-    public final void darkutils$isGlowing$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
+    private final void darkutils$isGlowing$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
         if (DarkUtilsConfig.INSTANCE.disableGlowing) {
             cir.setReturnValue(false);
         }

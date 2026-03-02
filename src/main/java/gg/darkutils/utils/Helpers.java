@@ -24,29 +24,26 @@ import java.util.function.ObjIntConsumer;
 import java.util.function.Predicate;
 
 public final class Helpers {
-    private Helpers() {
-        super();
-
-        throw new UnsupportedOperationException("static utility class");
-    }
-
     @NotNull
     private static final BlockState AIR_STATE = Blocks.AIR.getDefaultState();
-
     @Nullable
     private static BlockState targetedBlock;
-
     @Nullable
     private static Optional<Entity> targetedEntity;
     @Nullable
     private static String targetedEntityName;
-
     @Nullable
     private static ItemStack mainHandHeldItemStack;
     @Nullable
     private static ItemStack offHandHeldItemStack;
     @Nullable
     private static String mainHandHeldItemStackName;
+
+    private Helpers() {
+        super();
+
+        throw new UnsupportedOperationException("static utility class");
+    }
 
     public static final void resetHeldItemCache() {
         Helpers.mainHandHeldItemStack = null;
@@ -144,7 +141,7 @@ public final class Helpers {
                 final var cached = Helpers.targetedEntityName;
                 if (null == cached) {
                     final var customName = entity.getCustomName();
-                    name = null == customName ? "" : ChatUtils.removeControlCodes(customName.getString());
+                    Helpers.targetedEntityName = name = null == customName ? "" : ChatUtils.removeControlCodes(customName.getString());
                 } else {
                     name = cached;
                 }
@@ -223,7 +220,7 @@ public final class Helpers {
     }
 
     public static final boolean isHoldingAGyrokineticWand() {
-        return Helpers.doesHeldItemNameMatch(name -> "Gyrokinetic Wand".equals(name));
+        return Helpers.doesHeldItemNameMatch("Gyrokinetic Wand"::equals);
     }
 
     @NotNull

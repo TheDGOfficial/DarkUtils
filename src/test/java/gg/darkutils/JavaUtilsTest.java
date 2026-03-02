@@ -5,7 +5,25 @@ import gg.darkutils.utils.JavaUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 
+import java.util.Optional;
+
 final class JavaUtilsTest {
+    static Optional<StackWalker.StackFrame> level1() {
+        return JavaUtilsTest.level2();
+    }
+
+    static Optional<StackWalker.StackFrame> level2() {
+        return JavaUtils.getImmediateCaller();
+    }
+
+    static Optional<Class<?>> level1Class() {
+        return JavaUtilsTest.level2Class();
+    }
+
+    static Optional<Class<?>> level2Class() {
+        return JavaUtils.getImmediateCallerClass();
+    }
+
     @Test
     void getImmediateCaller_returnsCallerOfCaller() {
         final var frame = JavaUtilsTest.level1();
@@ -15,28 +33,12 @@ final class JavaUtilsTest {
         Assertions.assertEquals("level1", frame.get().getMethodName());
     }
 
-    private static java.util.Optional<StackWalker.StackFrame> level1() {
-        return JavaUtilsTest.level2();
-    }
-
-    private static java.util.Optional<StackWalker.StackFrame> level2() {
-        return JavaUtils.getImmediateCaller();
-    }
-
     @Test
     void getImmediateCallerClass_returnsCorrectClass() {
         final var clazz = JavaUtilsTest.level1Class();
 
         Assertions.assertTrue(clazz.isPresent());
         Assertions.assertEquals(JavaUtilsTest.class, clazz.get());
-    }
-
-    private static java.util.Optional<? extends Class<?>> level1Class() {
-        return JavaUtilsTest.level2Class();
-    }
-
-    private static java.util.Optional<? extends Class<?>> level2Class() {
-        return JavaUtils.getImmediateCallerClass();
     }
 
     @Test
