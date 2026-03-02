@@ -475,7 +475,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
         final def privatizedMethodsByClass = new HashMap<String, Set<String>>()
         final def constantFields = new HashMap<String, Object>()
 
-        final def verbose = true
+        final def verbose = false
         final def constantFold = true
 
         inputDir.eachFileRecurse { final inputFile ->
