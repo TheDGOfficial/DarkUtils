@@ -1071,10 +1071,6 @@ abstract class AsmPreprocessTask extends DefaultTask {
                                     ownerMethod.instructions.set(insn, new LdcInsnNode(value))
                                     changed = true
                                     if (verbose) BatchedMessageCollector.add(30, "Inlined constant (second pass) ${fieldInsn.owner}.${fieldInsn.name} = ${value} in ${cn.name}.${ownerMethod.name}")
-                                } else {
-                                    if (fieldInsn.name.contains("TICK_NANOS")) {
-                                        BatchedMessageCollector.add(31, "Couldn't find constant ${fieldInsn.owner}#${fieldInsn.name} with desc ${fieldInsn.desc} in list of constants");
-                                    }
                                 }
                                 break
                         }
