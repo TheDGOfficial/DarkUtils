@@ -473,8 +473,10 @@ abstract class AsmPreprocessTask extends DefaultTask {
         }
 
         final def privatizedMethodsByClass = new HashMap<String, Set<String>>()
+        final def constantFields = new HashMap<String, Object>()
 
-        final def verbose = false
+        final def verbose = true
+        final def constantFold = true
 
         inputDir.eachFileRecurse { final inputFile ->
             if (!inputFile.file) {
@@ -506,97 +508,119 @@ abstract class AsmPreprocessTask extends DefaultTask {
             def changed = false
             def renamed = false
 
-            final def constantFields = new HashMap<String, Object>()
+            if (constantFold) {
+                final def fieldsBySig = HashMap.<String, FieldNode>newHashMap(cn.fields.size())
 
-            for (final def mn : cn.methods) {
-                if ('<clinit>' != mn.name || null == mn.instructions) continue
+                for (final def f : cn.fields) {
+                    fieldsBySig[f.name + f.desc] = f
+                }
 
-                for (def insn = mn.instructions.first; insn != null; ) {
-                    final def next = insn.next
+                for (final def mn : cn.methods) {
+                    if ('<clinit>' != mn.name || null == mn.instructions) continue
 
-                    /*
-                     * --------------------------------------------------
-                     * 1. TimeUnit constant folding
-                     * --------------------------------------------------
-                     */
-                    if (Opcodes.INVOKEVIRTUAL == insn.opcode) {
-                        final def mInsn = (MethodInsnNode) insn
+                    for (def insn = mn.instructions.first; insn != null; ) {
+                        final def next = insn.next
 
-                        if ('java/util/concurrent/TimeUnit' == mInsn.owner
-                                && '(J)J' == mInsn.desc
-                                && mInsn.name.startsWith('to')) {
+                        /*
+                         * --------------------------------------------------
+                         * 1. TimeUnit constant folding
+                         * --------------------------------------------------
+                         */
+                        if (Opcodes.INVOKEVIRTUAL == insn.opcode) {
+                            final def mInsn = (MethodInsnNode) insn
 
-                            final def constNode = insn.previous
-                            final def enumNode  = constNode?.previous
+                            if ('java/util/concurrent/TimeUnit' == mInsn.owner
+                                    && '(J)J' == mInsn.desc
+                                    && mInsn.name.startsWith('to')) {
 
-                            if (enumNode instanceof FieldInsnNode
-                                    && Opcodes.GETSTATIC == enumNode.opcode
-                                    && 'java/util/concurrent/TimeUnit' == enumNode.owner) {
-                                long value
+                                final def constNode = insn.previous
+                                final def enumNode  = constNode?.previous
 
-                                switch (constNode.opcode) {
-                                    case Opcodes.LCONST_0: value = 0L; break
-                                    case Opcodes.LCONST_1: value = 1L; break
-                                    case Opcodes.LDC:
-                                        if (constNode instanceof LdcInsnNode && constNode.cst instanceof Long) {
-                                            value = constNode.cst as long
-                                        } else {
+                                if (enumNode instanceof FieldInsnNode
+                                        && Opcodes.GETSTATIC == enumNode.opcode
+                                        && 'java/util/concurrent/TimeUnit' == enumNode.owner) {
+                                    long value
+
+                                    switch (constNode.opcode) {
+                                        case Opcodes.LCONST_0: value = 0L; break
+                                        case Opcodes.LCONST_1: value = 1L; break
+                                        case Opcodes.LDC:
+                                            if (constNode instanceof LdcInsnNode && constNode.cst instanceof Long) {
+                                                value = constNode.cst as long
+                                            } else {
+                                                insn = next; continue
+                                            }
+                                            break
+                                        default:
                                             insn = next; continue
-                                        }
-                                        break
-                                    default:
-                                        insn = next; continue
+                                    }
+
+                                    final def timeUnit = TimeUnit.valueOf(enumNode.name)
+                                    long result
+
+                                    switch (mInsn.name) {
+                                        case 'toNanos':   result = timeUnit.toNanos(value); break
+                                        case 'toMicros':  result = timeUnit.toMicros(value); break
+                                        case 'toMillis':  result = timeUnit.toMillis(value); break
+                                        case 'toSeconds': result = timeUnit.toSeconds(value); break
+                                        case 'toMinutes': result = timeUnit.toMinutes(value); break
+                                        case 'toHours':   result = timeUnit.toHours(value); break
+                                        case 'toDays':    result = timeUnit.toDays(value); break
+                                        default:
+                                            logger.warn("unsupported TimeUnit method for compile-time evaluation used: ${mInsn.name}"); insn = next; continue
+                                    }
+
+                                    final def ldc = new LdcInsnNode(result)
+                                    mn.instructions.insert(insn, ldc)
+                                    mn.instructions.remove(enumNode)
+                                    mn.instructions.remove(constNode)
+                                    mn.instructions.remove(insn)
+
+                                    changed = true
+                                    insn = ldc
+                                    if (verbose) BatchedMessageCollector.add(26, "Replaced TimeUnit conversion with evaluated value: TimeUnit.${enumNode.name}.${mInsn.name}(${value}) = ${result} inlined.")
+                                    continue
                                 }
+                            }
+                        }
 
-                                final def timeUnit = TimeUnit.valueOf(enumNode.name)
-                                long result
+                        /*
+                         * --------------------------------------------------
+                         * 2 + 3. Collect & remove constant PUTSTATIC
+                         * --------------------------------------------------
+                         */
+                        if (Opcodes.PUTSTATIC == insn.opcode) {
+                            final def put = (FieldInsnNode) insn
+                            final def prev = put.previous
 
-                                switch (mInsn.name) {
-                                    case 'toNanos':   result = timeUnit.toNanos(value); break
-                                    case 'toMicros':  result = timeUnit.toMicros(value); break
-                                    case 'toMillis':  result = timeUnit.toMillis(value); break
-                                    case 'toSeconds': result = timeUnit.toSeconds(value); break
-                                    case 'toMinutes': result = timeUnit.toMinutes(value); break
-                                    case 'toHours':   result = timeUnit.toHours(value); break
-                                    case 'toDays':    result = timeUnit.toDays(value); break
-                                    default:
-                                        logger.warn("unsupported TimeUnit method for compile-time evaluation used: ${mInsn.name}"); insn = next; continue
-                                }
+                            final def f = fieldsBySig[put.name + put.desc]
 
-                                final def ldc = new LdcInsnNode(result)
-                                mn.instructions.insert(insn, ldc)
-                                mn.instructions.remove(enumNode)
-                                mn.instructions.remove(constNode)
+                            if ((0 != (f.access & Opcodes.ACC_PRIVATE)) && (0 != (f.access & Opcodes.ACC_STATIC)) && (0 != (f.access & Opcodes.ACC_FINAL)) && prev instanceof LdcInsnNode) {
+                                constantFields[put.owner + put.name + put.desc] = prev.cst
+
+                                mn.instructions.remove(prev)
                                 mn.instructions.remove(insn)
 
                                 changed = true
-                                insn = ldc
-                                if (verbose) BatchedMessageCollector.add(26, "Replaced TimeUnit conversion with evaluated value: TimeUnit.${enumNode.name}.${mInsn.name}(${value}) = ${result} inlined.")
-                                continue
+                                if (verbose) BatchedMessageCollector.add(29, "Removed putstatic to constant field ${cn.name}#${f.name} = ${prev.cst}")
                             }
                         }
+
+                        insn = next
                     }
+                }
+            }
 
-                    /*
-                     * --------------------------------------------------
-                     * 2 + 3. Collect & remove constant PUTSTATIC
-                     * --------------------------------------------------
-                     */
-                    if (Opcodes.PUTSTATIC == insn.opcode) {
-                        final def put = (FieldInsnNode) insn
-                        final def prev = put.previous
+            final def it = cn.fields.iterator()
 
-                        if (prev instanceof LdcInsnNode) {
-                            constantFields[put.owner + put.name + put.desc] = prev.cst
+            while (it.hasNext()) {
+                final def f = it.next()
+                final def key = cn.name + f.name + f.desc
 
-                            mn.instructions.remove(prev)
-                            mn.instructions.remove(insn)
-
-                            changed = true
-                        }
-                    }
-
-                    insn = next
+                if (constantFields.containsKey(key)) {
+                    it.remove()
+                    changed = true
+                    if (verbose) BatchedMessageCollector.add(28, "Removed constant folded field ${cn.name}#${f.name}")
                 }
             }
 
@@ -900,7 +924,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
 
             final def privatized = privatizedMethodsByClass.getOrDefault(cn.name, Collections.emptySet())
 
-            final def methodsBySig = new HashMap<String, MethodNode>(cn.methods.size())
+            final def methodsBySig = HashMap.<String, MethodNode>newHashMap(cn.methods.size())
 
             for (final def m : cn.methods) {
                 methodsBySig[m.name + m.desc] = m
@@ -919,12 +943,15 @@ abstract class AsmPreprocessTask extends DefaultTask {
                          * ------------------------------
                          */
                         case Opcodes.GETSTATIC:
-                            final def fieldInsn = (FieldInsnNode) insn
-                            final def value = constantFields[fieldInsn.owner + fieldInsn.name + fieldInsn.desc]
+                            if (constantFold) {
+                                final def fieldInsn = (FieldInsnNode) insn
+                                final def value = constantFields[fieldInsn.owner + fieldInsn.name + fieldInsn.desc]
 
-                            if (null != value) {
-                                ownerMethod.instructions.set(insn, new LdcInsnNode(value))
-                                changed = true
+                                if (null != value) {
+                                    ownerMethod.instructions.set(insn, new LdcInsnNode(value))
+                                    changed = true
+                                    if (verbose) BatchedMessageCollector.add(27, "Inlined constant ${fieldInsn.owner}.${fieldInsn.name} = ${value} in ${cn.name}.${ownerMethod.name}")
+                                }
                             }
                             break
 
@@ -1004,8 +1031,90 @@ abstract class AsmPreprocessTask extends DefaultTask {
             }
         }
 
+        if (constantFold) {
+            // We must do a second pass to handle inner class'es getstatic calls to the outer class constant-replaced fields.
+            outputDir.eachFileRecurse { final inputFile ->
+                if (!inputFile.file) {
+                    return
+                }
+
+                final def relative = outputDir.toPath().relativize(inputFile.toPath())
+                final def outputFile = new File(outputDir, relative.toString())
+
+                final def bytes = inputFile.bytes
+
+                final def cr = new ClassReader(bytes)
+                final def cn = new ClassNode()
+
+                cr.accept(cn, ClassReader.EXPAND_FRAMES)
+
+                def changed = false
+                final def renamed = false
+
+                for (final def ownerMethod : cn.methods) {
+                    if (null == ownerMethod.instructions) continue
+
+                    for (def insn = ownerMethod.instructions.first; insn != null;) {
+                        final def next = insn.next
+
+                        switch (insn.opcode) {
+                            /*
+                             * ------------------------------
+                             * GETSTATIC constant folding
+                             * ------------------------------
+                             */
+                            case Opcodes.GETSTATIC:
+                                final def fieldInsn = (FieldInsnNode) insn
+                                final def value = constantFields[fieldInsn.owner + fieldInsn.name + fieldInsn.desc]
+
+                                if (null != value) {
+                                    ownerMethod.instructions.set(insn, new LdcInsnNode(value))
+                                    changed = true
+                                    if (verbose) BatchedMessageCollector.add(30, "Inlined constant (second pass) ${fieldInsn.owner}.${fieldInsn.name} = ${value} in ${cn.name}.${ownerMethod.name}")
+                                } else {
+                                    if (fieldInsn.name.contains("TICK_NANOS")) {
+                                        BatchedMessageCollector.add(31, "Couldn't find constant ${fieldInsn.owner}#${fieldInsn.name} with desc ${fieldInsn.desc} in list of constants");
+                                    }
+                                }
+                                break
+                        }
+
+                        insn = next
+                    }
+                }
+
+                def output = bytes
+                def cw = new ClassWriter(0)
+
+                if (changed) {
+                    if (renamed) {
+                        cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
+                            @Override
+                            protected final String getCommonSuperClass(final String type1, final String type2) {
+                                return 'java/lang/Object'
+                            }
+                        }
+                    }
+
+                    cn.accept(cw)
+                    output = cw.toByteArray()
+                }
+
+                try {
+                    if (verbose) BatchedMessageCollector.add(25, "Checking class (second pass) ${cn.name} changed=${changed},renamed=${renamed}")
+                    cn.accept(new CheckClassAdapter(cw, true))
+                } catch (final Throwable error) {
+                    throw new RuntimeException("class ${cn.name} has error (second pass): ${error.message}")
+                }
+
+                outputFile.newOutputStream().withCloseable {
+                    it.write(output)
+                }
+            }
+        }
+
         if (verbose) {
-            messages.logAll(logger)
+            BatchedMessageCollector.logAll(logger)
         }
     }
 }
