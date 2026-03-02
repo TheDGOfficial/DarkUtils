@@ -13,7 +13,6 @@ import gg.darkutils.feat.dungeons.ArrowStackWaypoints;
 import gg.darkutils.feat.dungeons.AutoCloseSecretChests;
 import gg.darkutils.feat.dungeons.DialogueSkipTimer;
 import gg.darkutils.feat.dungeons.DungeonTimer;
-import gg.darkutils.feat.dungeons.RagnarockHelper;
 import gg.darkutils.feat.dungeons.ReplaceDiorite;
 import gg.darkutils.feat.dungeons.SoloCrushTimer;
 import gg.darkutils.feat.foraging.TreeGiftConfirmation;
@@ -515,8 +514,7 @@ public final class DarkUtils implements ClientModInitializer {
                 ThreadPriorityTweaker::init,
                 ArrowStackWaypoints::init,
                 VanillaMode::init,
-                CursorFix::init,
-                RagnarockHelper::init
+                CursorFix::init
         );
     }
 
