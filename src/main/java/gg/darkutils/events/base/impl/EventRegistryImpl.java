@@ -14,7 +14,7 @@ public final class EventRegistryImpl implements EventRegistry {
      * Singleton instance.
      */
     @NotNull
-    private static final EventRegistryImpl INSTANCE = new EventRegistryImpl();
+    public static final EventRegistryImpl INSTANCE = new EventRegistryImpl();
 
     /**
      * Holds the event handlers in a thread-safe manner (thread-safety provided by JDK ClassValue)
@@ -29,16 +29,6 @@ public final class EventRegistryImpl implements EventRegistry {
      */
     private EventRegistryImpl() {
         super();
-    }
-
-    /**
-     * Gets the singleton {@link EventRegistryImpl} instance.
-     *
-     * @return The singleton {@link EventRegistryImpl} instance.
-     */
-    @NotNull
-    public static final EventRegistryImpl getInstance() {
-        return EventRegistryImpl.INSTANCE;
     }
 
     @SuppressWarnings("unchecked")

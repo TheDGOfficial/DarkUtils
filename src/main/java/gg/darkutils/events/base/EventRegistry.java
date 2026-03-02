@@ -17,7 +17,7 @@ public interface EventRegistry {
      */
     @NotNull
     static EventRegistry centralRegistry() {
-        return EventRegistryImpl.getInstance();
+        return EventRegistryImpl.INSTANCE;
     }
 
     /**
