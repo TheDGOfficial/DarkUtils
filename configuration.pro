@@ -42,7 +42,7 @@
 # Most of these mangle method names with an additional $hash at the end which we don't want,
 # while some inflate code size too much due to inlining of every unique method,
 # while others remove finals and mess with field access visibility even inside enums making constants private.
--optimizations !code/allocation/variable,!method/inlining/unique,!method/propagation/parameter,!method/specialization/returntype,!method/marking/static,!method/marking/private,!field/marking/private
+-optimizations !code/allocation/variable,!method/inlining/unique,!method/propagation/parameter,!method/specialization/returntype,!method/marking/static,!method/marking/private,!field/marking/private,!code/simplification/variable
 
 # ProGuard removes the $VALUES field and the public values() method,
 # but it does not remove the private synthetic method $values(), which
