@@ -22,20 +22,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 final class EventSystemTest {
     @BeforeEach
-    void resetRegistry() {
+    final void resetRegistry() {
         clearListeners(TestEvent.class);
         clearListeners(TestCancellableEvent.class);
     }
 
     @SuppressWarnings("unchecked")
-    <T extends Event> void clearListeners(Class<T> event) {
+    private static final <T extends Event> void clearListeners(final Class<T> event) {
         final var handler = EventRegistry.centralRegistry().getEventHandler(event);
 
         handler.getListeners().forEach((l) -> handler.removeListener((EventListener<T>) l));
     }
 
     @Test
-    void testListenerInvocation() {
+    final void testListenerInvocation() {
         final var registry = EventRegistry.centralRegistry();
 
         final var counter = new AtomicInteger(0);
@@ -48,7 +48,7 @@ final class EventSystemTest {
     }
 
     @Test
-    void testPriorityOrdering() {
+    final void testPriorityOrdering() {
         final var registry = EventRegistry.centralRegistry();
 
         final var order = new ArrayList<Integer>();
@@ -63,7 +63,7 @@ final class EventSystemTest {
     }
 
     @Test
-    void testStableRegistrationOrder() {
+    final void testStableRegistrationOrder() {
         final var registry = EventRegistry.centralRegistry();
 
         final var order = new ArrayList<Integer>();
@@ -78,7 +78,7 @@ final class EventSystemTest {
     }
 
     @Test
-    void testCancellationStopsListeners() {
+    final void testCancellationStopsListeners() {
         final var registry = EventRegistry.centralRegistry();
 
         final var counter = new AtomicInteger(0);
@@ -92,7 +92,7 @@ final class EventSystemTest {
     }
 
     @Test
-    void testReceiveCancelled() {
+    final void testReceiveCancelled() {
         final var registry = EventRegistry.centralRegistry();
 
         final var counter = new AtomicInteger(0);
@@ -108,7 +108,7 @@ final class EventSystemTest {
     }
 
     @Test
-    void testUncancelRestoresDownstreamPropagation() {
+    final void testUncancelRestoresDownstreamPropagation() {
         final var registry = EventRegistry.centralRegistry();
 
         final var counter = new AtomicInteger(0);
@@ -130,7 +130,7 @@ final class EventSystemTest {
     }
 
     @Test
-    void testTriggerAndNotCancelledContract() {
+    final void testTriggerAndNotCancelledContract() {
         final var registry = EventRegistry.centralRegistry();
 
         registry.addListener((TestCancellableEvent e) -> e.cancellationState().cancel());
@@ -141,7 +141,7 @@ final class EventSystemTest {
     }
 
     @Test
-    void testReentrancy() {
+    final void testReentrancy() {
         final var registry = EventRegistry.centralRegistry();
 
         final var counter = new AtomicInteger(0);
@@ -159,7 +159,7 @@ final class EventSystemTest {
     }
 
     @Test
-    void testNestedDispatchIsolation() {
+    final void testNestedDispatchIsolation() {
         final var registry = EventRegistry.centralRegistry();
 
         final var counter = new AtomicInteger(0);
@@ -178,7 +178,7 @@ final class EventSystemTest {
     }
 
     @Test
-    void testThreadSafety() throws InterruptedException {
+    final void testThreadSafety() throws InterruptedException {
         final var registry = EventRegistry.centralRegistry();
 
         final int threads = 8;
@@ -208,7 +208,6 @@ final class EventSystemTest {
 
     record TestCancellableEvent(@NotNull CancellationState cancellationState)
             implements CancellableEvent {
-
         TestCancellableEvent() {
             this(CancellationState.ofFresh());
         }

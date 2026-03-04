@@ -8,24 +8,24 @@ import org.junit.jupiter.api.Assertions;
 import java.util.Optional;
 
 final class JavaUtilsTest {
-    static Optional<StackWalker.StackFrame> level1() {
+    private static final Optional<StackWalker.StackFrame> level1() {
         return JavaUtilsTest.level2();
     }
 
-    static Optional<StackWalker.StackFrame> level2() {
+    private static final Optional<StackWalker.StackFrame> level2() {
         return JavaUtils.getImmediateCaller();
     }
 
-    static Optional<Class<?>> level1Class() {
+    private static final Optional<Class<?>> level1Class() {
         return JavaUtilsTest.level2Class();
     }
 
-    static Optional<Class<?>> level2Class() {
+    private static final Optional<Class<?>> level2Class() {
         return JavaUtils.getImmediateCallerClass();
     }
 
     @Test
-    void getImmediateCaller_returnsCallerOfCaller() {
+    final void getImmediateCaller_returnsCallerOfCaller() {
         final var frame = JavaUtilsTest.level1();
 
         Assertions.assertTrue(frame.isPresent());
@@ -34,7 +34,7 @@ final class JavaUtilsTest {
     }
 
     @Test
-    void getImmediateCallerClass_returnsCorrectClass() {
+    final void getImmediateCallerClass_returnsCorrectClass() {
         final var clazz = JavaUtilsTest.level1Class();
 
         Assertions.assertTrue(clazz.isPresent());
@@ -42,7 +42,7 @@ final class JavaUtilsTest {
     }
 
     @Test
-    void getExternalCaller_returnsExternalFrame() {
+    final void getExternalCaller_returnsExternalFrame() {
         final var frame = JavaUtils.getExternalCaller();
 
         Assertions.assertTrue(frame.isPresent());

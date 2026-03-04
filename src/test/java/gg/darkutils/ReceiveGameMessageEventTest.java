@@ -21,19 +21,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 final class ReceiveGameMessageEventTest {
     @BeforeEach
-    void resetRegistry() {
+    final void resetRegistry() {
         clearListeners(ReceiveGameMessageEvent.class);
     }
 
     @SuppressWarnings("unchecked")
-    <T extends Event> void clearListeners(Class<T> event) {
+    private static final <T extends Event> void clearListeners(final Class<T> event) {
         final var handler = EventRegistry.centralRegistry().getEventHandler(event);
 
         handler.getListeners().forEach((l) -> handler.removeListener((EventListener<T>) l));
     }
 
     @Test
-    void testEventTriggerAndReceive() {
+    final void testEventTriggerAndReceive() {
         final var counter = new AtomicInteger(0);
 
         EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> counter.incrementAndGet());
@@ -44,7 +44,7 @@ final class ReceiveGameMessageEventTest {
     }
 
     @Test
-    void testContentAndRawContent() {
+    final void testContentAndRawContent() {
         EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
             Assertions.assertEquals(e.content(), "Hello");
             Assertions.assertEquals(e.rawContent(), "Hello");
@@ -79,7 +79,7 @@ final class ReceiveGameMessageEventTest {
     }
 
     @Test
-    void testContentAndRawContentLegacyFormatted() {
+    final void testContentAndRawContentLegacyFormatted() {
         EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
             Assertions.assertEquals(e.content(), "Hello");
             Assertions.assertEquals(e.rawContent(), "§cHello");
@@ -95,7 +95,7 @@ final class ReceiveGameMessageEventTest {
     }
 
     @Test
-    void testExtractPart() {
+    final void testExtractPart() {
         EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
             Assertions.assertEquals(e.extractPart("[Player] ", ':'), "John Doe");
         });
@@ -104,7 +104,7 @@ final class ReceiveGameMessageEventTest {
     }
 
     @Test
-    void testMatch() {
+    final void testMatch() {
         final var counter = new AtomicInteger(0);
 
         EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {

@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 final class ChatUtilsHasFormattingTest {
     @Test
-    void shouldDetectColorFormattingInsideComponent() {
+    final void shouldDetectColorFormattingInsideComponent() {
         final var style = SimpleStyle.colored(SimpleColor.RED);
 
         final var text = TextBuilder
@@ -28,7 +28,7 @@ final class ChatUtilsHasFormattingTest {
     }
 
     @Test
-    void shouldNotDetectDifferentColorFormattingInsideComponent() {
+    final void shouldNotDetectDifferentColorFormattingInsideComponent() {
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle.colored(SimpleColor.BLUE))
                 .build();
@@ -39,28 +39,13 @@ final class ChatUtilsHasFormattingTest {
     }
 
     @Test
-    void shouldDetectColorAndBoldFormattingInsideComponent() {
-        final var style = SimpleStyle
-                .colored(SimpleColor.GOLD)
-                .also(SimpleStyle.formatted(SimpleFormatting.BOLD));
-
-        final var text = TextBuilder
-                .withInitial("Hello", SimpleStyle
-                        .colored(SimpleColor.GOLD)
-                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD)))
-                .build();
-
-        final var result = ChatUtils.hasFormatting(
-                text,
-                SimpleColor.GOLD,
-                SimpleFormatting.BOLD
-        );
-
-        Assertions.assertTrue(result);
+    final void shouldDetectColorAndBoldFormattingInsideComponent() {
+        final var style = SimpleStyle.colored(SimpleColor.GOLD).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
+        Assertions.assertTrue(ChatUtils.hasFormatting(TextBuilder.withInitial("Hello", style).build(), SimpleColor.GOLD,SimpleFormatting.BOLD));
     }
 
     @Test
-    void shouldNotDetectFormattingIfBoldMissing() {
+    final void shouldNotDetectFormattingIfBoldMissing() {
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle.colored(SimpleColor.GOLD))
                 .build();
@@ -75,7 +60,7 @@ final class ChatUtilsHasFormattingTest {
     }
 
     @Test
-    void shouldDetectFormattingFromRawLegacyCodesFallback() {
+    final void shouldDetectFormattingFromRawLegacyCodesFallback() {
         final var style = SimpleStyle.colored(SimpleColor.GREEN);
 
         final var legacyFormatted =
@@ -89,7 +74,7 @@ final class ChatUtilsHasFormattingTest {
     }
 
     @Test
-    void shouldNotDetectFormattingWhenPlainTextProvided() {
+    final void shouldNotDetectFormattingWhenPlainTextProvided() {
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle.inherited())
                 .build();
@@ -103,7 +88,7 @@ final class ChatUtilsHasFormattingTest {
     }
 
     @Test
-    void shouldDetectFormattingInAppendedChildComponent() {
+    final void shouldDetectFormattingInAppendedChildComponent() {
         final var style = SimpleStyle
                 .colored(SimpleColor.AQUA)
                 .also(SimpleStyle.formatted(SimpleFormatting.BOLD));
@@ -123,7 +108,7 @@ final class ChatUtilsHasFormattingTest {
     }
 
     @Test
-    void shouldDetectItalicFormattingInsideComponent() {
+    final void shouldDetectItalicFormattingInsideComponent() {
         final var style = SimpleStyle
                 .colored(SimpleColor.YELLOW)
                 .also(SimpleStyle.formatted(SimpleFormatting.ITALIC));
@@ -144,7 +129,7 @@ final class ChatUtilsHasFormattingTest {
     }
 
     @Test
-    void shouldDetectUnderlineFormattingInsideComponent() {
+    final void shouldDetectUnderlineFormattingInsideComponent() {
         final var style = SimpleStyle
                 .colored(SimpleColor.AQUA)
                 .also(SimpleStyle.formatted(SimpleFormatting.UNDERLINE));
@@ -165,7 +150,7 @@ final class ChatUtilsHasFormattingTest {
     }
 
     @Test
-    void shouldDetectStrikethroughFormattingInsideComponent() {
+    final void shouldDetectStrikethroughFormattingInsideComponent() {
         final var style = SimpleStyle
                 .colored(SimpleColor.GREEN)
                 .also(SimpleStyle.formatted(SimpleFormatting.STRIKETHROUGH));
@@ -186,7 +171,7 @@ final class ChatUtilsHasFormattingTest {
     }
 
     @Test
-    void shouldDetectObfuscatedFormattingInsideComponent() {
+    final void shouldDetectObfuscatedFormattingInsideComponent() {
         final var style = SimpleStyle
                 .colored(SimpleColor.RED)
                 .also(SimpleStyle.formatted(SimpleFormatting.OBFUSCATED));
@@ -207,7 +192,7 @@ final class ChatUtilsHasFormattingTest {
     }
 
     @Test
-    void shouldNotDetectItalicIfMissing() {
+    final void shouldNotDetectItalicIfMissing() {
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle.colored(SimpleColor.YELLOW))
                 .build();
@@ -222,7 +207,7 @@ final class ChatUtilsHasFormattingTest {
     }
 
     @Test
-    void shouldDetectVanillaFormattingColorAgainstRgbConstructedStyle() {
+    final void shouldDetectVanillaFormattingColorAgainstRgbConstructedStyle() {
         final var text = Text.literal("Hello")
                 .setStyle(Style.EMPTY.withFormatting(Formatting.GREEN));
 

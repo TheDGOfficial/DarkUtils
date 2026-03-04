@@ -12,7 +12,7 @@ import java.util.Map;
 
 final class LazyConstantsTest {
     @Test
-    void lazyConstantOf_computesOnlyOnce() {
+    final void lazyConstantOf_computesOnlyOnce() {
         final var counter = new AtomicInteger(0);
 
         final Supplier<Integer> supplier = LazyConstants.lazyConstantOf(counter::incrementAndGet);
@@ -28,7 +28,7 @@ final class LazyConstantsTest {
     }
 
     @Test
-    void lazyMapOf_valueMapperCalledOnlyOncePerKey() {
+    final void lazyMapOf_valueMapperCalledOnlyOncePerKey() {
         final var counter = new AtomicInteger(0);
 
         final Map<Integer, Integer> map =
