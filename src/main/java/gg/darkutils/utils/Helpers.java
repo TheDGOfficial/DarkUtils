@@ -116,7 +116,8 @@ public final class Helpers {
         final var cached = Helpers.targetedEntity;
 
         if (null != cached) {
-            return cached.isPresent() && matcher.test(cached.get());
+            final var et = cached.orElse(null);
+            return null != et && matcher.test(et);
         }
 
         final var mc = MinecraftClient.getInstance();
@@ -154,7 +155,15 @@ public final class Helpers {
 
     @NotNull
     public static final ItemStack getItemStackInHand(@NotNull final Hand hand) {
-        return Helpers.getItemStackInHand(Hand.MAIN_HAND == hand);
+        final var main = Hand.MAIN_HAND == hand;
+
+        // Very unlikely check, branch predictor or even the C2 will realize the if is never true unless mojang actually adds another enum value to Hand enum.
+        if (!main && Hand.OFF_HAND != hand) {
+            // We must be in the future and 3-handed player exists
+            throw new UnsupportedOperationException("Helpers cache needs updating for new possible hand " + hand.name());
+        }
+
+        return Helpers.getItemStackInHand(main);
     }
 
     @NotNull
@@ -171,7 +180,7 @@ public final class Helpers {
         }
 
         final var player = MinecraftClient.getInstance().player;
-        final var item = null == player ? ItemStack.EMPTY : player.getStackInHand(Hand.MAIN_HAND);
+        final var item = null == player ? ItemStack.EMPTY : player.getStackInHand(main ? Hand.MAIN_HAND : Hand.OFF_HAND);
 
         if (main) {
             Helpers.mainHandHeldItemStack = item;
