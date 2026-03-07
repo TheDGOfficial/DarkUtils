@@ -25,9 +25,11 @@ public enum SimpleColor {
 
     @NotNull
     private final Formatting formatting;
+    private final int rgb;
 
     private SimpleColor(@NotNull final Formatting formatting) {
-        this.formatting = formatting;
+        this.formatting = Objects.requireNonNull(formatting, "SimpleColor formatting value");
+        this.rgb = Objects.requireNonNull(this.formatting.getColorValue(), "SimpleColor formatting color value");
     }
 
     @NotNull
@@ -36,6 +38,6 @@ public enum SimpleColor {
     }
 
     public final int toRgb() {
-        return Objects.requireNonNull(this.formatting.getColorValue(), "SimpleColor formatting color value");
+        return this.rgb;
     }
 }

@@ -4,6 +4,9 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Non-thread safe builder for Text instances with helper methods.
+ */
 public final class TextBuilder {
     @NotNull
     private final MutableText text;
@@ -60,6 +63,14 @@ public final class TextBuilder {
         return this;
     }
 
+    /**
+     * Builds and obtains the Text.
+     * <p>
+     * The TextBuilder shall not be used again after this call
+     * as it is unsafe because of modifying the underlying MutableText.
+     *
+     * @return The built text instance.
+     */
     @NotNull
     public final Text build() {
         return this.text;
