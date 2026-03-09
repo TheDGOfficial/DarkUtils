@@ -239,9 +239,7 @@ public final class ChatUtils {
 
         final var builder = new StringBuilder(text.length());
 
-        var compensated = 0;
-
-        while (compensated < toCompensate) {
+        for (var compensated = 0; compensated < toCompensate; ) {
             builder.append(' ');
             compensated += fillerWidth;
         }

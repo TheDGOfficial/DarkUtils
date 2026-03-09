@@ -596,9 +596,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
             }
         }
 
-        final def it = cn.fields.iterator()
-
-        while (it.hasNext()) {
+        for (final def it = cn.fields.iterator(); it.hasNext(); ) {
             final def f = it.next()
             final def key = cn.name + f.name + f.desc
 
