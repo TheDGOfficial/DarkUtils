@@ -1,6 +1,8 @@
 package gg.darkutils.feat.performance;
 
+import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -152,18 +154,22 @@ public final class ThreadPriorityTweaker {
      * Tweaks priorities of currently live threads. This action is done on a separate thread to not cause any lag in-game.
      */
     private static final void tweakPriorities() {
-        if (!ThreadPriorityTweaker.isEnabled()) {
-            return;
-        }
-
-        for (final var thread : ThreadPriorityTweaker.getAllThreads()) {
-            final var name = thread.getName();
-
-            if (ThreadPriorityTweaker.tweakPriorityExact(name, thread)) {
-                continue;
+        try {
+            if (!ThreadPriorityTweaker.isEnabled()) {
+                return;
             }
 
-            ThreadPriorityTweaker.tweakPriority(thread, name);
+            for (final var thread : ThreadPriorityTweaker.getAllThreads()) {
+                final var name = thread.getName();
+
+                if (ThreadPriorityTweaker.tweakPriorityExact(name, thread)) {
+                    continue;
+                }
+
+                ThreadPriorityTweaker.tweakPriority(thread, name);
+            }
+        } catch (final Throwable error) {
+            DarkUtils.error(ThreadPriorityTweaker.class, "Error while running Thread Priority Tweaker", error);
         }
     }
 
@@ -189,7 +195,7 @@ public final class ThreadPriorityTweaker {
         // No matching tweaker found if we reached here
         if (ThreadPriorityTweaker.ThreadPriority.NORMAL.getPriority() < thread.getPriority()) {
             // Unknown thread names with higher than NORMAL priority gets set back to NORMAL.
-            ThreadPriorityTweaker.tweakPriority(thread, ThreadPriorityTweaker.ThreadPriority.NORMAL.getPriority());
+            ThreadPriorityTweaker.ThreadPriority.NORMAL.applyTo(thread);
         }
     }
 
@@ -205,8 +211,7 @@ public final class ThreadPriorityTweaker {
     private static final ThreadGroup findRootThreadGroup() {
         var threadGroup = Thread.currentThread().getThreadGroup();
 
-        ThreadGroup parent;
-        while (null != (parent = threadGroup.getParent())) {
+        for (ThreadGroup parent; null != (parent = threadGroup.getParent()); ) {
             threadGroup = parent;
         }
 
@@ -268,6 +273,10 @@ public final class ThreadPriorityTweaker {
         private final int getPriority() {
             return this.priority;
         }
+
+        private final void applyTo(@NotNull final Thread thread) {
+            ThreadPriorityTweaker.tweakPriority(thread, this.priority);
+        }
     }
 
     private record ThreadPriorityTweak(@NotNull String threadName,
@@ -278,7 +287,7 @@ public final class ThreadPriorityTweaker {
         }
 
         private final void applyTo(@NotNull final Thread thread) {
-            ThreadPriorityTweaker.tweakPriority(thread, this.priority.getPriority());
+            this.priority.applyTo(thread);
         }
     }
 }
