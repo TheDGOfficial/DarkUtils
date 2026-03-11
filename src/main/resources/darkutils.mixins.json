@@ -8,6 +8,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "accessors.MinecraftClientAccessor",
+    "accessors.ChatHudAccessor",
     "accessors.LivingEntityAccessor",
 
     "bugfixes.HandledScreenMixin",
