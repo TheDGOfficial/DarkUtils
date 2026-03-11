@@ -107,7 +107,7 @@ public final class RenderUtils {
     }
 
     public static final int middleAlignedXForText(@NotNull final RenderUtils.RenderingText text) {
-        return (MinecraftClient.getInstance().getWindow().getScaledWidth() >> 1) - (text.widthHolder.getWidth() >> 1);
+        return (MinecraftClient.getInstance().getWindow().getScaledWidth() >> 1) - (text.getWidth() >> 1);
     }
 
     public static final void renderCenteredText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, @NotNull final IntSupplier y, @NotNull final Formatting color) {
@@ -153,8 +153,8 @@ public final class RenderUtils {
         @NotNull
         private OrderedText orderedText;
 
-        @NotNull
-        private final RenderUtils.WidthHolder widthHolder;
+        private int width;
+        private boolean widthDirty = true;
 
         private RenderingText() {
             this("", RenderUtils.EMPTY_ORDERED_TEXT);
@@ -169,8 +169,6 @@ public final class RenderUtils {
 
             this.text = text;
             this.orderedText = orderedText;
-
-            this.widthHolder = new RenderUtils.WidthHolder(this);
         }
 
         public final void setText(@NotNull final String newText) {
@@ -181,7 +179,16 @@ public final class RenderUtils {
             this.text = newText;
             this.orderedText = Text.of(newText).asOrderedText();
 
-            this.widthHolder.markDirty();
+            this.widthDirty = true;
+        }
+
+        private final int getWidth() {
+            if (this.widthDirty) {
+                this.widthDirty = false;
+                return this.width = MinecraftClient.getInstance().textRenderer.getWidth(this.orderedText);
+            }
+
+            return this.width;
         }
 
         @Override
@@ -189,42 +196,8 @@ public final class RenderUtils {
             return "RenderingText{" +
                     "text='" + this.text + '\'' +
                     ", orderedText=" + this.orderedText +
-                    ", widthHolder=" + this.widthHolder +
-                    '}';
-        }
-    }
-
-    private static final class WidthHolder {
-        @NotNull
-        private final RenderUtils.RenderingText renderingText;
-        private int width;
-        private boolean dirty = true;
-
-        private WidthHolder(@NotNull final RenderUtils.RenderingText renderingText) {
-            super();
-
-            this.renderingText = renderingText;
-        }
-
-        private final int getWidth() {
-            if (this.dirty) {
-                this.dirty = false;
-                return this.width = MinecraftClient.getInstance().textRenderer.getWidth(this.renderingText.text);
-            }
-
-            return this.width;
-        }
-
-        private final void markDirty() {
-            this.dirty = true;
-        }
-
-        @Override
-        public final String toString() {
-            return "WidthHolder{" +
-                    "text=" + this.renderingText.text + // cannot use this.renderingText in toString as it would create infinite recursion, since renderingText's toString() calls toString on WidthHolder
                     ", width=" + this.width +
-                    ", dirty=" + this.dirty +
+                    ", widthDirty=" + this.widthDirty +
                     '}';
         }
     }

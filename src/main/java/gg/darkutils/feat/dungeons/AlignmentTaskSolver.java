@@ -545,8 +545,7 @@ public final class AlignmentTaskSolver {
                         final var steps = new ObjectArrayList<AlignmentTaskSolver.Point>();
                         steps.add(nextPos);
                         steps.add(currPos);
-                        var tmp = currPos;
-                        while (!tmp.equals(start)) {
+                        for (var tmp = currPos; !tmp.equals(start); ) {
                             tmp = gridCopy[tmp.y()][tmp.x()];
                             steps.add(tmp);
                         }

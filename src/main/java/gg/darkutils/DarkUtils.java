@@ -286,9 +286,7 @@ public final class DarkUtils implements ClientModInitializer {
 
     @NotNull
     private static final Throwable getRootError(@NotNull Throwable error, @NotNull final Predicate<Throwable> predicate) {
-        Throwable parent;
-
-        while (null != (parent = error.getCause())) {
+        for (Throwable parent; null != (parent = error.getCause()); ) {
             // We don't want the exceptions with no stack trace. Additionally, test for the predicate requested.
             if (0 == parent.getStackTrace().length || !predicate.test(parent)) {
                 return error;

@@ -9,6 +9,7 @@ import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.SimpleColor;
+import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
@@ -530,7 +531,7 @@ public final class DungeonTimer {
                 continue;
             }
 
-            final var line = Formatting.strip(team.getPrefix().getString() + team.getSuffix().getString());
+            final var line = ChatUtils.removeControlCodes(team.getPrefix().getString() + team.getSuffix().getString());
 
             if (line.contains("The Catacombs (")) {
                 final var floor = DungeonTimer.parseFloorFromScoreboard(line);

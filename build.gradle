@@ -310,7 +310,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
 
     private static final def MIXIN_OVERWRITE_DESC    = 'Lorg/spongepowered/asm/mixin/Overwrite;'
 
-    private final Map<String, ClassNode> classNodeCache = new HashMap<>()
+    protected final Map<String, ClassNode> classNodeCache = new HashMap<>()
 
     @InputDirectory
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -325,7 +325,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
     @Inject
     abstract FileSystemOperations getFs()
 
-    private final void copyFile(final File from, final File to) {
+    protected final void copyFile(final File from, final File to) {
         fs.copy {
             it.from(from)
             it.into(to.parentFile)
@@ -334,14 +334,14 @@ abstract class AsmPreprocessTask extends DefaultTask {
         }
     }
 
-    private final boolean overridesSomething(final ClassNode owner, final MethodNode method, final Set<File> classpath) {
+    protected final boolean overridesSomething(final ClassNode owner, final MethodNode method, final Set<File> classpath) {
         final def name = method.name
         final def desc = method.desc
 
         return this.hierarchyHasMethod(owner, name, desc, classpath)
     }
 
-    private final boolean hierarchyHasMethod(final ClassNode owner, final String name, final String desc, final Set<File> classpath) {
+    protected final boolean hierarchyHasMethod(final ClassNode owner, final String name, final String desc, final Set<File> classpath) {
         final def queue   = new ArrayDeque<String>()
         final def visited = new HashSet<String>()
 
@@ -381,7 +381,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
         return false
     }
 
-    private final ClassNode loadClassNode(final String internalName, final Set<File> classpath) {
+    protected final ClassNode loadClassNode(final String internalName, final Set<File> classpath) {
         return classNodeCache.computeIfAbsent(internalName, name -> AsmPreprocessTask.loadClassNode0(name, classpath))
     }
 
@@ -596,9 +596,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
             }
         }
 
-        final def it = cn.fields.iterator()
-
-        while (it.hasNext()) {
+        for (final def it = cn.fields.iterator(); it.hasNext(); ) {
             final def f = it.next()
             final def key = cn.name + f.name + f.desc
 

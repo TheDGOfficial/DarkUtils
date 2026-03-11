@@ -175,10 +175,7 @@ public final class ArmorStandOptimizer {
         final var playerY = player.getY();
         final var playerZ = player.getZ();
 
-        var left = 0;
-        var right = listSize - 1;
-
-        while (left <= right) {
+        for (int left = 0, right = listSize - 1; left <= right; ) {
             final var pivotIndex = ArmorStandOptimizer.partition(list, left, right, playerX, playerY, playerZ);
             if (pivotIndex == closestCount) {
                 return;
