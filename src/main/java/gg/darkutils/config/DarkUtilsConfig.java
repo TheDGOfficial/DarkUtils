@@ -2,26 +2,21 @@ package gg.darkutils.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import gg.darkutils.DarkUtils;
 import gg.darkutils.events.ConfigSaveFinishEvent;
 import gg.darkutils.events.ConfigSaveStartEvent;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import gg.darkutils.utils.LogLevel;
-
 import net.fabricmc.loader.api.FabricLoader;
-
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 public final class DarkUtilsConfig {
     private static final @NotNull Gson GSON = new GsonBuilder().setPrettyPrinting().create();

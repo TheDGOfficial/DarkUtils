@@ -1,7 +1,6 @@
 package gg.darkutils.utils;
 
 import gg.darkutils.utils.chat.ChatUtils;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;

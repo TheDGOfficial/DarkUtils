@@ -31,10 +31,10 @@ import gg.darkutils.feat.qol.PreventUselessBlockHit;
 import gg.darkutils.feat.qol.RejoinCooldownDisplay;
 import gg.darkutils.feat.qol.ServerTPSCalculator;
 import gg.darkutils.feat.qol.VanillaMode;
+import gg.darkutils.utils.LazyConstants;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
-import gg.darkutils.utils.LazyConstants;
 import gg.darkutils.utils.chat.ButtonData;
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleFormatting;
@@ -58,10 +58,10 @@ import org.slf4j.helpers.MessageFormatter;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Supplier;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /*
 import gg.darkutils.utils.chat.SimpleColor;

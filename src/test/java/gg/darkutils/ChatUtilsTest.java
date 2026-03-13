@@ -1,9 +1,8 @@
 package gg.darkutils;
 
 import gg.darkutils.utils.chat.ChatUtils;
-
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 final class ChatUtilsTest {
     @Test

@@ -1,7 +1,6 @@
 package gg.darkutils.utils;
 
 import gg.darkutils.utils.chat.ChatUtils;
-
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;

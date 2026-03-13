@@ -19,7 +19,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import java.util.function.Supplier;
 
 public final class ChatUtils {
@@ -239,9 +238,8 @@ public final class ChatUtils {
 
         final var builder = new StringBuilder(text.length());
 
-        for (var compensated = 0; compensated < toCompensate; ) {
+        for (var compensated = 0; compensated < toCompensate; compensated += fillerWidth) {
             builder.append(' ');
-            compensated += fillerWidth;
         }
 
         return builder + text;
