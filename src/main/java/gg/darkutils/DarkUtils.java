@@ -15,6 +15,7 @@ import gg.darkutils.feat.dungeons.DialogueSkipTimer;
 import gg.darkutils.feat.dungeons.DungeonTimer;
 import gg.darkutils.feat.dungeons.ReplaceDiorite;
 import gg.darkutils.feat.dungeons.SoloCrushTimer;
+import gg.darkutils.feat.dungeons.SoloCrushWaypoint;
 import gg.darkutils.feat.foraging.TreeGiftConfirmation;
 import gg.darkutils.feat.foraging.TreeGiftFeatures;
 import gg.darkutils.feat.foraging.TreeGiftsPerHour;
@@ -515,6 +516,7 @@ public final class DarkUtils implements ClientModInitializer {
                 AutoCloseSecretChests::init,
                 DialogueSkipTimer::init,
                 SoloCrushTimer::init,
+                SoloCrushWaypoint::init,
                 GhostBlockKey::init,
                 ReplaceDiorite::init,
                 AutoTip::init,

@@ -167,6 +167,10 @@ public final class DarkUtilsConfigScreen {
                 "Displays a timer for when to pad to crush storm solo in purple pad. Use wither cloak or a mask to bypass lightning while in pad. Pad when instructed on screen, after padding move to align with crusher immediately so that storm gets crushed when it moves towards you.",
                 config.soloCrushTimer, newValue -> config.soloCrushTimer = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Solo Crush Waypoint",
+                "Renders a waypoint for the block you need to lower the purple crusher into so that it can crush Storm the next time you lower it. You first need to lower it all the way down and then all the way up, and once you lower it down 1 time afterwards, the lowest block at the center of crusher should be inside this waypoint, and the next time you lower it storm will be crushed if you are aligned correctly behind it.",
+                config.soloCrushWaypoint, newValue -> config.soloCrushWaypoint = newValue);
+
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Auto Close Secret Chests",
                 "Automatically closes secret chests instantly inside Dungeons, as if you were holding a bow while opening it, even if you weren't.",
                 config.autoCloseSecretChests, newValue -> config.autoCloseSecretChests = newValue);

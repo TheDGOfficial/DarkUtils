@@ -54,6 +54,7 @@ public final class DarkUtilsConfig {
     // === Dungeons ===
     public boolean dialogueSkipTimer;
     public boolean soloCrushTimer;
+    public boolean soloCrushWaypoint;
     public boolean autoCloseSecretChests;
     public boolean replaceDiorite;
     public boolean arrowAlignmentDeviceSolver;
