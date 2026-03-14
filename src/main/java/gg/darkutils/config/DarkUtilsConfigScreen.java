@@ -36,6 +36,17 @@ public final class DarkUtilsConfigScreen {
                 .build());
     }
 
+    private static final void addSimpleFloatSetting(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, final float value, @NotNull final Consumer<Float> setter, final float defaultValue, final float min, final float max) {
+        configCategory.addEntry(configEntryBuilder
+                .startFloatField(Text.of(name), value)
+                .setDefaultValue(defaultValue)
+                .setMin(min)
+                .setMax(max)
+                .setTooltip(Text.of(desc))
+                .setSaveConsumer(setter)
+                .build());
+    }
+
     private static final void addSimpleBooleanToggle(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, final boolean value, @NotNull final Consumer<Boolean> setter) {
         configCategory.addEntry(configEntryBuilder
                 .startBooleanToggle(Text.of(name), value)
@@ -94,12 +105,12 @@ public final class DarkUtilsConfigScreen {
     }
 
     private static final void addQualityOfLifeSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory qol) {
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Welcome Message",
-                "Sends a cool welcome message about the mod with a button to open the settings menu quickly or learn more about the mod.",
-                config.welcomeMessage, newValue -> config.welcomeMessage = newValue);
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Disable Welcome Message",
+                "Normally, we send a cool welcome message about the mod with a button to open the settings menu quickly or learn more about the mod. If you enable this option, the message won't be sent.",
+                config.disableWelcomeMessage, newValue -> config.disableWelcomeMessage = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker",
-                "Stop carpal tunnel by automatically sending clicks when you are holding down the mouse buttons when holding swords of any type, the huntaxe (for damage and ferocity swap) or the diana spades (for burrow-digging). Right-clicks are only sent for Hyperion/Astraea.",
+                "Stop carpal tunnel by automatically sending clicks when you are holding down the mouse buttons when holding swords of any type, the huntaxe (for damage and ferocity swap) or the diana spades (for burrow-digging). Right-clicks are only sent for Hyperion/Astraea. This clicks every-tick e.g., 20 CPS but is safe to use.",
                 config.autoClicker, newValue -> config.autoClicker = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker Work In Levers",
@@ -176,6 +187,10 @@ public final class DarkUtilsConfigScreen {
                 "Blocks incorrect clicks after the arrow has been rotated enough times. Compatible with AutoClicker so you can finish it fast with it.",
                 config.arrowAlignmentDeviceSolverBlockIncorrectClicks, newValue -> config.arrowAlignmentDeviceSolverBlockIncorrectClicks = newValue);
 
+        DarkUtilsConfigScreen.addDungeonsSecond(config, entryBuilder, dungeons);
+    }
+
+    private static final void addDungeonsSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory dungeons) {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Arrow Stack Waypoints",
                 "Displays arrow stack waypoints in the Wither King dragon fight showing where to shoot your Last Breath arrows for optimal stacking.",
                 config.arrowStackWaypoints, newValue -> config.arrowStackWaypoints = newValue);
@@ -183,6 +198,16 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Dungeon Timer",
                 "Displays dungeon timer on left side of the screen, showing time took to finish each phase. Shows live time if not finished yet, and shows how much time is lost to server lag, with fancy item icons, separate colors, and non-phase informational splits, like Boss Total.",
                 config.dungeonTimer, newValue -> config.dungeonTimer = newValue);
+
+        DarkUtilsConfigScreen.addSimpleFloatSetting(entryBuilder, dungeons, "Dungeon Timer Scale", "Makes the Dungeon Timer HUD show smaller or bigger. Use 1.0 to keep the original size, 0.9 to make it 10% smaller, 1.1 to make it 10% bigger, 0.5 to make it half the size, 1.5 to make it 50% bigger, etc. Note: Anything other than 1.0 will cause text font to look uglier due to the way vanilla font renderer scales text.", config.dungeonTimerScale, newValue -> config.dungeonTimerScale = newValue, 1.0F, 0.5F, 1.5F);
+
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, dungeons, "Dungeon Timer Offset X", "X offset for render position of the Dungeon Timer HUD. For example, 0 keeps original position which is +2px to the right of leftmost of the screen by default, while 50 moves it 50px right, and -2 makes it render at leftmost since original position is +2px.", config.dungeonTimerOffsetX, newValue -> config.dungeonTimerOffsetX = newValue, 0, -2, Integer.MAX_VALUE);
+
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, dungeons, "Dungeon Timer Offset Y", "Y offset for render position of the Dungeon Timer HUD. For example, 0 keeps original position which is dynamically the middle of the screen by default, while 50 moves the timer down by 50px, and -50 moves it up by 50px.", config.dungeonTimerOffsetY, newValue -> config.dungeonTimerOffsetY = newValue, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Dungeon Timer No Item Icon",
+                "When enabled, disables the item icons rendering before the text. Default disabled to make the HUD look cooler, but you can disable the item icons if you prefer the HUD simpler with text-only by enabling this option.",
+                config.dungeonTimerNoItemIcon, newValue -> config.dungeonTimerNoItemIcon = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Blood Cleared Notification",
                 "Shows a message on screen when the blood room is cleared with how much time it took for it.",

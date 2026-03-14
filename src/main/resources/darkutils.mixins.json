@@ -7,9 +7,6 @@
   "package": "gg.darkutils.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "accessors.MinecraftClientAccessor",
-    "accessors.LivingEntityAccessor",
-
     "bugfixes.HandledScreenMixin",
     "bugfixes.InactivityFpsLimiterMixin",
     "bugfixes.GLFWMixin",

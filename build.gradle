@@ -74,6 +74,8 @@ repositories {
 }
 
 loom {
+    accessWidenerPath = file('src/main/resources/darkutils.classtweaker')
+
     mods {
         'darkutils' {
             sourceSet sourceSets.main

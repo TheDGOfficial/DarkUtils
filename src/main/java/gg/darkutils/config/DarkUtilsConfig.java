@@ -36,7 +36,7 @@ public final class DarkUtilsConfig {
     public boolean alwaysSprint;
     public boolean ghostBlockKey;
     public boolean autoTip;
-    public boolean welcomeMessage;
+    public boolean disableWelcomeMessage;
     public boolean autoClicker;
     public boolean autoClickerWorkInLevers;
     public boolean autoClickerWorkWithAOTV;
@@ -61,6 +61,10 @@ public final class DarkUtilsConfig {
     public boolean arrowAlignmentDeviceSolverBlockIncorrectClicks;
     public boolean arrowStackWaypoints;
     public boolean dungeonTimer;
+    public float dungeonTimerScale = 1.0F;
+    public int dungeonTimerOffsetX = 0;
+    public int dungeonTimerOffsetY = 0;
+    public boolean dungeonTimerNoItemIcon;
     public boolean bloodClearedNotification;
 
     // === Visual Tweaks ===

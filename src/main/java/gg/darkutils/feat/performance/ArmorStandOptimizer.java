@@ -1,7 +1,6 @@
 package gg.darkutils.feat.performance;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.mixin.accessors.LivingEntityAccessor;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
@@ -156,7 +155,7 @@ public final class ArmorStandOptimizer {
     }
 
     private static final boolean isInventoryEmpty(@NotNull final ArmorStandEntity armorStand) {
-        return ((LivingEntityAccessor) armorStand).getEquipment().isEmpty();
+        return armorStand.equipment.isEmpty();
     }
 
     private static final void setShouldSkipRender(@NotNull final ArmorStandEntity armorStand, final boolean shouldSkipRender) {

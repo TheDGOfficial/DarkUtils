@@ -4,6 +4,7 @@ import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHud;
 import org.jetbrains.annotations.NotNull;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -24,7 +25,7 @@ final class ChatHudMixin {
                     target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V"
             ),
             slice = @Slice(
-                    from = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/hud/ChatHud;scrolledLines:I")
+                    from = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/hud/ChatHud;scrolledLines:I", opcode = Opcodes.GETFIELD)
                     // no "to" means slice extends to end of method
             )
     )

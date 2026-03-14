@@ -1,7 +1,6 @@
 package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.mixin.accessors.MinecraftClientAccessor;
 import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.ChatUtils;
@@ -145,7 +144,7 @@ public final class AutoFishingRod {
         TickUtils.queueTickTask(() -> {
             final var mc = MinecraftClient.getInstance();
             if (DarkUtilsConfig.INSTANCE.autoFishingWorkThroughMenus || null == mc.currentScreen) {
-                ((MinecraftClientAccessor) mc).callDoItemUse();
+                mc.doItemUse();
                 continuation.run();
             }
         }, delay);

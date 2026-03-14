@@ -250,13 +250,32 @@ public final class ChatUtils {
         return ChatUtils.fillRemainingOf(character, bold, "");
     }
 
+    private static final void validateAvailable(@NotNull final String name, @Nullable final Object nullable) {
+        if (null == nullable) {
+            throw new IllegalStateException("called before " + name + " is available");
+        }
+    }
+
+    private static final int getChatWidth(@NotNull final MinecraftClient mc) {
+        final var inGameHud = mc.inGameHud;
+
+        ChatUtils.validateAvailable("inGameHud", inGameHud);
+
+        return inGameHud.getChatHud().getWidth();
+    }
+
     @NotNull
     public static final String fillRemainingOf(final char character, final boolean bold, @NotNull final String middleText) {
         final var mc = MinecraftClient.getInstance();
         final var style = Style.EMPTY.withBold(bold);
 
-        final var chatWidth = mc.inGameHud.getChatHud().getWidth();
-        final var middleWidth = mc.textRenderer.getWidth(Text.literal(middleText).setStyle(style));
+        final var chatWidth = ChatUtils.getChatWidth(mc);
+        final var textRenderer = mc.textRenderer;
+
+        ChatUtils.validateAvailable("textRenderer", textRenderer);
+        ChatUtils.validateAvailable("player", mc.player);
+
+        final var middleWidth = textRenderer.getWidth(Text.literal(middleText).setStyle(style));
         final var toCompensate = chatWidth - middleWidth;
 
         // If text is too wide, just return the middle text unchanged
@@ -264,8 +283,9 @@ public final class ChatUtils {
             return middleText;
         }
 
-        final var fillerStr = Character.toString(character);
-        final var fillerWidth = mc.textRenderer.getWidth(Text.literal(fillerStr).setStyle(style));
+        final var characterStr = Character.toString(character);
+        final var fillerWidth = textRenderer.getWidth(Text.literal(characterStr).setStyle(style));
+
         if (0 >= fillerWidth) {
             return middleText;
         }
@@ -278,11 +298,9 @@ public final class ChatUtils {
 
         // Build base candidate
         final var rightFillers = totalFillers - leftFillers;
-        var best = String.valueOf(character).repeat(leftFillers) +
-                middleText +
-                String.valueOf(character).repeat(Math.max(0, rightFillers));
-        final var bestWidth = mc.textRenderer.getWidth(Text.literal(best).setStyle(style));
-        var bestDiff = Math.abs(chatWidth - bestWidth);
+
+        var best = characterStr.repeat(leftFillers) + middleText + characterStr.repeat(rightFillers);
+        var bestDiff = Math.abs(chatWidth - textRenderer.getWidth(Text.literal(best).setStyle(style)));
 
         // --- Adjustment Phase ---
         // Try shifting one filler left/right or adding/removing one on either side
@@ -290,8 +308,7 @@ public final class ChatUtils {
         for (var adjust = 0; 16 > adjust; ++adjust) {
             // Try adding one to the right
             var test = best + character;
-            var testWidth = mc.textRenderer.getWidth(Text.literal(test).setStyle(style));
-            var diff = Math.abs(chatWidth - testWidth);
+            var diff = Math.abs(chatWidth - textRenderer.getWidth(Text.literal(test).setStyle(style)));
             if (diff < bestDiff) {
                 best = test;
                 bestDiff = diff;
@@ -300,15 +317,14 @@ public final class ChatUtils {
 
             // Try adding one to the left
             test = character + best;
-            testWidth = mc.textRenderer.getWidth(Text.literal(test).setStyle(style));
-            diff = Math.abs(chatWidth - testWidth);
+            diff = Math.abs(chatWidth - textRenderer.getWidth(Text.literal(test).setStyle(style)));
             if (diff < bestDiff) {
                 best = test;
                 bestDiff = diff;
                 continue;
             }
 
-            // No improvement possible → stop
+            // No improvement possible - stop
             return best;
         }
 

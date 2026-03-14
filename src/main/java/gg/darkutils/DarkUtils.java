@@ -32,6 +32,7 @@ import gg.darkutils.feat.qol.RejoinCooldownDisplay;
 import gg.darkutils.feat.qol.ServerTPSCalculator;
 import gg.darkutils.feat.qol.VanillaMode;
 import gg.darkutils.utils.LazyConstants;
+import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
@@ -187,23 +188,29 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final void log(@NotNull final String source, @NotNull final LogLevel level, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
-        final var finalMessage = DarkUtils.addPrefixToLogEntry(source, message);
-        var formattedMessage = null == args || 0 == args.length ? finalMessage : MessageFormatter.arrayFormat(finalMessage, args).getMessage();
+        try {
+            final var finalMessage = DarkUtils.addPrefixToLogEntry(source, message);
+            var formattedMessage = null == args || 0 == args.length ? finalMessage : MessageFormatter.arrayFormat(finalMessage, args).getMessage();
 
-        if (null == error) {
-            DarkUtils.logMessage(level, formattedMessage);
-        } else {
-            if (LogLevel.ERROR != level) {
-                throw new IllegalArgumentException("tried to log an error at a log level of " + level.name());
+            if (null == error) {
+                DarkUtils.logMessage(level, formattedMessage);
+            } else {
+                if (LogLevel.ERROR != level) {
+                    throw new IllegalArgumentException("tried to log an error at a log level of " + level.name());
+                }
+
+                // Append: error type, error reason (message), source file and line number to the message if provided.
+                formattedMessage += ": " + DarkUtils.extractCodeDetails(error);
+
+                DarkUtils.logError(formattedMessage, error);
             }
 
-            // Append: error type, error reason (message), source file and line number to the message if provided.
-            formattedMessage += ": " + DarkUtils.extractCodeDetails(error);
-
-            DarkUtils.logError(formattedMessage, error);
+            DarkUtils.logInGame(level, formattedMessage);
+        } catch (final Throwable e) {
+            // Error when handling error; fallback to simple JDK printStackTrace as last resort
+            e.printStackTrace();
+            error.printStackTrace();
         }
-
-        DarkUtils.logInGame(level, formattedMessage);
     }
 
     private static final void logMessage(@NotNull final LogLevel level, @NotNull final String formattedMessage) {
@@ -309,27 +316,33 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final void handleInitError(@NotNull final Throwable error) {
-        final var rootError = DarkUtils.getRootError(error, DarkUtils::isOurModuleFrame);
+        try {
+            final var rootError = DarkUtils.getRootError(error, DarkUtils::isOurModuleFrame);
 
-        final var ste = DarkUtils.findRelevantStackTrace(rootError.getStackTrace());
-        final var featureName = DarkUtils.deriveFeatureName(rootError.getStackTrace());
+            final var ste = DarkUtils.findRelevantStackTrace(rootError.getStackTrace());
+            final var featureName = DarkUtils.deriveFeatureName(rootError.getStackTrace());
 
-        var details = "";
-        final var msg = rootError.getMessage();
-        if (null != msg && !msg.isEmpty()) {
-            details = " Details: " + msg;
+            var details = "";
+            final var msg = rootError.getMessage();
+            if (null != msg && !msg.isEmpty()) {
+                details = " Details: " + msg;
+            }
+
+            DarkUtils.error(
+                    DarkUtils.class,
+                    "Encountered " + rootError.getClass().getSimpleName()
+                            + " at " + ste.getFileName()
+                            + " in method " + ste.getMethodName()
+                            + " (line " + ste.getLineNumber() + ')'
+                            + " while initializing feature " + featureName + '.'
+                            + details,
+                    rootError
+            );
+        } catch (final Throwable e) {
+            // Error when handling error; fallback to simple JDK printStackTrace as last resort
+            e.printStackTrace();
+            error.printStackTrace();
         }
-
-        DarkUtils.error(
-                DarkUtils.class,
-                "Encountered " + rootError.getClass().getSimpleName()
-                        + " at " + ste.getFileName()
-                        + " in method " + ste.getMethodName()
-                        + " (line " + ste.getLineNumber() + ')'
-                        + " while initializing feature " + featureName + '.'
-                        + details,
-                rootError
-        );
     }
 
     private static final boolean isOurModuleFrame(@NotNull final Throwable err) {
@@ -430,43 +443,45 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final void queueWelcomeMessageIfEnabled() {
-        if (!DarkUtilsConfig.INSTANCE.welcomeMessage) {
+        if (DarkUtilsConfig.INSTANCE.disableWelcomeMessage) {
             return;
         }
 
-        final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
-        final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
+        TickUtils.awaitLocalPlayer((player) -> {
+            final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
+            final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
 
-        final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
-        final var footer = ChatUtils.fill('▬', true);
+            final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
+            final var footer = ChatUtils.fill('▬', true);
 
-        final var gradientStart = "#54daf4";
-        final var gradientEnd = "#545eb6";
+            final var gradientStart = "#54daf4";
+            final var gradientEnd = "#545eb6";
 
-        final var text = TextBuilder
-                .withInitial(header.first(), headerFooterStyle)
-                .appendSpace()
-                .appendGradientText(gradientStart, gradientEnd, DarkUtils.class.getSimpleName(), SimpleStyle.inherited())
-                .appendSpace()
-                .append(header.second(), headerFooterStyle)
-                .appendNewLine()
-                .appendNewLine()
-                .appendGradientText(gradientStart, gradientEnd, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', SimpleStyle
-                        .centered()
-                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
-                )
-                .appendNewLine()
-                .appendNewLine()
-                .appendGradientButton(gradientStart, gradientEnd, new ButtonData("Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID), SimpleStyle
-                        .centered()
-                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
-                )
-                .appendNewLine()
-                .appendNewLine()
-                .append(footer, headerFooterStyle)
-                .build();
+            final var text = TextBuilder
+                    .withInitial(header.first(), headerFooterStyle)
+                    .appendSpace()
+                    .appendGradientText(gradientStart, gradientEnd, DarkUtils.class.getSimpleName(), SimpleStyle.inherited())
+                    .appendSpace()
+                    .append(header.second(), headerFooterStyle)
+                    .appendNewLine()
+                    .appendNewLine()
+                    .appendGradientText(gradientStart, gradientEnd, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', SimpleStyle
+                            .centered()
+                            .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                    )
+                    .appendNewLine()
+                    .appendNewLine()
+                    .appendGradientButton(gradientStart, gradientEnd, new ButtonData("Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID), SimpleStyle
+                            .centered()
+                            .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
+                    )
+                    .appendNewLine()
+                    .appendNewLine()
+                    .append(footer, headerFooterStyle)
+                    .build();
 
-        ChatUtils.sendMessageToLocalPlayer(text);
+            ChatUtils.sendMessageToLocalPlayer(text); 
+        });
     }
 
     private static final void initEvents() {
@@ -623,26 +638,30 @@ public final class DarkUtils implements ClientModInitializer {
      */
     @Override
     public final void onInitializeClient() {
-        //TickUtils.queueRepeatingTickTask(DarkUtils::onTick, 1);
+        try {
+            //TickUtils.queueRepeatingTickTask(DarkUtils::onTick, 1);
 
-        // Register mod commands
-        DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.openConfig(), DarkUtils.MOD_ID, "darkutil", "du");
-        DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.debugState(), "darkutilsdebug", "darkutildebug", "dudbg");
-        //DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.dumpLeaks(), "dumpleaks");
+            // Register mod commands
+            DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.openConfig(), "darkutil", "du");
+            DarkUtils.registerCommandWithAliases("darkutilsdebug", ctx -> DarkUtils.debugState(), "darkutildebug", "dudbg");
+            //DarkUtils.registerCommandWithAliases("dumpleaks", ctx -> DarkUtils.dumpLeaks());
 
-        // Init custom events that wrap fabric events, other things depend on them
-        DarkUtils.initEvents();
+            // Init custom events that wrap fabric events, other things depend on them
+            DarkUtils.initEvents();
 
-        // Init utils, features may depend on those so they should be init before features
-        DarkUtils.initUtils();
+            // Init utils, features may depend on those so they should be init before features
+            DarkUtils.initUtils();
 
-        // Init feature dependencies, features will depend on those so they should be init before features
-        DarkUtils.initFeatureDependencies();
+            // Init feature dependencies, features will depend on those so they should be init before features
+            DarkUtils.initFeatureDependencies();
 
-        // Init features
-        DarkUtils.initFeatures();
+            // Init features
+            DarkUtils.initFeatures();
 
-        // Send welcome message once player joins a world/server/realm
-        DarkUtils.queueWelcomeMessageIfEnabled();
+            // Send welcome message once player joins a world/server/realm
+            DarkUtils.queueWelcomeMessageIfEnabled();
+        } catch (final Throwable error) {
+            DarkUtils.error(DarkUtils.class, "Error during mod initialization", error);
+        }
     }
 }
