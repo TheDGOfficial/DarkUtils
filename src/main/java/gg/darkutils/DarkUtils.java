@@ -19,6 +19,7 @@ import gg.darkutils.feat.dungeons.SoloCrushWaypoint;
 import gg.darkutils.feat.foraging.TreeGiftConfirmation;
 import gg.darkutils.feat.foraging.TreeGiftFeatures;
 import gg.darkutils.feat.foraging.TreeGiftsPerHour;
+import gg.darkutils.feat.farming.PestCooldownDisplay;
 import gg.darkutils.feat.performance.ArmorStandOptimizer;
 import gg.darkutils.feat.performance.LogCleaner;
 import gg.darkutils.feat.performance.SoundLagFix;
@@ -512,6 +513,7 @@ public final class DarkUtils implements ClientModInitializer {
                 AutoFishingRod::init,
                 TreeGiftConfirmation::init,
                 TreeGiftsPerHour::init,
+                PestCooldownDisplay::init,
                 LogCleaner::init,
                 AutoCloseSecretChests::init,
                 DialogueSkipTimer::init,

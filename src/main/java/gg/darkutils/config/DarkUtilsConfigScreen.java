@@ -161,6 +161,15 @@ public final class DarkUtilsConfigScreen {
                 config.treeGiftsPerHour, newValue -> config.treeGiftsPerHour = newValue);
     }
 
+    private static final void addFarming(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
+        final var farming = builder.getOrCreateCategory(Text.of("Farming"));
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Pest Cooldown Display",
+                "Shows a display with remaining pest cooldown, e.g., time until you can spawn your next pests.",
+                config.pestCooldownDisplay, newValue -> config.pestCooldownDisplay = newValue);
+
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, farming, "Pest Cooldown", "Pest cooldown in seconds. Minimum cooldown currently obtainable is 135 without Finnegan and 75 with Finnegan.", config.pestCooldown, newValue -> config.pestCooldown = newValue, 135, 75, 300);
+    }
+
     private static final void addDungeons(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var dungeons = builder.getOrCreateCategory(Text.of("Dungeons"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Dialogue Skip Timer",
@@ -414,6 +423,9 @@ public final class DarkUtilsConfigScreen {
 
         // === Foraging ===
         DarkUtilsConfigScreen.addForaging(config, builder, entryBuilder);
+
+        // === Farming ===
+        DarkUtilsConfigScreen.addFarming(config, builder, entryBuilder);
 
         // === Dungeons ===
         DarkUtilsConfigScreen.addDungeons(config, builder, entryBuilder);

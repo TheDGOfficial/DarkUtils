@@ -52,6 +52,10 @@ public final class DarkUtilsConfig {
     public boolean treeGiftConfirmation;
     public boolean treeGiftsPerHour;
 
+    // === Farming ===
+    public boolean pestCooldownDisplay;
+    public int pestCooldown = 135;
+
     // === Dungeons ===
     public boolean dialogueSkipTimer;
     public boolean soloCrushTimer;
