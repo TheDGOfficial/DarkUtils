@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8.7",
   "mixinextras": {
-    "minVersion": "0.5.0"
+    "minVersion": "0.5.3"
   },
   "package": "gg.darkutils.mixin",
   "compatibilityLevel": "JAVA_21",
@@ -37,6 +37,7 @@
     "qol.ClientPlayerEntityMixin",
     "qol.ClientPlayerInteractionManagerMixin",
     "qol.MouseMixin",
+    "qol.ModAnnouncerMixin",
 
     "visuals.ChatHudMixin",
     "visuals.FireCommandRendererMixin",

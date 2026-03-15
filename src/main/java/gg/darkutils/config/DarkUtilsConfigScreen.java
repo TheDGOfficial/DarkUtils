@@ -144,6 +144,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Vanilla Mode",
                 "Automatically disables certain visual tweaks when playing a singleplayer world, such as hiding the armor and food bars. Your settings will not be actually modified and will revert to default when leaving singleplayer.",
                 config.vanillaMode, newValue -> config.vanillaMode = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Enable Mod Announcer",
+                "By default, we disable Firmament's Mod Announcer feature that silently sends all your mod list to servers you connect to without your consent. Enabling this will restore the default behaviour of Firmament, therefore compromising your privacy. It is recommended to not change this option.",
+                config.enableModAnnouncer, newValue -> config.enableModAnnouncer = newValue);
     }
 
     private static final void addForaging(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

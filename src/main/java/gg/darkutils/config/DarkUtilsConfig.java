@@ -46,6 +46,7 @@ public final class DarkUtilsConfig {
     public boolean rejoinCooldownDisplay;
     public boolean laggyServerDetector;
     public boolean vanillaMode;
+    public boolean enableModAnnouncer;
 
     // === Foraging ===
     public boolean treeGiftConfirmation;

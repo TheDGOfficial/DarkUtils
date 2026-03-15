@@ -1170,8 +1170,8 @@ tasks.named('jar', Jar).configure { final jarTask ->
 // Task class for full configuration-cache compatibility
 @CacheableTask
 abstract class CheckMethodSizesTask extends DefaultTask {
-    @CompileClasspath
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     abstract ConfigurableFileCollection getClassesDirectories()
 
     @OutputFile
@@ -1182,27 +1182,23 @@ abstract class CheckMethodSizesTask extends DefaultTask {
         final def thresholds = [huge: 8000, large: 2000, nonsmall: 325]
         final def issues = []
 
-        classesDirectories.each { final directory ->
-            if (!directory.exists()) return
+        classesDirectories.asFileTree.matching { include '**/*.class' }.each { final file ->
+            final def directory = classesDirectories.files.find { file.toPath().startsWith(it.toPath()) }
 
-            directory.eachFileRecurse { final file ->
-                if (!file.name.endsWith('.class')) return
+            final def relativePath = directory.toPath().relativize(file.toPath()).toString()
+            final def className = relativePath.replace(File.separator, '.').replaceAll('[.]class$', '')
 
-                final def relativePath = directory.toPath().relativize(file.toPath()).toString()
-                final def className = relativePath.replace(File.separator, '.').replaceAll('[.]class$', '')
+            file.withInputStream { final inputStream ->
+                new DataInputStream(inputStream).withCloseable { final dataInputStream ->
+                    final def classFile = new ClassFile(dataInputStream)
+                    classFile.methods.each { final methodInfo ->
+                        final def codeAttribute = methodInfo.codeAttribute
+                        if (codeAttribute == null) return
+                        final def size = codeAttribute.code.length
 
-                file.withInputStream { final inputStream ->
-                    new DataInputStream(inputStream).withCloseable { final dataInputStream ->
-                        final def classFile = new ClassFile(dataInputStream)
-                        classFile.methods.each { final methodInfo ->
-                            final def codeAttribute = methodInfo.codeAttribute
-                            if (codeAttribute == null) return
-                            final def size = codeAttribute.code.length
-
-                            if (size > thresholds.huge) issues << "Huge method: $className#${methodInfo.name} (bytecode size: $size)"
-                            else if (size > thresholds.large) issues << "Large method: $className#${methodInfo.name} (bytecode size: $size)"
-                            else if (size > thresholds.nonsmall) issues << "Non trivial method: $className#${methodInfo.name} (bytecode size: $size)"
-                        }
+                        if (size > thresholds.huge) issues << "Huge method: $className#${methodInfo.name} (bytecode size: $size)"
+                        else if (size > thresholds.large) issues << "Large method: $className#${methodInfo.name} (bytecode size: $size)"
+                        else if (size > thresholds.nonsmall) issues << "Non trivial method: $className#${methodInfo.name} (bytecode size: $size)"
                     }
                 }
             }
@@ -1229,14 +1225,12 @@ tasks.register('checkMethodSizes', CheckMethodSizesTask) {
 
     // Use a FileCollection as input (lazy, configuration-cache safe)
     classesDirectories.from(
-        layout.buildDirectory.dir('classes/java/main')
+        tasks.named('asmPreprocess').flatMap { it.outputClassesDir }
     )
 
     reportFile.set(
         layout.buildDirectory.file('reports/methodSizes.txt')
     )
-
-    dependsOn tasks.named('classes')
 }
 
 // Make it run after asmPreprocess
