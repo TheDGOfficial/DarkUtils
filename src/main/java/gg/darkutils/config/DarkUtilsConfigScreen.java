@@ -168,6 +168,10 @@ public final class DarkUtilsConfigScreen {
                 config.pestCooldownDisplay, newValue -> config.pestCooldownDisplay = newValue);
 
         DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, farming, "Pest Cooldown", "Pest cooldown in seconds. Minimum cooldown currently obtainable is 135 without Finnegan and 75 with Finnegan.", config.pestCooldown, newValue -> config.pestCooldown = newValue, 135, 75, 300);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Persistent Tablist while Farming",
+                "Always shows tablist while you are actively farming. Tablist shows useful info while farming in Garden, such as the percentage to the next crop milestone for the crop you are farming, the visitors in your garden, and more.",
+                config.persistentTabListWhileFarming, newValue -> config.persistentTabListWhileFarming = newValue);
     }
 
     private static final void addDungeons(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

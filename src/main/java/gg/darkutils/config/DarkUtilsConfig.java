@@ -55,6 +55,7 @@ public final class DarkUtilsConfig {
     // === Farming ===
     public boolean pestCooldownDisplay;
     public int pestCooldown = 135;
+    public boolean persistentTabListWhileFarming;
 
     // === Dungeons ===
     public boolean dialogueSkipTimer;

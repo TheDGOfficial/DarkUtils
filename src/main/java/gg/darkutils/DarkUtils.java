@@ -19,6 +19,7 @@ import gg.darkutils.feat.dungeons.SoloCrushWaypoint;
 import gg.darkutils.feat.foraging.TreeGiftConfirmation;
 import gg.darkutils.feat.foraging.TreeGiftFeatures;
 import gg.darkutils.feat.foraging.TreeGiftsPerHour;
+import gg.darkutils.feat.farming.FarmingState;
 import gg.darkutils.feat.farming.PestCooldownDisplay;
 import gg.darkutils.feat.performance.ArmorStandOptimizer;
 import gg.darkutils.feat.performance.LogCleaner;
@@ -503,7 +504,8 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.init(
                 TreeGiftFeatures::init,
                 DungeonTimer::init,
-                ServerTPSCalculator::init
+                ServerTPSCalculator::init,
+                FarmingState::init
         );
     }
 
