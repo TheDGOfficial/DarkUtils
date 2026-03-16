@@ -172,6 +172,26 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Persistent Tablist while Farming",
                 "Always shows tablist while you are actively farming. Tablist shows useful info while farming in Garden, such as the percentage to the next crop milestone for the crop you are farming, the visitors in your garden, and more.",
                 config.persistentTabListWhileFarming, newValue -> config.persistentTabListWhileFarming = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Farming Keys",
+                "Turns the keys to move forward, back, left, right and the key to attack into toggle instead of hold whilst you are farming. Note: Only one sticky movement key is active at a time. You must enable them indiviually below. Pressing any movement key will disable other sticky keys even if that movement key's sticky setting is disabled.",
+                config.stickyFarmingKeys, newValue -> config.stickyFarmingKeys = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Forward",
+                "Controls whether to enable sticky forward.",
+                config.stickyForward, newValue -> config.stickyForward = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Backward",
+                "Controls whether to enable sticky backward.",
+                config.stickyBackward, newValue -> config.stickyBackward = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Left",
+                "Controls whether to enable sticky left.",
+                config.stickyLeft, newValue -> config.stickyLeft = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Right",
+                "Controls whether to enable sticky right.",
+                config.stickyRight, newValue -> config.stickyRight = newValue);
     }
 
     private static final void addDungeons(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

@@ -19,9 +19,7 @@ public final class AutoClicker {
         }
     }
 
-    public static final boolean isPressed(@NotNull final KeyBinding keyBinding) {
-        final var actual = keyBinding.isPressed();
-
+    public static final boolean isPressed(@NotNull final KeyBinding keyBinding, final boolean actual) {
         if (!DarkUtilsConfig.INSTANCE.autoClicker || !actual) {
             return actual;
         }
@@ -35,9 +33,7 @@ public final class AutoClicker {
         return true;
     }
 
-    public static final boolean wasPressed(@NotNull final KeyBinding keyBinding) {
-        final var actual = keyBinding.wasPressed();
-
+    public static final boolean wasPressed(@NotNull final KeyBinding keyBinding, final boolean actual) {
         if (!DarkUtilsConfig.INSTANCE.autoClicker) {
             return actual;
         }

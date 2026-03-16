@@ -1,5 +1,7 @@
 package gg.darkutils.feat.farming;
 
+import gg.darkutils.utils.chat.ChatUtils;
+
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 
 import java.util.concurrent.TimeUnit;
@@ -19,7 +21,7 @@ public final class FarmingState {
                 return;
             }
 
-            final var text = message.getString();
+            final var text = ChatUtils.removeControlCodes(message.getString());
 
             if (text.contains(" Farming (")) {
                 FarmingState.onFarmingXp();

@@ -56,6 +56,11 @@ public final class DarkUtilsConfig {
     public boolean pestCooldownDisplay;
     public int pestCooldown = 135;
     public boolean persistentTabListWhileFarming;
+    public boolean stickyFarmingKeys;
+    public boolean stickyForward;
+    public boolean stickyBackward;
+    public boolean stickyLeft;
+    public boolean stickyRight;
 
     // === Dungeons ===
     public boolean dialogueSkipTimer;
