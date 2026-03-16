@@ -2,9 +2,8 @@ package gg.darkutils;
 
 import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RoundingMode;
-
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 final class MathUtilsTest {
     @Test

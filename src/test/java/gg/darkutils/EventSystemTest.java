@@ -1,22 +1,19 @@
 package gg.darkutils;
 
-import gg.darkutils.events.base.Event;
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
+import gg.darkutils.events.base.Event;
+import gg.darkutils.events.base.EventListener;
 import gg.darkutils.events.base.EventPriority;
 import gg.darkutils.events.base.EventRegistry;
-import gg.darkutils.events.base.EventListener;
 import gg.darkutils.events.base.NonCancellableEvent;
-
 import org.jetbrains.annotations.NotNull;
-
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 

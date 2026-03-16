@@ -1,23 +1,19 @@
 package gg.darkutils;
 
 import gg.darkutils.utils.chat.ChatUtils;
-import gg.darkutils.utils.chat.SimpleStyle;
 import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.SimpleFormatting;
+import gg.darkutils.utils.chat.SimpleStyle;
 import gg.darkutils.utils.chat.TextBuilder;
-
-import net.minecraft.text.Text;
 import net.minecraft.text.Style;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 final class ChatUtilsHasFormattingTest {
     @Test
     final void shouldDetectColorFormattingInsideComponent() {
-        final var style = SimpleStyle.colored(SimpleColor.RED);
-
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle.colored(SimpleColor.RED))
                 .build();
@@ -109,10 +105,6 @@ final class ChatUtilsHasFormattingTest {
 
     @Test
     final void shouldDetectItalicFormattingInsideComponent() {
-        final var style = SimpleStyle
-                .colored(SimpleColor.YELLOW)
-                .also(SimpleStyle.formatted(SimpleFormatting.ITALIC));
-
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle
                         .colored(SimpleColor.YELLOW)
@@ -130,10 +122,6 @@ final class ChatUtilsHasFormattingTest {
 
     @Test
     final void shouldDetectUnderlineFormattingInsideComponent() {
-        final var style = SimpleStyle
-                .colored(SimpleColor.AQUA)
-                .also(SimpleStyle.formatted(SimpleFormatting.UNDERLINE));
-
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle
                         .colored(SimpleColor.AQUA)
@@ -151,10 +139,6 @@ final class ChatUtilsHasFormattingTest {
 
     @Test
     final void shouldDetectStrikethroughFormattingInsideComponent() {
-        final var style = SimpleStyle
-                .colored(SimpleColor.GREEN)
-                .also(SimpleStyle.formatted(SimpleFormatting.STRIKETHROUGH));
-
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle
                         .colored(SimpleColor.GREEN)
@@ -172,10 +156,6 @@ final class ChatUtilsHasFormattingTest {
 
     @Test
     final void shouldDetectObfuscatedFormattingInsideComponent() {
-        final var style = SimpleStyle
-                .colored(SimpleColor.RED)
-                .also(SimpleStyle.formatted(SimpleFormatting.OBFUSCATED));
-
         final var text = TextBuilder
                 .withInitial("Hello", SimpleStyle
                         .colored(SimpleColor.RED)

@@ -1,5 +1,6 @@
 package gg.darkutils.mixin.visuals;
 
+import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -107,6 +108,6 @@ final class LightmapTextureManagerMixin {
         }
 
         // Won't be the case unless vanilla moved hasStatusEffect around messing with our ordinal
-        throw new IllegalStateException("@fileName@ needs updating, ordinal for hasStatusEffect did not match");
+        throw new IllegalStateException("@fileName@ needs updating, ordinal for hasStatusEffect did not match (" + DarkUtils.class.getSimpleName() + ')');
     }
 }

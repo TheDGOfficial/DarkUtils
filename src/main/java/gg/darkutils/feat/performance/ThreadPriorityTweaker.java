@@ -2,7 +2,6 @@ package gg.darkutils.feat.performance;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
-
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

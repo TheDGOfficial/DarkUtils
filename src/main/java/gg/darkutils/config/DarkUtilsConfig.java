@@ -2,26 +2,21 @@ package gg.darkutils.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import gg.darkutils.DarkUtils;
 import gg.darkutils.events.ConfigSaveFinishEvent;
 import gg.darkutils.events.ConfigSaveStartEvent;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import gg.darkutils.utils.LogLevel;
-
 import net.fabricmc.loader.api.FabricLoader;
-
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 public final class DarkUtilsConfig {
     private static final @NotNull Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -41,7 +36,7 @@ public final class DarkUtilsConfig {
     public boolean alwaysSprint;
     public boolean ghostBlockKey;
     public boolean autoTip;
-    public boolean welcomeMessage;
+    public boolean disableWelcomeMessage;
     public boolean autoClicker;
     public boolean autoClickerWorkInLevers;
     public boolean autoClickerWorkWithAOTV;
@@ -51,14 +46,26 @@ public final class DarkUtilsConfig {
     public boolean rejoinCooldownDisplay;
     public boolean laggyServerDetector;
     public boolean vanillaMode;
+    public boolean enableModAnnouncer;
 
     // === Foraging ===
     public boolean treeGiftConfirmation;
     public boolean treeGiftsPerHour;
 
+    // === Farming ===
+    public boolean pestCooldownDisplay;
+    public int pestCooldown = 135;
+    public boolean persistentTabListWhileFarming;
+    public boolean stickyFarmingKeys;
+    public boolean stickyForward;
+    public boolean stickyBackward;
+    public boolean stickyLeft;
+    public boolean stickyRight;
+
     // === Dungeons ===
     public boolean dialogueSkipTimer;
     public boolean soloCrushTimer;
+    public boolean soloCrushWaypoint;
     public boolean autoCloseSecretChests;
     public boolean replaceDiorite;
     public boolean arrowAlignmentDeviceSolver;
@@ -66,6 +73,10 @@ public final class DarkUtilsConfig {
     public boolean arrowAlignmentDeviceSolverBlockIncorrectClicks;
     public boolean arrowStackWaypoints;
     public boolean dungeonTimer;
+    public float dungeonTimerScale = 1.0F;
+    public int dungeonTimerOffsetX = 0;
+    public int dungeonTimerOffsetY = 0;
+    public boolean dungeonTimerNoItemIcon;
     public boolean bloodClearedNotification;
 
     // === Visual Tweaks ===

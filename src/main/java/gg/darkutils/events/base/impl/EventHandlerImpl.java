@@ -1,13 +1,13 @@
 package gg.darkutils.events.base.impl;
 
 import gg.darkutils.DarkUtils;
-import gg.darkutils.utils.JavaUtils;
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationResult;
 import gg.darkutils.events.base.Event;
 import gg.darkutils.events.base.EventHandler;
 import gg.darkutils.events.base.EventListener;
 import gg.darkutils.events.base.NonCancellableEvent;
+import gg.darkutils.utils.JavaUtils;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import org.jetbrains.annotations.NotNull;
 

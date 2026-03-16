@@ -21,7 +21,7 @@ abstract class ArmorStandEntityRendererMixin<T extends ArmorStandEntity, S exten
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Redirect(method = "hasLabel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/decoration/ArmorStandEntity;isCustomNameVisible()Z"))
+    @Redirect(method = "hasLabel(Lnet/minecraft/entity/decoration/ArmorStandEntity;D)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/decoration/ArmorStandEntity;isCustomNameVisible()Z"))
     private final boolean darkutils$skipRenderingLabelIfEnabled(@NotNull final ArmorStandEntity armorStand) {
         return armorStand.isCustomNameVisible() && ArmorStandOptimizer.shouldNotSkipRenderArmorStand(armorStand);
     }

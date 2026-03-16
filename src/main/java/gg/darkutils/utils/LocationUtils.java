@@ -48,6 +48,10 @@ public final class LocationUtils {
         return LocationUtils.SkyblockIsland.GALATEA == LocationUtils.skyblockIsland;
     }
 
+    public static final boolean isInGarden() {
+        return LocationUtils.SkyblockIsland.GARDEN == LocationUtils.skyblockIsland;
+    }
+
     public static final boolean isInSkyblock() {
         return LocationUtils.isInSkyblock;
     }
@@ -62,7 +66,8 @@ public final class LocationUtils {
 
     private enum SkyblockIsland {
         DUNGEONS,
-        GALATEA;
+        GALATEA,
+        GARDEN;
 
         private SkyblockIsland() {
         }
@@ -71,6 +76,7 @@ public final class LocationUtils {
             return null == id ? null : switch (id) {
                 case "dungeon" -> LocationUtils.SkyblockIsland.DUNGEONS;
                 case "foraging_2" -> LocationUtils.SkyblockIsland.GALATEA;
+                case "garden" -> LocationUtils.SkyblockIsland.GARDEN;
                 default -> null;
             };
         }

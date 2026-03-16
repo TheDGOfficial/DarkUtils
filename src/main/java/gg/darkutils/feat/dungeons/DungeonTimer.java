@@ -8,8 +8,8 @@ import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.ChatUtils;
+import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
@@ -17,19 +17,21 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+
+import org.joml.Matrix3x2fStack;
 
 public final class DungeonTimer {
     private static final long TICK_NANOS = TimeUnit.MILLISECONDS.toNanos(50L);
@@ -303,16 +305,16 @@ public final class DungeonTimer {
         return DungeonTimer.formatSeconds(wholeSeconds);
     }
 
-    private static final int nextRenderSlot() {
-        return DungeonTimer.slotIndex++;
-    }
+    private static final void line(@NotNull final DungeonTimer.DungeonPhase start, @NotNull final DungeonTimer.DungeonPhase end, @NotNull final String prettyName, @NotNull final Formatting color, @Nullable Item optionalItemIcon) {
+        if (null != optionalItemIcon && DarkUtilsConfig.INSTANCE.dungeonTimerNoItemIcon) {
+            optionalItemIcon = null;
+        }
 
-    private static final void line(@NotNull final DungeonTimer.DungeonPhase start, @NotNull final DungeonTimer.DungeonPhase end, @NotNull final String prettyName, @NotNull final Formatting color, @Nullable final Item optionalItemIcon) {
-        final var slot = DungeonTimer.nextRenderSlot();
+        final var slot = ++DungeonTimer.slotIndex;
 
         final DungeonTimer.RenderableLine line;
 
-        if (slot >= DungeonTimer.PHASE_LINES.size()) {
+        if (slot >= DungeonTimer.PHASE_LINES.size() - 1) {
             line = new DungeonTimer.RenderableLine(RenderUtils.createRenderingText(), color, optionalItemIcon);
             DungeonTimer.PHASE_LINES.add(line);
         } else {
@@ -589,17 +591,34 @@ public final class DungeonTimer {
         final var client = MinecraftClient.getInstance();
 
         final var textRenderer = client.textRenderer;
+
         final var lineHeight = textRenderer.fontHeight;
         final var lineSpacing = 7; // TODO find best value, maybe increase it to 8
 
         final var iconSize = 16;
         final var iconTextGap = 4;
 
-        final var baseTextX = RenderUtils.CHAT_ALIGNED_X + RenderUtils.CHAT_ALIGNED_X * 10;
-        final var baseIconX = RenderUtils.CHAT_ALIGNED_X;
+        final var offsetX = DarkUtilsConfig.INSTANCE.dungeonTimerOffsetX;
+        final var offsetY = DarkUtilsConfig.INSTANCE.dungeonTimerOffsetY;
+
+        final var baseTextX = RenderUtils.CHAT_ALIGNED_X + RenderUtils.CHAT_ALIGNED_X * 10 + offsetX;
+        final var baseIconX = baseTextX - (iconSize + iconTextGap);
 
         final var totalHeight = DungeonTimer.linesSize * (lineHeight + lineSpacing) - lineSpacing;
-        final var baseY = RenderUtils.MIDDLE_ALIGNED_Y.getAsInt() - (totalHeight >> 1);
+        final var baseY = RenderUtils.MIDDLE_ALIGNED_Y.getAsInt() - (totalHeight >> 1) + offsetY;
+
+        final var scale = DarkUtilsConfig.INSTANCE.dungeonTimerScale;
+
+        Matrix3x2fStack matrices = null;
+
+        if (1.0F != scale) {
+            matrices = context.getMatrices();
+            matrices.pushMatrix();
+
+            matrices.translate(baseTextX, baseY);
+            matrices.scale(scale, scale);
+            matrices.translate(-baseTextX, -baseY);
+        }
 
         for (int i = 0, len = DungeonTimer.linesSize; i < len; ++i) {
             final var line = DungeonTimer.activeLines.get(i);
@@ -612,7 +631,7 @@ public final class DungeonTimer {
                         context,
                         line.optionalItemIcon(),
                         baseIconX,
-                        y - (iconSize - lineHeight >> 1)
+                        y - ((iconSize - lineHeight) >> 1)
                 );
             }
 
@@ -623,6 +642,10 @@ public final class DungeonTimer {
                     y,
                     line.color()
             );
+        }
+
+        if (null != matrices) {
+            matrices.popMatrix();
         }
     }
 

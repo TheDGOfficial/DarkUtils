@@ -1,4 +1,5 @@
 import javassist.bytecode.ClassFile
+import net.fabricmc.loom.task.RemapJarTask
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.objectweb.asm.ClassReader
@@ -15,7 +16,6 @@ import java.util.concurrent.TimeUnit
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
-import net.fabricmc.loom.task.RemapJarTask
 
 buildscript {
     repositories {
@@ -74,6 +74,8 @@ repositories {
 }
 
 loom {
+    accessWidenerPath = file('src/main/resources/darkutils.classtweaker')
+
     mods {
         'darkutils' {
             sourceSet sourceSets.main
@@ -173,11 +175,7 @@ abstract class PreprocessMixinNamesTask extends DefaultTask {
         final def inputDirectory = inputDir.get().asFile
         final def outputDirectory = outputDir.get().asFile
 
-        fs.delete {
-            it.delete(outputDirectory)
-        }
-
-        fs.copy { spec ->
+        fs.copy { final def spec ->
             spec.from(inputDirectory)
             spec.into(outputDirectory)
             spec.include('**/*.java')
@@ -198,14 +196,10 @@ tasks.register('preprocessMixinNames', PreprocessMixinNamesTask) {
     outputDir.set(layout.buildDirectory.dir('preprocessed/java'))
 }
 
-sourceSets {
-    main {
-        java {
-            srcDirs = []
+tasks.named('compileJava', JavaCompile).configure {
+    dependsOn(tasks.named('preprocessMixinNames'))
 
-            srcDir(tasks.named('preprocessMixinNames'))
-        }
-    }
+    source = fileTree(tasks.named('preprocessMixinNames').get().outputDir)
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -272,14 +266,14 @@ publishing {
 }
 
 final class BatchedMessageCollector {
-    private static final HashMap<Integer, ArrayList<String>> messages = new HashMap<>()
+    private static final HashMap<Integer, ArrayList<String>> MESSAGES = new HashMap<>()
 
     private static final void add(final int messageCategory, final String message) {
-        BatchedMessageCollector.messages.computeIfAbsent(messageCategory, c -> new ArrayList<>()).add(message)
+        BatchedMessageCollector.MESSAGES.computeIfAbsent(messageCategory, category -> new ArrayList<>()).add(message)
     }
 
     private static final void logAll(final Logger logger) {
-        for (final def entry : BatchedMessageCollector.messages.entrySet()) {
+        for (final def entry : BatchedMessageCollector.MESSAGES.entrySet()) {
             final def category = entry.key
             final def messages = entry.value
 
@@ -292,10 +286,10 @@ final class BatchedMessageCollector {
 }
 
 final class JrtHolder {
-    private static final def JRT = FileSystems.getFileSystem(URI.create("jrt:/"))
+    private static final def JRT_FILESYSTEM = FileSystems.getFileSystem(URI.create('jrt:/'))
 
     static final def getJrt() {
-        return JRT
+        return JRT_FILESYSTEM
     }
 }
 
@@ -325,12 +319,12 @@ abstract class AsmPreprocessTask extends DefaultTask {
     @Inject
     abstract FileSystemOperations getFs()
 
-    protected final void copyFile(final File from, final File to) {
+    protected final void copyFile(final File from, final File into) {
         fs.copy {
             it.from(from)
-            it.into(to.parentFile)
+            it.into(into.parentFile)
 
-            it.rename { to.name }
+            it.rename { into.name }
         }
     }
 
@@ -365,8 +359,8 @@ abstract class AsmPreprocessTask extends DefaultTask {
                 continue
             }
 
-            for (final def m : cn.methods) {
-                if (m.name == name && m.desc == desc) {
+            for (final def mn : cn.methods) {
+                if (mn.name == name && mn.desc == desc) {
                     return true
                 }
             }
@@ -400,11 +394,11 @@ abstract class AsmPreprocessTask extends DefaultTask {
             }
 
             if (root.name.endsWith('.jar')) {
-                try (final def jar = new JarFile(root)) {
-                    final def e = jar.getJarEntry(entry)
+                try (final def jarFile = new JarFile(root)) {
+                    final def jarEntry = jarFile.getJarEntry(entry)
 
-                    if (null != e) {
-                        return AsmPreprocessTask.readNode(jar.getInputStream(e).bytes)
+                    if (null != jarEntry) {
+                        return AsmPreprocessTask.readNode(jarFile.getInputStream(jarEntry).bytes)
                     }
                 }
             }
@@ -437,21 +431,21 @@ abstract class AsmPreprocessTask extends DefaultTask {
     }
 
     private static final boolean hasAnnotation(final MethodNode mn, final String desc) {
-        final def anns = mn.visibleAnnotations
+        final def annotationNodes = mn.visibleAnnotations
 
-        if (null != anns) {
-            for (final def a : anns) {
-                if (a.desc == desc) {
+        if (null != annotationNodes) {
+            for (final def annotationNode : annotationNodes) {
+                if (annotationNode.desc == desc) {
                     return true
                 }
             }
         }
 
-        final def ianns = mn.invisibleAnnotations
+        final def invisibleAnnotationNodes = mn.invisibleAnnotations
 
-        if (null != ianns) {
-            for (final def a : ianns) {
-                if (a.desc == desc) {
+        if (null != invisibleAnnotationNodes) {
+            for (final def annotationNode : invisibleAnnotationNodes) {
+                if (annotationNode.desc == desc) {
                     return true
                 }
             }
@@ -496,8 +490,8 @@ abstract class AsmPreprocessTask extends DefaultTask {
         if (constantFold) {
             final def fieldsBySig = HashMap.<String, FieldNode>newHashMap(cn.fields.size())
 
-            for (final def f : cn.fields) {
-                fieldsBySig[f.name + f.desc] = f
+            for (final def fn : cn.fields) {
+                fieldsBySig[fn.name + fn.desc] = fn
             }
 
             for (final def mn : cn.methods) {
@@ -578,16 +572,16 @@ abstract class AsmPreprocessTask extends DefaultTask {
                         final def put = (FieldInsnNode) insn
                         final def prev = put.previous
 
-                        final def f = fieldsBySig[put.name + put.desc]
+                        final def fn = fieldsBySig[put.name + put.desc]
 
-                        if ((0 != (f.access & Opcodes.ACC_PRIVATE)) && (0 != (f.access & Opcodes.ACC_STATIC)) && (0 != (f.access & Opcodes.ACC_FINAL)) && prev instanceof LdcInsnNode && prev.cst instanceof Long) {
+                        if ((0 != (fn.access & Opcodes.ACC_PRIVATE)) && (0 != (fn.access & Opcodes.ACC_STATIC)) && (0 != (fn.access & Opcodes.ACC_FINAL)) && prev instanceof LdcInsnNode && prev.cst instanceof Long) {
                             constantFields[put.owner + put.name + put.desc] = prev.cst as long
 
                             mn.instructions.remove(prev)
                             mn.instructions.remove(insn)
 
                             changed = true
-                            if (verbose) BatchedMessageCollector.add(29, "Removed putstatic to constant field ${cn.name}#${f.name} = ${prev.cst}")
+                            if (verbose) BatchedMessageCollector.add(29, "Removed putstatic to constant field ${cn.name}#${fn.name} = ${prev.cst}")
                         }
                     }
 
@@ -909,8 +903,8 @@ abstract class AsmPreprocessTask extends DefaultTask {
 
         final def methodsBySig = HashMap.<String, MethodNode>newHashMap(cn.methods.size())
 
-        for (final def m : cn.methods) {
-            methodsBySig[m.name + m.desc] = m
+        for (final def mn : cn.methods) {
+            methodsBySig[mn.name + mn.desc] = mn
         }
 
         for (final def ownerMethod : cn.methods) {
@@ -983,10 +977,6 @@ abstract class AsmPreprocessTask extends DefaultTask {
 
         final def inputDir = inputClassesDir.get().asFile
         final def outputDir = outputClassesDir.get().asFile
-
-        fs.delete {
-            it.delete(outputDir)
-        }
 
         final def privatizedMethodsByClass = new HashMap<String, HashSet<String>>()
         final def constantFields = new HashMap<String, Long>()
@@ -1126,7 +1116,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
                     return
                 }
 
-                def cw = new ClassWriter(0)
+                final def cw = new ClassWriter(0)
                 cn.accept(cw)
 
                 try {
@@ -1180,8 +1170,8 @@ tasks.named('jar', Jar).configure { final jarTask ->
 // Task class for full configuration-cache compatibility
 @CacheableTask
 abstract class CheckMethodSizesTask extends DefaultTask {
-    @CompileClasspath
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     abstract ConfigurableFileCollection getClassesDirectories()
 
     @OutputFile
@@ -1192,27 +1182,23 @@ abstract class CheckMethodSizesTask extends DefaultTask {
         final def thresholds = [huge: 8000, large: 2000, nonsmall: 325]
         final def issues = []
 
-        classesDirectories.each { final directory ->
-            if (!directory.exists()) return
+        classesDirectories.asFileTree.matching { include '**/*.class' }.each { final file ->
+            final def directory = classesDirectories.files.find { file.toPath().startsWith(it.toPath()) }
 
-            directory.eachFileRecurse { final file ->
-                if (!file.name.endsWith('.class')) return
+            final def relativePath = directory.toPath().relativize(file.toPath()).toString()
+            final def className = relativePath.replace(File.separator, '.').replaceAll('[.]class$', '')
 
-                final def relativePath = directory.toPath().relativize(file.toPath()).toString()
-                final def className = relativePath.replace(File.separator, '.').replaceAll('[.]class$', '')
+            file.withInputStream { final inputStream ->
+                new DataInputStream(inputStream).withCloseable { final dataInputStream ->
+                    final def classFile = new ClassFile(dataInputStream)
+                    classFile.methods.each { final methodInfo ->
+                        final def codeAttribute = methodInfo.codeAttribute
+                        if (codeAttribute == null) return
+                        final def size = codeAttribute.code.length
 
-                file.withInputStream { final inputStream ->
-                    new DataInputStream(inputStream).withCloseable { final dataInputStream ->
-                        final def classFile = new ClassFile(dataInputStream)
-                        classFile.methods.each { final methodInfo ->
-                            final def codeAttribute = methodInfo.codeAttribute
-                            if (codeAttribute == null) return
-                            final def size = codeAttribute.code.length
-
-                            if (size > thresholds.huge) issues << "Huge method: $className#${methodInfo.name} (bytecode size: $size)"
-                            else if (size > thresholds.large) issues << "Large method: $className#${methodInfo.name} (bytecode size: $size)"
-                            else if (size > thresholds.nonsmall) issues << "Non trivial method: $className#${methodInfo.name} (bytecode size: $size)"
-                        }
+                        if (size > thresholds.huge) issues << "Huge method: $className#${methodInfo.name} (bytecode size: $size)"
+                        else if (size > thresholds.large) issues << "Large method: $className#${methodInfo.name} (bytecode size: $size)"
+                        else if (size > thresholds.nonsmall) issues << "Non trivial method: $className#${methodInfo.name} (bytecode size: $size)"
                     }
                 }
             }
@@ -1239,14 +1225,12 @@ tasks.register('checkMethodSizes', CheckMethodSizesTask) {
 
     // Use a FileCollection as input (lazy, configuration-cache safe)
     classesDirectories.from(
-        layout.buildDirectory.dir('classes/java/main')
+        tasks.named('asmPreprocess').flatMap { it.outputClassesDir }
     )
 
     reportFile.set(
         layout.buildDirectory.file('reports/methodSizes.txt')
     )
-
-    dependsOn tasks.named('classes')
 }
 
 // Make it run after asmPreprocess
@@ -1273,10 +1257,6 @@ abstract class CreateJavaBaseLibraryJarTask extends DefaultTask {
         logger.lifecycle('Generating java.base jrt libraryjar...')
 
         final def outputFile = outputJar.get().asFile
-
-        fs.delete {
-            it.delete(outputFile)
-        }
 
         outputFile.parentFile.mkdirs()
 
@@ -1375,7 +1355,7 @@ static final Provider<File> resolveMinecraftDir(final Project project) {
     return finalPath.map { new File(it) }
 }
 
-@DisableCachingByDefault(because = "Installs to external Minecraft mods directory")
+@DisableCachingByDefault(because = 'Installs to external Minecraft mods directory')
 abstract class InstallToModFolderTask extends DefaultTask {
     @Classpath
     @InputFile

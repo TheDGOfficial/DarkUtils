@@ -2,14 +2,12 @@
   "required": true,
   "minVersion": "0.8.7",
   "mixinextras": {
-    "minVersion": "0.5.0"
+    "minVersion": "0.5.3"
   },
   "package": "gg.darkutils.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "accessors.MinecraftClientAccessor",
     "accessors.ChatHudAccessor",
-    "accessors.LivingEntityAccessor",
 
     "bugfixes.HandledScreenMixin",
     "bugfixes.InactivityFpsLimiterMixin",
@@ -41,6 +39,8 @@
     "qol.ClientPlayerEntityMixin",
     "qol.ClientPlayerInteractionManagerMixin",
     "qol.MouseMixin",
+    "qol.ModAnnouncerMixin",
+    "qol.KeyboardInputMixin"
 
     "visuals.ChatHudMixin",
     "visuals.FireCommandRendererMixin",

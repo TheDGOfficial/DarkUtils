@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.InteractEntityEvent;
+import gg.darkutils.feat.farming.StickyFarmingKeys;
 import gg.darkutils.feat.qol.AutoClicker;
 import gg.darkutils.utils.Helpers;
 import net.minecraft.client.MinecraftClient;
@@ -60,17 +61,18 @@ final class MinecraftClientMixin {
 
     @Inject(method = "handleInputEvents", at = @At("HEAD"))
     private final void darkutils$resetState(@NotNull final CallbackInfo ci) {
+        StickyFarmingKeys.resetState();
         AutoClicker.resetState();
     }
 
     @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;wasPressed()Z"))
     private final boolean darkutils$wasPressed$modifyReturnValueIfApplicable(@NotNull final KeyBinding keyBinding) {
-        return AutoClicker.wasPressed(keyBinding);
+        return AutoClicker.wasPressed(keyBinding, StickyFarmingKeys.wasPressed(keyBinding));
     }
 
     @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private final boolean darkutils$isPressed$modifyReturnValueIfApplicable(@NotNull final KeyBinding keyBinding) {
-        return AutoClicker.isPressed(keyBinding);
+        return AutoClicker.isPressed(keyBinding, StickyFarmingKeys.isPressed(keyBinding, false));
     }
 
     @WrapOperation(method = "doItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;interactEntityAtLocation(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/util/hit/EntityHitResult;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"))

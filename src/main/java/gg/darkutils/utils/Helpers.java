@@ -1,7 +1,6 @@
 package gg.darkutils.utils;
 
 import gg.darkutils.utils.chat.ChatUtils;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -160,7 +159,7 @@ public final class Helpers {
         // Very unlikely check, branch predictor or even the C2 will realize the if is never true unless mojang actually adds another enum value to Hand enum.
         if (!main && Hand.OFF_HAND != hand) {
             // We must be in the future and 3-handed player exists
-            throw new UnsupportedOperationException("Helpers cache needs updating for new possible hand " + hand.name());
+            throw new UnsupportedOperationException("Helpers cache needs updating for new possible hand " + hand.name() + " (" + Helpers.class.getName() + ')');
         }
 
         return Helpers.getItemStackInHand(main);

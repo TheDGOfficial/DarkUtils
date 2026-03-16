@@ -2,19 +2,16 @@ package gg.darkutils;
 
 import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.Event;
-import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.events.base.EventListener;
-
+import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.chat.SimpleColor;
-import gg.darkutils.utils.chat.SimpleStyle;
 import gg.darkutils.utils.chat.SimpleFormatting;
+import gg.darkutils.utils.chat.SimpleStyle;
 import gg.darkutils.utils.chat.TextBuilder;
-
 import net.minecraft.text.Text;
-
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;

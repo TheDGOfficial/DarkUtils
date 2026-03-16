@@ -36,6 +36,17 @@ public final class DarkUtilsConfigScreen {
                 .build());
     }
 
+    private static final void addSimpleFloatSetting(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, final float value, @NotNull final Consumer<Float> setter, final float defaultValue, final float min, final float max) {
+        configCategory.addEntry(configEntryBuilder
+                .startFloatField(Text.of(name), value)
+                .setDefaultValue(defaultValue)
+                .setMin(min)
+                .setMax(max)
+                .setTooltip(Text.of(desc))
+                .setSaveConsumer(setter)
+                .build());
+    }
+
     private static final void addSimpleBooleanToggle(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, final boolean value, @NotNull final Consumer<Boolean> setter) {
         configCategory.addEntry(configEntryBuilder
                 .startBooleanToggle(Text.of(name), value)
@@ -94,12 +105,12 @@ public final class DarkUtilsConfigScreen {
     }
 
     private static final void addQualityOfLifeSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory qol) {
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Welcome Message",
-                "Sends a cool welcome message about the mod with a button to open the settings menu quickly or learn more about the mod.",
-                config.welcomeMessage, newValue -> config.welcomeMessage = newValue);
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Disable Welcome Message",
+                "Normally, we send a cool welcome message about the mod with a button to open the settings menu quickly or learn more about the mod. If you enable this option, the message won't be sent.",
+                config.disableWelcomeMessage, newValue -> config.disableWelcomeMessage = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker",
-                "Stop carpal tunnel by automatically sending clicks when you are holding down the mouse buttons when holding swords of any type, the huntaxe (for damage and ferocity swap) or the diana spades (for burrow-digging). Right-clicks are only sent for Hyperion/Astraea.",
+                "Stop carpal tunnel by automatically sending clicks when you are holding down the mouse buttons when holding swords of any type, the huntaxe (for damage and ferocity swap) or the diana spades (for burrow-digging). Right-clicks are only sent for Hyperion/Astraea. This clicks every-tick e.g., 20 CPS but is safe to use.",
                 config.autoClicker, newValue -> config.autoClicker = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker Work In Levers",
@@ -133,6 +144,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Vanilla Mode",
                 "Automatically disables certain visual tweaks when playing a singleplayer world, such as hiding the armor and food bars. Your settings will not be actually modified and will revert to default when leaving singleplayer.",
                 config.vanillaMode, newValue -> config.vanillaMode = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Enable Mod Announcer",
+                "By default, we disable Firmament's Mod Announcer feature that silently sends all your mod list to servers you connect to without your consent. Enabling this will restore the default behaviour of Firmament, therefore compromising your privacy. It is recommended to not change this option.",
+                config.enableModAnnouncer, newValue -> config.enableModAnnouncer = newValue);
     }
 
     private static final void addForaging(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
@@ -146,6 +161,39 @@ public final class DarkUtilsConfigScreen {
                 config.treeGiftsPerHour, newValue -> config.treeGiftsPerHour = newValue);
     }
 
+    private static final void addFarming(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
+        final var farming = builder.getOrCreateCategory(Text.of("Farming"));
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Pest Cooldown Display",
+                "Shows a display with remaining pest cooldown, e.g., time until you can spawn your next pests.",
+                config.pestCooldownDisplay, newValue -> config.pestCooldownDisplay = newValue);
+
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, farming, "Pest Cooldown", "Pest cooldown in seconds. Minimum cooldown currently obtainable is 135 without Finnegan and 75 with Finnegan.", config.pestCooldown, newValue -> config.pestCooldown = newValue, 135, 75, 300);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Persistent Tablist while Farming",
+                "Always shows tablist while you are actively farming. Tablist shows useful info while farming in Garden, such as the percentage to the next crop milestone for the crop you are farming, the visitors in your garden, and more.",
+                config.persistentTabListWhileFarming, newValue -> config.persistentTabListWhileFarming = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Farming Keys",
+                "Turns the keys to move forward, back, left, right and the key to attack into toggle instead of hold whilst you are farming. Note: Only one sticky movement key is active at a time. You must enable them indiviually below. Pressing any movement key will disable other sticky keys even if that movement key's sticky setting is disabled.",
+                config.stickyFarmingKeys, newValue -> config.stickyFarmingKeys = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Forward",
+                "Controls whether to enable sticky forward.",
+                config.stickyForward, newValue -> config.stickyForward = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Backward",
+                "Controls whether to enable sticky backward.",
+                config.stickyBackward, newValue -> config.stickyBackward = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Left",
+                "Controls whether to enable sticky left.",
+                config.stickyLeft, newValue -> config.stickyLeft = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Right",
+                "Controls whether to enable sticky right.",
+                config.stickyRight, newValue -> config.stickyRight = newValue);
+    }
+
     private static final void addDungeons(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var dungeons = builder.getOrCreateCategory(Text.of("Dungeons"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Dialogue Skip Timer",
@@ -155,6 +203,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Solo Crush Timer",
                 "Displays a timer for when to pad to crush storm solo in purple pad. Use wither cloak or a mask to bypass lightning while in pad. Pad when instructed on screen, after padding move to align with crusher immediately so that storm gets crushed when it moves towards you.",
                 config.soloCrushTimer, newValue -> config.soloCrushTimer = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Solo Crush Waypoint",
+                "Renders a waypoint for the block you need to lower the purple crusher into so that it can crush Storm the next time you lower it. You first need to lower it all the way down and then all the way up, and once you lower it down 1 time afterwards, the lowest block at the center of crusher should be inside this waypoint, and the next time you lower it storm will be crushed if you are aligned correctly behind it.",
+                config.soloCrushWaypoint, newValue -> config.soloCrushWaypoint = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Auto Close Secret Chests",
                 "Automatically closes secret chests instantly inside Dungeons, as if you were holding a bow while opening it, even if you weren't.",
@@ -176,6 +228,10 @@ public final class DarkUtilsConfigScreen {
                 "Blocks incorrect clicks after the arrow has been rotated enough times. Compatible with AutoClicker so you can finish it fast with it.",
                 config.arrowAlignmentDeviceSolverBlockIncorrectClicks, newValue -> config.arrowAlignmentDeviceSolverBlockIncorrectClicks = newValue);
 
+        DarkUtilsConfigScreen.addDungeonsSecond(config, entryBuilder, dungeons);
+    }
+
+    private static final void addDungeonsSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory dungeons) {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Arrow Stack Waypoints",
                 "Displays arrow stack waypoints in the Wither King dragon fight showing where to shoot your Last Breath arrows for optimal stacking.",
                 config.arrowStackWaypoints, newValue -> config.arrowStackWaypoints = newValue);
@@ -183,6 +239,16 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Dungeon Timer",
                 "Displays dungeon timer on left side of the screen, showing time took to finish each phase. Shows live time if not finished yet, and shows how much time is lost to server lag, with fancy item icons, separate colors, and non-phase informational splits, like Boss Total.",
                 config.dungeonTimer, newValue -> config.dungeonTimer = newValue);
+
+        DarkUtilsConfigScreen.addSimpleFloatSetting(entryBuilder, dungeons, "Dungeon Timer Scale", "Makes the Dungeon Timer HUD show smaller or bigger. Use 1.0 to keep the original size, 0.9 to make it 10% smaller, 1.1 to make it 10% bigger, 0.5 to make it half the size, 1.5 to make it 50% bigger, etc. Note: Anything other than 1.0 will cause text font to look uglier due to the way vanilla font renderer scales text.", config.dungeonTimerScale, newValue -> config.dungeonTimerScale = newValue, 1.0F, 0.5F, 1.5F);
+
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, dungeons, "Dungeon Timer Offset X", "X offset for render position of the Dungeon Timer HUD. For example, 0 keeps original position which is +2px to the right of leftmost of the screen by default, while 50 moves it 50px right, and -2 makes it render at leftmost since original position is +2px.", config.dungeonTimerOffsetX, newValue -> config.dungeonTimerOffsetX = newValue, 0, -2, Integer.MAX_VALUE);
+
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, dungeons, "Dungeon Timer Offset Y", "Y offset for render position of the Dungeon Timer HUD. For example, 0 keeps original position which is dynamically the middle of the screen by default, while 50 moves the timer down by 50px, and -50 moves it up by 50px.", config.dungeonTimerOffsetY, newValue -> config.dungeonTimerOffsetY = newValue, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Dungeon Timer No Item Icon",
+                "When enabled, disables the item icons rendering before the text. Default disabled to make the HUD look cooler, but you can disable the item icons if you prefer the HUD simpler with text-only by enabling this option.",
+                config.dungeonTimerNoItemIcon, newValue -> config.dungeonTimerNoItemIcon = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Blood Cleared Notification",
                 "Shows a message on screen when the blood room is cleared with how much time it took for it.",
@@ -381,6 +447,9 @@ public final class DarkUtilsConfigScreen {
 
         // === Foraging ===
         DarkUtilsConfigScreen.addForaging(config, builder, entryBuilder);
+
+        // === Farming ===
+        DarkUtilsConfigScreen.addFarming(config, builder, entryBuilder);
 
         // === Dungeons ===
         DarkUtilsConfigScreen.addDungeons(config, builder, entryBuilder);
