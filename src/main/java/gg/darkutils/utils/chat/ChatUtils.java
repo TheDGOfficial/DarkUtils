@@ -1,6 +1,5 @@
 package gg.darkutils.utils.chat;
 
-import gg.darkutils.mixin.accessors.ChatHudAccessor;
 import gg.darkutils.events.SentCommandEvent;
 import gg.darkutils.events.SentMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
