@@ -38,7 +38,7 @@
     "qol.ClientPlayerInteractionManagerMixin",
     "qol.MouseMixin",
     "qol.ModAnnouncerMixin",
-    "qol.KeyboardInputMixin"
+    "qol.KeyboardInputMixin",
 
     "visuals.ChatHudMixin",
     "visuals.FireCommandRendererMixin",
