@@ -227,10 +227,6 @@ public final class ChatUtils {
         return text;
     }
 
-    private static final int getChatWidth(@NotNull final MinecraftClient mc) {
-        return ((ChatHudAccessor) mc.inGameHud.getChatHud()).callGetWidth();
-    }
-
     @NotNull
     public static final String center(@NotNull final String text, final boolean bold) {
         final var mc = MinecraftClient.getInstance();
