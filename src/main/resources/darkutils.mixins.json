@@ -7,8 +7,6 @@
   "package": "gg.darkutils.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "accessors.ChatHudAccessor",
-
     "bugfixes.HandledScreenMixin",
     "bugfixes.InactivityFpsLimiterMixin",
     "bugfixes.GLFWMixin",
