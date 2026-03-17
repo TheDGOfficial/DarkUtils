@@ -22,6 +22,7 @@ import gg.darkutils.feat.foraging.TreeGiftsPerHour;
 import gg.darkutils.feat.farming.FarmingState;
 import gg.darkutils.feat.farming.PestCooldownDisplay;
 import gg.darkutils.feat.farming.StickyFarmingKeys;
+import gg.darkutils.feat.farming.EnforceZorrosCape;
 import gg.darkutils.feat.performance.ArmorStandOptimizer;
 import gg.darkutils.feat.performance.LogCleaner;
 import gg.darkutils.feat.performance.SoundLagFix;
@@ -44,6 +45,7 @@ import gg.darkutils.utils.chat.ButtonData;
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.SimpleStyle;
+import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.TextBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
@@ -179,6 +181,25 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.error(source, message, error, (Object[]) null);
     }
 
+    public enum UserMessageLevel {
+        USER_ERROR("#FF3434");
+
+        private final int rgb;
+
+        private UserMessageLevel(@NotNull final String hex) {
+            this.rgb = ChatUtils.hexToRGB(hex);
+        }
+    }
+
+    public static final void user(@NotNull final String message, @NotNull final UserMessageLevel level) {
+        ChatUtils.sendMessageToLocalPlayer(
+            TextBuilder.withInitial(DarkUtils.class.getSimpleName(), SimpleStyle.colored(ChatUtils.hexToRGB("#161616")))
+            .append(" » ", SimpleStyle.colored(ChatUtils.hexToRGB("#67F9FF")))
+            .append(message, SimpleStyle.colored(level.rgb))
+            .build()
+        );
+    }
+
     private static final void error(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
         DarkUtils.log(source, LogLevel.ERROR, message, error, args);
     }
@@ -213,7 +234,10 @@ public final class DarkUtils implements ClientModInitializer {
         } catch (final Throwable e) {
             // Error when handling error; fallback to simple JDK printStackTrace as last resort
             e.printStackTrace();
-            error.printStackTrace();
+
+            if (null != error) {
+                error.printStackTrace();
+            }
         }
     }
 
@@ -518,6 +542,7 @@ public final class DarkUtils implements ClientModInitializer {
                 TreeGiftsPerHour::init,
                 PestCooldownDisplay::init,
                 StickyFarmingKeys::init,
+                EnforceZorrosCape::init,
                 LogCleaner::init,
                 AutoCloseSecretChests::init,
                 DialogueSkipTimer::init,
