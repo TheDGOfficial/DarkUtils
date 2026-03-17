@@ -1033,14 +1033,16 @@ abstract class AsmPreprocessTask extends DefaultTask {
                         }
                     }
                 }
-
-                cn.accept(cw)
-                output = cw.toByteArray()
             }
 
             try {
                 if (verbose) BatchedMessageCollector.add(25, "Checking class ${cn.name} changed=${changed},renamed=${renamed}")
+
                 cn.accept(new CheckClassAdapter(cw, true))
+
+                if (changed) {
+                    output = cw.toByteArray()
+                }
             } catch (final Throwable error) {
                 throw new RuntimeException("class ${cn.name} has error: ${error.message}")
             }
@@ -1116,17 +1118,25 @@ abstract class AsmPreprocessTask extends DefaultTask {
                     return
                 }
 
-                final def cw = new ClassWriter(0)
-                cn.accept(cw)
+                final def cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
+                    @Override
+                    protected final String getCommonSuperClass(final String type1, final String type2) {
+                        // We get class not found errors with default ASM implementation of this method, so override it to always return Object
+                        // Does not seem to cause any problems, but might be fixed later if we tweak compileClasspath passed to the task.
+                        return 'java/lang/Object'
+                    }
+                }
+
+                def output
 
                 try {
-                    if (verbose) BatchedMessageCollector.add(25, "Checking class (second pass) ${cn.name} changed=${changed},renamed=${renamed}")
+                    if (verbose) BatchedMessageCollector.add(25, "Checking class (second pass) ${cn.name} changed=${changed}")
+
                     cn.accept(new CheckClassAdapter(cw, true))
+                    output = cw.toByteArray()
                 } catch (final Throwable error) {
                     throw new RuntimeException("class ${cn.name} has error (second pass): ${error.message}")
                 }
-
-                final def output = cw.toByteArray()
 
                 outputFile.newOutputStream().withCloseable {
                     it.write(output)
