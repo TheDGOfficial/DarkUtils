@@ -3,6 +3,7 @@ package gg.darkutils.mixin.misc;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.data.PersistentData;
 import gg.darkutils.events.InteractEntityEvent;
 import gg.darkutils.feat.farming.StickyFarmingKeys;
 import gg.darkutils.feat.qol.AutoClicker;
@@ -85,5 +86,11 @@ final class MinecraftClientMixin {
         if (DarkUtilsConfig.INSTANCE.disableGlowing) {
             cir.setReturnValue(false);
         }
+    }
+
+    @Inject(method = "stop", at = @At("HEAD"))
+    private final void darkutils$onQuitGame(@NotNull final CallbackInfo ci) {
+        // The game will wait as this a blocking task so it should be safe to use non-atomic save here
+        PersistentData.save();
     }
 }

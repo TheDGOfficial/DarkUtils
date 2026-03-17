@@ -192,6 +192,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Right",
                 "Controls whether to enable sticky right.",
                 config.stickyRight, newValue -> config.stickyRight = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Enforce Zorro's Cape",
+                "Enforces having Zorro's Cape equipped before claiming any contest. You might need to open your equipment menu the first time to let the mod know you have it equipped, but after that the mod will remember your last equipped cloak.",
+                config.enforceZorrosCape, newValue -> config.enforceZorrosCape = newValue);
     }
 
     private static final void addDungeons(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
