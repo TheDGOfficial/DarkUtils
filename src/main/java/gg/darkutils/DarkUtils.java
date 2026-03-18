@@ -182,12 +182,19 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     public enum UserMessageLevel {
+        USER_INFO("#454D56"),
         USER_ERROR("#FF3434");
 
         private final int rgb;
 
         private UserMessageLevel(@NotNull final String hex) {
             this.rgb = ChatUtils.hexToRGB(hex);
+        }
+    }
+
+    public static final void debug(@NotNull final Supplier<String> message) {
+        if (DarkUtilsConfig.INSTANCE.debugMode) {
+            DarkUtils.user(message.get(), DarkUtils.UserMessageLevel.USER_INFO);
         }
     }
 

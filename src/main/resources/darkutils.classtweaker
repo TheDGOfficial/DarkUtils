@@ -1,3 +1,4 @@
 classTweaker v1 named
 accessible field net/minecraft/entity/LivingEntity equipment Lnet/minecraft/entity/EntityEquipment;
 accessible method net/minecraft/client/MinecraftClient doItemUse ()V
+accessible field net/minecraft/screen/ScreenHandler type Lnet/minecraft/screen/ScreenHandlerType;

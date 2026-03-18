@@ -150,7 +150,7 @@ public final class DungeonTimer {
             );
         }
 
-        if (null != started.floor && null != notYetFinished.floor && started.floor.floor() != notYetFinished.floor.floor()) {
+        if (null != started.floor && null != notYetFinished.floor && started.floor.floor != notYetFinished.floor.floor) {
             throw new IllegalArgumentException(
                     "Incompatible phase pair: "
                             + started + " <-> " + notYetFinished
@@ -430,7 +430,7 @@ public final class DungeonTimer {
      * Vice versa is also true, of course, if you pass a master floor and user is on regular, it won't return true.
      */
     public static final boolean isOnDungeonFloor(@NotNull final DungeonTimer.DungeonFloor dungeonFloor) {
-        return dungeonFloor == DungeonTimer.dungeonFloor; // enum-to-enum reference equality is safe. We don't need to call .equals or check that .floor() and .isMaster() is equal on both.
+        return dungeonFloor == DungeonTimer.dungeonFloor; // enum-to-enum reference equality is safe. We don't need to call .equals or check that .floor and .master is equal on both.
     }
 
     /**
@@ -440,7 +440,7 @@ public final class DungeonTimer {
      */
     public static final boolean isOnDungeonFloor(final int dungeonFloor) {
         final var floor = DungeonTimer.dungeonFloor;
-        return null != floor && dungeonFloor == floor.floor();
+        return null != floor && dungeonFloor == floor.floor;
     }
 
     /**
@@ -559,13 +559,13 @@ public final class DungeonTimer {
         DungeonTimer.line(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_ENTRY, "Boss Entry", Formatting.DARK_GREEN, Items.END_PORTAL_FRAME);
 
         // Floor 6
-        if (6 == floor.floor()) {
+        if (6 == floor.floor) {
             DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.TERRAS_CLEAR, "Terracottas", Formatting.GOLD, Items.BROWN_TERRACOTTA);
             DungeonTimer.line(DungeonTimer.DungeonPhase.TERRAS_CLEAR, DungeonTimer.DungeonPhase.GIANTS_CLEAR, "Giants", Formatting.AQUA, Items.DIAMOND_SWORD);
         }
 
         // Floor 7 & Master Floor 7
-        if (7 == floor.floor()) {
+        if (7 == floor.floor) {
             // Both regular and master 7 have those phases
             DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_1_CLEAR, "Maxor", Formatting.AQUA, Items.END_CRYSTAL);
             DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_1_CLEAR, DungeonTimer.DungeonPhase.PHASE_2_CLEAR, "Storm", Formatting.DARK_PURPLE, Items.BLAZE_ROD);
@@ -574,7 +574,7 @@ public final class DungeonTimer {
             DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_3_CLEAR, DungeonTimer.DungeonPhase.PHASE_4_CLEAR, "Necron", Formatting.DARK_RED, Items.STICK);
 
             // Master Floor 7 specific phase
-            if (floor.isMaster()) {
+            if (floor.master) {
                 DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_4_CLEAR, DungeonTimer.DungeonPhase.PHASE_5_CLEAR, "Wither King", Formatting.GRAY, Items.WITHER_SKELETON_SKULL);
             }
         }
@@ -706,7 +706,7 @@ public final class DungeonTimer {
             return false;
         }
 
-        final var floorNumber = floor.floor();
+        final var floorNumber = floor.floor;
 
         final var correctBoss = switch (floorNumber) {
             case 0 -> "The Watcher";
@@ -823,7 +823,7 @@ public final class DungeonTimer {
         }
 
         private final boolean appliesTo(@Nullable final DungeonTimer.DungeonFloor runFloor) {
-            return null == this.floor || null != runFloor && this.floor.floor() == runFloor.floor();
+            return null == this.floor || null != runFloor && this.floor.floor == runFloor.floor;
         }
     }
 

@@ -39,9 +39,12 @@ public final class StickyFarmingKeys {
         final var screen = mc.currentScreen;
         final var previousScreen = StickyFarmingKeys.previousScreen;
 
+        boolean reset = false;
+
         if (null != screen && null == previousScreen || null == screen && null != previousScreen) {
             // A screen was opened or closed. Reset toggled state.
             StickyFarmingKeys.resetToggledState();
+            reset = true;
         }
 
         StickyFarmingKeys.previousScreen = screen;
@@ -49,12 +52,15 @@ public final class StickyFarmingKeys {
         final var player = mc.player;
 
         if (null == player) {
-            StickyFarmingKeys.resetToggledState();
+            if (!reset) {
+                StickyFarmingKeys.resetToggledState();
+                reset = true;
+            }
         } else {
             final var currentSlot = player.getInventory().getSelectedSlot();
             final var previousSlot = StickyFarmingKeys.previousSelectedSlot;
 
-            if (previousSlot != -1 && previousSlot != currentSlot) {
+            if (!reset && previousSlot != -1 && previousSlot != currentSlot) {
                 StickyFarmingKeys.resetToggledState();
             }
 

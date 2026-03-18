@@ -18,6 +18,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.registry.Registries;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -74,7 +75,10 @@ public final class RenderUtils {
     /**
      * Holds the item to empty ItemStack cache.
      */
-    private static final @NotNull HashMap<Item, ItemStack> ITEM_TO_ITEM_STACK = HashMap.newHashMap(16);
+    private static final @NotNull Supplier<Map<Item, ItemStack>> ITEM_TO_ITEM_STACK = LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(
+        Set.copyOf(Registries.ITEM.stream().toList()),
+        ItemStack::new
+    ));
     /**
      * Holds the empty OrderedText.
      */
@@ -139,7 +143,7 @@ public final class RenderUtils {
     }
 
     private static final void renderItem(@NotNull final DrawContext context, @NotNull final Item item, final IntSupplier x, @NotNull final IntSupplier y) {
-        context.drawItemWithoutEntity(RenderUtils.ITEM_TO_ITEM_STACK.computeIfAbsent(item, ItemStack::new), x.getAsInt(), y.getAsInt(), 0);
+        context.drawItemWithoutEntity(RenderUtils.ITEM_TO_ITEM_STACK.get().get(item), x.getAsInt(), y.getAsInt(), 0);
     }
 
     public static final void drawBlockOutline(@NotNull final WorldRenderContext context,

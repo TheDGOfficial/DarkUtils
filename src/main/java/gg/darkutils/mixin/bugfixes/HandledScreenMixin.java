@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Mixin(HandledScreen.class)
 final class HandledScreenMixin {
@@ -28,8 +29,8 @@ final class HandledScreenMixin {
     }
 
     @Inject(method = "onMouseClick(Lnet/minecraft/screen/slot/Slot;IILnet/minecraft/screen/slot/SlotActionType;)V", at = @At("HEAD"), cancellable = true)
-    private final void darkutils$cancelClickSlotIfApplicable(@NotNull final Slot slot, final int slotId, final int button, @NotNull final SlotActionType actionType, @NotNull final CallbackInfo ci) {
-        if (new SlotClickEvent(slot).triggerAndCancelled()) {
+    private final void darkutils$cancelClickSlotIfApplicable(@Nullable final Slot slot, final int slotId, final int button, @NotNull final SlotActionType actionType, @NotNull final CallbackInfo ci) {
+        if (null != slot && new SlotClickEvent((HandledScreen) (Object) this, slotId, slot).triggerAndCancelled()) {
             ci.cancel();
         }
     }

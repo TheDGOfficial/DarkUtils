@@ -30,6 +30,7 @@ buildscript {
         classpath 'org.ow2.asm:asm-commons:9.9.1'
 
         classpath 'com.guardsquare:proguard-gradle:7.8.2'
+        classpath 'com.guardsquare:proguard-core:9.3.2'
     }
 }
 
@@ -425,7 +426,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
         final def cr = new ClassReader(bytes)
         final def cn = new ClassNode()
 
-        cr.accept(cn, ClassReader.SKIP_CODE)
+        cr.accept(cn, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
 
         return cn
     }
