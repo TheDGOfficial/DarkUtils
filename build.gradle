@@ -29,7 +29,7 @@ buildscript {
         classpath 'org.ow2.asm:asm-tree:9.9.1'
         classpath 'org.ow2.asm:asm-commons:9.9.1'
 
-        classpath 'com.guardsquare:proguard-gradle:7.8.2'
+        classpath 'com.guardsquare:proguard-gradle:7.9.0'
         classpath 'com.guardsquare:proguard-core:9.3.2'
     }
 }
