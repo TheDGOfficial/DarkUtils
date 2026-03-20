@@ -83,7 +83,7 @@ jobs:
 
         # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         queries: +security,security-extended,security-and-quality
-        packs: ${{ matrix.language == 'java' && 'githubsecuritylab/codeql-${{ matrix.language }}-queries,githubsecuritylab/codeql-${{ matrix.language }}-extensions,githubsecuritylab/codeql-${{ matrix.language }}-libs,githubsecuritylab/codeql-${{ matrix.language }}-library-sources,githubsecuritylab/codeql-${{ matrix.language }}-tests' || '' }}
+        packs: ${{ matrix.language == 'java' && 'githubsecuritylab/codeql-java-queries,githubsecuritylab/codeql-java-extensions,githubsecuritylab/codeql-java-libs,githubsecuritylab/codeql-java-library-sources,githubsecuritylab/codeql-java-tests' || '' }}
 
     # If the analyze step fails for one of the languages you are analyzing with
     # "We were unable to automatically build your code", modify the matrix above
