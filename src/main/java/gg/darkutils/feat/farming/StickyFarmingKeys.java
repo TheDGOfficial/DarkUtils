@@ -260,22 +260,27 @@ public final class StickyFarmingKeys {
         }
 
         @NotNull
+        @Override
         public final KeyBinding getKeyBinding() {
             return this.keyBinding;
         }
 
+        @Override
         public final boolean isToggled() {
             return this.toggled;
         }
 
+        @Override
         public final void setToggled(final boolean toggled) {
             this.toggled = toggled;
         }
 
+        @Override
         public final boolean isClicking() {
             return this.clicking;
         }
 
+        @Override
         public final void setClicking(final boolean clicking) {
             this.clicking = clicking;
         }
@@ -297,22 +302,27 @@ public final class StickyFarmingKeys {
         }
 
         @NotNull
+        @Override
         public final KeyBinding getKeyBinding() {
             return this.keyBinding;
         }
 
+        @Override
         public final boolean isToggled() {
             return this.toggled;
         }
 
+        @Override
         public final void setToggled(final boolean toggled) {
             this.toggled = toggled;
         }
 
+        @Override
         public final boolean isClicking() {
             return this.clicking;
         }
 
+        @Override
         public final void setClicking(final boolean clicking) {
             this.clicking = clicking;
         }

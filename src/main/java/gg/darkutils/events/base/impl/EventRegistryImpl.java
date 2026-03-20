@@ -38,13 +38,6 @@ public final class EventRegistryImpl implements EventRegistry {
         return (EventHandler<T>) EventRegistryImpl.handlers.get(event);
     }
 
-    @Override
-    public final String toString() {
-        return "EventRegistryImpl{" +
-                "handlers=" + EventRegistryImpl.handlers +
-                '}';
-    }
-
     private static final class EventHandlerClassValue extends ClassValue<EventHandler<? extends Event>> {
         private EventHandlerClassValue() {
             super();
