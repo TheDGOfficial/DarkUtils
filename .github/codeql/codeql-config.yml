@@ -7,5 +7,3 @@ queries:
 query-filters:
   - exclude:
       id: java/unused-parameter
-      paths:
-        - "**/java/gg/darkutils/mixin/**"
