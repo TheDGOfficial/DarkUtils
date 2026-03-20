@@ -39,9 +39,12 @@ public final class StickyFarmingKeys {
         final var screen = mc.currentScreen;
         final var previousScreen = StickyFarmingKeys.previousScreen;
 
+        boolean reset = false;
+
         if (null != screen && null == previousScreen || null == screen && null != previousScreen) {
             // A screen was opened or closed. Reset toggled state.
             StickyFarmingKeys.resetToggledState();
+            reset = true;
         }
 
         StickyFarmingKeys.previousScreen = screen;
@@ -49,12 +52,15 @@ public final class StickyFarmingKeys {
         final var player = mc.player;
 
         if (null == player) {
-            StickyFarmingKeys.resetToggledState();
+            if (!reset) {
+                StickyFarmingKeys.resetToggledState();
+                reset = true;
+            }
         } else {
             final var currentSlot = player.getInventory().getSelectedSlot();
             final var previousSlot = StickyFarmingKeys.previousSelectedSlot;
 
-            if (previousSlot != -1 && previousSlot != currentSlot) {
+            if (!reset && previousSlot != -1 && previousSlot != currentSlot) {
                 StickyFarmingKeys.resetToggledState();
             }
 
@@ -254,22 +260,27 @@ public final class StickyFarmingKeys {
         }
 
         @NotNull
+        @Override
         public final KeyBinding getKeyBinding() {
             return this.keyBinding;
         }
 
+        @Override
         public final boolean isToggled() {
             return this.toggled;
         }
 
+        @Override
         public final void setToggled(final boolean toggled) {
             this.toggled = toggled;
         }
 
+        @Override
         public final boolean isClicking() {
             return this.clicking;
         }
 
+        @Override
         public final void setClicking(final boolean clicking) {
             this.clicking = clicking;
         }
@@ -291,22 +302,27 @@ public final class StickyFarmingKeys {
         }
 
         @NotNull
+        @Override
         public final KeyBinding getKeyBinding() {
             return this.keyBinding;
         }
 
+        @Override
         public final boolean isToggled() {
             return this.toggled;
         }
 
+        @Override
         public final void setToggled(final boolean toggled) {
             this.toggled = toggled;
         }
 
+        @Override
         public final boolean isClicking() {
             return this.clicking;
         }
 
+        @Override
         public final void setClicking(final boolean clicking) {
             this.clicking = clicking;
         }

@@ -21,8 +21,8 @@ jobs:
       - name: setup jdk
         uses: actions/setup-java@v5
         with:
-          java-version: '21'
-          distribution: 'microsoft'
+          java-version: '25'
+          distribution: 'temurin'
 
       - name: setup gradle
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c

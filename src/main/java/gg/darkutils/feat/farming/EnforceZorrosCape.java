@@ -9,8 +9,12 @@ import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.ChatUtils;
 import org.jetbrains.annotations.NotNull;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.item.Items;
+import net.minecraft.item.ItemStack;
 
 public final class EnforceZorrosCape {
     private EnforceZorrosCape() {
@@ -34,36 +38,26 @@ public final class EnforceZorrosCape {
 
     private static final void onTick() {
         // No config check, still need to track zorro's cape equip status in case user enables/disables the feature to not desync the state from the real state.
-        final var client = MinecraftClient.getInstance();
-        final var screen = client.currentScreen;
+        final ScreenHandler screenHandler;
 
-        if (!(screen instanceof final HandledScreen<?> handled)) {
+        if (!(MinecraftClient.getInstance().currentScreen instanceof final GenericContainerScreen container) || ScreenHandlerType.GENERIC_9X6 != (screenHandler = container.getScreenHandler()).type || !"Your Equipment and Stats".equals(ChatUtils.removeControlCodes(container.getTitle().getString()))) {
             return;
         }
 
-        final var title = ChatUtils.removeControlCodes(handled.getTitle().getString());
+        { // new scope so that slots variable is not available for use outside the block
+            final var slots = screenHandler.slots;
 
-        if (!"Your Equipment and Stats".equals(title)) {
-            return;
-        }
+            if (slots.size() == 90) {
+                final var stack = slots.get(19).getStack();
 
-        final var handler = handled.getScreenHandler();
-        final var slots = handler.slots;
-        final var upperSize = slots.size() - 36;
+                if (!stack.isEmpty()) {
+                    final var customName = stack.getCustomName();
 
-        for (var i = 0; i < upperSize; ++i) {
-            final var slot = slots.get(i);
-            final var stack = slot.getStack();
-
-            if (stack.isEmpty()) {
-                continue;
-            }
-
-            final var name = ChatUtils.removeControlCodes(stack.getName().getString());
-
-            if (name.endsWith("Zorro's Cape")) {
-                EnforceZorrosCape.setEquipped(true);
-                return;
+                    if (null != customName && ChatUtils.removeControlCodes(customName.getString()).endsWith("Zorro's Cape")) {
+                        EnforceZorrosCape.setEquipped(true);
+                        return;
+                    }
+                }
             }
         }
 
@@ -71,40 +65,45 @@ public final class EnforceZorrosCape {
     }
 
     private static final void onSlotClick(@NotNull final SlotClickEvent event) {
-        if (!DarkUtilsConfig.INSTANCE.enforceZorrosCape) {
+        final var i = event.slotId();
+
+        // 50 = index of gold block/bulk claim item
+        // rest are possible indexes for contest items
+        // out of radius items are glass pane or arrows
+        // makes it short circuit and exit method early to avoid running more code later
+        if (i != 50 && !((i >= 10 && i <= 16) ||
+              (i >= 19 && i <= 25) ||
+              (i >= 28 && i <= 34) ||
+              (i >= 37 && i <= 43))) {
             return;
         }
 
-        final var slot = event.slot();
+        final var handledScreen = event.handledScreen();
+        final ItemStack stack;
 
-        final var client = MinecraftClient.getInstance();
-        final var screen = client.currentScreen;
-
-        if (!(screen instanceof final HandledScreen<?> handled)) {
+        if (!DarkUtilsConfig.INSTANCE.enforceZorrosCape || ScreenHandlerType.GENERIC_9X6 != handledScreen.getScreenHandler().type || (stack = event.slot().getStack()).isEmpty() || !"Your Contests".equals(ChatUtils.removeControlCodes(handledScreen.getTitle().getString()))) {
             return;
         }
 
-        final var title = ChatUtils.removeControlCodes(handled.getTitle().getString());
+        if (stack.isOf(Items.GOLD_BLOCK)) {
+            final var customName = stack.getCustomName();
 
-        if (!"Your Contests".equals(title)) {
-            return;
-        }
-
-        final var stack = slot.getStack();
-
-        if (stack.isEmpty()) {
-            return;
-        }
-
-        final var name = ChatUtils.removeControlCodes(stack.getName().getString());
-
-        if ("Bulk Claim".equals(name)) {
-            if (!EnforceZorrosCape.hasEquipped()) {
-                EnforceZorrosCape.notifyPlayer();
-
-                event.cancellationState().cancel();
+            if (null == customName) {
                 return;
             }
+
+            if ("Bulk Claim".equals(ChatUtils.removeControlCodes(customName.getString()))) {
+                if (!EnforceZorrosCape.hasEquipped()) {
+                    EnforceZorrosCape.notifyPlayer();
+                    event.cancellationState().cancel();
+                }
+            }
+
+            return;
+        }
+
+        if (stack.isOf(Items.ARROW)) {
+            return;
         }
 
         final var lore = stack.get(DataComponentTypes.LORE);
@@ -113,17 +112,15 @@ public final class EnforceZorrosCape {
             return;
         }
 
-        for (final var line : lore.lines()) {
-            final var clean = ChatUtils.removeControlCodes(line.getString());
+        final var lines = lore.lines();
 
-            if ("Click to claim reward!".equals(clean)) {
-                if (!EnforceZorrosCape.hasEquipped()) {
-                    EnforceZorrosCape.notifyPlayer();
+        if (lines.isEmpty()) {
+            return;
+        }
 
-                    event.cancellationState().cancel();
-                    return;
-                }
-            }
+        if ("Click to claim reward!".equals(ChatUtils.removeControlCodes(lines.getLast().getString())) && !EnforceZorrosCape.hasEquipped()) {
+            EnforceZorrosCape.notifyPlayer();
+            event.cancellationState().cancel();
         }
     }
 
