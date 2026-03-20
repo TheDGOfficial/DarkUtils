@@ -11,15 +11,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class TickUtils {
-    private static final @NotNull Set<TickUtils.Task> tasks = ConcurrentHashMap.newKeySet();
-    private static final @NotNull Set<TickUtils.Task> serverTasks = ConcurrentHashMap.newKeySet();
+    private static final @NotNull ConcurrentLinkedQueue<TickUtils.Task> tasks = new ConcurrentLinkedQueue<>();
+    private static final @NotNull ConcurrentLinkedQueue<TickUtils.Task> serverTasks = new ConcurrentLinkedQueue<>();
 
     private static final @NotNull Supplier<ClientPlayerEntity> localPlayer = () -> MinecraftClient.getInstance().player;
 
@@ -46,8 +45,17 @@ public final class TickUtils {
         TickUtils.processAwaitingTasksIn(TickUtils.serverTasks);
     }
 
-    private static final void processAwaitingTasksIn(@NotNull final Set<TickUtils.Task> tasks) {
-        tasks.removeIf(TickUtils.Task::tick);
+    private static final void processAwaitingTasksIn(@NotNull final ConcurrentLinkedQueue<TickUtils.Task> tasks) {
+        for (var size = tasks.size(); size > 0; --size) {
+            final var task = tasks.poll();
+            if (null == task) {
+                break;
+            }
+
+            if (!task.tick()) {
+                tasks.offer(task); // requeue if not done
+            }
+        }
     }
 
     // ============================================================

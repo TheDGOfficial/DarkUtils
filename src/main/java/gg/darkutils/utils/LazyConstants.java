@@ -68,8 +68,9 @@ public final class LazyConstants {
     }
 
     @NotNull
+    @SuppressWarnings("preview")
     public static final <K, V> Map<K, V> lazyMapOf(@NotNull final Set<@NotNull K> allPossibleKeys, @NotNull final Function<? super K, ? extends V> valueMapper) {
-        // J26 EA preview
+        // J26 preview
         // return Map.ofLazy(allPossibleKeys, valueMapper);
 
         // J25 preview
@@ -91,8 +92,9 @@ public final class LazyConstants {
     }
 
     @NotNull
+    @SuppressWarnings("preview")
     public static final <T> Supplier<T> lazyConstantOf(@NotNull final Supplier<? extends T> supplier) {
-        // J26 EA preview
+        // J26 preview
         // return LazyConstant.of(supplier);
 
         // J25 preview
