@@ -1,7 +1,7 @@
 package gg.darkutils.utils;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import gg.darkutils.annotations.PrivateFields;
+import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.events.ServerTickEvent;
 import gg.darkutils.events.base.EventRegistry;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -92,7 +92,7 @@ public final class TickUtils {
         Objects.requireNonNull(condition, "condition");
         Objects.requireNonNull(action, "action");
 
-        TickUtils.checkCallerThread();
+        RenderUtils.validateRenderThread();
 
         if (condition.getAsBoolean()) {
             action.run();
@@ -115,7 +115,7 @@ public final class TickUtils {
     public static final void awaitLocalPlayer(@NotNull final Consumer<ClientPlayerEntity> action) {
         Objects.requireNonNull(action, "action");
 
-        if (TickUtils.isNotCallingFromRenderThread()) {
+        if (RenderUtils.isNotCallingFromRenderThread()) {
             TickUtils.queueTickTask(() -> TickUtils.awaitLocalPlayerInternal(action), 1);
             return;
         }
@@ -134,7 +134,7 @@ public final class TickUtils {
      * @param action The action.
      */
     private static final void awaitLocalPlayerInternal(@NotNull final Consumer<ClientPlayerEntity> action) {
-        TickUtils.checkCallerThread();
+        RenderUtils.validateRenderThread();
 
         Objects.requireNonNull(action, "action");
 
@@ -199,7 +199,7 @@ public final class TickUtils {
     public static final BooleanSupplier queueUpdatingCondition(@NotNull final BooleanSupplier condition) {
         Objects.requireNonNull(condition, "condition");
 
-        TickUtils.checkCallerThread();
+        RenderUtils.validateRenderThread();
 
         @PrivateFields
         final class CachedCondition implements BooleanSupplier {
@@ -238,6 +238,23 @@ public final class TickUtils {
     }
 
     /**
+     * Runs a task immediately if we are already on the render thread, or otherwise queues it to be
+     * ran next tick on the render thread. The render thread polls the tasks each tick so less delay
+     * or running immediately is not possible if we are not on the render thread already. 
+     *
+     * @param task The task to run immediately or next tick on the render thread.
+     */
+    public static final void runImmediatelyOrNextTick(@NotNull final Runnable task) {
+        if (RenderUtils.isNotCallingFromRenderThread()) {
+            // We have to use 1 tick delay or otherwise validateRenderThread would throw if we use 0.
+            TickUtils.queueTickTask(() -> TickUtils.runImmediatelyOrNextTick(task), 1);
+            return;
+        }
+
+        task.run();
+    }
+
+    /**
      * Queues a tick task to be run. If delay is zero, it will be run immediately, with a check to ensure correct threading.
      * Otherwise, it will run on the render thread with the specified delay in ticks.
      *
@@ -270,20 +287,10 @@ public final class TickUtils {
     private static final void queueTickTaskInternal(@NotNull final Runnable task, final int delay, final boolean client) {
         Objects.requireNonNull(task, "task");
         if (0 == delay) {
-            TickUtils.checkCallerThread();
+            RenderUtils.validateRenderThread();
             task.run();
         } else {
             (client ? TickUtils.tasks : TickUtils.serverTasks).add(new TickUtils.Task(task, delay, false));
-        }
-    }
-
-    private static final boolean isNotCallingFromRenderThread() {
-        return !RenderSystem.isOnRenderThread();
-    }
-
-    private static final void checkCallerThread() {
-        if (TickUtils.isNotCallingFromRenderThread()) {
-            throw new IllegalStateException("unexpected caller thread with name: " + Thread.currentThread().getName() + ", expected: Render thread");
         }
     }
 

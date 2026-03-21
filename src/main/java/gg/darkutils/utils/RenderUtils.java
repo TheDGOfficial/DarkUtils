@@ -1,5 +1,6 @@
 package gg.darkutils.utils;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import gg.darkutils.DarkUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
@@ -193,6 +194,25 @@ public final class RenderUtils {
         );
 
         matrices.pop();
+    }
+
+    /**
+     * Checks if the current thread is not the render thread and returns true if so.
+     *
+     * Typically used to re-schedule an action next tick to ensure thread-safety when called from external thread,
+     * if you need to fail-fast and reject external thread call, use {@link RenderUtils#checkCallerThread()} instead.
+     */
+    public static final boolean isNotCallingFromRenderThread() {
+        return !RenderSystem.isOnRenderThread();
+    }
+
+    /**
+     * Checks if the current thread is not the render thread and throws {@link IllegalStateException} if so.
+     */
+    public static final void validateRenderThread() {
+        if (RenderUtils.isNotCallingFromRenderThread()) {
+            throw new IllegalStateException("unexpected caller thread with name: " + Thread.currentThread().getName() + ", expected: Render thread");
+        }
     }
 
     public static final class RenderingText {

@@ -54,6 +54,7 @@ public final class DarkUtilsConfig {
     public boolean laggyServerDetector;
     public boolean vanillaMode;
     public boolean enableModAnnouncer;
+    public boolean disableUpdateChecker;
 
     // === Foraging ===
     public boolean treeGiftConfirmation;

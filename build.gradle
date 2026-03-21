@@ -1240,7 +1240,7 @@ tasks.named('asmPreprocess') {
 }
 
 @CacheableTask
-abstract class CreateJavaBaseLibraryJarTask extends DefaultTask {
+abstract class CreateJrtModulesLibraryJarTask extends DefaultTask {
     @Input
     abstract Property<String> getJavaVendor()
 
@@ -1261,20 +1261,31 @@ abstract class CreateJavaBaseLibraryJarTask extends DefaultTask {
 
         outputFile.parentFile.mkdirs()
 
-        final def modulePath = JrtHolder.jrt.getPath('/modules/java.base')
+        final def modules = [
+                '/modules/java.base',
+                '/modules/java.net.http'
+        ]
 
         try (final def jarOutputStream = new JarOutputStream(new FileOutputStream(outputFile))) {
-            Files.walk(modulePath).forEach { final def path ->
-                if (!Files.isRegularFile(path) || !path.toString().endsWith('.class')) {
-                    return
+            modules.each { moduleName ->
+                final def modulePath = JrtHolder.jrt.getPath(moduleName)
+
+                Files.walk(modulePath).forEach { final def path ->
+                    if (!Files.isRegularFile(path) || !path.toString().endsWith('.class')) {
+                        return
+                    }
+
+                    final def entryName = modulePath.relativize(path).toString().replace('\\', '/')
+
+                    if (entryName == 'module-info.class') {
+                        return
+                    }
+
+                    jarOutputStream.putNextEntry(new JarEntry(entryName))
+                    Files.copy(path, jarOutputStream)
+
+                    jarOutputStream.closeEntry()
                 }
-
-                final def entryName = modulePath.relativize(path).toString().replace('\\', '/')
-
-                jarOutputStream.putNextEntry(new JarEntry(entryName))
-                Files.copy(path, jarOutputStream)
-
-                jarOutputStream.closeEntry()
             }
         }
     }
@@ -1282,7 +1293,7 @@ abstract class CreateJavaBaseLibraryJarTask extends DefaultTask {
 
 final def jdk = layout.buildDirectory.file('proguard/java-base-from-jrt.jar')
 
-tasks.register('createJavaBaseLibraryJar', CreateJavaBaseLibraryJarTask) {
+tasks.register('createJrtModulesLibraryJar', CreateJrtModulesLibraryJarTask) {
     javaVendor.set(System.getProperty('java.vendor'))
     javaVersion.set(System.getProperty('java.version'))
 
@@ -1293,7 +1304,7 @@ final def proguardOutput = layout.buildDirectory.file("libs/${project.archives_b
 
 tasks.register('proguard', ProGuardTask) {
     dependsOn jar
-    dependsOn tasks.named('createJavaBaseLibraryJar')
+    dependsOn tasks.named('createJrtModulesLibraryJar')
 
     doFirst {
         logger.lifecycle('Creating optimized JAR...')

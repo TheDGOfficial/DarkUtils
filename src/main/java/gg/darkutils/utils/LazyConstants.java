@@ -17,6 +17,7 @@ import com.google.common.base.Suppliers;
 
 // TODO Remove the --enable-preview when the JEP lands in a Stable JDK version
 // TODO Remove the fallbacks entirely when the JEP lands in a LTS JDK version
+@SuppressWarnings("preview")
 public final class LazyConstants {
     private LazyConstants() {
         super();

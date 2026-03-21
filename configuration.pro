@@ -38,10 +38,18 @@
     public static ***[] values();
 }
 
+# We use it in the update checker with GSON serialization,
+# which needs the canonical record constructor and all the accessor methods.
+-keepclassmembers class gg.darkutils.update.UpdateChecker$GitHubRelease extends java.lang.Record {
+    public <init>(...);
+    public *** *();
+}
+
 # Disable some of the possibly problematic optimizations.
-# Most of these mangle method names with an additional $hash at the end which we don't want,
-# while some inflate code size too much due to inlining of every unique method,
-# while others remove finals and mess with field access visibility even inside enums making constants private.
+# Some of these either cause a crash of loom's jar remap task or a crash in runtime when fabric's class loader
+# is discovering our classes (code/allocation/variable, code/simplification/variable)
+# While others end up widening accessibility instead of lowering to private because ProGuard does not understand
+# the concept of nestmates added in modern java that allows private members to be accessed from outer class without synthetic accessors.
 -optimizations !code/allocation/variable,!method/marking/static,!method/marking/private,!field/marking/private,!code/simplification/variable
 
 # ProGuard removes the $VALUES field and the public values() method,

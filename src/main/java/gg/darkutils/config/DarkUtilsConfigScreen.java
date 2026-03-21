@@ -148,6 +148,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Enable Mod Announcer",
                 "By default, we disable Firmament's Mod Announcer feature that silently sends all your mod list to servers you connect to without your consent. Enabling this will restore the default behaviour of Firmament, therefore compromising your privacy. It is recommended to not change this option.",
                 config.enableModAnnouncer, newValue -> config.enableModAnnouncer = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Disable Update Checker",
+                "By default, we check for updates a single time in the background after your game has been launched. This will not slow down your startup and ensures you are using latest version of the mod, but you can opt-out by enabling this option if you want to disable it.",
+                config.disableUpdateChecker, newValue -> config.disableUpdateChecker = newValue);
     }
 
     private static final void addForaging(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
