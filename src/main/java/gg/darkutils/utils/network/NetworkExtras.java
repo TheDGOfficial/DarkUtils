@@ -11,9 +11,9 @@ public final class NetworkExtras {
     @NotNull
     private static final HttpClient.Version detectOptimalHttpVersion() {
         try {
-            return HttpClient.Version.valueOf("HTTP_3");
+            return HttpClient.Version.valueOf("HTTP_3"); // Available since Java 26
         } catch (final IllegalArgumentException ignored) {
-            return HttpClient.Version.HTTP_2;
+            return HttpClient.Version.HTTP_2; // Fallback to baseline of HTTP/2
         }
     }
 
