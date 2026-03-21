@@ -4,6 +4,7 @@ import gg.darkutils.DarkUtils;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.Pair;
+import gg.darkutils.utils.network.NetworkUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -18,6 +19,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.concurrent.Executor;
@@ -36,9 +39,6 @@ public final class UpdateChecker {
 
     @NotNull
     private static final String USER_AGENT = "DarkUtils-UpdateChecker";
-
-    @NotNull
-    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
 
     @NotNull
     private static final Gson GSON = new Gson();
@@ -144,15 +144,12 @@ public final class UpdateChecker {
 
     @Nullable
     private static final GitHubRelease fetchLatestRelease() throws IOException, InterruptedException {
-        final var request = HttpRequest.newBuilder()
-                .uri(URI.create(UpdateChecker.API_URL))
-                .version(HttpClient.Version.HTTP_3)
-                .header("Accept", "application/vnd.github+json")
-                .header("User-Agent", UpdateChecker.USER_AGENT)
-                .GET()
-                .build();
+        final var request = NetworkUtils.newGetRequest(UpdateChecker.API_URL, List.of(
+            Map.entry("Accept", "application/vnd.github+json"),
+            Map.entry("User-Agent", UpdateChecker.USER_AGENT)
+        ));
 
-        final var response = UpdateChecker.HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        final var response = request.sendTextual();
         final var statusCode = response.statusCode();
 
         if (statusCode < 200 || statusCode >= 300) {
