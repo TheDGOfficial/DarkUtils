@@ -3,6 +3,7 @@ package gg.darkutils.update;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
+import gg.darkutils.utils.Pair;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -21,7 +22,7 @@ import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public final class UpdateChecker {
     @NotNull
@@ -77,14 +78,14 @@ public final class UpdateChecker {
      * <p>
      * The callback must not be null.
      * <p>
-     * Throws {@link IllegalStateException} if not called from render thread initially. This method will return instantly, continue from the callback consumer
-     * if you want to inspect the result or otherwise act on the result.
+     * Throws {@link IllegalStateException} if not called from render thread initially. This method will return instantly, continue from the callback if you
+     * want to inspect the result or otherwise act on the result.
      */
-    public static final void checkUpdateAndRunCallbackOnRenderThread(@NotNull final Consumer<UpdateCheckerResult> callback) {
+    public static final void checkUpdateAndRunCallbackOnRenderThread(final @NotNull BiConsumer<@NotNull UpdateCheckerResult, @Nullable GitHubRelease> callback) {
         Objects.requireNonNull(callback, "callback");
         RenderUtils.validateRenderThread(); // will throw if not called from render thread
 
-        UpdateChecker.checkUpdateAndRunCallback(result -> TickUtils.runImmediatelyOrNextTick(() -> callback.accept(result))); // checks in background, then runs callback on render thread
+        UpdateChecker.checkUpdateAndRunCallback((result, release) -> TickUtils.runImmediatelyOrNextTick(() -> callback.accept(result, release))); // checks in background, then runs callback on render thread
     }
 
     /**
@@ -92,85 +93,107 @@ public final class UpdateChecker {
      * <p>
      * The callback must not be null.
      */
-    private static final void checkUpdateAndRunCallback(@NotNull final Consumer<UpdateCheckerResult> callback) {
+    private static final void checkUpdateAndRunCallback(final @NotNull BiConsumer<@NotNull UpdateCheckerResult, @Nullable GitHubRelease> callback) {
         Objects.requireNonNull(callback, "callback");
 
-        UpdateChecker.UPDATE_CHECKER_EXECUTOR.execute(() -> callback.accept(UpdateChecker.checkUpdates())); // runs callback on update checker thread
+        // runs callback on update checker thread
+        UpdateChecker.UPDATE_CHECKER_EXECUTOR.execute(() -> {
+            final var res = UpdateChecker.checkUpdates();
+            callback.accept(res.first(), res.second());
+        });
     }
 
     /**
      * Blocking update check. Should NOT be called on main thread.
      */
-    @NotNull
-    private static final UpdateCheckerResult checkUpdates() {
+    private static final @NotNull Pair<@NotNull UpdateCheckerResult, @Nullable GitHubRelease> checkUpdates() {
         final var currentVersionRaw = DarkUtils.getVersion();
 
         if ("unknown".equals(currentVersionRaw)) {
-            return UpdateCheckerResult.COULD_NOT_CHECK; // shouldn't happen unless user modified fabric.mod.json manually (unsupported)
+            return new Pair<>(UpdateCheckerResult.COULD_NOT_CHECK, null);
         }
 
         final var currentVersion = UpdateChecker.normalizeVersion(currentVersionRaw);
 
         try {
-            final var request = HttpRequest.newBuilder()
-                    .uri(URI.create(UpdateChecker.API_URL))
-                    .header("Accept", "application/vnd.github+json")
-                    .header("User-Agent", UpdateChecker.USER_AGENT)
-                    .GET()
-                    .build();
+            final var release = UpdateChecker.fetchLatestRelease();
 
-            final var response = UpdateChecker.HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-            final var statusCode = response.statusCode();
-
-            if (statusCode < 200 || statusCode >= 300) {
-                return UpdateCheckerResult.COULD_NOT_CHECK;
+            if (null == release) {
+                return new Pair<>(UpdateCheckerResult.COULD_NOT_CHECK, null);
             }
 
-            final var responseBody = response.body();
-            final GitHubRelease release;
-
-            try {
-                release = UpdateChecker.GSON.fromJson(responseBody, GitHubRelease.class);
-            } catch (final JsonSyntaxException jse) {
-                DarkUtils.error(UpdateChecker.class, "GitHub release API returned invalid JSON (status=" + statusCode + ",responseBody=" + responseBody + ')');
-
-                return UpdateChecker.UpdateCheckerResult.COULD_NOT_CHECK;
+            if (null == release.tag_name) {
+                return new Pair<>(UpdateCheckerResult.COULD_NOT_CHECK, release);
             }
 
-            if (null == release || null == release.tag_name) {
-                DarkUtils.error(UpdateChecker.class, "GitHub release API returned JSON with missing expected fields (status=" + statusCode + ",responseBody=" + responseBody + ')');
-
-                return UpdateChecker.UpdateCheckerResult.COULD_NOT_CHECK;
-            }
-
-            final var latestVersion = UpdateChecker.normalizeVersion(release.tag_name);
-
-            return UpdateChecker.compareVersions(currentVersion, latestVersion)
-                    .stream()
-                    .mapToObj(cmp -> switch (cmp) {
-                        case 0 -> release.prerelease
-                                ? UpdateCheckerResult.UP_TO_DATE_PRE
-                                : UpdateCheckerResult.UP_TO_DATE_STABLE;
-
-                        default -> cmp > 0
-                                ? UpdateCheckerResult.IN_DEVELOPMENT_VERSION
-                                : UpdateCheckerResult.OUT_OF_DATE;
-                    })
-                    .findFirst()
-                    .orElse(UpdateCheckerResult.COULD_NOT_CHECK);
+            return UpdateChecker.evaluateReleaseAgainstCurrent(currentVersion, release);
         } catch (final InterruptedException ie) {
-            Thread.currentThread().interrupt(); // re-set the interrupted flag
+            Thread.currentThread().interrupt();
 
-            return UpdateChecker.UpdateCheckerResult.COULD_NOT_CHECK;
+            return new Pair<>(UpdateCheckerResult.COULD_NOT_CHECK, null);
         } catch (final IOException ioe) {
             DarkUtils.error(UpdateChecker.class, "IO error whilst checking for mod updates over GitHub, current version is \"" + currentVersion + "\"", ioe);
 
-            return UpdateChecker.UpdateCheckerResult.COULD_NOT_CHECK;
+            return new Pair<>(UpdateCheckerResult.COULD_NOT_CHECK, null);
         } catch (final Throwable tw) {
             DarkUtils.error(UpdateChecker.class, "Unexpected error whilst checking for mod updates over GitHub, current version is \"" + currentVersion + "\"", tw);
 
-            return UpdateChecker.UpdateCheckerResult.COULD_NOT_CHECK;
+            return new Pair<>(UpdateCheckerResult.COULD_NOT_CHECK, null);
         }
+    }
+
+    @Nullable
+    private static final GitHubRelease fetchLatestRelease() throws IOException, InterruptedException {
+        final var request = HttpRequest.newBuilder()
+                .uri(URI.create(UpdateChecker.API_URL))
+                .version(HttpClient.Version.HTTP_3)
+                .header("Accept", "application/vnd.github+json")
+                .header("User-Agent", UpdateChecker.USER_AGENT)
+                .GET()
+                .build();
+
+        final var response = UpdateChecker.HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        final var statusCode = response.statusCode();
+
+        if (statusCode < 200 || statusCode >= 300) {
+            return null;
+        }
+
+        final var responseBody = response.body();
+
+        try {
+            final var release = UpdateChecker.GSON.fromJson(responseBody, GitHubRelease.class);
+
+            if (null == release || null == release.tag_name) {
+                DarkUtils.error(UpdateChecker.class, "GitHub release API returned JSON with missing expected fields (status=" + statusCode + ",responseBody=" + responseBody + ')');
+            }
+
+            return release;
+        } catch (final JsonSyntaxException jse) {
+            DarkUtils.error(UpdateChecker.class,"GitHub release API returned invalid JSON (status=" + statusCode + ",responseBody=" + responseBody + ')', jse);
+
+            return null;
+        }
+    }
+
+    private static final @NotNull Pair<@NotNull UpdateCheckerResult, @Nullable GitHubRelease> evaluateReleaseAgainstCurrent(@NotNull final String currentVersion, @NotNull final GitHubRelease release) {
+        final var latestVersion = UpdateChecker.normalizeVersion(release.tag_name);
+
+        final var result = UpdateChecker.compareVersions(currentVersion, latestVersion)
+                                .stream()
+                                .mapToObj(cmp -> switch (cmp) {
+                                    case 0 -> release.prerelease
+                                            ? UpdateCheckerResult.UP_TO_DATE_PRE
+                                            : UpdateCheckerResult.UP_TO_DATE_STABLE;
+
+                                    default -> cmp > 0
+                                            ? UpdateCheckerResult.IN_DEVELOPMENT_VERSION
+                                            : UpdateCheckerResult.OUT_OF_DATE;
+                                })
+                                .findFirst()
+                                .orElse(UpdateCheckerResult.COULD_NOT_CHECK);
+
+        return new Pair<>(result, release);
     }
 
     /**
