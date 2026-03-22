@@ -147,7 +147,7 @@ public final class AutoFishingRod {
                 mc.doItemUse();
                 continuation.run();
             }
-        }, delay);
+        }, Math.max(1, delay));
     }
 
     private static final void resetState() {

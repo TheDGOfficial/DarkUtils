@@ -6,6 +6,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.config.DarkUtilsConfigScreen;
+import gg.darkutils.update.UpdateChecker;
 import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.feat.bugfixes.CursorFix;
 import gg.darkutils.feat.dungeons.AlignmentTaskSolver;
@@ -42,6 +43,7 @@ import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
 import gg.darkutils.utils.chat.ButtonData;
+import gg.darkutils.utils.chat.LinkData;
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.SimpleStyle;
@@ -64,11 +66,13 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.concurrent.TimeUnit;
 
 /*
 import gg.darkutils.utils.chat.SimpleColor;
@@ -91,6 +95,7 @@ public final class DarkUtils implements ClientModInitializer {
      * Can be used tu uniquely identify the mod from other mods.
      */
     public static final @NotNull String MOD_ID = "darkutils";
+
     /**
      * We must avoid loading some MC classes during test phase of Gradle build,
      * because they cause exceptions when loaded outside of runtime.
@@ -98,6 +103,7 @@ public final class DarkUtils implements ClientModInitializer {
      * This system property is set to true from build.gradle when running tests.
      */
     public static final boolean INSIDE_JUNIT = "true".equals(System.getProperty("inside.junit")); // roughly same as Boolean#getBoolean but this is case-sensitive
+
     /**
      * This logger is used to write text to the console and the log file.
      * It is considered best practice to use your mod id as the logger's name.
@@ -108,6 +114,7 @@ public final class DarkUtils implements ClientModInitializer {
      * user-friendly short string representation of the error.
      */
     private static final @NotNull Logger LOGGER = LoggerFactory.getLogger(DarkUtils.MOD_ID);
+
     /**
      * Lazy-initialized non-changing constant-foldable (depending on LazyConstants
      * impl if the JEP is stabilized) value of the current Windowing platform.
@@ -116,6 +123,20 @@ public final class DarkUtils implements ClientModInitializer {
      * diagnostic features like disallowing setting cursor position in wayland.
      */
     private static final @NotNull Supplier<String> WINDOW_PLATFORM = LazyConstants.lazyConstantOf(Window::getGlfwPlatform);
+
+    /**
+     * Used for rate-limiting the update checker command so that user can't spam the GH API.
+     * <p>
+     * Not a definitive solution to server-side rate limit, just a safety against spamming.
+     */
+    private static final long ONE_MINUTE_NS = TimeUnit.MINUTES.toNanos(1L);
+
+    /**
+     * Used for rate-limiting the update checker command so that user can't spam the GH API.
+     * <p>
+     * Not a definitive solution to server-side rate limit, just a safety against spamming.
+     */
+    private static long lastManualUpdateCheckTimeNs = 0L;
 
     public DarkUtils() {
         super();
@@ -183,6 +204,7 @@ public final class DarkUtils implements ClientModInitializer {
 
     public enum UserMessageLevel {
         USER_INFO("#454D56"),
+        USER_WARN("#F4E051"),
         USER_ERROR("#FF3434");
 
         private final int rgb;
@@ -199,12 +221,26 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     public static final void user(@NotNull final String message, @NotNull final UserMessageLevel level) {
-        ChatUtils.sendMessageToLocalPlayer(
-            TextBuilder.withInitial(DarkUtils.class.getSimpleName(), SimpleStyle.colored(ChatUtils.hexToRGB("#161616")))
-            .append(" » ", SimpleStyle.colored(ChatUtils.hexToRGB("#67F9FF")))
-            .append(message, SimpleStyle.colored(level.rgb))
-            .build()
+        DarkUtils.user(message, level, null);
+    }
+
+    public static final void user(@NotNull final String message, @NotNull final UserMessageLevel level, @Nullable final LinkData link) {
+        final var text = TextBuilder
+                            .empty();
+
+        final var pendingAppend = List.of(
+                Map.entry(DarkUtils.class.getSimpleName(), SimpleStyle.colored(ChatUtils.hexToRGB("#161616"))),
+                Map.entry(" » ", SimpleStyle.colored(ChatUtils.hexToRGB("#67F9FF"))),
+                Map.entry(message, SimpleStyle.colored(level.rgb))
         );
+
+        if (null == link) {
+            pendingAppend.forEach(entry -> text.append(entry.getKey(), entry.getValue()));
+        } else {
+            pendingAppend.forEach(entry -> text.append(entry.getKey(), entry.getValue(), link));
+        }
+
+        ChatUtils.sendMessageToLocalPlayer(text.build());
     }
 
     private static final void error(@NotNull final Class<?> source, @NotNull final String message, @Nullable final Throwable error, @Nullable final Object @Nullable ... args) {
@@ -420,6 +456,22 @@ public final class DarkUtils implements ClientModInitializer {
 
     /**
      * Due to <a href="https://github.com/Mojang/brigadier/issues/46">a brigadier issue</a> we can't use redirect and must use a workaround for each alias separately.
+     * <p>
+     * This version always returns {@link Command#SINGLE_SUCCESS} and accepts a Runnable instead of Command, so you don't have to accept context and can use method reference.
+     * We don't really care about the command sender as the output would always go on the local player because the mod is client-environment only (no running commands from console or other players), and it does not make sense to run the commands from another source in single player like a command block.
+     * <p>
+     * The commands should catch their own exceptions and output messages on error conditions, so we always return success.
+     */
+    private static final void registerCommandWithAliases(@NotNull final String command, @NotNull final Runnable onExecute, final String... aliases) {
+        DarkUtils.registerCommandWithAliases(command, (ctx) -> {
+            onExecute.run();
+
+            return Command.SINGLE_SUCCESS;
+        }, aliases);
+    }
+
+    /**
+     * Due to <a href="https://github.com/Mojang/brigadier/issues/46">a brigadier issue</a> we can't use redirect and must use a workaround for each alias separately.
      */
     private static final void registerCommandWithAliases(@NotNull final String command, @NotNull final Command<FabricClientCommandSource> onExecute, final String... aliases) {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
@@ -455,17 +507,16 @@ public final class DarkUtils implements ClientModInitializer {
                 .executes(onExecute));
     }
 
-    private static final int openConfig() {
+    private static final void openConfig() {
         final var mc = MinecraftClient.getInstance();
         mc.send(() -> mc.setScreen(DarkUtilsConfigScreen.create(null)));
-        return Command.SINGLE_SUCCESS;
     }
 
     public static final @NotNull String getVersion() {
         final var container = FabricLoader.getInstance().getModContainer(DarkUtils.MOD_ID);
         if (container.isPresent()) {
             final var meta = container.get().getMetadata();
-            return meta.getVersion().getFriendlyString(); // e.g. "1.2.3"
+            return meta.getVersion().getFriendlyString(); // e.g. "1.3.0+1.21.10"
         }
         return "unknown";
     }
@@ -477,7 +528,54 @@ public final class DarkUtils implements ClientModInitializer {
         return new Pair<>(text.substring(0, mid), text.substring(mid));
     }
 
+    private static final void checkUpdates() {
+        DarkUtils.checkUpdatesAndGreet(false, false); // fancy welcome message is special for join time, when called externally always default to one-liner feedback
+    }
+
+    private static final void checkUpdatesAndGreet() {
+        DarkUtils.checkUpdatesAndGreet(!DarkUtilsConfig.INSTANCE.disableWelcomeMessage, DarkUtilsConfig.INSTANCE.disableUpdateChecker);
+    }
+
+    private static final void checkUpdatesAndGreet(final boolean fancyGreet, final boolean noCheck) {
+        if (noCheck && fancyGreet) {
+            // User choose to disable update checker but keep welcome message, treat as if they had latest version.
+            DarkUtils.queueWelcomeMessageIfEnabled();
+            return;
+        }
+
+        if (noCheck) {
+            // Both the update checker and welcome message is disabled, don't do anything.
+            return;
+        }
+
+        // User has update checker enabled and potentially the welcome message.
+        UpdateChecker.checkUpdateAndRunCallbackOnRenderThread((result, release) -> DarkUtils.notifyUpdateCheckerResult(fancyGreet, result, release));
+    }
+
+    private static final void notifyUpdateCheckerResult(final boolean fancyGreet, @NotNull final UpdateChecker.UpdateCheckerResult result, @Nullable final UpdateChecker.GitHubRelease release) {
+        final var latestReleaseLink = null != release && null != release.html_url() ? new LinkData("Click to open latest release in browser", release.html_url()) : null;
+
+        // If welcome message is enabled, we embed the update result into it, otherwise send a seperate (simple) message.
+        final Runnable feedback = switch (result) {
+            case UP_TO_DATE_STABLE -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This is the latest stable version.") : () -> DarkUtils.user("You are using the latest version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
+            case UP_TO_DATE_PRE -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This is the latest pre-release version.") : () -> DarkUtils.user("You are using the latest pre-release version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
+            case OUT_OF_DATE -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("!! This is an outdated version !!", latestReleaseLink) : () -> DarkUtils.user("You are using an !! outdated !! version of the mod - please update!", DarkUtils.UserMessageLevel.USER_WARN, latestReleaseLink);
+            case IN_DEVELOPMENT_VERSION -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This is an in-development version of the mod! Expect bugs and update frequently!") : () -> DarkUtils.user("You are using an in-development version of the mod! Expect bugs and update frequently!", DarkUtils.UserMessageLevel.USER_WARN);
+            case COULD_NOT_CHECK -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("We couldn't check if this the latest version, please see if there is any errors above!") : () -> DarkUtils.user("Could not check for mod updates!", DarkUtils.UserMessageLevel.USER_ERROR);
+        };
+
+        feedback.run();
+    }
+
     private static final void queueWelcomeMessageIfEnabled() {
+        DarkUtils.queueWelcomeMessageIfEnabled(null);
+    }
+
+    private static final void queueWelcomeMessageIfEnabled(@NotNull final String extra) {
+        DarkUtils.queueWelcomeMessageIfEnabled(extra, null);
+    }
+
+    private static final void queueWelcomeMessageIfEnabled(@Nullable final String extra, @Nullable final LinkData link) {
         if (DarkUtilsConfig.INSTANCE.disableWelcomeMessage) {
             return;
         }
@@ -498,24 +596,37 @@ public final class DarkUtils implements ClientModInitializer {
                     .appendGradientText(gradientStart, gradientEnd, DarkUtils.class.getSimpleName(), SimpleStyle.inherited())
                     .appendSpace()
                     .append(header.second(), headerFooterStyle)
-                    .appendNewLine()
-                    .appendNewLine()
+                    .appendDoubleNewLine()
                     .appendGradientText(gradientStart, gradientEnd, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', SimpleStyle
                             .centered()
                             .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
-                    )
-                    .appendNewLine()
-                    .appendNewLine()
+                    );
+
+            final var hasExtra = null != extra;
+
+            if (!hasExtra && null != link) {
+                throw new IllegalArgumentException("Can only have external link on external extra text");
+            }
+
+            if (hasExtra) {
+                text.appendNewLine()
+                    .appendGradientText(gradientStart, gradientEnd, extra, SimpleStyle
+                            .centered()
+                            .also(SimpleStyle.formatted(SimpleFormatting.BOLD)),
+                            link
+                    );
+            }
+
+            text
+                    .appendDoubleNewLine()
                     .appendGradientButton(gradientStart, gradientEnd, new ButtonData("Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID), SimpleStyle
                             .centered()
                             .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
                     )
-                    .appendNewLine()
-                    .appendNewLine()
-                    .append(footer, headerFooterStyle)
-                    .build();
+                    .appendDoubleNewLine()
+                    .append(footer, headerFooterStyle);
 
-            ChatUtils.sendMessageToLocalPlayer(text); 
+            ChatUtils.sendMessageToLocalPlayer(text.build()); 
         });
     }
 
@@ -583,7 +694,7 @@ public final class DarkUtils implements ClientModInitializer {
         );
     }
 
-    private static final int debugState() {
+    private static final void debugState() {
         final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
         final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
 
@@ -609,15 +720,13 @@ public final class DarkUtils implements ClientModInitializer {
         }
 
         textBuilder
-                .appendNewLine()
-                .appendNewLine()
+                .appendDoubleNewLine()
                 .append(footer, headerFooterStyle)
         ;
 
         final var text = textBuilder.build();
 
         ChatUtils.sendMessageToLocalPlayer(text);
-        return Command.SINGLE_SUCCESS;
     }
 
     /*@NotNull
@@ -638,7 +747,7 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.previous = curr;
     }
 
-    private static final int dumpLeaks() {
+    private static final void dumpLeaks() {
         final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
         final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
 
@@ -654,8 +763,7 @@ public final class DarkUtils implements ClientModInitializer {
                 .appendGradientText(gradientStart, gradientEnd, "Leak Statistics", SimpleStyle.inherited())
                 .appendSpace()
                 .append(header.second(), headerFooterStyle)
-                .appendNewLine()
-                .appendNewLine()
+                .appendDoubleNewLine()
                 .appendGradientText(gradientStart, gradientEnd, "Worlds leaked or pending GC: " + StreamSupport.stream(oldWorlds.spliterator(), false)
                             .filter(Objects::nonNull)
                             .filter(world -> world != MinecraftClient.getInstance().world)
@@ -664,14 +772,27 @@ public final class DarkUtils implements ClientModInitializer {
                         .centered()
                         .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
                 )
-                .appendNewLine()
-                .appendNewLine()
+                .appendDoubleNewLine()
                 .append(footer, headerFooterStyle)
                 .build();
 
         ChatUtils.sendMessageToLocalPlayer(text);
-        return Command.SINGLE_SUCCESS;
     }*/
+
+    private static final void runRateLimitedManualUpdateCheck() {
+        final var now = System.nanoTime();
+        final var last = DarkUtils.lastManualUpdateCheckTimeNs;
+
+        if (0L != last && now - last < DarkUtils.ONE_MINUTE_NS) {
+            DarkUtils.user("Please wait a minute before running the update check again.", DarkUtils.UserMessageLevel.USER_ERROR);
+            return;
+        }
+
+        DarkUtils.lastManualUpdateCheckTimeNs = now;
+
+        // Will still check even if disabled on config since user explicitly entered the command.
+        DarkUtils.checkUpdates();
+    }
 
     /**
      * This entrypoint is suitable for setting up client-specific logic, such as rendering.
@@ -682,9 +803,21 @@ public final class DarkUtils implements ClientModInitializer {
             //TickUtils.queueRepeatingTickTask(DarkUtils::onTick, 1);
 
             // Register mod commands
-            DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, ctx -> DarkUtils.openConfig(), "darkutil", "du");
-            DarkUtils.registerCommandWithAliases("darkutilsdebug", ctx -> DarkUtils.debugState(), "darkutildebug", "dudbg");
-            //DarkUtils.registerCommandWithAliases("dumpleaks", ctx -> DarkUtils.dumpLeaks());
+            DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, DarkUtils::openConfig, "darkutil", "du");
+            DarkUtils.registerCommandWithAliases("darkutilsdebug", DarkUtils::debugState, "darkutildebug", "dudbg");
+            DarkUtils.registerCommandWithAliases("darkutilscheckupdates", DarkUtils::runRateLimitedManualUpdateCheck, "darkutilscheckupdate", "duupdate");
+            /*DarkUtils.registerCommandWithAliases("darkutilstestupdateoutput", () -> {
+                // A dummy latest release that is newer than the current release for testing purposes.
+                // Tag name and html url required for the link to appear, rest can be null and false.
+                final var mockRelease = new UpdateChecker.GitHubRelease("v999.9.9", null, null, false, false, "https://github.com/TheDGOfficial/DarkUtils/releases/tag/v999.9.9", null, null);
+                final boolean[] bools = { true, false };
+                for (final var fancy : bools) {
+                    for (final var res : UpdateChecker.UpdateCheckerResult.values()) {
+                        DarkUtils.notifyUpdateCheckerResult(fancy, res, mockRelease);
+                    }
+                }
+            });*/
+            //DarkUtils.registerCommandWithAliases("dumpleaks", DarkUtils::dumpLeaks);
 
             // Init custom events that wrap fabric events, other things depend on them
             DarkUtils.initEvents();
@@ -698,8 +831,8 @@ public final class DarkUtils implements ClientModInitializer {
             // Init features
             DarkUtils.initFeatures();
 
-            // Send welcome message once player joins a world/server/realm
-            DarkUtils.queueWelcomeMessageIfEnabled();
+            // Run update checker and greet user depending on version
+            DarkUtils.checkUpdatesAndGreet();
         } catch (final Throwable error) {
             DarkUtils.error(DarkUtils.class, "Error during mod initialization", error);
         }

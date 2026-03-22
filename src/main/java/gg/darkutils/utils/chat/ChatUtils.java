@@ -219,8 +219,8 @@ public final class ChatUtils {
         button.setStyle(
                 button.getStyle()
                         .withBold(bold)
-                        .withClickEvent(new ClickEvent.RunCommand(command))
                         .withHoverEvent(new HoverEvent.ShowText(hoverText))
+                        .withClickEvent(new ClickEvent.RunCommand(command))
         );
 
         text.append(button);
