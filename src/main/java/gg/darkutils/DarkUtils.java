@@ -529,16 +529,14 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final void checkUpdates() {
-        DarkUtils.checkUpdatesAndGreet(false); // fancy welcome message is special for join time, when called externally always default to one-liner feedback
+        DarkUtils.checkUpdatesAndGreet(false, false); // fancy welcome message is special for join time, when called externally always default to one-liner feedback
     }
 
     private static final void checkUpdatesAndGreet() {
-        DarkUtils.checkUpdatesAndGreet(!DarkUtilsConfig.INSTANCE.disableWelcomeMessage);
+        DarkUtils.checkUpdatesAndGreet(!DarkUtilsConfig.INSTANCE.disableWelcomeMessage, DarkUtilsConfig.INSTANCE.disableUpdateChecker);
     }
 
-    private static final void checkUpdatesAndGreet(final boolean fancyGreet) {
-        final var noCheck = DarkUtilsConfig.INSTANCE.disableUpdateChecker;
-
+    private static final void checkUpdatesAndGreet(final boolean fancyGreet, final boolean noCheck) {
         if (noCheck && fancyGreet) {
             // User choose to disable update checker but keep welcome message, treat as if they had latest version.
             DarkUtils.queueWelcomeMessageIfEnabled();
@@ -605,9 +603,8 @@ public final class DarkUtils implements ClientModInitializer {
                     );
 
             final var hasExtra = null != extra;
-            final var hasLink = null != link;
 
-            if (!hasExtra && hasLink) {
+            if (!hasExtra && null != link) {
                 throw new IllegalArgumentException("Can only have external link on external extra text");
             }
 
@@ -616,7 +613,7 @@ public final class DarkUtils implements ClientModInitializer {
                     .appendGradientText(gradientStart, gradientEnd, extra, SimpleStyle
                             .centered()
                             .also(SimpleStyle.formatted(SimpleFormatting.BOLD)),
-                            hasLink ? link : null
+                            link
                     );
             }
 
@@ -793,6 +790,7 @@ public final class DarkUtils implements ClientModInitializer {
 
         DarkUtils.lastManualUpdateCheckTimeNs = now;
 
+        // Will still check even if disabled on config since user explicitly entered the command.
         DarkUtils.checkUpdates();
     }
 
@@ -809,10 +807,13 @@ public final class DarkUtils implements ClientModInitializer {
             DarkUtils.registerCommandWithAliases("darkutilsdebug", DarkUtils::debugState, "darkutildebug", "dudbg");
             DarkUtils.registerCommandWithAliases("darkutilscheckupdates", DarkUtils::runRateLimitedManualUpdateCheck, "darkutilscheckupdate", "duupdate");
             /*DarkUtils.registerCommandWithAliases("darkutilstestupdateoutput", () -> {
+                // A dummy latest release that is newer than the current release for testing purposes.
+                // Tag name and html url required for the link to appear, rest can be null and false.
+                final var mockRelease = new UpdateChecker.GitHubRelease("v999.9.9", null, null, false, false, "https://github.com/TheDGOfficial/DarkUtils/releases/tag/v999.9.9", null, null);
                 final boolean[] bools = { true, false };
                 for (final var fancy : bools) {
                     for (final var res : UpdateChecker.UpdateCheckerResult.values()) {
-                        DarkUtils.notifyUpdateCheckerResult(fancy, res);
+                        DarkUtils.notifyUpdateCheckerResult(fancy, res, mockRelease);
                     }
                 }
             });*/
