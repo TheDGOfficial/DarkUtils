@@ -68,7 +68,7 @@ public final class TextBuilder {
             TextBuilder.addLink(gradientText, link);
         }
 
-        this.text.append(text);
+        this.text.append(gradientText);
         return this;
     }
 

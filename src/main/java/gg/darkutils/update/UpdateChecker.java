@@ -199,8 +199,9 @@ public final class UpdateChecker {
     @NotNull
     private static final String normalizeVersion(@NotNull final String version) {
         final var plusIndex = version.indexOf('+');
+        final var base = plusIndex > 0 ? version.substring(0, plusIndex) : version;
 
-        return plusIndex > 0 ? version.substring(0, plusIndex) : version;
+        return base.length() > 0 && 'v' == base.charAt(0) ? base.substring(1) : base;
     }
 
     @Nullable
