@@ -70,6 +70,7 @@ import java.util.Map;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.concurrent.TimeUnit;
@@ -138,6 +139,24 @@ public final class DarkUtils implements ClientModInitializer {
      */
     private static long lastManualUpdateCheckTimeNs = 0L;
 
+    /**
+     * Color used for mod headers that take the full chat width.
+     */
+    @NotNull
+    private static final String HEADER_FOOTER_COLOR = "#1e2124";
+
+    /**
+     * Color used for gradient start hex, which will transition to gradient end inside text slowly.
+     */
+    @NotNull
+    private static final String GRADIENT_START = "#00C6FF";
+
+    /**
+     * Color used for gradient end hex, which will transition from gradient start inside text slowly.
+     */
+    @NotNull
+    private static final String GRADIENT_END = "#0072FF";
+
     public DarkUtils() {
         super();
     }
@@ -203,7 +222,7 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     public enum UserMessageLevel {
-        USER_INFO("#454D56"),
+        USER_INFO("#36393e"),
         USER_WARN("#F4E051"),
         USER_ERROR("#FF3434");
 
@@ -229,8 +248,8 @@ public final class DarkUtils implements ClientModInitializer {
                             .empty();
 
         final var pendingAppend = List.of(
-                Map.entry(DarkUtils.class.getSimpleName(), SimpleStyle.colored(ChatUtils.hexToRGB("#161616"))),
-                Map.entry(" » ", SimpleStyle.colored(ChatUtils.hexToRGB("#67F9FF"))),
+                Map.entry(DarkUtils.class.getSimpleName(), SimpleStyle.colored(ChatUtils.hexToRGB("#1e2124"))),
+                Map.entry(" » ", SimpleStyle.colored(ChatUtils.hexToRGB("#7289da"))),
                 Map.entry(message, SimpleStyle.colored(level.rgb))
         );
 
@@ -522,6 +541,13 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     @NotNull
+    public static final Pair<String, String> getModAndMcVersion() {
+        final var split = DarkUtils.getVersion().split("\\+");
+
+        return new Pair<>(split[0], split[1]); // 0 = mod version, 1 = mc version
+    }
+
+    @NotNull
     private static final Pair<String, String> cutInHalf(@NotNull final String text) {
         final var mid = text.length() >> 1;
 
@@ -552,16 +578,25 @@ public final class DarkUtils implements ClientModInitializer {
         UpdateChecker.checkUpdateAndRunCallbackOnRenderThread((result, release) -> DarkUtils.notifyUpdateCheckerResult(fancyGreet, result, release));
     }
 
+    @FunctionalInterface
+    private interface TriConsumer<T, U, V> {
+        void accept(T t, U u, V v);
+    }
+
     private static final void notifyUpdateCheckerResult(final boolean fancyGreet, @NotNull final UpdateChecker.UpdateCheckerResult result, @Nullable final UpdateChecker.GitHubRelease release) {
+        // 60 ticks = 3 seconds delay so that the message is sent after guild motd and other stuff for more visibility
+        final BiConsumer<String, DarkUtils.UserMessageLevel> user = (message, level) -> TickUtils.queueTickTask(() -> DarkUtils.user(message, level), 60);
+        final TriConsumer<String, DarkUtils.UserMessageLevel, LinkData> userWithLink = (message, level, linkData) -> TickUtils.queueTickTask(() -> DarkUtils.user(message, level, linkData), 60);
+
         final var latestReleaseLink = null != release && null != release.html_url() ? new LinkData("Click to open latest release in browser", release.html_url()) : null;
 
         // If welcome message is enabled, we embed the update result into it, otherwise send a seperate (simple) message.
         final Runnable feedback = switch (result) {
-            case UP_TO_DATE_STABLE -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This is the latest stable version.") : () -> DarkUtils.user("You are using the latest version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
-            case UP_TO_DATE_PRE -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This is the latest pre-release version.") : () -> DarkUtils.user("You are using the latest pre-release version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
-            case OUT_OF_DATE -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("!! This is an outdated version !!", latestReleaseLink) : () -> DarkUtils.user("You are using an !! outdated !! version of the mod - please update!", DarkUtils.UserMessageLevel.USER_WARN, latestReleaseLink);
-            case IN_DEVELOPMENT_VERSION -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This is an in-development version of the mod! Expect bugs and update frequently!") : () -> DarkUtils.user("You are using an in-development version of the mod! Expect bugs and update frequently!", DarkUtils.UserMessageLevel.USER_WARN);
-            case COULD_NOT_CHECK -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("We couldn't check if this the latest version, please see if there is any errors above!") : () -> DarkUtils.user("Could not check for mod updates!", DarkUtils.UserMessageLevel.USER_ERROR);
+            case UP_TO_DATE_STABLE -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This the latest stable version.") : () -> user.accept("You are using the latest version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
+            case UP_TO_DATE_PRE -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This the latest pre-release version.") : () -> user.accept("You are using the latest pre-release version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
+            case OUT_OF_DATE -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("!! This an outdated version !!", latestReleaseLink) : () -> userWithLink.accept("You are using an !! outdated !! version of the mod - please update!", DarkUtils.UserMessageLevel.USER_WARN, latestReleaseLink);
+            case IN_DEVELOPMENT_VERSION -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("In-development version - Update frequently!") : () -> user.accept("You are using an in-development version of the mod! Expect bugs and update frequently!", DarkUtils.UserMessageLevel.USER_WARN);
+            case COULD_NOT_CHECK -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("We couldn't check if this the latest version, please see if there is any errors above!") : () -> user.accept("Could not check for mod updates!", DarkUtils.UserMessageLevel.USER_ERROR);
         };
 
         feedback.run();
@@ -581,23 +616,22 @@ public final class DarkUtils implements ClientModInitializer {
         }
 
         TickUtils.awaitLocalPlayer((player) -> {
-            final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
+            final var headerFooterColor = ChatUtils.hexToRGB(DarkUtils.HEADER_FOOTER_COLOR);
             final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
 
             final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
             final var footer = ChatUtils.fill('▬', true);
 
-            final var gradientStart = "#54daf4";
-            final var gradientEnd = "#545eb6";
+            final var vers = DarkUtils.getModAndMcVersion();
 
             final var text = TextBuilder
                     .withInitial(header.first(), headerFooterStyle)
                     .appendSpace()
-                    .appendGradientText(gradientStart, gradientEnd, DarkUtils.class.getSimpleName(), SimpleStyle.inherited())
+                    .appendGradientText(DarkUtils.GRADIENT_START, DarkUtils.GRADIENT_END, DarkUtils.class.getSimpleName(), SimpleStyle.inherited())
                     .appendSpace()
                     .append(header.second(), headerFooterStyle)
                     .appendDoubleNewLine()
-                    .appendGradientText(gradientStart, gradientEnd, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + DarkUtils.getVersion() + '!', SimpleStyle
+                    .appendGradientText(DarkUtils.GRADIENT_START, DarkUtils.GRADIENT_END, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + vers.first() + " for " + vers.second() + '!', SimpleStyle
                             .centered()
                             .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
                     );
@@ -610,7 +644,7 @@ public final class DarkUtils implements ClientModInitializer {
 
             if (hasExtra) {
                 text.appendNewLine()
-                    .appendGradientText(gradientStart, gradientEnd, extra, SimpleStyle
+                    .appendGradientText(DarkUtils.GRADIENT_START, DarkUtils.GRADIENT_END, extra, SimpleStyle
                             .centered()
                             .also(SimpleStyle.formatted(SimpleFormatting.BOLD)),
                             link
@@ -619,14 +653,14 @@ public final class DarkUtils implements ClientModInitializer {
 
             text
                     .appendDoubleNewLine()
-                    .appendGradientButton(gradientStart, gradientEnd, new ButtonData("Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID), SimpleStyle
+                    .appendGradientButton(DarkUtils.GRADIENT_START, DarkUtils.GRADIENT_END, new ButtonData("Open Settings", "Click to open mod settings!", '/' + DarkUtils.MOD_ID), SimpleStyle
                             .centered()
                             .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
                     )
                     .appendDoubleNewLine()
                     .append(footer, headerFooterStyle);
 
-            ChatUtils.sendMessageToLocalPlayer(text.build()); 
+            TickUtils.queueTickTask(() -> ChatUtils.sendMessageToLocalPlayer(text.build()), 60); // 3 seconds delay so that the message is sent after guild motd and other stuff for more visibility
         });
     }
 
@@ -695,19 +729,16 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final void debugState() {
-        final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
+        final var headerFooterColor = ChatUtils.hexToRGB(DarkUtils.HEADER_FOOTER_COLOR);
         final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
 
         final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, " Debug State ").replace(" Debug State ", ""));
         final var footer = ChatUtils.fill('▬', true);
 
-        final var gradientStart = "#54daf4";
-        final var gradientEnd = "#545eb6";
-
         final var textBuilder = TextBuilder
                 .withInitial(header.first(), headerFooterStyle)
                 .appendSpace()
-                .appendGradientText(gradientStart, gradientEnd, "Debug State", SimpleStyle.inherited())
+                .appendGradientText(DarkUtils.GRADIENT_START, DarkUtils.GRADIENT_END, "Debug State", SimpleStyle.inherited())
                 .appendSpace()
                 .append(header.second(), headerFooterStyle)
                 .appendNewLine();
@@ -715,7 +746,7 @@ public final class DarkUtils implements ClientModInitializer {
         for (final var line : DarkUtils.collectDebugInformation()) {
             textBuilder
                     .appendNewLine()
-                    .appendGradientText(gradientStart, gradientEnd, line, SimpleStyle.centered().also(SimpleStyle.formatted(SimpleFormatting.BOLD)))
+                    .appendGradientText(DarkUtils.GRADIENT_START, DarkUtils.GRADIENT_END, line, SimpleStyle.centered().also(SimpleStyle.formatted(SimpleFormatting.BOLD)))
             ;
         }
 
@@ -748,23 +779,20 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final void dumpLeaks() {
-        final var headerFooterColor = ChatUtils.hexToRGB("#4ffd7c");
+        final var headerFooterColor = ChatUtils.hexToRGB(DarkUtils.HEADER_FOOTER_COLOR);
         final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
 
         final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, " Leak Statistics ").replace(" Leak Statistics ", ""));
         final var footer = ChatUtils.fill('▬', true);
 
-        final var gradientStart = "#54daf4";
-        final var gradientEnd = "#545eb6";
-
         final var text = TextBuilder
                 .withInitial(header.first(), headerFooterStyle)
                 .appendSpace()
-                .appendGradientText(gradientStart, gradientEnd, "Leak Statistics", SimpleStyle.inherited())
+                .appendGradientText(DarkUtils.GRADIENT_START, DarkUtils.GRADIENT_END, "Leak Statistics", SimpleStyle.inherited())
                 .appendSpace()
                 .append(header.second(), headerFooterStyle)
                 .appendDoubleNewLine()
-                .appendGradientText(gradientStart, gradientEnd, "Worlds leaked or pending GC: " + StreamSupport.stream(oldWorlds.spliterator(), false)
+                .appendGradientText(DarkUtils.GRADIENT_START, DarkUtils.GRADIENT_END, "Worlds leaked or pending GC: " + StreamSupport.stream(oldWorlds.spliterator(), false)
                             .filter(Objects::nonNull)
                             .filter(world -> world != MinecraftClient.getInstance().world)
                             .count()

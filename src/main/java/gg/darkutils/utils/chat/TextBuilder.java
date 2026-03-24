@@ -5,6 +5,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
+import net.minecraft.text.Style;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.NotNull;
 import java.net.URI;
@@ -62,10 +63,11 @@ public final class TextBuilder {
 
     @NotNull
     public final TextBuilder appendGradientText(@NotNull final String startHex, @NotNull final String endHex, @NotNull final String text, @NotNull final SimpleStyle simpleStyle, @Nullable final LinkData link) {
-        final var gradientText = ChatUtils.gradient(startHex, endHex, simpleStyle.isCentered() ? ChatUtils.center(text, simpleStyle.toStyle().isBold()) : text);
+        final var bold = simpleStyle.toStyle().isBold();
+        final var gradientText = ChatUtils.gradient(startHex, endHex, simpleStyle.isCentered() ? ChatUtils.center(text, bold) : text);
 
         if (null != link) {
-            TextBuilder.addLink(gradientText, link);
+            TextBuilder.addGradientLink(startHex, endHex, gradientText, link, bold);
         }
 
         this.text.append(gradientText);
@@ -106,13 +108,19 @@ public final class TextBuilder {
         return this;
     }
 
-    private static final void addLink(@NotNull final MutableText text, @NotNull final LinkData link) {
-        final var originalStyle = text.getStyle();
+    private static final void addGradientLink(@NotNull final String startHex, @NotNull final String endHex, @NotNull final MutableText text, @NotNull final LinkData link, final boolean bold) {
+        TextBuilder.addLink(text, ChatUtils.gradient(startHex, endHex, link.hover(), bold), link.link());
+    }
 
+    private static final void addLink(@NotNull final MutableText text, @NotNull final LinkData link) {
+        TextBuilder.addLink(text, Text.literal(link.hover()).setStyle(text.getStyle()), link.link());
+    }
+
+    private static final void addLink(@NotNull final MutableText text, @NotNull final MutableText hover, @NotNull final String link) {
         text.setStyle(
-                originalStyle
-                        .withHoverEvent(new HoverEvent.ShowText(Text.literal(link.hover()).setStyle(originalStyle)))
-                        .withClickEvent(new ClickEvent.OpenUrl(URI.create(link.link())))
+            text.getStyle()
+                .withHoverEvent(new HoverEvent.ShowText(hover))
+                .withClickEvent(new ClickEvent.OpenUrl(URI.create(link)))
         );
     }
 

@@ -443,9 +443,11 @@ public final class DarkUtilsConfigScreen {
 
         final var config = DarkUtilsConfig.INSTANCE;
 
+        final var vers = DarkUtils.getModAndMcVersion();
+
         final var builder = ConfigBuilder.create()
                 .setParentScreen(parent)
-                .setTitle(Text.of("DarkUtils v" + DarkUtils.getVersion() + " Settings"))
+                .setTitle(Text.of("DarkUtils v" + vers.first() + " for Minecraft " + vers.second() + " Settings"))
                 .setSavingRunnable(DarkUtilsConfig::save);
 
         final var entryBuilder = builder.entryBuilder();
