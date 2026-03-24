@@ -580,7 +580,7 @@ public final class DarkUtils implements ClientModInitializer {
 
     @FunctionalInterface
     private interface TriConsumer<T, U, V> {
-        void accept(T t, U u, V v);
+        void accept(@NotNull final T t, @NotNull final U u, @Nullable final V v);
     }
 
     private static final void notifyUpdateCheckerResult(final boolean fancyGreet, @NotNull final UpdateChecker.UpdateCheckerResult result, @Nullable final UpdateChecker.GitHubRelease release) {
