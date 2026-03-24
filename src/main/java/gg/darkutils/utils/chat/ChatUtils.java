@@ -184,19 +184,30 @@ public final class ChatUtils {
 
     @NotNull
     public static final MutableText gradient(@NotNull final String startHex, @NotNull final String endHex, @NotNull final String text) {
+        return ChatUtils.gradient(startHex, endHex, text, false);
+    }
+
+    @NotNull
+    public static final MutableText gradient(@NotNull final String startHex, @NotNull final String endHex, @NotNull final String text, final boolean bold) {
         final var start = ChatUtils.hexToRGB(startHex);
         final var end = ChatUtils.hexToRGB(endHex);
 
         final var length = text.length();
 
-        var root = Text.literal("");
+        var root = Text.empty();
 
         for (var i = 0; i < length; ++i) {
             final var t = 1 == length ? 0.0D : i / (length - 1.0D);
             final var color = ChatUtils.interpolate(start, end, t);
 
+            var style = Style.EMPTY.withColor(color);
+
+            if (bold) {
+                style = style.withBold(true);
+            }
+
             root = root.append(Text.literal(String.valueOf(text.charAt(i)))
-                    .setStyle(Style.EMPTY.withColor(color)));
+                    .setStyle(style));
         }
 
         return root;

@@ -2,7 +2,7 @@ package gg.darkutils.mixin.visuals;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
-import net.fabricmc.fabric.api.util.TriState;
+import gg.darkutils.utils.BasicTriState;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.entity.effect.StatusEffect;
@@ -25,10 +25,10 @@ final class LightmapTextureManagerMixin {
     private boolean dirty;
     @Unique
     @Nullable
-    private TriState darkutils$fullbrightAtLastUpdate;
+    private BasicTriState darkutils$fullbrightAtLastUpdate;
     @Unique
     @Nullable
-    private TriState darkutils$nightVisionAtLastUpdate;
+    private BasicTriState darkutils$nightVisionAtLastUpdate;
 
     private LightmapTextureManagerMixin() {
         super();
@@ -38,9 +38,9 @@ final class LightmapTextureManagerMixin {
 
     @Unique
     @NotNull
-    private final TriState darkutils$getFullbrightAtLastUpdate() {
+    private final BasicTriState darkutils$getFullbrightAtLastUpdate() {
         if (null == this.darkutils$fullbrightAtLastUpdate) {
-            this.darkutils$fullbrightAtLastUpdate = TriState.DEFAULT;
+            this.darkutils$fullbrightAtLastUpdate = BasicTriState.DEFAULT;
         }
 
         return this.darkutils$fullbrightAtLastUpdate;
@@ -48,9 +48,9 @@ final class LightmapTextureManagerMixin {
 
     @Unique
     @NotNull
-    private final TriState darkutils$getNightVisionAtLastUpdate() {
+    private final BasicTriState darkutils$getNightVisionAtLastUpdate() {
         if (null == this.darkutils$nightVisionAtLastUpdate) {
-            this.darkutils$nightVisionAtLastUpdate = TriState.DEFAULT;
+            this.darkutils$nightVisionAtLastUpdate = BasicTriState.DEFAULT;
         }
 
         return this.darkutils$nightVisionAtLastUpdate;
@@ -61,14 +61,14 @@ final class LightmapTextureManagerMixin {
         final var fb = DarkUtilsConfig.INSTANCE.fullbright;
         final var lastFb = this.darkutils$getFullbrightAtLastUpdate();
 
-        if (TriState.of(fb) != lastFb && TriState.DEFAULT != lastFb) {
+        if (BasicTriState.of(fb) != lastFb && BasicTriState.DEFAULT != lastFb) {
             return true;
         }
 
         final var nv = DarkUtilsConfig.INSTANCE.nightVision;
         final var lastNv = this.darkutils$getNightVisionAtLastUpdate();
 
-        return TriState.of(nv) != lastNv && TriState.DEFAULT != lastNv;
+        return BasicTriState.of(nv) != lastNv && BasicTriState.DEFAULT != lastNv;
     }
 
     @Inject(method = "update", at = @At("HEAD"), cancellable = true)
@@ -86,8 +86,8 @@ final class LightmapTextureManagerMixin {
         }
 
         if (this.dirty) {
-            this.darkutils$fullbrightAtLastUpdate = TriState.of(DarkUtilsConfig.INSTANCE.fullbright);
-            this.darkutils$nightVisionAtLastUpdate = TriState.of(DarkUtilsConfig.INSTANCE.nightVision);
+            this.darkutils$fullbrightAtLastUpdate = BasicTriState.of(DarkUtilsConfig.INSTANCE.fullbright);
+            this.darkutils$nightVisionAtLastUpdate = BasicTriState.of(DarkUtilsConfig.INSTANCE.nightVision);
         }
     }
 
