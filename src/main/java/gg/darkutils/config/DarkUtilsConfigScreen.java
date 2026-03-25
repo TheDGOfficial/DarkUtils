@@ -342,6 +342,10 @@ public final class DarkUtilsConfigScreen {
                 "Overrides glGetError to always return no error to disable error checking completely.",
                 config.disableErrorCheckingEntirely, newValue -> config.disableErrorCheckingEntirely = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Re-Enable AMD Game Optimizations",
+                "Sodium disables some of the AMD driver's game optimizations for Minecraft due to bugs with a workaround. This option re-enables it. It is not guaranteed this would do anything as it depends on driver. Additionally, the workaround was not supposed to be applied in Linux systems, but is bugged, enabling this will fix it.",
+                config.reenableAmdGameOptimizations, newValue -> config.reenableAmdGameOptimizations = newValue);
+
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable Campfire Smoke Particles",
                 "Disables campfire smoke particles, which optimizes memory allocation rate of the game, due to smoke particles calling entity collision code for some reason.",
                 config.disableCampfireSmokeParticles, newValue -> config.disableCampfireSmokeParticles = newValue);

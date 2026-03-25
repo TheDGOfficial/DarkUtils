@@ -110,6 +110,7 @@ public final class DarkUtilsConfig {
     public boolean optimizeExceptions;
     public boolean alwaysUseNoErrorContext;
     public boolean disableErrorCheckingEntirely;
+    public boolean reenableAmdGameOptimizations;
     public boolean disableCampfireSmokeParticles;
     public boolean removeMainMenuFrameLimit;
     public boolean logCleaner;
