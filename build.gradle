@@ -109,7 +109,7 @@ dependencies {
         exclude(group: 'net.fabricmc.fabric-api')
     }
 
-    modApi('net.hypixel:mod-api:1.0.1') {
+    modApi('net.hypixel:mod-api:1.0.2') {
         exclude(group: 'net.fabricmc.fabric-api')
     }
 
