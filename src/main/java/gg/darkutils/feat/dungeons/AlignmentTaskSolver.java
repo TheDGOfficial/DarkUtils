@@ -497,7 +497,7 @@ public final class AlignmentTaskSolver {
 
             moves.add(new AlignmentTaskSolver.GridMove(current, rotation));
         }
-        return moves;
+        return List.copyOf(moves);
     }
 
     private static final int[][] getLayout() {
@@ -549,7 +549,7 @@ public final class AlignmentTaskSolver {
                             tmp = gridCopy[tmp.y()][tmp.x()];
                             steps.add(tmp);
                         }
-                        return steps;
+                        return List.copyOf(steps);
                     }
                 }
             }
