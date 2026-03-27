@@ -20,7 +20,7 @@ final class ModAnnouncerMixin {
     }
 
     @WrapMethod(method = "onServerJoin")
-    private final void onServerJoin(@NotNull @Coerce final Object event, @NotNull final Operation<Void> original) {
+    private final void darkutils$onServerJoinExitEarlyIfNotEnabled(@NotNull @Coerce final Object event, @NotNull final Operation<Void> original) {
         if (DarkUtilsConfig.INSTANCE.enableModAnnouncer) {
             original.call(event);
         }
