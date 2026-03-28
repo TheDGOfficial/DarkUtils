@@ -246,7 +246,7 @@ public final class ChatUtils {
         final var width = mc.textRenderer.getWidth(Text.literal(text).setStyle(Style.EMPTY.withBold(bold)));
         final var halvedWidth = width >> 1;
 
-        final var toCompensate = (mc.inGameHud.getChatHud().getWidth() >> 1) - halvedWidth;
+        final var toCompensate = (ChatUtils.getChatWidth(mc) >> 1) - halvedWidth;
         final var fillerWidth = mc.textRenderer.getWidth(Text.literal(" ").setStyle(Style.EMPTY.withBold(bold))) + 1;
 
         final var builder = new StringBuilder(text.length());
