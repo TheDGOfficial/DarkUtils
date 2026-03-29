@@ -7,6 +7,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.sound.SoundEvent;
@@ -217,6 +218,10 @@ public final class Helpers {
         Helpers.mainHandHeldItemStackName = plain;
 
         return matcher.test(plain);
+    }
+
+    public static final boolean isHoldingADiamondHoeAxeOrSword() {
+        return Helpers.doesHeldItemMatch(stack -> stack.isOf(Items.DIAMOND_HOE) || stack.isOf(Items.DIAMOND_AXE) || stack.isOf(Items.DIAMOND_SWORD));
     }
 
     public static final boolean isHoldingASwordHuntaxeOrSpade() {
