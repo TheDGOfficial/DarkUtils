@@ -9,6 +9,7 @@ import org.objectweb.asm.tree.*
 import org.objectweb.asm.util.CheckClassAdapter
 import proguard.gradle.ProGuardTask
 
+import java.nio.file.Path as NioPath
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -176,6 +177,10 @@ abstract class PreprocessMixinNamesTask extends DefaultTask {
         final def inputDirectory = inputDir.get().asFile
         final def outputDirectory = outputDir.get().asFile
 
+        fs.delete {
+            it.delete(outputDir)
+        }
+
         fs.copy { final def spec ->
             spec.from(inputDirectory)
             spec.into(outputDirectory)
@@ -260,7 +265,7 @@ final class BatchedMessageCollector {
     private static final HashMap<Integer, ArrayList<String>> MESSAGES = new HashMap<>()
 
     private static final void add(final int messageCategory, final String message) {
-        BatchedMessageCollector.MESSAGES.computeIfAbsent(messageCategory, category -> new ArrayList<>()).add(message)
+        BatchedMessageCollector.MESSAGES.computeIfAbsent(messageCategory, { final def category -> new ArrayList<>() }).add(message)
     }
 
     private static final void logAll(final Logger logger) {
@@ -273,6 +278,7 @@ final class BatchedMessageCollector {
                 logger.lifecycle(message)
             }
         }
+        MESSAGES.clear()
     }
 }
 
@@ -281,6 +287,33 @@ final class JrtHolder {
 
     static final def getJrt() {
         return JRT_FILESYSTEM
+    }
+}
+
+final class JrtIndexHolder {
+    private static final Map<String, NioPath> CLASS_INDEX = JrtIndexHolder.buildIndex()
+
+    private static final Map<String, NioPath> buildIndex() {
+        final def index = new HashMap<String, NioPath>()
+
+        final def modules = JrtHolder.jrt.getPath('/modules')
+
+        try (final def stream = Files.walk(modules)) {
+            stream
+                .filter { Files.isRegularFile(it) }
+                .filter { it.toString().endsWith('.class') }
+                .forEach { final def path ->
+                    final def relative = modules.relativize(path).toString().replace('\\', '/')
+                    final def className = relative.substring(relative.indexOf('/') + 1)
+                    index.putIfAbsent(className, path)
+                }
+        }
+
+        return Map.copyOf(index)
+    }
+
+    static final NioPath lookup(final String entry) {
+        return JrtIndexHolder.CLASS_INDEX.get(entry)
     }
 }
 
@@ -294,8 +327,6 @@ abstract class AsmPreprocessTask extends DefaultTask {
     private static final def PRIVATE_FIELDS_DESC     = 'Lgg/darkutils/annotations/PrivateFields;'
 
     private static final def MIXIN_OVERWRITE_DESC    = 'Lorg/spongepowered/asm/mixin/Overwrite;'
-
-    protected final Map<String, ClassNode> classNodeCache = new HashMap<>()
 
     @InputDirectory
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -319,14 +350,14 @@ abstract class AsmPreprocessTask extends DefaultTask {
         }
     }
 
-    protected final boolean overridesSomething(final ClassNode owner, final MethodNode method, final Set<File> classpath) {
+    protected final boolean overridesSomething(final ClassNode owner, final MethodNode method, final Set<File> classpath, final HashMap<String, ClassNode> classNodeCache) {
         final def name = method.name
         final def desc = method.desc
 
-        return this.hierarchyHasMethod(owner, name, desc, classpath)
+        return this.hierarchyHasMethod(owner, name, desc, classpath, classNodeCache)
     }
 
-    protected final boolean hierarchyHasMethod(final ClassNode owner, final String name, final String desc, final Set<File> classpath) {
+    protected final boolean hierarchyHasMethod(final ClassNode owner, final String name, final String desc, final Set<File> classpath, final HashMap<String, ClassNode> classNodeCache) {
         final def queue   = new ArrayDeque<String>()
         final def visited = new HashSet<String>()
 
@@ -343,10 +374,10 @@ abstract class AsmPreprocessTask extends DefaultTask {
                 continue
             }
 
-            final def cn = this.loadClassNode(internalName, classpath)
+            final def cn = this.loadClassNode(internalName, classpath, classNodeCache)
 
             if (null == cn) {
-                System.err.println("Failed to load class: ${internalName} from classpath")
+                logger.error("Failed to load class: ${internalName} from classpath")
                 continue
             }
 
@@ -366,8 +397,8 @@ abstract class AsmPreprocessTask extends DefaultTask {
         return false
     }
 
-    protected final ClassNode loadClassNode(final String internalName, final Set<File> classpath) {
-        return classNodeCache.computeIfAbsent(internalName, name -> AsmPreprocessTask.loadClassNode0(name, classpath))
+    protected final ClassNode loadClassNode(final String internalName, final Set<File> classpath, final HashMap<String, ClassNode> classNodeCache) {
+        return classNodeCache.computeIfAbsent(internalName, { final def name -> AsmPreprocessTask.loadClassNode0(name, classpath) })
     }
 
     private static final ClassNode loadClassNode0(final String internalName, final Set<File> classpath) {
@@ -389,7 +420,9 @@ abstract class AsmPreprocessTask extends DefaultTask {
                     final def jarEntry = jarFile.getJarEntry(entry)
 
                     if (null != jarEntry) {
-                        return AsmPreprocessTask.readNode(jarFile.getInputStream(jarEntry).bytes)
+                        try (final def input = jarFile.getInputStream(jarEntry)) {
+                            return AsmPreprocessTask.readNode(input.bytes)
+                        }
                     }
                 }
             }
@@ -399,14 +432,10 @@ abstract class AsmPreprocessTask extends DefaultTask {
          * ---------- JDK MODULE FALLBACK ----------
          */
 
-        final def modules = JrtHolder.jrt.getPath('/modules')
+        final def jrtPath = JrtIndexHolder.lookup(entry)
 
-        try (final def stream = Files.walk(modules)) {
-            final def found = stream.filter { it.toString().endsWith(entry) }.findFirst()
-
-            if (found.present) {
-                return AsmPreprocessTask.readNode(Files.readAllBytes(found.get()))
-            }
+        if (null != jrtPath) {
+            return AsmPreprocessTask.readNode(Files.readAllBytes(jrtPath))
         }
 
         return null
@@ -445,36 +474,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
         return false
     }
 
-    /*private static final String fieldAccessToString(final FieldNode field) {
-        final def flags = []
-        if ((field.access & Opcodes.ACC_PUBLIC) != 0) flags << 'public'
-        if ((field.access & Opcodes.ACC_PRIVATE) != 0) flags << 'private'
-        if ((field.access & Opcodes.ACC_PROTECTED) != 0) flags << 'protected'
-        if ((field.access & Opcodes.ACC_STATIC) != 0) flags << 'static'
-        if ((field.access & Opcodes.ACC_FINAL) != 0) flags << 'final'
-        if ((field.access & Opcodes.ACC_SYNTHETIC) != 0) flags << 'synthetic'
-        if ((field.access & Opcodes.ACC_TRANSIENT) != 0) flags << 'transient'
-        return flags.join(' ')
-    }
-
-    private static final String methodAccessToString(final MethodNode method) {
-        final def flags = []
-        if ((method.access & Opcodes.ACC_PUBLIC) != 0) flags << 'public'
-        if ((method.access & Opcodes.ACC_PRIVATE) != 0) flags << 'private'
-        if ((method.access & Opcodes.ACC_PROTECTED) != 0) flags << 'protected'
-        if ((method.access & Opcodes.ACC_STATIC) != 0) flags << 'static'
-        if ((method.access & Opcodes.ACC_FINAL) != 0) flags << 'final'
-        if ((method.access & Opcodes.ACC_SYNCHRONIZED) != 0) flags << 'synchronized'
-        if ((method.access & Opcodes.ACC_BRIDGE) != 0) flags << 'bridge'
-        if ((method.access & Opcodes.ACC_VARARGS) != 0) flags << 'varargs'
-        if ((method.access & Opcodes.ACC_NATIVE) != 0) flags << 'native'
-        if ((method.access & Opcodes.ACC_ABSTRACT) != 0) flags << 'abstract'
-        if ((method.access & Opcodes.ACC_STRICT) != 0) flags << 'strictfp'
-        if ((method.access & Opcodes.ACC_SYNTHETIC) != 0) flags << 'synthetic'
-        return flags.join(' ')
-    }*/
-
-    protected final List<Boolean> process(final HashMap<String, HashSet<String>> privatizedMethodsByClass, final HashMap<String, Long> constantFields, final boolean verbose, final boolean constantFold, final ClassNode cn) {
+    protected final List<Boolean> process(final HashMap<String, HashSet<String>> privatizedMethodsByClass, final HashMap<String, Long> constantFields, final HashMap<String, ClassNode> classNodeCache, final boolean verbose, final boolean constantFold, final ClassNode cn) {
         def changed = false
         def renamed = false
 
@@ -755,7 +755,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
                         mn.access &= ~Opcodes.ACC_PUBLIC
                         mn.access &= ~Opcodes.ACC_PROTECTED
                         mn.access |= Opcodes.ACC_PRIVATE
-                        privatizedMethodsByClass.computeIfAbsent(cn.name, className -> new HashSet<String>()).add("${mn.name}${mn.desc}")
+                        privatizedMethodsByClass.computeIfAbsent(cn.name, { final def className -> new HashSet<String>() }).add("${mn.name}${mn.desc}")
                         if (verbose) BatchedMessageCollector.add(14, "Made method private: ${cn.name}#${mn.name}")
                     }
 
@@ -809,7 +809,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
                     continue
                 }
 
-                if (0 == (mn.access & Opcodes.ACC_STATIC) && '<init>' != mn.name && this.overridesSomething(cn, mn, processorClasspath.files)) {
+                if (0 == (mn.access & Opcodes.ACC_STATIC) && '<init>' != mn.name && this.overridesSomething(cn, mn, processorClasspath.files, classNodeCache)) {
                     continue
                 }
 
@@ -858,31 +858,11 @@ abstract class AsmPreprocessTask extends DefaultTask {
                     logger.warn("Method ${cn.name}#${mn.name} should be final")
                 }
             }
-
-            /*if (bridge || synthetic) {
-                def mod = AsmPreprocessTask.methodAccessToString(mn)
-                mod += " ${cn.name}.${mn.name}()"
-
-                logger.lifecycle(mod)
-            }*/
         }
-
-        /*for (final def fn : cn.fields) {
-            if (0 != (fn.access & Opcodes.ACC_SYNTHETIC)) {
-                def mod = AsmPreprocessTask.fieldAccessToString(fn)
-                mod += " ${cn.name}.${fn.name}"
-
-                logger.lifecycle(mod)
-            }
-        }*/
 
         if (0 == (cn.access & Opcodes.ACC_FINAL) && !isInterface && 0 == (cn.access & Opcodes.ACC_ABSTRACT)) {
             logger.warn("Non-final class: ${cn.name}")
         }
-
-        /*if (classPublic && cn.name.contains('$')) {
-            logger.warn("Public inner class: ${cn.name}")
-        }*/
 
         for (final def mn : cn.methods) {
             if (0 == (mn.access & Opcodes.ACC_FINAL) && '<init>' != mn.name && '<clinit>' != mn.name && !isInterface) {
@@ -969,13 +949,18 @@ abstract class AsmPreprocessTask extends DefaultTask {
         final def inputDir = inputClassesDir.get().asFile
         final def outputDir = outputClassesDir.get().asFile
 
+        fs.delete {
+            it.delete(outputDir)
+        }
+
         final def privatizedMethodsByClass = new HashMap<String, HashSet<String>>()
         final def constantFields = new HashMap<String, Long>()
+        final def classNodeCache = new HashMap<String, ClassNode>()
 
         final def verbose = false
         final def constantFold = true
 
-        inputDir.eachFileRecurse { final inputFile ->
+        inputDir.eachFileRecurse { final def inputFile ->
             if (!inputFile.file) {
                 return
             }
@@ -1005,7 +990,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
             def changed = false
             def renamed = false
 
-            final def result = this.process(privatizedMethodsByClass, constantFields, verbose, constantFold, cn)
+            final def result = this.process(privatizedMethodsByClass, constantFields, classNodeCache, verbose, constantFold, cn)
 
             changed = result.first
             renamed = result.last
@@ -1056,7 +1041,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
 
         if (constantFold) {
             // We must do a second pass to handle inner class'es getstatic calls to the outer class constant-replaced fields.
-            outputDir.eachFileRecurse { final inputFile ->
+            outputDir.eachFileRecurse { final def inputFile ->
                 if (!inputFile.file) {
                     return
                 }
@@ -1153,14 +1138,14 @@ tasks.named('asmPreprocess', AsmPreprocessTask).configure {
 final def compileOutputDirProvider = tasks.named('compileJava', JavaCompile).flatMap(JavaCompile::getDestinationDirectory)
 final def asmOutputProvider = tasks.named('asmPreprocess').flatMap(AsmPreprocessTask::getOutputClassesDir)
 
-tasks.named('jar', Jar).configure { final jarTask ->
+tasks.named('jar', Jar).configure { final def jarTask ->
     dependsOn(tasks.named('asmPreprocess'))
 
     // include ASM-processed classes
     from(asmOutputProvider)
 
     // exclude ORIGINAL compiled classes from jar
-    exclude { final details ->
+    exclude { final def details ->
         final def compileDir = compileOutputDirProvider.get().asFile.toPath()
         final def filePath = details.file.toPath()
 
@@ -1183,16 +1168,16 @@ abstract class CheckMethodSizesTask extends DefaultTask {
         final def thresholds = [huge: 8000, large: 2000, nonsmall: 325]
         final def issues = []
 
-        classesDirectories.asFileTree.matching { include '**/*.class' }.each { final file ->
+        classesDirectories.asFileTree.matching { include '**/*.class' }.each { final def file ->
             final def directory = classesDirectories.files.find { file.toPath().startsWith(it.toPath()) }
 
             final def relativePath = directory.toPath().relativize(file.toPath()).toString()
             final def className = relativePath.replace(File.separator, '.').replaceAll('[.]class$', '')
 
-            file.withInputStream { final inputStream ->
-                new DataInputStream(inputStream).withCloseable { final dataInputStream ->
+            file.withInputStream { final def inputStream ->
+                new DataInputStream(inputStream).withCloseable { final def dataInputStream ->
                     final def classFile = new ClassFile(dataInputStream)
-                    classFile.methods.each { final methodInfo ->
+                    classFile.methods.each { final def methodInfo ->
                         final def codeAttribute = methodInfo.codeAttribute
                         if (codeAttribute == null) return
                         final def size = codeAttribute.code.length
@@ -1261,30 +1246,36 @@ abstract class CreateJrtModulesLibraryJarTask extends DefaultTask {
 
         outputFile.parentFile.mkdirs()
 
+        fs.delete {
+            it.delete(outputFile)
+        }
+
         final def modules = [
                 '/modules/java.base',
                 '/modules/java.net.http'
         ]
 
-        try (final def jarOutputStream = new JarOutputStream(new FileOutputStream(outputFile))) {
-            modules.each { moduleName ->
+        try (final def jarOutputStream = new JarOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)))) {
+            modules.each { final def moduleName ->
                 final def modulePath = JrtHolder.jrt.getPath(moduleName)
 
-                Files.walk(modulePath).forEach { final def path ->
-                    if (!Files.isRegularFile(path) || !path.toString().endsWith('.class')) {
-                        return
+                try (final def files = Files.walk(modulePath)) {
+                    files.forEach { final def path ->
+                        if (!Files.isRegularFile(path) || !path.toString().endsWith('.class')) {
+                            return
+                        }
+
+                        final def entryName = modulePath.relativize(path).toString().replace('\\', '/')
+
+                        if (entryName == 'module-info.class') {
+                            return
+                        }
+
+                        jarOutputStream.putNextEntry(new JarEntry(entryName))
+                        Files.copy(path, jarOutputStream)
+
+                        jarOutputStream.closeEntry()
                     }
-
-                    final def entryName = modulePath.relativize(path).toString().replace('\\', '/')
-
-                    if (entryName == 'module-info.class') {
-                        return
-                    }
-
-                    jarOutputStream.putNextEntry(new JarEntry(entryName))
-                    Files.copy(path, jarOutputStream)
-
-                    jarOutputStream.closeEntry()
                 }
             }
         }
@@ -1337,9 +1328,11 @@ static final Provider<File> resolveMinecraftDir(final Project project) {
     final def fromProps =
             providers.fileContents(devPropsFile)
                     .asText
-                    .map { final text ->
+                    .map { final def text ->
                         final def props = new Properties()
-                        props.load(new StringReader(text))
+                        new StringReader(text).withCloseable { final def reader ->
+                            props.load(reader)
+                        }
                         props.getProperty('minecraftDir')
                     }
 
@@ -1348,7 +1341,7 @@ static final Provider<File> resolveMinecraftDir(final Project project) {
     final def fromEnv =
             providers.fileContents(envFile)
                     .asText
-                    .map { final text ->
+                    .map { final def text ->
                         text.readLines()
                                 .find { it.startsWith('MINECRAFT_DIR=') }
                                 ?.split('=', 2)
@@ -1393,14 +1386,15 @@ abstract class InstallToModFolderTask extends DefaultTask {
         final def baseName =
                 fileName.replaceFirst("-${modVersion.get()}\\.jar\$", '')
 
-        // Delete previous versions of this mod
-        Files.list(modsDir)
-                .filter { it.fileName.toString().startsWith(baseName + '-') }
-                .filter { it.fileName.toString().endsWith('.jar') }
-                .forEach {
-                    logger.lifecycle("Removing old mod jar: ${it.fileName}")
-                    Files.deleteIfExists(it)
-                }
+        // Delete previous versions of the mod
+        try (final def files = Files.list(modsDir)) {
+                files.filter { it.fileName.toString().startsWith(baseName + '-') }
+                     .filter { it.fileName.toString().endsWith('.jar') }
+                     .forEach {
+                         logger.lifecycle("Removing old mod jar: ${it.fileName}")
+                         Files.deleteIfExists(it)
+                     }
+        }
 
         final def target = modsDir.resolve(fileName)
 

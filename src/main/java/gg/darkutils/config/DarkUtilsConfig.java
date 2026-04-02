@@ -103,8 +103,6 @@ public final class DarkUtilsConfig {
     public boolean noWitherHearts;
 
     // === Performance ===
-    public boolean armorStandOptimizer;
-    public int armorStandLimit = 50;
     public boolean disableYield;
     public boolean alwaysPrioritizeRenderThread;
     public boolean optimizeExceptions;
