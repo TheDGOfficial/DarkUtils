@@ -24,7 +24,6 @@ import gg.darkutils.feat.farming.FarmingState;
 import gg.darkutils.feat.farming.PestCooldownDisplay;
 import gg.darkutils.feat.farming.StickyFarmingKeys;
 import gg.darkutils.feat.farming.EnforceZorrosCape;
-import gg.darkutils.feat.performance.ArmorStandOptimizer;
 import gg.darkutils.feat.performance.LogCleaner;
 import gg.darkutils.feat.performance.SoundLagFix;
 import gg.darkutils.feat.performance.ThreadPriorityTweaker;
@@ -688,7 +687,6 @@ public final class DarkUtils implements ClientModInitializer {
 
     private static final void initFeatures() {
         DarkUtils.init(
-                ArmorStandOptimizer::init,
                 AutoFishingRod::init,
                 TreeGiftConfirmation::init,
                 TreeGiftsPerHour::init,

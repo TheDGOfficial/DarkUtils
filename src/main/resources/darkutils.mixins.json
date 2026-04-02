@@ -18,7 +18,6 @@
     "misc.PacketApplyBatcherEntryMixin",
     "misc.WindowMixin",
 
-    "performance.ArmorStandEntityRendererMixin",
     "performance.CrashMemoryReserveMixin",
     "performance.EntityMixin",
     "performance.FormattingMixin",
@@ -31,7 +30,6 @@
     "performance.WorldMixin",
     "performance.YggdrasilServicesKeyInfoMixin",
     "performance.WorldRendererMixin",
-    "performance.ArmorStandEntityMixin",
     "performance.GlStateManagerMixin",
 
     "qol.ClientPlayerEntityMixin",
