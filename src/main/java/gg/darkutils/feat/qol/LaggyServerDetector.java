@@ -45,10 +45,10 @@ public final class LaggyServerDetector {
     private static final @NotNull LaggyServerDetector.TPSCommentAndColor getTpsStatus(final double tps) {
         return 19.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Good)", "§a")
                 : 18.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Decent)", "§2")
-                : 17.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Fine)", "§6")
-                : 16.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Bearable)", "§e")
-                : 15.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Bad)", "§c")
-                : new LaggyServerDetector.TPSCommentAndColor(" (Very Bad)", "§4");
+                : 17.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Bearable)", "§6")
+                : 16.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Bad)", "§e")
+                : 15.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Horrible)", "§c")
+                : new LaggyServerDetector.TPSCommentAndColor(" (Horrendous)", "§4");
     }
 
     private static final void onTPSUpdate(final int tps) {
