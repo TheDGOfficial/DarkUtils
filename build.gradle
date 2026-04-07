@@ -119,7 +119,7 @@ dependencies {
 
     testRuntimeOnly('org.junit.platform:junit-platform-launcher:6.1.0-M1')
 
-    compileOnly('com.google.errorprone:error_prone_annotations:2.48.0')
+    compileOnly('com.google.errorprone:error_prone_annotations:2.49.0')
 }
 
 tasks {
