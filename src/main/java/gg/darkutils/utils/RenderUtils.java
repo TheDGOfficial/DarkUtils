@@ -59,7 +59,7 @@ public final class RenderUtils {
     /**
      * Holds the empty OrderedText.
      */
-    private static final @NotNull OrderedText EMPTY_ORDERED_TEXT = Text.of("").asOrderedText();
+    private static final @NotNull Supplier<OrderedText> EMPTY_ORDERED_TEXT = LazyConstants.lazyConstantOf(() -> Text.of("").asOrderedText());
 
     private RenderUtils() {
         super();
@@ -182,7 +182,7 @@ public final class RenderUtils {
         private boolean widthDirty = true;
 
         private RenderingText() {
-            this("", RenderUtils.EMPTY_ORDERED_TEXT);
+            this("", RenderUtils.EMPTY_ORDERED_TEXT.get());
         }
 
         private RenderingText(@NotNull final String text) {

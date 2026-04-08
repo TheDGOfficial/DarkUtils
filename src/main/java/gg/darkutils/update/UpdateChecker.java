@@ -4,6 +4,7 @@ import gg.darkutils.DarkUtils;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.Pair;
+import gg.darkutils.utils.LazyConstants;
 import gg.darkutils.utils.network.NetworkUtils;
 
 import com.google.gson.Gson;
@@ -26,6 +27,7 @@ import java.util.OptionalInt;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 public final class UpdateChecker {
     @NotNull
@@ -44,10 +46,10 @@ public final class UpdateChecker {
     private static final Gson GSON = new Gson();
 
     @NotNull
-    private static final Executor UPDATE_CHECKER_EXECUTOR = Executors.newSingleThreadExecutor(r -> Thread.ofPlatform()
+    private static final Supplier<Executor> UPDATE_CHECKER_EXECUTOR = LazyConstants.lazyConstantOf(() -> Executors.newSingleThreadExecutor(r -> Thread.ofPlatform()
             .name("DarkUtils Update Checker Thread")
             .daemon(true)
-            .unstarted(r));
+            .unstarted(r)));
 
     private UpdateChecker() {
         super();
@@ -97,7 +99,7 @@ public final class UpdateChecker {
         Objects.requireNonNull(callback, "callback");
 
         // runs callback on update checker thread
-        UpdateChecker.UPDATE_CHECKER_EXECUTOR.execute(() -> {
+        UpdateChecker.UPDATE_CHECKER_EXECUTOR.get().execute(() -> {
             final var res = UpdateChecker.checkUpdates();
             callback.accept(res.first(), res.second());
         });

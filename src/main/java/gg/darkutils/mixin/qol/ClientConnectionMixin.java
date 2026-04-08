@@ -1,6 +1,7 @@
 package gg.darkutils.mixin.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.mixinquirks.HolderFields;
 
 import io.netty.channel.ChannelFutureListener;
 
@@ -8,7 +9,6 @@ import net.minecraft.network.ClientConnection;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.network.packet.c2s.common.CustomPayloadC2SPacket;
-import net.minecraft.util.Identifier;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -20,10 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 @Mixin(ClientConnection.class)
 final class ClientConnectionMixin {
-    @Unique
-    @NotNull
-    private static final Identifier MOD_LIST_IDENTIFIER = Identifier.of("firmament", "mod_list");
-
     private ClientConnectionMixin() {
         super();
 
@@ -33,7 +29,7 @@ final class ClientConnectionMixin {
     @Inject(method = "sendImmediately", at = @At("HEAD"), cancellable = true)
     private final void darkutils$cancelSendPacketIfNotEnabled(@NotNull final Packet<?> packet, @NotNull final ChannelFutureListener listener, final boolean flush, @NotNull final CallbackInfo ci) {
         if (!DarkUtilsConfig.INSTANCE.enableModAnnouncer && packet instanceof CustomPayloadC2SPacket(@NotNull final CustomPayload payload)) {
-            if (ClientConnectionMixin.MOD_LIST_IDENTIFIER.equals(payload.getId().id())) {
+            if (HolderFields.FirmamentValues.MOD_LIST_IDENTIFIER.equals(payload.getId().id())) {
                 ci.cancel();
             }
         }

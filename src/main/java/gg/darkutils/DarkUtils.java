@@ -113,7 +113,7 @@ public final class DarkUtils implements ClientModInitializer {
      * The custom methods log errors in-game to the chat as well with a
      * user-friendly short string representation of the error.
      */
-    private static final @NotNull Logger LOGGER = LoggerFactory.getLogger(DarkUtils.MOD_ID);
+    private static final @NotNull Supplier<Logger> LOGGER = LazyConstants.lazyConstantOf(() -> LoggerFactory.getLogger(DarkUtils.MOD_ID));
 
     /**
      * Lazy-initialized non-changing constant-foldable (depending on LazyConstants
@@ -303,20 +303,31 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final void logMessage(@NotNull final LogLevel level, @NotNull final String formattedMessage) {
-        final Pair<BooleanSupplier, Consumer<String>> loggingFunction = switch (level) {
-            case INFO -> new Pair<>(DarkUtils.LOGGER::isInfoEnabled, DarkUtils.LOGGER::info);
-            case WARN -> new Pair<>(DarkUtils.LOGGER::isWarnEnabled, DarkUtils.LOGGER::warn);
-            case ERROR -> new Pair<>(DarkUtils.LOGGER::isErrorEnabled, DarkUtils.LOGGER::error);
-        };
+        final var logger = DarkUtils.LOGGER.get();
 
-        if (loggingFunction.first().getAsBoolean()) {
-            loggingFunction.second().accept(formattedMessage);
+        switch (level) {
+            case INFO -> {
+                if (logger.isInfoEnabled()) {
+                    logger.info(formattedMessage);
+                }
+            }
+            case WARN -> {
+                if (logger.isWarnEnabled()) {
+                    logger.warn(formattedMessage);
+                }
+            }
+            case ERROR -> {
+                if (logger.isErrorEnabled()) {
+                    logger.error(formattedMessage);
+                }
+            }
         }
     }
 
     private static final void logError(@NotNull final String formattedMessage, @NotNull final Throwable error) {
-        if (DarkUtils.LOGGER.isErrorEnabled()) {
-            DarkUtils.LOGGER.error(formattedMessage, error);
+        final var logger = DarkUtils.LOGGER.get();
+        if (logger.isErrorEnabled()) {
+            logger.error(formattedMessage, error);
         }
     }
 
@@ -578,14 +589,19 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     @FunctionalInterface
-    private interface TriConsumer<T, U, V> {
-        void accept(@NotNull final T t, @NotNull final U u, @Nullable final V v);
+    private interface UserMessageMethod {
+        void accept(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level);
+    }
+
+    @FunctionalInterface
+    private interface UserMessageMethodWithLink {
+        void accept(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level, @Nullable final LinkData link);
     }
 
     private static final void notifyUpdateCheckerResult(final boolean fancyGreet, @NotNull final UpdateChecker.UpdateCheckerResult result, @Nullable final UpdateChecker.GitHubRelease release) {
         // 60 ticks = 3 seconds delay so that the message is sent after guild motd and other stuff for more visibility
-        final BiConsumer<String, DarkUtils.UserMessageLevel> user = (message, level) -> TickUtils.queueTickTask(() -> DarkUtils.user(message, level), 60);
-        final TriConsumer<String, DarkUtils.UserMessageLevel, LinkData> userWithLink = (message, level, linkData) -> TickUtils.queueTickTask(() -> DarkUtils.user(message, level, linkData), 60);
+        final UserMessageMethod user = (message, level) -> TickUtils.queueTickTask(() -> DarkUtils.user(message, level), 60);
+        final UserMessageMethodWithLink userWithLink = (message, level, linkData) -> TickUtils.queueTickTask(() -> DarkUtils.user(message, level, linkData), 60);
 
         final var latestReleaseLink = null != release && null != release.html_url() ? new LinkData("Click to open latest release in browser", release.html_url()) : null;
 

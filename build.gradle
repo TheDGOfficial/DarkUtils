@@ -677,7 +677,37 @@ abstract class AsmPreprocessTask extends DefaultTask {
             }
         }
 
+        final def classPublic = 0 != (cn.access & Opcodes.ACC_PUBLIC)
+
         for (final def fn : cn.fields) {
+            if (privateFields) {
+                fn.access &= ~Opcodes.ACC_PUBLIC
+                fn.access &= ~Opcodes.ACC_PROTECTED
+                fn.access |= Opcodes.ACC_PRIVATE
+                changed = true
+                if (verbose) BatchedMessageCollector.add(8, "Removed public from field ${cn.name}#${fn.name}")
+                if (verbose) BatchedMessageCollector.add(9, "Removed protected from field ${cn.name}#${fn.name}")
+                if (verbose) BatchedMessageCollector.add(10, "Add private to field ${cn.name}#${fn.name}")
+            }
+
+            if (!classPublic) {
+                if (0 != (fn.access & Opcodes.ACC_PUBLIC)) {
+                    changed = true
+                    fn.access &= ~Opcodes.ACC_PUBLIC
+                    if (verbose) BatchedMessageCollector.add(17, "Removed public from field ${cn.name}#${fn.name}")
+                }
+
+                if (0 != (fn.access & Opcodes.ACC_PROTECTED)) {
+                    changed = true
+                    fn.access &= ~Opcodes.ACC_PROTECTED
+                    if (verbose) BatchedMessageCollector.add(18, "Removed protected from field ${cn.name}#${fn.name}")
+                }
+            }
+
+            /*if (0 != (fn.access & Opcodes.ACC_STATIC) && 0 != (fn.access & Opcodes.ACC_FINAL) && 1 != fn.desc.length() && 'Ljava/util/function/Supplier;' != fn.desc && 'Ljava/lang/String;' != fn.desc && 'Ljava/util/Map;' != fn.desc && '$VALUES' != fn.name && 'INSTANCE' != fn.name && (0 == (fn.access & Opcodes.ACC_ENUM) || ('L' + cn.name + ';') != fn.desc)) {
+                logger.lifecycle("Possible lazy initialization of ${cn.name}#${fn.name} via LazyConstants")
+            }*/
+
             final def anns = fn.invisibleAnnotations
 
             if (null != anns) {
@@ -722,20 +752,89 @@ abstract class AsmPreprocessTask extends DefaultTask {
                     }
                 }
             }
+        }
 
-            if (privateFields) {
-                fn.access &= ~Opcodes.ACC_PUBLIC
-                fn.access &= ~Opcodes.ACC_PROTECTED
-                fn.access |= Opcodes.ACC_PRIVATE
-                changed = true
-                if (verbose) BatchedMessageCollector.add(8, "Removed public from field ${cn.name}#${fn.name}")
-                if (verbose) BatchedMessageCollector.add(9, "Removed protected from field ${cn.name}#${fn.name}")
-                if (verbose) BatchedMessageCollector.add(10, "Add private to field ${cn.name}#${fn.name}")
+        /*
+         * -----------------------------
+         * CLASS PROCESSING
+         * -----------------------------
+         */
+        if (0 != (cn.access & Opcodes.ACC_SYNTHETIC)) {
+            changed = true
+            cn.access |= Opcodes.ACC_FINAL
+            if (verbose) BatchedMessageCollector.add(16, "Made ${cn.name} final")
+        }
+
+        final def isInterface = 0 != (cn.access & Opcodes.ACC_INTERFACE)
+
+        if (classPublic) {
+            if (cn.name.contains('mixin') && !cn.name.contains('accessor') && !cn.name.contains('mixinquirks')) {
+                logger.warn('Non-accessor mixin class declared public')
             }
         }
 
+        /*
+         * -----------------------------
+         * METHOD PROCESSING
+         * -----------------------------
+         */
+        final def isRecord = 0 != (cn.access & Opcodes.ACC_RECORD)
+
+        final def methodsBySig = HashMap.<String, MethodNode>newHashMap(cn.methods.size())
+
         for (final def mn : cn.methods) {
-            final def isBridge = 0 != (mn.access & Opcodes.ACC_BRIDGE)
+            /*
+             * FINALIZATION
+             */
+            final def abstractMethod = 0 != (mn.access & Opcodes.ACC_ABSTRACT)
+            final def bridge = 0 != (mn.access & Opcodes.ACC_BRIDGE)
+            final def synthetic = 0 != (mn.access & Opcodes.ACC_SYNTHETIC)
+
+            methodsBySig[mn.name + mn.desc] = mn
+
+            if (!isInterface && !abstractMethod && '<clinit>' != mn.name && '<init>' != mn.name && 0 == (mn.access & Opcodes.ACC_FINAL)) {
+                if ((isRecord || bridge || synthetic || mn.name.contains('$') || 'values' == mn.name || 'valueOf' == mn.name)) {
+                    changed = true
+                    mn.access |= Opcodes.ACC_FINAL
+                    if (!isRecord && !bridge && !synthetic && 'values' != mn.name && 'valueOf' != mn.name) {
+                        logger.warn("Method ${cn.name}#${mn.name} should be final")
+                    }
+                    if (verbose) BatchedMessageCollector.add(21, "Added final to ${cn.name}#${mn.name}")
+                    continue
+                } else {
+                    logger.warn("Method ${cn.name}#${mn.name} should be final")
+                }
+            }
+
+            if (0 == (mn.access & Opcodes.ACC_FINAL) && '<init>' != mn.name && '<clinit>' != mn.name && !isInterface) {
+                logger.warn("Non-final method: ${cn.name}#${mn.name}")
+            }
+
+            if (!classPublic) {
+                if ('<clinit>' == mn.name || 0 != (mn.access & Opcodes.ACC_PRIVATE) || AsmPreprocessTask.hasAnnotation(mn, MIXIN_OVERWRITE_DESC)) {
+                    continue
+                }
+
+                if (0 == (mn.access & Opcodes.ACC_STATIC) && '<init>' != mn.name && this.overridesSomething(cn, mn, processorClasspath.files, classNodeCache)) {
+                    continue
+                }
+
+                if (0 == (mn.access & Opcodes.ACC_BRIDGE) && mn.name.contains('mixin')) {
+                    logger.warn("Method ${cn.name}#${mn.name} should be package-private or private")
+                }
+
+                if (0 != (mn.access & Opcodes.ACC_PUBLIC) && !bridge && !isInterface) {
+                    changed = true
+                    mn.access &= ~Opcodes.ACC_PUBLIC
+                    if (verbose) BatchedMessageCollector.add(19, "Removed public from method ${cn.name}#${mn.name}")
+                }
+
+                if (0 != (mn.access & Opcodes.ACC_PROTECTED) && !bridge) {
+                    changed = true
+                    mn.access &= ~Opcodes.ACC_PROTECTED
+                    if (verbose) BatchedMessageCollector.add(20, "Removed protected from method ${cn.name}#${mn.name}")
+                }
+            }
 
             /*
              * METHOD ANNOTATIONS
@@ -771,7 +870,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
                         if (verbose) BatchedMessageCollector.add(12, "Added ACC_SYNTHETIC to ${cn.name}#${mn.name}")
                     }
 
-                    if (PACKAGE_PRIVATE_DESC == an.desc && !isBridge) {
+                    if (PACKAGE_PRIVATE_DESC == an.desc && !bridge) {
                         changed = true
                         mn.access &= ~Opcodes.ACC_PUBLIC
                         mn.access &= ~Opcodes.ACC_PROTECTED
@@ -781,7 +880,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
                         if (verbose) BatchedMessageCollector.add(13, "Made method package-private: ${cn.name}#${mn.name}")
                     }
 
-                    if (PRIVATE_DESC == an.desc && !isBridge) {
+                    if (PRIVATE_DESC == an.desc && !bridge) {
                         changed = true
                         mn.access &= ~Opcodes.ACC_PUBLIC
                         mn.access &= ~Opcodes.ACC_PROTECTED
@@ -799,115 +898,11 @@ abstract class AsmPreprocessTask extends DefaultTask {
             }
         }
 
-        final def classPublic = 0 != (cn.access & Opcodes.ACC_PUBLIC)
-
-        /*
-         * -----------------------------
-         * CLASS PROCESSING
-         * -----------------------------
-         */
-        if (0 != (cn.access & Opcodes.ACC_SYNTHETIC)) {
-            changed = true
-            cn.access |= Opcodes.ACC_FINAL
-            if (verbose) BatchedMessageCollector.add(16, "Made ${cn.name} final")
-        }
-
-        final def isInterface = 0 != (cn.access & Opcodes.ACC_INTERFACE)
-
-        if (classPublic) {
-            if (cn.name.contains('mixin') && !cn.name.contains('accessor')) {
-                logger.warn('Non-accessor mixin class declared public')
-            }
-        } else {
-            for (final def fn : cn.fields) {
-                if (0 != (fn.access & Opcodes.ACC_PUBLIC)) {
-                    changed = true
-                    fn.access &= ~Opcodes.ACC_PUBLIC
-                    if (verbose) BatchedMessageCollector.add(17, "Removed public from field ${cn.name}#${fn.name}")
-                }
-
-                if (0 != (fn.access & Opcodes.ACC_PROTECTED)) {
-                    changed = true
-                    fn.access &= ~Opcodes.ACC_PROTECTED
-                    if (verbose) BatchedMessageCollector.add(18, "Removed protected from field ${cn.name}#${fn.name}")
-                }
-            }
-
-            for (final def mn : cn.methods) {
-                final def isBridge = 0 != (mn.access & Opcodes.ACC_BRIDGE)
-
-                if ('<clinit>' == mn.name || 0 != (mn.access & Opcodes.ACC_PRIVATE) || AsmPreprocessTask.hasAnnotation(mn, MIXIN_OVERWRITE_DESC)) {
-                    continue
-                }
-
-                if (0 == (mn.access & Opcodes.ACC_STATIC) && '<init>' != mn.name && this.overridesSomething(cn, mn, processorClasspath.files, classNodeCache)) {
-                    continue
-                }
-
-                if (0 == (mn.access & Opcodes.ACC_BRIDGE) && mn.name.contains('mixin')) {
-                    logger.warn("Method ${cn.name}#${mn.name} should be package-private or private")
-                }
-
-                if (0 != (mn.access & Opcodes.ACC_PUBLIC) && !isBridge && !isInterface) {
-                    changed = true
-                    mn.access &= ~Opcodes.ACC_PUBLIC
-                    if (verbose) BatchedMessageCollector.add(19, "Removed public from method ${cn.name}#${mn.name}")
-                }
-
-                if (0 != (mn.access & Opcodes.ACC_PROTECTED) && !isBridge) {
-                    changed = true
-                    mn.access &= ~Opcodes.ACC_PROTECTED
-                    if (verbose) BatchedMessageCollector.add(20, "Removed protected from method ${cn.name}#${mn.name}")
-                }
-            }
-        }
-
-        /*
-         * -----------------------------
-         * METHOD PROCESSING
-         * -----------------------------
-         */
-        final def isRecord = 0 != (cn.access & Opcodes.ACC_RECORD)
-
-        for (final def mn : cn.methods) {
-            /*
-             * FINALIZATION
-             */
-            final def abstractMethod = 0 != (mn.access & Opcodes.ACC_ABSTRACT)
-            final def bridge = 0 != (mn.access & Opcodes.ACC_BRIDGE)
-            final def synthetic = 0 != (mn.access & Opcodes.ACC_SYNTHETIC)
-
-            if (!isInterface && !abstractMethod && '<clinit>' != mn.name && '<init>' != mn.name && 0 == (mn.access & Opcodes.ACC_FINAL)) {
-                if ((isRecord || bridge || synthetic || mn.name.contains('$') || 'values' == mn.name || 'valueOf' == mn.name)) {
-                    changed = true
-                    mn.access |= Opcodes.ACC_FINAL
-                    if (!isRecord && !bridge && !synthetic && 'values' != mn.name && 'valueOf' != mn.name) {
-                        logger.warn("Method ${cn.name}#${mn.name} should be final")
-                    }
-                    if (verbose) BatchedMessageCollector.add(21, "Added final to ${cn.name}#${mn.name}")
-                } else {
-                    logger.warn("Method ${cn.name}#${mn.name} should be final")
-                }
-            }
-        }
-
         if (0 == (cn.access & Opcodes.ACC_FINAL) && !isInterface && 0 == (cn.access & Opcodes.ACC_ABSTRACT)) {
             logger.warn("Non-final class: ${cn.name}")
         }
 
-        for (final def mn : cn.methods) {
-            if (0 == (mn.access & Opcodes.ACC_FINAL) && '<init>' != mn.name && '<clinit>' != mn.name && !isInterface) {
-                logger.warn("Non-final method: ${cn.name}#${mn.name}")
-            }
-        }
-
         final def privatized = privatizedMethodsByClass.getOrDefault(cn.name, Collections.emptySet())
-
-        final def methodsBySig = HashMap.<String, MethodNode>newHashMap(cn.methods.size())
-
-        for (final def mn : cn.methods) {
-            methodsBySig[mn.name + mn.desc] = mn
-        }
 
         for (final def ownerMethod : cn.methods) {
             if (null == ownerMethod.instructions) continue
