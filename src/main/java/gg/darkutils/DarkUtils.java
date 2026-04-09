@@ -20,10 +20,12 @@ import gg.darkutils.feat.dungeons.SoloCrushWaypoint;
 import gg.darkutils.feat.foraging.TreeGiftConfirmation;
 import gg.darkutils.feat.foraging.TreeGiftFeatures;
 import gg.darkutils.feat.foraging.TreeGiftsPerHour;
-import gg.darkutils.feat.farming.FarmingState;
 import gg.darkutils.feat.farming.PestCooldownDisplay;
 import gg.darkutils.feat.farming.StickyFarmingKeys;
 import gg.darkutils.feat.farming.EnforceZorrosCape;
+import gg.darkutils.feat.mining.MineshaftFeatures;
+import gg.darkutils.feat.mining.CorpsesPerShaftDisplay;
+import gg.darkutils.feat.mining.MineshaftDisplay;
 import gg.darkutils.feat.performance.LogCleaner;
 import gg.darkutils.feat.performance.SoundLagFix;
 import gg.darkutils.feat.performance.ThreadPriorityTweaker;
@@ -39,6 +41,7 @@ import gg.darkutils.feat.qol.VanillaMode;
 import gg.darkutils.utils.LazyConstants;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.LocationUtils;
+import gg.darkutils.utils.ActivityState;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
 import gg.darkutils.utils.chat.ButtonData;
@@ -697,7 +700,8 @@ public final class DarkUtils implements ClientModInitializer {
                 TreeGiftFeatures::init,
                 DungeonTimer::init,
                 ServerTPSCalculator::init,
-                FarmingState::init
+                ActivityState::init,
+                MineshaftFeatures::init
         );
     }
 
@@ -709,6 +713,8 @@ public final class DarkUtils implements ClientModInitializer {
                 PestCooldownDisplay::init,
                 StickyFarmingKeys::init,
                 EnforceZorrosCape::init,
+                CorpsesPerShaftDisplay::init,
+                MineshaftDisplay::init,
                 LogCleaner::init,
                 AutoCloseSecretChests::init,
                 DialogueSkipTimer::init,

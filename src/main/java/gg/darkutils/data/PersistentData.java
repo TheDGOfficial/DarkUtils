@@ -57,7 +57,16 @@ public final class PersistentData {
 
     // === Persistent Fields ===
 
+    // === Farming ===
     public boolean zorrosCapeEquipped;
+
+    // === Mining ===
+    public int shaftsEntered;
+    public int lapisCorpsesOpened;
+    public int umberCorpsesOpened;
+    public int tungstenCorpsesOpened;
+    public int vanguardCorpsesOpened;
+    public long[] timeTookForShafts;
 
     // ================================
 

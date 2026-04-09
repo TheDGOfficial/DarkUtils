@@ -202,6 +202,17 @@ public final class DarkUtilsConfigScreen {
                 config.enforceZorrosCape, newValue -> config.enforceZorrosCape = newValue);
     }
 
+    private static final void addMining(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
+        final var mining = builder.getOrCreateCategory(Text.of("Mining"));
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, mining, "Corpses Per Shaft Display",
+                "Shows corpse statistics like % of found and opened corpses per shaft. Amount of shafts and opened corpses are automatically tracked when enabled.",
+                config.corpsesPerShaftDisplay, newValue -> config.corpsesPerShaftDisplay = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, mining, "Mineshaft Display",
+                "Shows mineshaft information like time passed since last shaft spawn, avg time between shaft spawns, despawn timer when a shaft spawns before you enter it, after entering shows uptime (how long have you been in the shaft) and warp close time (time till you can warp others) instead.",
+                config.mineshaftDisplay, newValue -> config.mineshaftDisplay = newValue);
+    }
+
     private static final void addDungeons(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var dungeons = builder.getOrCreateCategory(Text.of("Dungeons"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Dialogue Skip Timer",
@@ -458,6 +469,9 @@ public final class DarkUtilsConfigScreen {
 
         // === Farming ===
         DarkUtilsConfigScreen.addFarming(config, builder, entryBuilder);
+
+        // === Mining ===
+        DarkUtilsConfigScreen.addMining(config, builder, entryBuilder);
 
         // === Dungeons ===
         DarkUtilsConfigScreen.addDungeons(config, builder, entryBuilder);

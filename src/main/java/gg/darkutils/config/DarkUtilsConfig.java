@@ -71,6 +71,10 @@ public final class DarkUtilsConfig {
     public boolean stickyRight;
     public boolean enforceZorrosCape;
 
+    // === Mining ===
+    public boolean corpsesPerShaftDisplay;
+    public boolean mineshaftDisplay;
+
     // === Dungeons ===
     public boolean dialogueSkipTimer;
     public boolean soloCrushTimer;

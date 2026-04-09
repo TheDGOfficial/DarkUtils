@@ -4,7 +4,7 @@ import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.Helpers;
-import gg.darkutils.feat.farming.FarmingState;
+import gg.darkutils.utils.ActivityState;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
@@ -163,7 +163,7 @@ public final class StickyFarmingKeys {
                 return true;
             }
 
-            if (!FarmingState.isActivelyFarming() || !LocationUtils.isInGarden() || !Helpers.isHoldingADiamondHoeAxeOrSword()) {
+            if (!ActivityState.isActivelyFarming() || !LocationUtils.isInGarden() || !Helpers.isHoldingADiamondHoeAxeOrSword()) {
                 this.setToggled(false);
                 return false;
             }
@@ -178,7 +178,7 @@ public final class StickyFarmingKeys {
         }
 
         default boolean wasPressed(final boolean actual) {
-            if (!FarmingState.isActivelyFarming() || !LocationUtils.isInGarden() || !Helpers.isHoldingADiamondHoeAxeOrSword()) {
+            if (!ActivityState.isActivelyFarming() || !LocationUtils.isInGarden() || !Helpers.isHoldingADiamondHoeAxeOrSword()) {
                 this.setToggled(false);
                 return actual;
             }

@@ -2,7 +2,7 @@ package gg.darkutils.mixin.visuals;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.feat.farming.FarmingState;
+import gg.darkutils.utils.ActivityState;
 import gg.darkutils.utils.LocationUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
@@ -30,7 +30,7 @@ final class InGameHudMixin {
             throw new IllegalStateException("@fileName@ needs updating (" + DarkUtils.class.getSimpleName() + ')');
         }
 
-        return keyBinding.isPressed() || (DarkUtilsConfig.INSTANCE.persistentTabListWhileFarming && FarmingState.isActivelyFarming() && LocationUtils.isInGarden());
+        return keyBinding.isPressed() || (DarkUtilsConfig.INSTANCE.persistentTabListWhileFarming && ActivityState.isActivelyFarming() && LocationUtils.isInGarden());
     }
 
     @Inject(method = "renderArmor", at = @At("HEAD"), cancellable = true)

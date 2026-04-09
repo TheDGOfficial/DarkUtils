@@ -8,6 +8,7 @@ import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
+import gg.darkutils.utils.PrettyUtils;
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
@@ -36,10 +37,6 @@ import org.joml.Matrix3x2fStack;
 public final class DungeonTimer {
     private static final long TICK_NANOS = TimeUnit.MILLISECONDS.toNanos(50L);
     private static final long MIN_DISPLAY_LAG_NANO = TimeUnit.MILLISECONDS.toNanos(100L);
-    private static final long SECONDS_PER_DAY = TimeUnit.DAYS.toSeconds(1L);
-    private static final long SECONDS_PER_HOUR = TimeUnit.HOURS.toSeconds(1L);
-    private static final long SECONDS_PER_MINUTE = TimeUnit.MINUTES.toSeconds(1L);
-    private static final long HUNDRED_MS_AS_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
     private static final long FIVE_SECOND_NANOS = TimeUnit.SECONDS.toNanos(5L);
     @NotNull
     private static final ArrayList<DungeonTimer.RenderableLine> PHASE_LINES =
@@ -232,79 +229,6 @@ public final class DungeonTimer {
         return lagNano;
     }
 
-    @NotNull
-    private static final String formatSeconds(final long seconds) {
-        if (60L > seconds) {
-            return seconds + "s";
-        }
-
-        var remainingSeconds = seconds;
-
-        final var days = remainingSeconds / DungeonTimer.SECONDS_PER_DAY;
-        remainingSeconds -= days * DungeonTimer.SECONDS_PER_DAY;
-
-        final var hours = remainingSeconds / DungeonTimer.SECONDS_PER_HOUR;
-        remainingSeconds -= hours * DungeonTimer.SECONDS_PER_HOUR;
-
-        final var minutes = remainingSeconds / DungeonTimer.SECONDS_PER_MINUTE;
-        remainingSeconds -= minutes * DungeonTimer.SECONDS_PER_MINUTE;
-
-        final var builder = new StringBuilder(8);
-        var needsSpace = false;
-
-        if (0L < days) {
-            builder.append(days).append('d');
-            needsSpace = true;
-        }
-
-        if (0L < hours) {
-            if (needsSpace) {
-                builder.append(' ');
-            }
-            builder.append(hours).append('h');
-            needsSpace = true;
-        }
-
-        if (0L < minutes) {
-            if (needsSpace) {
-                builder.append(' ');
-            }
-            builder.append(minutes).append('m');
-            needsSpace = true;
-        }
-
-        if (0L < remainingSeconds || !needsSpace) {
-            if (needsSpace) {
-                builder.append(' ');
-            }
-            builder.append(remainingSeconds).append('s');
-        }
-
-        return builder.toString();
-    }
-
-    @NotNull
-    private static final String formatNanosAsSeconds(final long nanos) {
-        if (0L >= nanos) {
-            return "0s";
-        }
-
-        // truncate to 1 decimal (no rounding up - monotonic-safe)
-        final var secondsTimes10 = nanos / DungeonTimer.HUNDRED_MS_AS_NANOS;
-
-        final var wholeSeconds = secondsTimes10 / 10L;
-
-        if (60L > wholeSeconds) {
-            final var decimal = secondsTimes10 % 10L;
-            return 0L == decimal
-                    ? wholeSeconds + "s"
-                    : wholeSeconds + "." + decimal + 's';
-        }
-
-        // fall back to existing formatter for large values
-        return DungeonTimer.formatSeconds(wholeSeconds);
-    }
-
     private static final void line(@NotNull final DungeonTimer.DungeonPhase start, @NotNull final DungeonTimer.DungeonPhase end, @NotNull final String prettyName, @NotNull final Formatting color, @Nullable Item optionalItemIcon) {
         if (null != optionalItemIcon && DarkUtilsConfig.INSTANCE.dungeonTimerNoItemIcon) {
             optionalItemIcon = null;
@@ -351,9 +275,9 @@ public final class DungeonTimer {
         final var lagNano = DungeonTimer.getPhaseLagTimeInNanos(startTime, endTime);
 
         final var text = DungeonTimer.MIN_DISPLAY_LAG_NANO <= lagNano
-                ? prettyName + ": " + DungeonTimer.formatSeconds(phaseTime)
-                + " (-" + DungeonTimer.formatNanosAsSeconds(lagNano) + " lag)"
-                : prettyName + ": " + DungeonTimer.formatSeconds(phaseTime);
+                ? prettyName + ": " + PrettyUtils.formatSeconds(phaseTime)
+                + " (-" + PrettyUtils.formatNanosAsSeconds(lagNano) + " lag)"
+                : prettyName + ": " + PrettyUtils.formatSeconds(phaseTime);
 
         line.renderingText().setText(text);
         DungeonTimer.activeLines.add(line);
