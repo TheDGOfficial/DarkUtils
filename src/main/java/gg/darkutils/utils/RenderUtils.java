@@ -201,6 +201,17 @@ public final class RenderUtils {
             this.widthDirty = true;
         }
 
+        /**
+         * Overrides shown text directly. Bypasses cache. The textual {@link #text} field will not be updated.
+         * Use carefully, if you compile the {@link FormattedCharSequence} per frame it will reduce performance.
+         *
+         * @param newText The new shown text.
+         */
+        public final void setShownText(@NotNull final FormattedCharSequence newText) {
+            this.orderedText = newText;
+            this.widthDirty = true;
+        }
+
         private final int getWidth() {
             if (this.widthDirty) {
                 this.widthDirty = false;

@@ -211,6 +211,14 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, mining, "Mineshaft Display",
                 "Shows mineshaft information like time passed since last shaft spawn, avg time between shaft spawns, despawn timer when a shaft spawns before you enter it, after entering shows uptime (how long have you been in the shaft) and warp close time (time till you can warp others) instead.",
                 config.mineshaftDisplay, newValue -> config.mineshaftDisplay = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, mining, "Will-o'-wisp Display",
+                "Shows time remaining on your Will-o'-wisp, or INACTIVE if it is out of radius or has expired. Takes account for the 30 block radius when outside a shaft, which is infinite radius inside a shaft.",
+                config.willOWispDisplay, newValue -> config.willOWispDisplay = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, mining, "Littlefoot Display",
+                "Shows a list of Littlefoot entities nametags in your screen, allowing you to see whether any littlefoots remain in current shaft, or if there were none, along with their health.",
+                config.littlefootDisplay, newValue -> config.littlefootDisplay = newValue);
     }
 
     private static final void addDungeons(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

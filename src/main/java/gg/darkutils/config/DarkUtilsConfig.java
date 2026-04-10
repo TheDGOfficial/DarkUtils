@@ -74,6 +74,8 @@ public final class DarkUtilsConfig {
     // === Mining ===
     public boolean corpsesPerShaftDisplay;
     public boolean mineshaftDisplay;
+    public boolean willOWispDisplay;
+    public boolean littlefootDisplay;
 
     // === Dungeons ===
     public boolean dialogueSkipTimer;
