@@ -249,7 +249,7 @@ public final class Helpers {
         Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueServerTickTask);
     }
 
-    private static final void displayCountdownTitlesInternal(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final ObjIntConsumer<Runnable> queueMethod) {
+    private static final void displayCountdownTitlesInternal(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final ObjIntConsumer<TickUtils.TaskAction> queueMethod) {
         // Show the first number immediately
         Helpers.notify(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, color + seconds);
 

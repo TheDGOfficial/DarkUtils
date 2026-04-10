@@ -24,7 +24,7 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
      * @return The new event listener that delegates to the passed consumer.
      */
     @NotNull
-    static <T extends Event> EventListener<T> create(@NotNull final Consumer<? super T> listener) {
+    static <T extends Event> EventListener<T> create(@NotNull final EventConsumer<? super T> listener) {
         return EventListener.create(listener, EventPriority.NORMAL);
     }
 
@@ -38,7 +38,7 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
      * to the passed consumer.
      */
     @NotNull
-    static <T extends Event> EventListener<T> create(@NotNull final Consumer<? super T> listener, @NotNull final EventPriority priority) {
+    static <T extends Event> EventListener<T> create(@NotNull final EventConsumer<? super T> listener, @NotNull final EventPriority priority) {
         return EventListener.create(listener, priority, false);
     }
 
@@ -54,8 +54,8 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
      */
     @NotNull
     @SuppressWarnings("unchecked")
-    static <T extends Event> EventListener<T> create(@NotNull final Consumer<? super T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled) {
-        return new EventListener.Impl<>((Consumer<T>) listener, priority, receiveCancelled);
+    static <T extends Event> EventListener<T> create(@NotNull final EventConsumer<? super T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled) {
+        return new EventListener.Impl<>((EventConsumer<T>) listener, priority, receiveCancelled);
     }
 
     /**
@@ -90,7 +90,7 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
      * @param receiveCancelled The custom receiveCancelled behavior.
      * @param <T>              The type of the event.
      */
-    public record Impl<T extends Event>(@NotNull Consumer<T> listener, @NotNull EventPriority priority,
+    public record Impl<T extends Event>(@NotNull EventConsumer<T> listener, @NotNull EventPriority priority,
                                         boolean receiveCancelled) implements EventListener<T> {
         @Override
         public final void accept(@NotNull final T event) {

@@ -43,7 +43,7 @@ public interface EventHandler<T extends Event> {
      * @return The created event listener, which might be passed to {@link EventHandler#removeListener(EventListener)}.
      */
     @NotNull
-    default EventListener<Event> addListener(final @NotNull Consumer<? super Event> listener) {
+    default EventListener<Event> addListener(final @NotNull EventConsumer<? super Event> listener) {
         final var eventListener = EventListener.create(listener);
         this.addListener(eventListener);
 
@@ -67,7 +67,7 @@ public interface EventHandler<T extends Event> {
      * @return The created event listener, which might be passed to {@link EventHandler#removeListener(EventListener)}.
      */
     @NotNull
-    default EventListener<Event> addListener(final @NotNull Consumer<? super Event> listener, final @NotNull EventPriority priority, final boolean receiveCancelled) {
+    default EventListener<Event> addListener(final @NotNull EventConsumer<? super Event> listener, final @NotNull EventPriority priority, final boolean receiveCancelled) {
         final var eventListener = EventListener.create(listener, priority, receiveCancelled);
         this.addListener(eventListener);
 
