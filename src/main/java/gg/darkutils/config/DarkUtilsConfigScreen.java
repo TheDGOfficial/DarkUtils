@@ -178,7 +178,7 @@ public final class DarkUtilsConfigScreen {
                 config.persistentTabListWhileFarming, newValue -> config.persistentTabListWhileFarming = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Farming Keys",
-                "Turns the keys to move forward, back, left, right and the key to attack into toggle instead of hold whilst you are farming. Note: Only one sticky movement key is active at a time. You must enable them indiviually below. Pressing any movement key will disable other sticky keys even if that movement key's sticky setting is disabled.",
+                "Turns the keys to move forward, back, left, right and the key to attack into toggle instead of hold whilst you are farming. Note: Only one sticky movement key is active at a time. You must enable them individually below. Pressing any movement key will disable other sticky keys even if that movement key's sticky setting is disabled.",
                 config.stickyFarmingKeys, newValue -> config.stickyFarmingKeys = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Sticky Forward",
@@ -349,7 +349,7 @@ public final class DarkUtilsConfigScreen {
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Re-Enable AMD Game Optimizations",
                 "Sodium disables some of the AMD driver's game optimizations for Minecraft due to bugs with a workaround. This option re-enables it. It is not guaranteed this would do anything as it depends on driver. Additionally, the workaround was not supposed to be applied in Linux systems, but is bugged, enabling this will fix it.",
-                config.reenableAmdGameOptimizations, newValue -> config.reenableAmdGameOptimizations = newValue);
+                config.reEnableAmdGameOptimizations, newValue -> config.reEnableAmdGameOptimizations = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable Campfire Smoke Particles",
                 "Disables campfire smoke particles, which optimizes memory allocation rate of the game, due to smoke particles calling entity collision code for some reason.",
@@ -452,11 +452,11 @@ public final class DarkUtilsConfigScreen {
 
         final var config = DarkUtilsConfig.INSTANCE;
 
-        final var vers = DarkUtils.getModAndMcVersion();
+        final var version = DarkUtils.getModAndMcVersion();
 
         final var builder = ConfigBuilder.create()
                 .setParentScreen(parent)
-                .setTitle(Text.of("DarkUtils v" + vers.first() + " for Minecraft " + vers.second() + " Settings"))
+                .setTitle(Text.of("DarkUtils v" + version.first() + " for Minecraft " + version.second() + " Settings"))
                 .setSavingRunnable(DarkUtilsConfig::save);
 
         final var entryBuilder = builder.entryBuilder();

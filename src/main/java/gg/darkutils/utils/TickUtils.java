@@ -2,7 +2,6 @@ package gg.darkutils.utils;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.annotations.PrivateFields;
-import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.events.ServerTickEvent;
 import gg.darkutils.events.base.EventRegistry;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -47,7 +46,7 @@ public final class TickUtils {
     }
 
     private static final void processAwaitingTasksIn(@NotNull final ConcurrentLinkedQueue<TickUtils.Task> tasks) {
-        for (var size = tasks.size(); size > 0; --size) {
+        for (var size = tasks.size(); 0 < size; --size) {
             final var task = tasks.poll();
             if (null == task) {
                 break;
@@ -76,7 +75,7 @@ public final class TickUtils {
      * @param condition The condition before negating.
      * @param action    The action.
      */
-    public static final void awaitNegatedCondition(@NotNull final BooleanSupplier condition, @NotNull final TaskAction action) {
+    public static final void awaitNegatedCondition(@NotNull final BooleanSupplier condition, @NotNull final TickUtils.TaskAction action) {
         TickUtils.awaitCondition(() -> !condition.getAsBoolean(), action);
     }
 
@@ -89,7 +88,7 @@ public final class TickUtils {
      * @param condition The condition.
      * @param action    The action.
      */
-    public static final void awaitCondition(@NotNull final BooleanSupplier condition, @NotNull final TaskAction action) {
+    public static final void awaitCondition(@NotNull final BooleanSupplier condition, @NotNull final TickUtils.TaskAction action) {
         Objects.requireNonNull(condition, "condition");
         Objects.requireNonNull(action, "action");
 
@@ -154,7 +153,7 @@ public final class TickUtils {
      * @param task     The task.
      * @param interval The interval, in ticks. 20 ticks is considered equal to a second.
      */
-    public static final void queueRepeatingTickTask(@NotNull final TaskAction task, final int interval) {
+    public static final void queueRepeatingTickTask(@NotNull final TickUtils.TaskAction task, final int interval) {
         TickUtils.queueRepeatingTickTaskInternal(task, interval, true);
     }
 
@@ -166,7 +165,7 @@ public final class TickUtils {
      * @param task     The task.
      * @param interval The interval, in server ticks. 20 ticks is considered equal to a second if the server is running at 20 tps with no lag.
      */
-    public static final void queueRepeatingServerTickTask(@NotNull final TaskAction task, final int interval) {
+    public static final void queueRepeatingServerTickTask(@NotNull final TickUtils.TaskAction task, final int interval) {
         TickUtils.queueRepeatingTickTaskInternal(task, interval, false);
     }
 
@@ -179,7 +178,7 @@ public final class TickUtils {
      * @param interval The interval, in ticks. 20 ticks is considered equal to a second.
      * @param client   Pass true to use client ticks, false to use server ticks.
      */
-    private static final void queueRepeatingTickTaskInternal(@NotNull final TaskAction task, final int interval, final boolean client) {
+    private static final void queueRepeatingTickTaskInternal(@NotNull final TickUtils.TaskAction task, final int interval, final boolean client) {
         Objects.requireNonNull(task, "task");
         if (0 == interval) {
             throw new IllegalArgumentException("Queueing a repeating tick task with interval zero is prohibited");
@@ -240,12 +239,12 @@ public final class TickUtils {
 
     /**
      * Runs a task immediately if we are already on the render thread, or otherwise queues it to be
-     * ran next tick on the render thread. The render thread polls the tasks each tick so less delay
-     * or running immediately is not possible if we are not on the render thread already. 
+     * run next tick on the render thread. The render thread polls the tasks each tick so less delay
+     * or running immediately is not possible if we are not on the render thread already.
      *
      * @param task The task to run immediately or next tick on the render thread.
      */
-    public static final void runImmediatelyOrNextTick(@NotNull final TaskAction task) {
+    public static final void runImmediatelyOrNextTick(@NotNull final TickUtils.TaskAction task) {
         if (RenderUtils.isNotCallingFromRenderThread()) {
             // We have to use 1 tick delay or otherwise validateRenderThread would throw if we use 0.
             TickUtils.queueTickTask(() -> TickUtils.runImmediatelyOrNextTick(task), 1);
@@ -262,7 +261,7 @@ public final class TickUtils {
      * @param task  The task.
      * @param delay The delay, in ticks. 20 ticks is considered equal to a second.
      */
-    public static final void queueTickTask(@NotNull final TaskAction task, final int delay) {
+    public static final void queueTickTask(@NotNull final TickUtils.TaskAction task, final int delay) {
         TickUtils.queueTickTaskInternal(task, delay, true);
     }
 
@@ -273,7 +272,7 @@ public final class TickUtils {
      * @param task  The task.
      * @param delay The delay, in server ticks. 20 ticks is considered equal to a second.
      */
-    public static final void queueServerTickTask(@NotNull final TaskAction task, final int delay) {
+    public static final void queueServerTickTask(@NotNull final TickUtils.TaskAction task, final int delay) {
         TickUtils.queueTickTaskInternal(task, delay, false);
     }
 
@@ -285,7 +284,7 @@ public final class TickUtils {
      * @param delay  The delay, in client or server ticks. 20 ticks is considered equal to a second.
      * @param client Pass true to use client ticks, false to use server ticks.
      */
-    private static final void queueTickTaskInternal(@NotNull final TaskAction task, final int delay, final boolean client) {
+    private static final void queueTickTaskInternal(@NotNull final TickUtils.TaskAction task, final int delay, final boolean client) {
         Objects.requireNonNull(task, "task");
         if (0 == delay) {
             RenderUtils.validateRenderThread();
@@ -313,7 +312,7 @@ public final class TickUtils {
     }
 
     private static final class Task {
-        private final @NotNull TaskAction action;
+        private final @NotNull TickUtils.TaskAction action;
         private final int initialTicks;
         private final boolean repeats;
         private final @Nullable BooleanSupplier condition;
@@ -322,7 +321,7 @@ public final class TickUtils {
         /**
          * Condition-based constructor.
          */
-        private Task(@NotNull final BooleanSupplier condition, @NotNull final TaskAction action) {
+        private Task(@NotNull final BooleanSupplier condition, @NotNull final TickUtils.TaskAction action) {
             super();
 
             this.condition = condition;
@@ -335,7 +334,7 @@ public final class TickUtils {
         /**
          * Time-based constructor.
          */
-        private Task(@NotNull final TaskAction action, final int initialTicks, final boolean repeats) {
+        private Task(@NotNull final TickUtils.TaskAction action, final int initialTicks, final boolean repeats) {
             super();
 
             if (0 >= initialTicks) {

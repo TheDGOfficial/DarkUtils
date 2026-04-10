@@ -1,14 +1,12 @@
 package gg.darkutils.mixin.qol;
 
-import gg.darkutils.config.DarkUtilsConfig;
-
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import gg.darkutils.config.DarkUtilsConfig;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.Coerce;
-
-import org.jetbrains.annotations.NotNull;
 
 @Pseudo
 @Mixin(targets = "moe.nea.firmament.features.misc.ModAnnouncer")

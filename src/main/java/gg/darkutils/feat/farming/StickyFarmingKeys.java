@@ -1,15 +1,15 @@
 package gg.darkutils.feat.farming;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.utils.ActivityState;
+import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.Helpers;
-import gg.darkutils.utils.ActivityState;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,9 +40,9 @@ public final class StickyFarmingKeys {
         final var screen = mc.currentScreen;
         final var previousScreen = StickyFarmingKeys.previousScreen;
 
-        boolean reset = false;
+        var reset = false;
 
-        if (null != screen && null == previousScreen || null == screen && null != previousScreen) {
+        if ((null != screen) == (null == previousScreen)) {
             // A screen was opened or closed. Reset toggled state.
             StickyFarmingKeys.resetToggledState();
             reset = true;
@@ -55,13 +55,12 @@ public final class StickyFarmingKeys {
         if (null == player) {
             if (!reset) {
                 StickyFarmingKeys.resetToggledState();
-                reset = true;
             }
         } else {
             final var currentSlot = player.getInventory().getSelectedSlot();
             final var previousSlot = StickyFarmingKeys.previousSelectedSlot;
 
-            if (!reset && previousSlot != -1 && previousSlot != currentSlot) {
+            if (!reset && -1 != previousSlot && previousSlot != currentSlot) {
                 StickyFarmingKeys.resetToggledState();
             }
 
@@ -110,18 +109,18 @@ public final class StickyFarmingKeys {
 
         if (playerInput) {
             if (null != movementKey) {
-                return movementKey.isPressed(actual);
+                return movementKey.isPressed(false);
             }
-            // jump sneak sprint falls-thru to return actual
+            // jump, sneak and sprint falls-thru to return false
         } else {
             for (final var key : StickyFarmingKeys.Key.VALUES) {
                 if (key.isForKeyBinding(keyBinding)) {
-                    return key.isPressed(actual);
+                    return key.isPressed(false);
                 }
             }
         }
 
-        return actual;
+        return false;
     }
 
     public static final boolean wasPressed(@NotNull final KeyBinding keyBinding) {
@@ -133,11 +132,144 @@ public final class StickyFarmingKeys {
 
         for (final var key : StickyFarmingKeys.Key.VALUES) {
             if (key.isForKeyBinding(keyBinding)) {
-                return key.wasPressed(actual);
+                return key.wasPressed(true);
             }
         }
 
-        return actual;
+        return true;
+    }
+
+    private enum MovementKey implements StickyFarmingKeys.CommonKey {
+        Forward(MinecraftClient.getInstance().options.forwardKey), // Typically W
+        Back(MinecraftClient.getInstance().options.backKey), // Typically S
+        Left(MinecraftClient.getInstance().options.leftKey), // Typically A
+        Right(MinecraftClient.getInstance().options.rightKey); // Typically D
+
+        private static final StickyFarmingKeys.MovementKey @NotNull [] VALUES = StickyFarmingKeys.MovementKey.values();
+
+        @NotNull
+        private final KeyBinding keyBinding;
+
+        private boolean toggled;
+        private boolean clicking;
+
+        private boolean lastPhysicalPressed;
+
+        private MovementKey(@NotNull final KeyBinding keyBinding) {
+            this.keyBinding = keyBinding;
+        }
+
+        private final boolean isStickyEnabled() {
+            final var config = DarkUtilsConfig.INSTANCE;
+
+            return switch (this) {
+                case Forward -> config.stickyForward;
+                case Back -> config.stickyBackward;
+                case Left -> config.stickyLeft;
+                case Right -> config.stickyRight;
+            };
+        }
+
+        private final void updateToggle(final boolean physicalPressed) {
+            if (!this.lastPhysicalPressed && physicalPressed) {
+                // always clear others so the player regains control
+                for (final var key : StickyFarmingKeys.MovementKey.VALUES) {
+                    if (key != this) {
+                        key.toggled = false;
+                    }
+                }
+
+                // only toggle if this sticky key is enabled in config
+                this.toggled = this.isStickyEnabled() && !this.toggled;
+            }
+
+            this.lastPhysicalPressed = physicalPressed;
+        }
+
+        @Override
+        public final void resetState() {
+            this.lastPhysicalPressed = false;
+
+            StickyFarmingKeys.CommonKey.super.resetState();
+        }
+
+        @Override
+        public final boolean isPressed(final boolean actual) {
+            if (!this.isStickyEnabled()) {
+                this.toggled = false;
+                return actual;
+            }
+
+            return StickyFarmingKeys.CommonKey.super.isPressed(actual);
+        }
+
+        @NotNull
+        @Override
+        public final KeyBinding getKeyBinding() {
+            return this.keyBinding;
+        }
+
+        @Override
+        public final boolean isToggled() {
+            return this.toggled;
+        }
+
+        @Override
+        public final void setToggled(final boolean toggled) {
+            this.toggled = toggled;
+        }
+
+        @Override
+        public final boolean isClicking() {
+            return this.clicking;
+        }
+
+        @Override
+        public final void setClicking(final boolean clicking) {
+            this.clicking = clicking;
+        }
+    }
+
+    private enum Key implements StickyFarmingKeys.CommonKey {
+        LMB(MinecraftClient.getInstance().options.attackKey);
+
+        private static final StickyFarmingKeys.Key @NotNull [] VALUES = StickyFarmingKeys.Key.values();
+
+        @NotNull
+        private final KeyBinding keyBinding;
+
+        private boolean toggled;
+        private boolean clicking;
+
+        private Key(@NotNull final KeyBinding keyBinding) {
+            this.keyBinding = keyBinding;
+        }
+
+        @NotNull
+        @Override
+        public final KeyBinding getKeyBinding() {
+            return this.keyBinding;
+        }
+
+        @Override
+        public final boolean isToggled() {
+            return this.toggled;
+        }
+
+        @Override
+        public final void setToggled(final boolean toggled) {
+            this.toggled = toggled;
+        }
+
+        @Override
+        public final boolean isClicking() {
+            return this.clicking;
+        }
+
+        @Override
+        public final void setClicking(final boolean clicking) {
+            this.clicking = clicking;
+        }
     }
 
     private interface CommonKey {
@@ -145,9 +277,11 @@ public final class StickyFarmingKeys {
         KeyBinding getKeyBinding();
 
         boolean isToggled();
+
         void setToggled(final boolean toggled);
 
         boolean isClicking();
+
         void setClicking(final boolean clicking);
 
         default boolean isForKeyBinding(@NotNull final KeyBinding keyBinding) {
@@ -189,143 +323,6 @@ public final class StickyFarmingKeys {
 
             this.setToggled(!this.isToggled());
             return true;
-        }
-    }
-
-    private enum MovementKey implements CommonKey {
-        Forward(MinecraftClient.getInstance().options.forwardKey), // Typically W
-        Back(MinecraftClient.getInstance().options.backKey), // Typically S
-        Left(MinecraftClient.getInstance().options.leftKey), // Typically A
-        Right(MinecraftClient.getInstance().options.rightKey); // Typically D
-
-        private static final StickyFarmingKeys.MovementKey @NotNull [] VALUES = StickyFarmingKeys.MovementKey.values();
-
-        @NotNull
-        private final KeyBinding keyBinding;
-
-        private boolean toggled;
-        private boolean clicking;
-
-        private boolean lastPhysicalPressed;
-
-        private MovementKey(@NotNull final KeyBinding keyBinding) {
-            this.keyBinding = keyBinding;
-        }
-
-        private final boolean isStickyEnabled() {
-            final var config = DarkUtilsConfig.INSTANCE;
-
-            return switch (this) {
-                case Forward -> config.stickyForward;
-                case Back -> config.stickyBackward;
-                case Left -> config.stickyLeft;
-                case Right -> config.stickyRight;
-            };
-        }
-
-        private final void updateToggle(final boolean physicalPressed) {
-            if (!this.lastPhysicalPressed && physicalPressed) {
-                // always clear others so the player regains control
-                for (final var key : StickyFarmingKeys.MovementKey.VALUES) {
-                    if (key != this) {
-                        key.toggled = false;
-                    }
-                }
-
-                // only toggle if this sticky key is enabled in config
-                if (this.isStickyEnabled()) {
-                    this.toggled = !this.toggled;
-                } else {
-                    this.toggled = false;
-                }
-            }
-
-            this.lastPhysicalPressed = physicalPressed;
-        }
-
-        @Override
-        public final void resetState() {
-            this.lastPhysicalPressed = false;
-
-            CommonKey.super.resetState();
-        }
-
-        @Override
-        public final boolean isPressed(final boolean actual) {
-            if (!this.isStickyEnabled()) {
-                this.toggled = false;
-                return actual;
-            }
-
-            return CommonKey.super.isPressed(actual);
-        }
-
-        @NotNull
-        @Override
-        public final KeyBinding getKeyBinding() {
-            return this.keyBinding;
-        }
-
-        @Override
-        public final boolean isToggled() {
-            return this.toggled;
-        }
-
-        @Override
-        public final void setToggled(final boolean toggled) {
-            this.toggled = toggled;
-        }
-
-        @Override
-        public final boolean isClicking() {
-            return this.clicking;
-        }
-
-        @Override
-        public final void setClicking(final boolean clicking) {
-            this.clicking = clicking;
-        }
-    }
-
-    private enum Key implements CommonKey {
-        LMB(MinecraftClient.getInstance().options.attackKey);
-
-        private static final StickyFarmingKeys.Key @NotNull [] VALUES = StickyFarmingKeys.Key.values();
-
-        @NotNull
-        private final KeyBinding keyBinding;
-
-        private boolean toggled;
-        private boolean clicking;
-
-        private Key(@NotNull final KeyBinding keyBinding) {
-            this.keyBinding = keyBinding;
-        }
-
-        @NotNull
-        @Override
-        public final KeyBinding getKeyBinding() {
-            return this.keyBinding;
-        }
-
-        @Override
-        public final boolean isToggled() {
-            return this.toggled;
-        }
-
-        @Override
-        public final void setToggled(final boolean toggled) {
-            this.toggled = toggled;
-        }
-
-        @Override
-        public final boolean isClicking() {
-            return this.clicking;
-        }
-
-        @Override
-        public final void setClicking(final boolean clicking) {
-            this.clicking = clicking;
         }
     }
 }

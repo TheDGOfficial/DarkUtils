@@ -1,31 +1,25 @@
 package gg.darkutils.utils;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import gg.darkutils.DarkUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.DrawStyle;
-import net.minecraft.world.debug.gizmo.GizmoDrawing;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.registry.Registries;
+import net.minecraft.world.debug.gizmo.GizmoDrawing;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -53,8 +47,8 @@ public final class RenderUtils {
      * Holds the item to empty ItemStack cache.
      */
     private static final @NotNull Supplier<Map<Item, ItemStack>> ITEM_TO_ITEM_STACK = LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(
-        Set.copyOf(Registries.ITEM.stream().toList()),
-        ItemStack::new
+            Set.copyOf(Registries.ITEM.stream().toList()),
+            ItemStack::new
     ));
     /**
      * Holds the empty OrderedText.
@@ -92,12 +86,12 @@ public final class RenderUtils {
     }
 
     private static final int toARGB(final double alpha, final double red, final double green, final double blue) {
-        final int a = (int) Math.round(alpha * 255.0D) & 0xFF;
-        final int r = (int) Math.round(red * 255.0D) & 0xFF;
-        final int g = (int) Math.round(green * 255.0D) & 0xFF;
-        final int b = (int) Math.round(blue * 255.0D) & 0xFF;
+        final var roundedAlpha = (int) Math.round(alpha * 255.0D) & 0xFF;
+        final var roundedRed = (int) Math.round(red * 255.0D) & 0xFF;
+        final var roundedGreen = (int) Math.round(green * 255.0D) & 0xFF;
+        final var roundedBlue = (int) Math.round(blue * 255.0D) & 0xFF;
 
-        return (a << 24) | (r << 16) | (g << 8) | b;
+        return roundedAlpha << 24 | roundedRed << 16 | roundedGreen << 8 | roundedBlue;
     }
 
     public static final void renderText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, final int x, final int y, @NotNull final Formatting color) {
@@ -143,9 +137,9 @@ public final class RenderUtils {
         final var blue = (rgb & 0xFF) / 255.0D;
         final var alpha = 1.0D; // fully opaque
 
-        final int argb = RenderUtils.toARGB(alpha, red, green, blue);
+        final var argb = RenderUtils.toARGB(alpha, red, green, blue);
 
-        DrawStyle style = DrawStyle.stroked(argb);
+        final var style = DrawStyle.stroked(argb);
 
         final var immutablePos = pos.toImmutable();
 
@@ -154,9 +148,9 @@ public final class RenderUtils {
 
     /**
      * Checks if the current thread is not the render thread and returns true if so.
-     *
+     * <p>
      * Typically used to re-schedule an action next tick to ensure thread-safety when called from external thread,
-     * if you need to fail-fast and reject external thread call, use {@link RenderUtils#checkCallerThread()} instead.
+     * if you need to fail-fast and reject external thread call, use {@link RenderUtils#validateRenderThread()} instead.
      */
     public static final boolean isNotCallingFromRenderThread() {
         return !RenderSystem.isOnRenderThread();

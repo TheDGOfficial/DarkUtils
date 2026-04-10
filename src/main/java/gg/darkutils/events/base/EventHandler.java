@@ -2,8 +2,6 @@ package gg.darkutils.events.base;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Consumer;
-
 /**
  * Declares an {@link EventHandler}.
  * <p>

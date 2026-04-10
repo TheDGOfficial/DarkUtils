@@ -3,18 +3,15 @@ package gg.darkutils.feat.mining;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.data.PersistentData;
-import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.PrettyUtils;
-
+import gg.darkutils.utils.RenderUtils;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.Items;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Formatting;
-
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 public final class CorpsesPerShaftDisplay {
@@ -43,7 +40,7 @@ public final class CorpsesPerShaftDisplay {
 
         final var client = MinecraftClient.getInstance();
 
-        if (null == client.player || (!LocationUtils.isInDwarvenMines() && !LocationUtils.isInMineshaft())) {
+        if (null == client.player || !LocationUtils.isInDwarvenMines() && !LocationUtils.isInMineshaft()) {
             return;
         }
 
@@ -60,10 +57,10 @@ public final class CorpsesPerShaftDisplay {
             final var vanguard = PrettyUtils.formatPercentage(100.0D * ((double) PersistentData.INSTANCE.vanguardCorpsesOpened / shafts));
 
             text.setText("Corpses per Shaft: " +
-                lapis + " Lapis | " +
-                umber + " Umber | " + 
-                tungsten + " Tungsten | " +
-                vanguard + " Vanguard"
+                    lapis + " Lapis | " +
+                    umber + " Umber | " +
+                    tungsten + " Tungsten | " +
+                    vanguard + " Vanguard"
             );
         }
 

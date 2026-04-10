@@ -1,9 +1,9 @@
 package gg.darkutils.mixin.visuals;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.StatusEffectsDisplay;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

@@ -4,13 +4,13 @@ import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
-import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.LocationUtils;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import gg.darkutils.utils.RenderUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.Items;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -82,7 +82,7 @@ public final class PestCooldownDisplay {
         final var cooldownEnd = 0L == lastSpawn ? now : lastSpawn + TimeUnit.SECONDS.toNanos(spawnCd);
 
         final var remainingNs = cooldownEnd - now;
-        final var ready = remainingNs <= 0L;
+        final var ready = 0L >= remainingNs;
 
         final var remainingSeconds = TimeUnit.NANOSECONDS.toSeconds(Math.max(remainingNs, 0L));
 

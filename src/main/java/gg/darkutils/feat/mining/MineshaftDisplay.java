@@ -2,21 +2,16 @@ package gg.darkutils.feat.mining;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.data.PersistentData;
-import gg.darkutils.utils.RenderUtils;
-import gg.darkutils.utils.PrettyUtils;
-import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.ActivityState;
-import gg.darkutils.utils.TickUtils;
-
+import gg.darkutils.utils.LocationUtils;
+import gg.darkutils.utils.PrettyUtils;
+import gg.darkutils.utils.RenderUtils;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.Items;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Formatting;
-
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.TimeUnit;
@@ -44,11 +39,7 @@ public final class MineshaftDisplay {
     }
 
     private static final @NotNull String prettifyNanosToSeconds(final long nanos) {
-        if (nanos < ONE_MINUTE_IN_NS) {
-            return TimeUnit.NANOSECONDS.toSeconds(nanos) + "s";
-        }
-
-        return PrettyUtils.formatNanosAsSeconds(nanos);
+        return nanos < MineshaftDisplay.ONE_MINUTE_IN_NS ? TimeUnit.NANOSECONDS.toSeconds(nanos) + "s" : PrettyUtils.formatNanosAsSeconds(nanos);
     }
 
     private static final void renderMineshaftDisplay(@NotNull final DrawContext context) {
@@ -58,7 +49,7 @@ public final class MineshaftDisplay {
 
         final var client = MinecraftClient.getInstance();
 
-        if (null == client.player || (!LocationUtils.isInDwarvenMines() && !LocationUtils.isInMineshaft())) {
+        if (null == client.player || !LocationUtils.isInDwarvenMines() && !LocationUtils.isInMineshaft()) {
             return;
         }
 
@@ -78,10 +69,10 @@ public final class MineshaftDisplay {
 
         final var text = MineshaftDisplay.TEXT;
 
-        text.setText("Mineshaft: " + 
-            (omitLast ? "" : "Last " + timeSinceLastShaft + " ago" + (ActivityState.isActivelyMining() ? "" : " [PAUSED]")) +
-            ("0s".equals(averageSpawnTime) ? "" : omitLast ? "Avg " + averageSpawnTime + " to spawn" : ", Avg " + averageSpawnTime + " to spawn") +
-            (0L != shaftEntered ? shaftUptime >= MineshaftDisplay.ONE_MINUTE_IN_NS ? " - In shaft for: " + MineshaftDisplay.prettifyNanosToSeconds(shaftUptime) : " - Time till warp closure: " + MineshaftDisplay.prettifyNanosToSeconds(MineshaftDisplay.ONE_MINUTE_IN_NS - shaftUptime) : hasUnenteredMineshaft ? " - Time till despawn: " + remainingTimeToDespawn : "")
+        text.setText("Mineshaft: " +
+                (omitLast ? "" : "Last " + timeSinceLastShaft + " ago" + (ActivityState.isActivelyMining() ? "" : " [PAUSED]")) +
+                ("0s".equals(averageSpawnTime) ? "" : (omitLast ? "Avg " : ", Avg ") + averageSpawnTime + " to spawn") +
+                (0L == shaftEntered ? hasUnenteredMineshaft ? " - Time till despawn: " + remainingTimeToDespawn : "" : shaftUptime >= MineshaftDisplay.ONE_MINUTE_IN_NS ? " - In shaft for: " + MineshaftDisplay.prettifyNanosToSeconds(shaftUptime) : " - Time till warp closure: " + MineshaftDisplay.prettifyNanosToSeconds(MineshaftDisplay.ONE_MINUTE_IN_NS - shaftUptime))
         );
 
         RenderUtils.renderItem(

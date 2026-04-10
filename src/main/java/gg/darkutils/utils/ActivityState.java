@@ -1,23 +1,20 @@
 package gg.darkutils.utils;
 
 import gg.darkutils.utils.chat.ChatUtils;
-
-import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
-import org.jetbrains.annotations.NotNull;
 
 public final class ActivityState {
     private static final long TEN_SECONDS_NANOS = TimeUnit.SECONDS.toNanos(10L);
 
     private static long lastFarmingXp;
-    private static long lastMiningXp;
-
     @NotNull
     private static final BooleanSupplier ACTIVELY_FARMING =
             TickUtils.queueUpdatingCondition(ActivityState::isActivelyFarmingRightNow);
-
+    private static long lastMiningXp;
     @NotNull
     private static final BooleanSupplier ACTIVELY_MINING =
             TickUtils.queueUpdatingCondition(ActivityState::isActivelyMiningRightNow);
@@ -61,6 +58,6 @@ public final class ActivityState {
     }
 
     private static final boolean isActive(final long last) {
-        return System.nanoTime() - last < TEN_SECONDS_NANOS;
+        return System.nanoTime() - last < ActivityState.TEN_SECONDS_NANOS;
     }
 }

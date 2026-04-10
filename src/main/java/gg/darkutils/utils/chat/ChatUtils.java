@@ -7,7 +7,6 @@ import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RoundingMode;
 import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.chat.SimpleColor;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
@@ -194,7 +193,7 @@ public final class ChatUtils {
 
         final var length = text.length();
 
-        var root = Text.empty();
+        final var root = Text.empty();
 
         for (var i = 0; i < length; ++i) {
             final var t = 1 == length ? 0.0D : i / (length - 1.0D);
@@ -206,7 +205,7 @@ public final class ChatUtils {
                 style = style.withBold(true);
             }
 
-            root = root.append(Text.literal(String.valueOf(text.charAt(i)))
+            root.append(Text.literal(String.valueOf(text.charAt(i)))
                     .setStyle(style));
         }
 

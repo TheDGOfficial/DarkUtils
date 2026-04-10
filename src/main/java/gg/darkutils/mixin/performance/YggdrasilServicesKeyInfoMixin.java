@@ -1,15 +1,13 @@
 package gg.darkutils.mixin.performance;
 
-import gg.darkutils.mixinquirks.HolderFields;
-
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.YggdrasilServicesKeyInfo;
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.mixinquirks.HolderFields;
 import net.minecraft.client.MinecraftClient;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;

@@ -22,7 +22,13 @@ final class UtilMixin {
     @Unique
     private static boolean overrideSuccessful;
 
-    @Inject(method = "<clinit>", at = @At(value = "RETURN"))
+    private UtilMixin() {
+        super();
+
+        throw new UnsupportedOperationException("mixin class");
+    }
+
+    @Inject(method = "<clinit>", at = @At("RETURN"))
     private static final void darkutils$postclinit(@NotNull final CallbackInfo ci) {
         try {
             TickUtils.awaitLocalPlayer(player -> { // Player will only be available after all Mixins are applied and executors are created.
@@ -34,12 +40,6 @@ final class UtilMixin {
             // We must catch all errors so that we do not fail loading of the vanilla util class and hard crash the game if any of our code above throws
             DarkUtils.error("@fileName@", "Error during post-<clinit> code", error);
         }
-    }
-
-    private UtilMixin() {
-        super();
-
-        throw new UnsupportedOperationException("mixin class");
     }
 
     /**

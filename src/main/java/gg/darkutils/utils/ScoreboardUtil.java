@@ -6,30 +6,19 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Objects;
 
 public final class ScoreboardUtil {
+    public static final ScoreboardUtil.@NonNull Continue<Void> CONTINUE = new ScoreboardUtil.Continue<>();
+    public static final ScoreboardUtil.@NonNull Return<Void> BREAK = () -> null;
+
     private ScoreboardUtil() {
         super();
 
         throw new UnsupportedOperationException("static-only class");
-    }
-
-    public static final ScoreboardUtil.Continue<Void> CONTINUE = new Continue<Void>();
-    public static final ScoreboardUtil.Return<Void> BREAK = () -> null;
-
-    public sealed interface IterationDecision<T> permits Continue, Return {
-    }
-
-    public static final record Continue<T>() implements IterationDecision<T> {
-    }
-
-    @FunctionalInterface
-    public non-sealed interface Return<T> extends IterationDecision<T> {
-        T getReturnValue();
-
-        static <T> Return<T> of(@NotNull final T value) {
-            return () -> value;
-        }
     }
 
     public static final <T> ScoreboardUtil.Return<T> returning(@NotNull final T value) {
@@ -40,16 +29,16 @@ public final class ScoreboardUtil {
         return new ScoreboardUtil.Continue<>();
     }
 
-    @FunctionalInterface
-    public interface ScoreboardLineConsumer<T> {
-        @NotNull ScoreboardUtil.IterationDecision<T> accept(final @NotNull String line);
-    }
-
     public static final void forEachScoreboardLine(@NotNull final ScoreboardUtil.ScoreboardLineConsumer<Void> action) {
-        ScoreboardUtil.forEachScoreboardLine(action, null);
+        ScoreboardUtil.queryScoreboardLines(action, null);
     }
 
-    public static final <T> T forEachScoreboardLine(@NotNull final ScoreboardUtil.ScoreboardLineConsumer<T> action, @NotNull final T defaultValue) {
+    public static final <T> @NotNull T forEachScoreboardLine(@NotNull final ScoreboardUtil.ScoreboardLineConsumer<T> action, @NotNull final T defaultValue) {
+        final var result = ScoreboardUtil.queryScoreboardLines(action, defaultValue);
+        return Objects.requireNonNullElse(result, defaultValue);
+    }
+
+    private static final <T> @Nullable T queryScoreboardLines(@NotNull final ScoreboardUtil.ScoreboardLineConsumer<T> action, @Nullable final T defaultValue) {
         final var mc = MinecraftClient.getInstance();
 
         if (null == mc.player || null == mc.world) {
@@ -74,17 +63,37 @@ public final class ScoreboardUtil {
             final var result = action.accept(line);
 
             switch (result) {
-                case Return<T> r -> {
-                    return r.getReturnValue();
+                case final ScoreboardUtil.Return<T> returning -> {
+                    return returning.getReturnValue();
                 }
 
-                case Continue<?> c -> {
+                case final ScoreboardUtil.Continue<?> continuing -> {
                     // implicit continue
                 }
             }
         }
 
         return defaultValue;
+    }
+
+    public sealed interface IterationDecision<T> permits ScoreboardUtil.Continue, ScoreboardUtil.Return {
+    }
+
+    @FunctionalInterface
+    public non-sealed interface Return<T> extends ScoreboardUtil.IterationDecision<T> {
+        static <T> ScoreboardUtil.Return<T> of(@NotNull final T value) {
+            return () -> value;
+        }
+
+        @Nullable T getReturnValue();
+    }
+
+    @FunctionalInterface
+    public interface ScoreboardLineConsumer<T> {
+        @NotNull ScoreboardUtil.IterationDecision<T> accept(final @NotNull String line);
+    }
+
+    public static final record Continue<T>() implements ScoreboardUtil.IterationDecision<T> {
     }
 }
 

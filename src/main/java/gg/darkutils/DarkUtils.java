@@ -6,7 +6,6 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.config.DarkUtilsConfigScreen;
-import gg.darkutils.update.UpdateChecker;
 import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.feat.bugfixes.CursorFix;
 import gg.darkutils.feat.dungeons.AlignmentTaskSolver;
@@ -17,15 +16,15 @@ import gg.darkutils.feat.dungeons.DungeonTimer;
 import gg.darkutils.feat.dungeons.ReplaceDiorite;
 import gg.darkutils.feat.dungeons.SoloCrushTimer;
 import gg.darkutils.feat.dungeons.SoloCrushWaypoint;
+import gg.darkutils.feat.farming.EnforceZorrosCape;
+import gg.darkutils.feat.farming.PestCooldownDisplay;
+import gg.darkutils.feat.farming.StickyFarmingKeys;
 import gg.darkutils.feat.foraging.TreeGiftConfirmation;
 import gg.darkutils.feat.foraging.TreeGiftFeatures;
 import gg.darkutils.feat.foraging.TreeGiftsPerHour;
-import gg.darkutils.feat.farming.PestCooldownDisplay;
-import gg.darkutils.feat.farming.StickyFarmingKeys;
-import gg.darkutils.feat.farming.EnforceZorrosCape;
-import gg.darkutils.feat.mining.MineshaftFeatures;
 import gg.darkutils.feat.mining.CorpsesPerShaftDisplay;
 import gg.darkutils.feat.mining.MineshaftDisplay;
+import gg.darkutils.feat.mining.MineshaftFeatures;
 import gg.darkutils.feat.performance.LogCleaner;
 import gg.darkutils.feat.performance.SoundLagFix;
 import gg.darkutils.feat.performance.ThreadPriorityTweaker;
@@ -38,18 +37,18 @@ import gg.darkutils.feat.qol.PreventUselessBlockHit;
 import gg.darkutils.feat.qol.RejoinCooldownDisplay;
 import gg.darkutils.feat.qol.ServerTPSCalculator;
 import gg.darkutils.feat.qol.VanillaMode;
-import gg.darkutils.utils.LazyConstants;
-import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.LocationUtils;
+import gg.darkutils.update.UpdateChecker;
 import gg.darkutils.utils.ActivityState;
+import gg.darkutils.utils.LazyConstants;
+import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
 import gg.darkutils.utils.Pair;
+import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.ButtonData;
-import gg.darkutils.utils.chat.LinkData;
 import gg.darkutils.utils.chat.ChatUtils;
+import gg.darkutils.utils.chat.LinkData;
 import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.SimpleStyle;
-import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.TextBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
@@ -68,14 +67,11 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Locale;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.function.BiConsumer;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.concurrent.TimeUnit;
 
 /*
 import gg.darkutils.utils.chat.SimpleColor;
@@ -133,31 +129,27 @@ public final class DarkUtils implements ClientModInitializer {
      * Not a definitive solution to server-side rate limit, just a safety against spamming.
      */
     private static final long ONE_MINUTE_NS = TimeUnit.MINUTES.toNanos(1L);
-
-    /**
-     * Used for rate-limiting the update checker command so that user can't spam the GH API.
-     * <p>
-     * Not a definitive solution to server-side rate limit, just a safety against spamming.
-     */
-    private static long lastManualUpdateCheckTimeNs = 0L;
-
     /**
      * Color used for mod headers that take the full chat width.
      */
     @NotNull
     private static final String HEADER_FOOTER_COLOR = "#1e2124";
-
     /**
      * Color used for gradient start hex, which will transition to gradient end inside text slowly.
      */
     @NotNull
     private static final String GRADIENT_START = "#00C6FF";
-
     /**
      * Color used for gradient end hex, which will transition from gradient start inside text slowly.
      */
     @NotNull
     private static final String GRADIENT_END = "#0072FF";
+    /**
+     * Used for rate-limiting the update checker command so that user can't spam the GH API.
+     * <p>
+     * Not a definitive solution to server-side rate limit, just a safety against spamming.
+     */
+    private static long lastManualUpdateCheckTimeNs;
 
     public DarkUtils() {
         super();
@@ -223,43 +215,33 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.error(source, message, error, (Object[]) null);
     }
 
-    public enum UserMessageLevel {
-        USER_INFO("#36393e"),
-        USER_WARN("#F4E051"),
-        USER_ERROR("#FF3434");
-
-        private final int rgb;
-
-        private UserMessageLevel(@NotNull final String hex) {
-            this.rgb = ChatUtils.hexToRGB(hex);
-        }
-    }
-
     public static final void debug(@NotNull final Supplier<String> message) {
         if (DarkUtilsConfig.INSTANCE.debugMode) {
             DarkUtils.user(message.get(), DarkUtils.UserMessageLevel.USER_INFO);
         }
     }
 
-    public static final void user(@NotNull final String message, @NotNull final UserMessageLevel level) {
+    public static final void user(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level) {
         DarkUtils.user(message, level, null);
     }
 
-    public static final void user(@NotNull final String message, @NotNull final UserMessageLevel level, @Nullable final LinkData link) {
+    private static final void user(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level, @Nullable final LinkData link) {
         final var text = TextBuilder
-                            .empty();
+                .empty();
 
         final var pendingAppend = List.of(
-                Map.entry(DarkUtils.class.getSimpleName(), SimpleStyle.colored(ChatUtils.hexToRGB("#1e2124"))),
+                Map.entry(DarkUtils.class.getSimpleName(), SimpleStyle.colored(ChatUtils.hexToRGB(DarkUtils.HEADER_FOOTER_COLOR))),
                 Map.entry(" » ", SimpleStyle.colored(ChatUtils.hexToRGB("#7289da"))),
                 Map.entry(message, SimpleStyle.colored(level.rgb))
         );
 
-        if (null == link) {
-            pendingAppend.forEach(entry -> text.append(entry.getKey(), entry.getValue()));
-        } else {
-            pendingAppend.forEach(entry -> text.append(entry.getKey(), entry.getValue(), link));
-        }
+        pendingAppend.forEach(entry -> {
+            if (null == link) {
+                text.append(entry.getKey(), entry.getValue());
+            } else {
+                text.append(entry.getKey(), entry.getValue(), link);
+            }
+        });
 
         ChatUtils.sendMessageToLocalPlayer(text.build());
     }
@@ -495,7 +477,7 @@ public final class DarkUtils implements ClientModInitializer {
      * The commands should catch their own exceptions and output messages on error conditions, so we always return success.
      */
     private static final void registerCommandWithAliases(@NotNull final String command, @NotNull final Runnable onExecute, final String... aliases) {
-        DarkUtils.registerCommandWithAliases(command, (ctx) -> {
+        DarkUtils.registerCommandWithAliases(command, ctx -> {
             onExecute.run();
 
             return Command.SINGLE_SUCCESS;
@@ -588,33 +570,28 @@ public final class DarkUtils implements ClientModInitializer {
         }
 
         // User has update checker enabled and potentially the welcome message.
-        UpdateChecker.checkUpdateAndRunCallbackOnRenderThread((result, release) -> DarkUtils.notifyUpdateCheckerResult(fancyGreet, result, release));
-    }
-
-    @FunctionalInterface
-    private interface UserMessageMethod {
-        void accept(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level);
-    }
-
-    @FunctionalInterface
-    private interface UserMessageMethodWithLink {
-        void accept(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level, @Nullable final LinkData link);
+        UpdateChecker.checkUpdateAndRunCallbackOnRenderThread((result, release) -> DarkUtils.notifyUpdateCheckerResult(fancyGreet, result, release.orElse(null)));
     }
 
     private static final void notifyUpdateCheckerResult(final boolean fancyGreet, @NotNull final UpdateChecker.UpdateCheckerResult result, @Nullable final UpdateChecker.GitHubRelease release) {
         // 60 ticks = 3 seconds delay so that the message is sent after guild motd and other stuff for more visibility
-        final UserMessageMethod user = (message, level) -> TickUtils.queueTickTask(() -> DarkUtils.user(message, level), 60);
-        final UserMessageMethodWithLink userWithLink = (message, level, linkData) -> TickUtils.queueTickTask(() -> DarkUtils.user(message, level, linkData), 60);
+        final DarkUtils.UserMessageMethod user = (message, level) -> TickUtils.queueTickTask(() -> DarkUtils.user(message, level), 60);
+        final DarkUtils.UserMessageMethodWithLink userWithLink = (message, level, linkData) -> TickUtils.queueTickTask(() -> DarkUtils.user(message, level, linkData), 60);
 
         final var latestReleaseLink = null != release && null != release.html_url() ? new LinkData("Click to open latest release in browser", release.html_url()) : null;
 
-        // If welcome message is enabled, we embed the update result into it, otherwise send a seperate (simple) message.
+        // If welcome message is enabled, we embed the update result into it, otherwise send a separate (simple) message.
         final Runnable feedback = switch (result) {
-            case UP_TO_DATE_STABLE -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This the latest stable version.") : () -> user.accept("You are using the latest version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
-            case UP_TO_DATE_PRE -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This the latest pre-release version.") : () -> user.accept("You are using the latest pre-release version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
-            case OUT_OF_DATE -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("!! This an outdated version !!", latestReleaseLink) : () -> userWithLink.accept("You are using an !! outdated !! version of the mod - please update!", DarkUtils.UserMessageLevel.USER_WARN, latestReleaseLink);
-            case IN_DEVELOPMENT_VERSION -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("In-development version - Update frequently!") : () -> user.accept("You are using an in-development version of the mod! Expect bugs and update frequently!", DarkUtils.UserMessageLevel.USER_WARN);
-            case COULD_NOT_CHECK -> fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("We couldn't check if this the latest version, please see if there is any errors above!") : () -> user.accept("Could not check for mod updates!", DarkUtils.UserMessageLevel.USER_ERROR);
+            case UP_TO_DATE_STABLE ->
+                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This the latest stable version.") : () -> user.accept("You are using the latest version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
+            case UP_TO_DATE_PRE ->
+                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This the latest pre-release version.") : () -> user.accept("You are using the latest pre-release version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
+            case OUT_OF_DATE ->
+                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("!! This an outdated version !!", latestReleaseLink) : () -> userWithLink.accept("You are using an !! outdated !! version of the mod - please update!", DarkUtils.UserMessageLevel.USER_WARN, latestReleaseLink);
+            case IN_DEVELOPMENT_VERSION ->
+                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("In-development version - Update frequently!") : () -> user.accept("You are using an in-development version of the mod! Expect bugs and update frequently!", DarkUtils.UserMessageLevel.USER_WARN);
+            case COULD_NOT_CHECK ->
+                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("We couldn't check if this the latest version, please see if there is any errors above!") : () -> user.accept("Could not check for mod updates!", DarkUtils.UserMessageLevel.USER_ERROR);
         };
 
         feedback.run();
@@ -624,7 +601,7 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.queueWelcomeMessageIfEnabled(null);
     }
 
-    private static final void queueWelcomeMessageIfEnabled(@NotNull final String extra) {
+    private static final void queueWelcomeMessageIfEnabled(@Nullable final String extra) {
         DarkUtils.queueWelcomeMessageIfEnabled(extra, null);
     }
 
@@ -633,14 +610,14 @@ public final class DarkUtils implements ClientModInitializer {
             return;
         }
 
-        TickUtils.awaitLocalPlayer((player) -> {
+        TickUtils.awaitLocalPlayer(player -> {
             final var headerFooterColor = ChatUtils.hexToRGB(DarkUtils.HEADER_FOOTER_COLOR);
             final var headerFooterStyle = SimpleStyle.colored(headerFooterColor).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
 
             final var header = DarkUtils.cutInHalf(ChatUtils.fillRemainingOf('▬', true, ' ' + DarkUtils.class.getSimpleName() + ' ').replace(' ' + DarkUtils.class.getSimpleName() + ' ', ""));
             final var footer = ChatUtils.fill('▬', true);
 
-            final var vers = DarkUtils.getModAndMcVersion();
+            final var version = DarkUtils.getModAndMcVersion();
 
             final var text = TextBuilder
                     .withInitial(header.first(), headerFooterStyle)
@@ -649,7 +626,7 @@ public final class DarkUtils implements ClientModInitializer {
                     .appendSpace()
                     .append(header.second(), headerFooterStyle)
                     .appendDoubleNewLine()
-                    .appendGradientText(DarkUtils.GRADIENT_START, DarkUtils.GRADIENT_END, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + vers.first() + " for " + vers.second() + '!', SimpleStyle
+                    .appendGradientText(DarkUtils.GRADIENT_START, DarkUtils.GRADIENT_END, "Welcome to " + DarkUtils.class.getSimpleName() + " v" + version.first() + " for " + version.second() + '!', SimpleStyle
                             .centered()
                             .also(SimpleStyle.formatted(SimpleFormatting.BOLD))
                     );
@@ -662,11 +639,11 @@ public final class DarkUtils implements ClientModInitializer {
 
             if (hasExtra) {
                 text.appendNewLine()
-                    .appendGradientText(DarkUtils.GRADIENT_START, DarkUtils.GRADIENT_END, extra, SimpleStyle
-                            .centered()
-                            .also(SimpleStyle.formatted(SimpleFormatting.BOLD)),
-                            link
-                    );
+                        .appendGradientText(DarkUtils.GRADIENT_START, DarkUtils.GRADIENT_END, extra, SimpleStyle
+                                        .centered()
+                                        .also(SimpleStyle.formatted(SimpleFormatting.BOLD)),
+                                link
+                        );
             }
 
             text
@@ -780,6 +757,77 @@ public final class DarkUtils implements ClientModInitializer {
         ChatUtils.sendMessageToLocalPlayer(text);
     }
 
+    private static final void runRateLimitedManualUpdateCheck() {
+        final var now = System.nanoTime();
+        final var last = DarkUtils.lastManualUpdateCheckTimeNs;
+
+        if (0L != last && now - last < DarkUtils.ONE_MINUTE_NS) {
+            DarkUtils.user("Please wait a minute before running the update check again.", DarkUtils.UserMessageLevel.USER_ERROR);
+            return;
+        }
+
+        DarkUtils.lastManualUpdateCheckTimeNs = now;
+
+        // Will still check even if disabled on config since user explicitly entered the command.
+        DarkUtils.checkUpdates();
+    }
+
+    /**
+     * This entrypoint is suitable for setting up client-specific logic, such as rendering.
+     */
+    @Override
+    public final void onInitializeClient() {
+        try {
+            //TickUtils.queueRepeatingTickTask(DarkUtils::onTick, 1);
+
+            // Register mod commands
+            DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, DarkUtils::openConfig, "darkutil", "du");
+            DarkUtils.registerCommandWithAliases("darkutilsdebug", DarkUtils::debugState, "darkutildebug", "dudbg");
+            DarkUtils.registerCommandWithAliases("darkutilscheckupdates", DarkUtils::runRateLimitedManualUpdateCheck, "darkutilscheckupdate", "duupdate");
+            /*DarkUtils.registerCommandWithAliases("darkutilstestupdateoutput", () -> {
+                // A dummy latest release that is newer than the current release for testing purposes.
+                // Tag name and HTML url required for the link to appear, rest can be null and false.
+                final var mockRelease = new UpdateChecker.GitHubRelease("v999.9.9", null, null, false, false, "https://github.com/TheDGOfficial/DarkUtils/releases/tag/v999.9.9", null, null);
+                final boolean[] booleans = { true, false };
+                for (final var fancy : booleans) {
+                    for (final var res : UpdateChecker.UpdateCheckerResult.values()) {
+                        DarkUtils.notifyUpdateCheckerResult(fancy, res, mockRelease);
+                    }
+                }
+            });*/
+            //DarkUtils.registerCommandWithAliases("dumpleaks", DarkUtils::dumpLeaks);
+
+            // Init custom events that wrap fabric events, other things depend on them
+            DarkUtils.initEvents();
+
+            // Init utils, features may depend on those so they should be init before features
+            DarkUtils.initUtils();
+
+            // Init feature dependencies, features will depend on those so they should be init before features
+            DarkUtils.initFeatureDependencies();
+
+            // Init features
+            DarkUtils.initFeatures();
+
+            // Run update checker and greet user depending on version
+            DarkUtils.checkUpdatesAndGreet();
+        } catch (final Throwable error) {
+            DarkUtils.error(DarkUtils.class, "Error during mod initialization", error);
+        }
+    }
+
+    public enum UserMessageLevel {
+        USER_INFO("#36393e"),
+        USER_WARN("#F4E051"),
+        USER_ERROR("#FF3434");
+
+        private final int rgb;
+
+        private UserMessageLevel(@NotNull final String hex) {
+            this.rgb = ChatUtils.hexToRGB(hex);
+        }
+    }
+
     /*@NotNull
     private static final Set<ClientWorld> oldWorlds = Collections.newSetFromMap(new WeakHashMap<>(64));
 
@@ -827,62 +875,13 @@ public final class DarkUtils implements ClientModInitializer {
         ChatUtils.sendMessageToLocalPlayer(text);
     }*/
 
-    private static final void runRateLimitedManualUpdateCheck() {
-        final var now = System.nanoTime();
-        final var last = DarkUtils.lastManualUpdateCheckTimeNs;
-
-        if (0L != last && now - last < DarkUtils.ONE_MINUTE_NS) {
-            DarkUtils.user("Please wait a minute before running the update check again.", DarkUtils.UserMessageLevel.USER_ERROR);
-            return;
-        }
-
-        DarkUtils.lastManualUpdateCheckTimeNs = now;
-
-        // Will still check even if disabled on config since user explicitly entered the command.
-        DarkUtils.checkUpdates();
+    @FunctionalInterface
+    private interface UserMessageMethod {
+        void accept(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level);
     }
 
-    /**
-     * This entrypoint is suitable for setting up client-specific logic, such as rendering.
-     */
-    @Override
-    public final void onInitializeClient() {
-        try {
-            //TickUtils.queueRepeatingTickTask(DarkUtils::onTick, 1);
-
-            // Register mod commands
-            DarkUtils.registerCommandWithAliases(DarkUtils.MOD_ID, DarkUtils::openConfig, "darkutil", "du");
-            DarkUtils.registerCommandWithAliases("darkutilsdebug", DarkUtils::debugState, "darkutildebug", "dudbg");
-            DarkUtils.registerCommandWithAliases("darkutilscheckupdates", DarkUtils::runRateLimitedManualUpdateCheck, "darkutilscheckupdate", "duupdate");
-            /*DarkUtils.registerCommandWithAliases("darkutilstestupdateoutput", () -> {
-                // A dummy latest release that is newer than the current release for testing purposes.
-                // Tag name and html url required for the link to appear, rest can be null and false.
-                final var mockRelease = new UpdateChecker.GitHubRelease("v999.9.9", null, null, false, false, "https://github.com/TheDGOfficial/DarkUtils/releases/tag/v999.9.9", null, null);
-                final boolean[] bools = { true, false };
-                for (final var fancy : bools) {
-                    for (final var res : UpdateChecker.UpdateCheckerResult.values()) {
-                        DarkUtils.notifyUpdateCheckerResult(fancy, res, mockRelease);
-                    }
-                }
-            });*/
-            //DarkUtils.registerCommandWithAliases("dumpleaks", DarkUtils::dumpLeaks);
-
-            // Init custom events that wrap fabric events, other things depend on them
-            DarkUtils.initEvents();
-
-            // Init utils, features may depend on those so they should be init before features
-            DarkUtils.initUtils();
-
-            // Init feature dependencies, features will depend on those so they should be init before features
-            DarkUtils.initFeatureDependencies();
-
-            // Init features
-            DarkUtils.initFeatures();
-
-            // Run update checker and greet user depending on version
-            DarkUtils.checkUpdatesAndGreet();
-        } catch (final Throwable error) {
-            DarkUtils.error(DarkUtils.class, "Error during mod initialization", error);
-        }
+    @FunctionalInterface
+    private interface UserMessageMethodWithLink {
+        void accept(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level, @Nullable final LinkData link);
     }
 }

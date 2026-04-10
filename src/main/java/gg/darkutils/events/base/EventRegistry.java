@@ -4,11 +4,10 @@ import gg.darkutils.events.base.impl.EventRegistryImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.function.Consumer;
-
 /**
  * Defines a {@link EventRegistry}.
  */
+@FunctionalInterface
 public interface EventRegistry {
     /**
      * Returns a basic central {@link EventRegistry} that can be used to register events.

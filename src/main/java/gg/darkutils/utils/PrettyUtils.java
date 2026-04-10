@@ -1,8 +1,8 @@
 package gg.darkutils.utils;
 
-import java.util.concurrent.TimeUnit;
-
 import org.jetbrains.annotations.NotNull;
+
+import java.util.concurrent.TimeUnit;
 
 public final class PrettyUtils {
     private static final long SECONDS_PER_DAY = TimeUnit.DAYS.toSeconds(1L);
@@ -11,6 +11,12 @@ public final class PrettyUtils {
 
     private static final long HUNDRED_MS_AS_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
 
+    private PrettyUtils() {
+        super();
+
+        throw new UnsupportedOperationException("static utility class");
+    }
+
     @NotNull
     public static final String formatPercentage(final double value) {
         // truncate to 1 decimal place without rounding
@@ -18,11 +24,7 @@ public final class PrettyUtils {
 
         // if the result is effectively integer, drop the decimal
         final var dropped = (long) scaled;
-        if (scaled == dropped) {
-            return dropped + "%";
-        }
-
-        return scaled + "%";
+        return (MathUtils.isNearEqual(scaled, dropped) ? dropped : scaled) + "%";
     }
 
     @NotNull
@@ -96,6 +98,6 @@ public final class PrettyUtils {
 
         // fall back to existing formatter for large values
         return PrettyUtils.formatSeconds(wholeSeconds);
-    }    
+    }
 }
 

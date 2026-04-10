@@ -7,14 +7,14 @@ import gg.darkutils.events.SlotClickEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.ChatUtils;
-import org.jetbrains.annotations.NotNull;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.ScreenHandlerType;
+import org.jetbrains.annotations.NotNull;
 
 public final class EnforceZorrosCape {
     private EnforceZorrosCape() {
@@ -37,7 +37,7 @@ public final class EnforceZorrosCape {
     }
 
     private static final void onTick() {
-        // No config check, still need to track zorro's cape equip status in case user enables/disables the feature to not desync the state from the real state.
+        // No config check, still need to track Zorro's cape equip status in case user enables/disables the feature to not desync the state from the real state.
         final ScreenHandler screenHandler;
 
         if (!(MinecraftClient.getInstance().currentScreen instanceof final GenericContainerScreen container) || ScreenHandlerType.GENERIC_9X6 != (screenHandler = container.getScreenHandler()).type || !"Your Equipment and Stats".equals(ChatUtils.removeControlCodes(container.getTitle().getString()))) {
@@ -47,7 +47,7 @@ public final class EnforceZorrosCape {
         { // new scope so that slots variable is not available for use outside the block
             final var slots = screenHandler.slots;
 
-            if (slots.size() == 90) {
+            if (90 == slots.size()) {
                 final var stack = slots.get(19).getStack();
 
                 if (!stack.isEmpty()) {
@@ -71,10 +71,10 @@ public final class EnforceZorrosCape {
         // rest are possible indexes for contest items
         // out of radius items are glass pane or arrows
         // makes it short circuit and exit method early to avoid running more code later
-        if (i != 50 && !((i >= 10 && i <= 16) ||
-              (i >= 19 && i <= 25) ||
-              (i >= 28 && i <= 34) ||
-              (i >= 37 && i <= 43))) {
+        if (50 != i && !(10 <= i && 16 >= i ||
+                19 <= i && 25 >= i ||
+                28 <= i && 34 >= i ||
+                37 <= i && 43 >= i)) {
             return;
         }
 
@@ -92,11 +92,9 @@ public final class EnforceZorrosCape {
                 return;
             }
 
-            if ("Bulk Claim".equals(ChatUtils.removeControlCodes(customName.getString()))) {
-                if (!EnforceZorrosCape.hasEquipped()) {
-                    EnforceZorrosCape.notifyPlayer();
-                    event.cancellationState().cancel();
-                }
+            if ("Bulk Claim".equals(ChatUtils.removeControlCodes(customName.getString())) && !EnforceZorrosCape.hasEquipped()) {
+                EnforceZorrosCape.notifyPlayer();
+                event.cancellationState().cancel();
             }
 
             return;

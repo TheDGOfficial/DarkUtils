@@ -6,11 +6,11 @@ import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.LocationUtils;
-import gg.darkutils.utils.RenderUtils;
-import gg.darkutils.utils.TickUtils;
+import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.PrettyUtils;
+import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.ScoreboardUtil;
-import gg.darkutils.utils.chat.ChatUtils;
+import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
@@ -25,14 +25,13 @@ import net.minecraft.util.Identifier;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2fStack;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-
-import org.joml.Matrix3x2fStack;
 
 public final class DungeonTimer {
     private static final long TICK_NANOS = TimeUnit.MILLISECONDS.toNanos(50L);
@@ -276,7 +275,7 @@ public final class DungeonTimer {
 
         final var text = DungeonTimer.MIN_DISPLAY_LAG_NANO <= lagNano
                 ? prettyName + ": " + PrettyUtils.formatSeconds(phaseTime)
-                + " (-" + PrettyUtils.formatNanosAsSeconds(lagNano) + " lag)"
+                  + " (-" + PrettyUtils.formatNanosAsSeconds(lagNano) + " lag)"
                 : prettyName + ": " + PrettyUtils.formatSeconds(phaseTime);
 
         line.renderingText().setText(text);
@@ -505,14 +504,10 @@ public final class DungeonTimer {
         final var lineHeight = textRenderer.fontHeight;
         final var lineSpacing = 7; // TODO find best value, maybe increase it to 8
 
-        final var iconSize = 16;
-        final var iconTextGap = 4;
-
         final var offsetX = DarkUtilsConfig.INSTANCE.dungeonTimerOffsetX;
         final var offsetY = DarkUtilsConfig.INSTANCE.dungeonTimerOffsetY;
 
         final var baseTextX = RenderUtils.CHAT_ALIGNED_X + RenderUtils.CHAT_ALIGNED_X * 10 + offsetX;
-        final var baseIconX = baseTextX - (iconSize + iconTextGap);
 
         final var totalHeight = DungeonTimer.linesSize * (lineHeight + lineSpacing) - lineSpacing;
         final var baseY = RenderUtils.MIDDLE_ALIGNED_Y.getAsInt() - (totalHeight >> 1) + offsetY;
@@ -521,7 +516,7 @@ public final class DungeonTimer {
 
         Matrix3x2fStack matrices = null;
 
-        if (1.0F != scale) {
+        if (!MathUtils.isNearEqual(1.0D, scale)) {
             matrices = context.getMatrices();
             matrices.pushMatrix();
 
@@ -529,6 +524,10 @@ public final class DungeonTimer {
             matrices.scale(scale, scale);
             matrices.translate(-baseTextX, -baseY);
         }
+
+        final var iconSize = 16;
+        final var iconTextGap = 4;
+        final var baseIconX = baseTextX - (iconSize + iconTextGap);
 
         for (int i = 0, len = DungeonTimer.linesSize; i < len; ++i) {
             final var line = DungeonTimer.activeLines.get(i);
@@ -541,7 +540,7 @@ public final class DungeonTimer {
                         context,
                         line.optionalItemIcon(),
                         baseIconX,
-                        y - ((iconSize - lineHeight) >> 1)
+                        y - (iconSize - lineHeight >> 1)
                 );
             }
 
@@ -686,14 +685,6 @@ public final class DungeonTimer {
             }
 
             return DungeonTimer.DungeonFloor.VALUES[index];
-        }
-
-        private final int floor() {
-            return this.floor;
-        }
-
-        private final boolean isMaster() {
-            return this.master;
         }
     }
 

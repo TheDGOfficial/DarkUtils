@@ -1,29 +1,26 @@
 package gg.darkutils.feat.mining;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.data.PersistentData;
 import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
-import gg.darkutils.data.PersistentData;
-import gg.darkutils.utils.Pair;
 import gg.darkutils.utils.ActivityState;
-import gg.darkutils.utils.MathUtils;
-import gg.darkutils.utils.RoundingMode;
-import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.ScoreboardUtil;
+import gg.darkutils.utils.TickUtils;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.world.ClientWorld;
+import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.concurrent.TimeUnit;
-
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
-
-import org.jetbrains.annotations.NotNull;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 
 public final class MineshaftFeatures {
     private static final long MINESHAFT_DESPAWN_TIME = TimeUnit.SECONDS.toNanos(30L);
@@ -37,21 +34,11 @@ public final class MineshaftFeatures {
 
     @NotNull
     private static final Map<String, Consumer<ReceiveGameMessageEvent>> MESSAGE_HANDLERS = Map.of(
-            "  LAPIS CORPSE LOOT! ",  e -> {
-                MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.LAPIS);
-            },
-            "  UMBER CORPSE LOOT! ", e -> {
-                MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.UMBER);
-            },
-            "  TUNGSTEN CORPSE LOOT! ", e -> {
-                MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.TUNGSTEN);
-            },
-            "  VANGUARD CORPSE LOOT! ", e -> {
-                MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.VANGUARD);
-            },
-            "WOW! You found a Glacite Mineshaft portal!", e -> {
-                MineshaftFeatures.mineshaftDespawnsAt = System.nanoTime() + MineshaftFeatures.MINESHAFT_DESPAWN_TIME;
-            }
+            "  LAPIS CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.LAPIS),
+            "  UMBER CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.UMBER),
+            "  TUNGSTEN CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.TUNGSTEN),
+            "  VANGUARD CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.VANGUARD),
+            "WOW! You found a Glacite Mineshaft portal!", e -> MineshaftFeatures.mineshaftDespawnsAt = System.nanoTime() + MineshaftFeatures.MINESHAFT_DESPAWN_TIME
     );
 
     public static long mineshaftEnter;
@@ -88,7 +75,7 @@ public final class MineshaftFeatures {
                 }
             }
         } else {
-            MineshaftFeatures.mineshaftEnter = 0;
+            MineshaftFeatures.mineshaftEnter = 0L;
 
             if (ActivityState.isActivelyMining() && LocationUtils.isInDwarvenMines() && MineshaftFeatures.IN_GLACITE_TUNNELS.getAsBoolean()) {
                 MineshaftFeatures.activeMiningTimeSinceLastShaft += MineshaftFeatures.TICK_NANOS;
@@ -97,18 +84,12 @@ public final class MineshaftFeatures {
     }
 
     private static final boolean isInGlaciteTunnels() {
-        return ScoreboardUtil.forEachScoreboardLine(line -> {
-            if (line.contains("Glacite Tunnels")) {
-                return ScoreboardUtil.returning(true);
-            }
-
-            return ScoreboardUtil.continuing();
-        }, false);
+        return ScoreboardUtil.forEachScoreboardLine(line -> line.contains("Glacite Tunnels") ? ScoreboardUtil.returning(true) : ScoreboardUtil.continuing(), false);
     }
 
     private static final void appendTime(final long duration) {
         if (null == PersistentData.INSTANCE.timeTookForShafts) {
-            PersistentData.INSTANCE.timeTookForShafts = new long[] { duration };
+            PersistentData.INSTANCE.timeTookForShafts = new long[]{duration};
             MineshaftFeatures.averageSpawnTime = duration;
             return;
         }
@@ -132,9 +113,9 @@ public final class MineshaftFeatures {
         }
 
         MineshaftFeatures.averageSpawnTime = Arrays.stream(PersistentData.INSTANCE.timeTookForShafts)
-            .mapToDouble(value -> value)
-            .average()
-            .orElse(0.0);
+                .mapToDouble(value -> value)
+                .average()
+                .orElse(0.0);
     }
 
     private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
@@ -156,21 +137,40 @@ public final class MineshaftFeatures {
     }
 
     private enum CorpseType {
-        LAPIS, UMBER, TUNGSTEN, VANGUARD;
+        LAPIS(v -> PersistentData.INSTANCE.lapisCorpsesOpened += v),
+        UMBER(v -> PersistentData.INSTANCE.umberCorpsesOpened += v),
+        TUNGSTEN(v -> PersistentData.INSTANCE.tungstenCorpsesOpened += v),
+        VANGUARD(v -> PersistentData.INSTANCE.vanguardCorpsesOpened += v);
+
+        private final @NonNull IntConsumer incrementer;
+
+        private CorpseType(final @NonNull IntConsumer incrementer) {
+            this.incrementer = incrementer;
+        }
+
+        private final void increment(final int amount) {
+            this.incrementer.accept(amount);
+        }
     }
 
     private static final class CorpseDataHolder {
-        private static final int[] foundCorpseForType = new int[MineshaftFeatures.CorpseType.values().length];
-        private static final int[] lastFoundCorpseForType = new int[MineshaftFeatures.CorpseType.values().length];
+        private static final int @NonNull [] foundCorpseForType = new int[MineshaftFeatures.CorpseType.values().length];
+        private static final int @NonNull [] lastFoundCorpseForType = new int[MineshaftFeatures.CorpseType.values().length];
 
-        private static final void incrementFound(@NotNull final CorpseType type) {
-            ++foundCorpseForType[type.ordinal()];
+        private CorpseDataHolder() {
+            super();
+
+            throw new UnsupportedOperationException("static-only class");
+        }
+
+        private static final void incrementFound(@NotNull final MineshaftFeatures.CorpseType type) {
+            ++MineshaftFeatures.CorpseDataHolder.foundCorpseForType[type.ordinal()];
         }
 
         private static final void finalizeAllFound() {
             var atLeastOne = false;
 
-            for (var i = 0; i < MineshaftFeatures.CorpseDataHolder.foundCorpseForType.length; ++i) {
+            for (int i = 0, len = MineshaftFeatures.CorpseDataHolder.foundCorpseForType.length; i < len; ++i) {
                 final var foundAmount = MineshaftFeatures.CorpseDataHolder.foundCorpseForType[i];
                 if (0 != foundAmount) {
                     MineshaftFeatures.CorpseDataHolder.lastFoundCorpseForType[i] = foundAmount;
@@ -189,16 +189,11 @@ public final class MineshaftFeatures {
             ++PersistentData.INSTANCE.shaftsEntered;
 
             final var types = MineshaftFeatures.CorpseType.values();
-            for (var i = 0; i < MineshaftFeatures.CorpseDataHolder.lastFoundCorpseForType.length; ++i) {
+            for (int i = 0, len = MineshaftFeatures.CorpseDataHolder.lastFoundCorpseForType.length; i < len; ++i) {
                 final var foundAmount = MineshaftFeatures.CorpseDataHolder.lastFoundCorpseForType[i];
 
                 if (0 != foundAmount) {
-                    switch (types[i]) {
-                        case LAPIS -> PersistentData.INSTANCE.lapisCorpsesOpened += foundAmount;
-                        case UMBER -> PersistentData.INSTANCE.umberCorpsesOpened += foundAmount;
-                        case TUNGSTEN -> PersistentData.INSTANCE.tungstenCorpsesOpened += foundAmount;
-                        case VANGUARD -> PersistentData.INSTANCE.vanguardCorpsesOpened += foundAmount;
-                    }
+                    types[i].increment(foundAmount);
                 }
             }
         }

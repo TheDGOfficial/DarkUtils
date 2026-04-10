@@ -1,13 +1,12 @@
 package gg.darkutils.utils.chat;
 
-import gg.darkutils.utils.chat.LinkData;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Style;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.net.URI;
 
 /**
@@ -37,6 +36,22 @@ public final class TextBuilder {
     @NotNull
     public static final TextBuilder withInitial(@NotNull final String initialText, @NotNull final SimpleStyle initialTextStyle) {
         return new TextBuilder(initialText, initialTextStyle);
+    }
+
+    private static final void addGradientLink(@NotNull final String startHex, @NotNull final String endHex, @NotNull final MutableText text, @NotNull final LinkData link, final boolean bold) {
+        TextBuilder.addLink(text, ChatUtils.gradient(startHex, endHex, link.hover(), bold), link.link());
+    }
+
+    private static final void addLink(@NotNull final MutableText text, @NotNull final LinkData link) {
+        TextBuilder.addLink(text, Text.literal(link.hover()).setStyle(text.getStyle()), link.link());
+    }
+
+    private static final void addLink(@NotNull final MutableText text, @NotNull final MutableText hover, @NotNull final String link) {
+        text.setStyle(
+                text.getStyle()
+                        .withHoverEvent(new HoverEvent.ShowText(hover))
+                        .withClickEvent(new ClickEvent.OpenUrl(URI.create(link)))
+        );
     }
 
     @NotNull
@@ -106,22 +121,6 @@ public final class TextBuilder {
 
         this.text.append(literal);
         return this;
-    }
-
-    private static final void addGradientLink(@NotNull final String startHex, @NotNull final String endHex, @NotNull final MutableText text, @NotNull final LinkData link, final boolean bold) {
-        TextBuilder.addLink(text, ChatUtils.gradient(startHex, endHex, link.hover(), bold), link.link());
-    }
-
-    private static final void addLink(@NotNull final MutableText text, @NotNull final LinkData link) {
-        TextBuilder.addLink(text, Text.literal(link.hover()).setStyle(text.getStyle()), link.link());
-    }
-
-    private static final void addLink(@NotNull final MutableText text, @NotNull final MutableText hover, @NotNull final String link) {
-        text.setStyle(
-            text.getStyle()
-                .withHoverEvent(new HoverEvent.ShowText(hover))
-                .withClickEvent(new ClickEvent.OpenUrl(URI.create(link)))
-        );
     }
 
     /**

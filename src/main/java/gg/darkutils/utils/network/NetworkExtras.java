@@ -1,12 +1,19 @@
 package gg.darkutils.utils.network;
 
+import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
+
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 
-import org.jetbrains.annotations.NotNull;
+final class NetworkExtras {
+    private static final HttpClient.@NonNull Version OPTIMAL_HTTP_VERSION = NetworkExtras.detectOptimalHttpVersion();
 
-public final class NetworkExtras {
-    private static final HttpClient.Version OPTIMAL_HTTP_VERSION = NetworkExtras.detectOptimalHttpVersion();
+    private NetworkExtras() {
+        super();
+
+        throw new UnsupportedOperationException("static utility class");
+    }
 
     @NotNull
     private static final HttpClient.Version detectOptimalHttpVersion() {
