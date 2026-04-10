@@ -10,9 +10,11 @@ import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RoundingMode;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.LocationUtils;
+import gg.darkutils.utils.ScoreboardUtil;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +28,10 @@ import org.jetbrains.annotations.NotNull;
 public final class MineshaftFeatures {
     private static final long MINESHAFT_DESPAWN_TIME = TimeUnit.SECONDS.toNanos(30L);
     private static final long TICK_NANOS = TimeUnit.MILLISECONDS.toNanos(50L);
+
+    @NotNull
+    private static final BooleanSupplier IN_GLACITE_TUNNELS =
+            TickUtils.queueUpdatingCondition(MineshaftFeatures::isInGlaciteTunnels);
 
     public static long mineshaftDespawnsAt;
 
@@ -84,10 +90,20 @@ public final class MineshaftFeatures {
         } else {
             MineshaftFeatures.mineshaftEnter = 0;
 
-            if (ActivityState.isActivelyMining() && LocationUtils.isInDwarvenMines()) {
+            if (ActivityState.isActivelyMining() && LocationUtils.isInDwarvenMines() && MineshaftFeatures.IN_GLACITE_TUNNELS.getAsBoolean()) {
                 MineshaftFeatures.activeMiningTimeSinceLastShaft += MineshaftFeatures.TICK_NANOS;
             }
         }
+    }
+
+    private static final boolean isInGlaciteTunnels() {
+        return ScoreboardUtil.forEachScoreboardLine(line -> {
+            if (line.contains("Glacite Tunnels")) {
+                return ScoreboardUtil.returning(true);
+            }
+
+            return ScoreboardUtil.continuing();
+        }, false);
     }
 
     private static final void appendTime(final long duration) {

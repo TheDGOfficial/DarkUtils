@@ -9,6 +9,7 @@ import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.PrettyUtils;
+import gg.darkutils.utils.ScoreboardUtil;
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
@@ -18,7 +19,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -442,23 +442,7 @@ public final class DungeonTimer {
             return;
         }
 
-        // TODO Extract to a ScoreboardUtil class later
-        final var scoreboard = mc.player.networkHandler.getScoreboard();
-        final var objective = scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR);
-
-        if (null == objective) {
-            return;
-        }
-
-        for (final var scoreHolder : scoreboard.getKnownScoreHolders()) {
-            final var team = scoreboard.getScoreHolderTeam(scoreHolder.getNameForScoreboard());
-
-            if (null == team) {
-                continue;
-            }
-
-            final var line = ChatUtils.removeControlCodes(team.getPrefix().getString() + team.getSuffix().getString());
-
+        ScoreboardUtil.forEachScoreboardLine(line -> {
             if (line.contains("The Catacombs (")) {
                 final var floor = DungeonTimer.parseFloorFromScoreboard(line);
 
@@ -466,9 +450,11 @@ public final class DungeonTimer {
                     DungeonTimer.dungeonFloor = floor;
                 }
 
-                return;
+                return ScoreboardUtil.BREAK;
             }
-        }
+
+            return ScoreboardUtil.CONTINUE;
+        });
     }
 
     private static final void updateLines() {
