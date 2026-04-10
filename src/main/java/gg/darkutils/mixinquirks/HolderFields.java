@@ -1,7 +1,7 @@
 package gg.darkutils.mixinquirks;
 
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
@@ -24,7 +24,7 @@ public final class HolderFields {
     }
 
     public static final class FormattingCache {
-        public static final @NotNull Formatting @NotNull [] FORMATTING_VALUES = Formatting.values();
+        public static final @NotNull ChatFormatting @NotNull [] FORMATTING_VALUES = ChatFormatting.values();
 
         private FormattingCache() {
             super();
@@ -34,7 +34,7 @@ public final class HolderFields {
     }
 
     public static final class FirmamentValues {
-        public static final @NotNull Identifier MOD_LIST_IDENTIFIER = Identifier.of("firmament", "mod_list");
+        public static final @NotNull Identifier MOD_LIST_IDENTIFIER = Identifier.fromNamespaceAndPath("firmament", "mod_list");
 
         private FirmamentValues() {
             super();

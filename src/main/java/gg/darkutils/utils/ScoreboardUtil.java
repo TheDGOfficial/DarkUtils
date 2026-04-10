@@ -2,8 +2,8 @@ package gg.darkutils.utils;
 
 import gg.darkutils.utils.chat.ChatUtils;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.scores.DisplaySlot;
 
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -39,27 +39,27 @@ public final class ScoreboardUtil {
     }
 
     private static final <T> @Nullable T queryScoreboardLines(@NotNull final ScoreboardUtil.ScoreboardLineConsumer<T> action, @Nullable final T defaultValue) {
-        final var mc = MinecraftClient.getInstance();
+        final var mc = Minecraft.getInstance();
 
-        if (null == mc.player || null == mc.world) {
+        if (null == mc.player || null == mc.level) {
             return defaultValue;
         }
 
-        final var scoreboard = mc.player.networkHandler.getScoreboard();
-        final var objective = scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR);
+        final var scoreboard = mc.player.connection.scoreboard();
+        final var objective = scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR);
 
         if (null == objective) {
             return defaultValue;
         }
 
-        for (final var scoreHolder : scoreboard.getKnownScoreHolders()) {
-            final var team = scoreboard.getScoreHolderTeam(scoreHolder.getNameForScoreboard());
+        for (final var scoreHolder : scoreboard.getTrackedPlayers()) {
+            final var team = scoreboard.getPlayersTeam(scoreHolder.getScoreboardName());
 
             if (null == team) {
                 continue;
             }
 
-            final var line = ChatUtils.removeControlCodes(team.getPrefix().getString() + team.getSuffix().getString());
+            final var line = ChatUtils.removeControlCodes(team.getPlayerPrefix().getString() + team.getPlayerSuffix().getString());
             final var result = action.accept(line);
 
             switch (result) {
@@ -67,7 +67,7 @@ public final class ScoreboardUtil {
                     return returning.getReturnValue();
                 }
 
-                case final ScoreboardUtil.Continue<?> continuing -> {
+                case ScoreboardUtil.Continue<?>() -> {
                     // implicit continue
                 }
             }

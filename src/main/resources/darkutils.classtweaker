@@ -1,5 +1,5 @@
 classTweaker v1 named
-accessible field net/minecraft/entity/LivingEntity equipment Lnet/minecraft/entity/EntityEquipment;
-accessible method net/minecraft/client/MinecraftClient doItemUse ()V
-accessible field net/minecraft/screen/ScreenHandler type Lnet/minecraft/screen/ScreenHandlerType;
-accessible method net/minecraft/client/gui/hud/ChatHud getWidth ()I
+accessible field net/minecraft/world/entity/LivingEntity equipment Lnet/minecraft/world/entity/EntityEquipment;
+accessible method net/minecraft/client/Minecraft startUseItem ()V
+accessible field net/minecraft/world/inventory/AbstractContainerMenu menuType Lnet/minecraft/world/inventory/MenuType;
+accessible method net/minecraft/client/gui/components/ChatComponent getWidth ()I

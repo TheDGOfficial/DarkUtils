@@ -1,21 +1,21 @@
 package gg.darkutils.utils;
 
 import gg.darkutils.utils.chat.ChatUtils;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.ArmorStandEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.registry.tag.ItemTags;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,7 +25,7 @@ import java.util.function.Predicate;
 
 public final class Helpers {
     @NotNull
-    private static final BlockState AIR_STATE = Blocks.AIR.getDefaultState();
+    private static final BlockState AIR_STATE = Blocks.AIR.defaultBlockState();
     @Nullable
     private static BlockState targetedBlock;
     @Nullable
@@ -67,9 +67,9 @@ public final class Helpers {
             return cached;
         }
 
-        final var mc = MinecraftClient.getInstance();
-        final var world = mc.world;
-        return Helpers.targetedBlock = null == world || !(mc.crosshairTarget instanceof final BlockHitResult blockHitResult) ? Helpers.AIR_STATE : world.getBlockState(blockHitResult.getBlockPos());
+        final var mc = Minecraft.getInstance();
+        final var world = mc.level;
+        return Helpers.targetedBlock = null == world || !(mc.hitResult instanceof final BlockHitResult blockHitResult) ? Helpers.AIR_STATE : world.getBlockState(blockHitResult.getBlockPos());
     }
 
     public static final boolean doesTargetedBlockMatch(@NotNull final Predicate<BlockState> matcher) {
@@ -79,37 +79,37 @@ public final class Helpers {
 
     @NotNull
     public static final Predicate<BlockState> isButton() {
-        return state -> state.isIn(BlockTags.BUTTONS);
+        return state -> state.is(BlockTags.BUTTONS);
     }
 
     @NotNull
     public static final Predicate<BlockState> isLever() {
-        return state -> state.isOf(Blocks.LEVER);
+        return state -> state.is(Blocks.LEVER);
     }
 
     @NotNull
     public static final Predicate<BlockState> isCraftingTable() {
-        return state -> state.isOf(Blocks.CRAFTING_TABLE);
+        return state -> state.is(Blocks.CRAFTING_TABLE);
     }
 
     @NotNull
     public static final Predicate<BlockState> isMushroom() {
-        return state -> state.isOf(Blocks.RED_MUSHROOM) || state.isOf(Blocks.BROWN_MUSHROOM);
+        return state -> state.is(Blocks.RED_MUSHROOM) || state.is(Blocks.BROWN_MUSHROOM);
     }
 
     @NotNull
     public static final Predicate<BlockState> isRedstoneBlock() {
-        return state -> state.isOf(Blocks.REDSTONE_BLOCK);
+        return state -> state.is(Blocks.REDSTONE_BLOCK);
     }
 
     @NotNull
     public static final Predicate<BlockState> isCommandBlock() {
-        return state -> state.isOf(Blocks.COMMAND_BLOCK);
+        return state -> state.is(Blocks.COMMAND_BLOCK);
     }
 
     @NotNull
     public static final Predicate<BlockState> isWoodenDoor() {
-        return state -> state.isIn(BlockTags.WOODEN_DOORS);
+        return state -> state.is(BlockTags.WOODEN_DOORS);
     }
 
     private static final boolean doesTargetedEntityMatch(@NotNull final Predicate<Entity> matcher) {
@@ -120,10 +120,10 @@ public final class Helpers {
             return null != et && matcher.test(et);
         }
 
-        final var mc = MinecraftClient.getInstance();
-        final var world = mc.world;
+        final var mc = Minecraft.getInstance();
+        final var world = mc.level;
 
-        if (null == world || !(mc.crosshairTarget instanceof final EntityHitResult entityHitResult)) {
+        if (null == world || !(mc.hitResult instanceof final EntityHitResult entityHitResult)) {
             Helpers.targetedEntity = Optional.empty();
             return false;
         }
@@ -136,7 +136,7 @@ public final class Helpers {
 
     public static final boolean isLookingAtATerminalEntity() {
         return Helpers.doesTargetedEntityMatch(entity -> {
-            if (entity instanceof ArmorStandEntity) {
+            if (entity instanceof ArmorStand) {
                 final String name;
 
                 final var cached = Helpers.targetedEntityName;
@@ -154,11 +154,11 @@ public final class Helpers {
     }
 
     @NotNull
-    public static final ItemStack getItemStackInHand(@NotNull final Hand hand) {
-        final var main = Hand.MAIN_HAND == hand;
+    public static final ItemStack getItemStackInHand(@NotNull final InteractionHand hand) {
+        final var main = InteractionHand.MAIN_HAND == hand;
 
         // Very unlikely check, branch predictor or even the C2 will realize the if is never true unless Mojang actually adds another enum value to Hand enum.
-        if (!main && Hand.OFF_HAND != hand) {
+        if (!main && InteractionHand.OFF_HAND != hand) {
             // We must be in the future and 3-handed player exists
             throw new UnsupportedOperationException("Helpers cache needs updating for new possible hand " + hand.name() + " (" + Helpers.class.getName() + ')');
         }
@@ -179,8 +179,8 @@ public final class Helpers {
             return cached;
         }
 
-        final var player = MinecraftClient.getInstance().player;
-        final var item = null == player ? ItemStack.EMPTY : player.getStackInHand(main ? Hand.MAIN_HAND : Hand.OFF_HAND);
+        final var player = Minecraft.getInstance().player;
+        final var item = null == player ? ItemStack.EMPTY : player.getItemInHand(main ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND);
 
         if (main) {
             Helpers.mainHandHeldItemStack = item;
@@ -221,11 +221,11 @@ public final class Helpers {
     }
 
     public static final boolean isHoldingADiamondHoeAxeOrSword() {
-        return Helpers.doesHeldItemMatch(stack -> stack.isOf(Items.DIAMOND_HOE) || stack.isOf(Items.DIAMOND_AXE) || stack.isOf(Items.DIAMOND_SWORD));
+        return Helpers.doesHeldItemMatch(stack -> stack.is(Items.DIAMOND_HOE) || stack.is(Items.DIAMOND_AXE) || stack.is(Items.DIAMOND_SWORD));
     }
 
     public static final boolean isHoldingASwordHuntaxeOrSpade() {
-        return Helpers.doesHeldItemMatch(stack -> stack.isIn(ItemTags.SWORDS) || Helpers.doesHeldItemNameMatch(stack, name -> name.contains("Huntaxe") || name.contains("Spade")));
+        return Helpers.doesHeldItemMatch(stack -> stack.is(ItemTags.SWORDS) || Helpers.doesHeldItemNameMatch(stack, name -> name.contains("Huntaxe") || name.contains("Spade")));
     }
 
     public static final boolean isHoldingARCMWeaponOrMatches(@NotNull final Predicate<String> matcher) {
@@ -251,21 +251,21 @@ public final class Helpers {
 
     private static final void displayCountdownTitlesInternal(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final ObjIntConsumer<TickUtils.TaskAction> queueMethod) {
         // Show the first number immediately
-        Helpers.notify(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, color + seconds);
+        Helpers.notify(SoundEvents.EXPERIENCE_ORB_PICKUP, color + seconds);
 
         // Queue the rest
         for (var i = seconds - 1; 0 < i; --i) {
             final var value = i;
             final var delay = 20 * (seconds - i);
             queueMethod.accept(
-                    () -> Helpers.notify(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, color + value),
+                    () -> Helpers.notify(SoundEvents.EXPERIENCE_ORB_PICKUP, color + value),
                     delay
             );
         }
 
         // Queue the final text
         queueMethod.accept(
-                () -> Helpers.notify(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), color + finalText),
+                () -> Helpers.notify(SoundEvents.NOTE_BLOCK_PLING.value(), color + finalText),
                 20 * seconds
         );
     }
@@ -275,11 +275,11 @@ public final class Helpers {
     }
 
     public static final void notify(@NotNull final SoundEvent sound, @NotNull final String text, final int ticks) {
-        final var client = MinecraftClient.getInstance();
+        final var client = Minecraft.getInstance();
 
         Helpers.playSound(sound, 1.0F, 1.0F);
-        client.inGameHud.setTitle(Text.of(text));
-        client.inGameHud.setTitleTicks(0, ticks, 0);
+        client.gui.setTitle(Component.nullToEmpty(text));
+        client.gui.setTimes(0, ticks, 0);
     }
 
     public static final void notifyForServerTicks(@NotNull final SoundEvent sound, @NotNull final String text, final int serverTicks) {
@@ -288,13 +288,13 @@ public final class Helpers {
     }
 
     private static final void notifyForServerTicks(@NotNull final SoundEvent sound, @NotNull final String text, final int serverTicks, @NotNull final Runnable afterDismissHook) {
-        final var client = MinecraftClient.getInstance();
+        final var client = Minecraft.getInstance();
 
         Helpers.playSound(sound, 1.0F, 1.0F);
-        client.inGameHud.setTitle(Text.of(text));
+        client.gui.setTitle(Component.nullToEmpty(text));
 
         // Hacky way to simulate server tick dismissal of the title
-        client.inGameHud.setTitleTicks(0, Integer.MAX_VALUE, 0);
+        client.gui.setTimes(0, Integer.MAX_VALUE, 0);
         TickUtils.queueServerTickTask(() -> {
             Helpers.clearTitle();
             afterDismissHook.run();
@@ -302,14 +302,14 @@ public final class Helpers {
     }
 
     private static final void clearTitle() {
-        final var client = MinecraftClient.getInstance();
+        final var client = Minecraft.getInstance();
 
-        client.inGameHud.setTitle(null);
-        client.inGameHud.setTitleTicks(0, Integer.MAX_VALUE, 0);
+        client.gui.setTitle(null);
+        client.gui.setTimes(0, Integer.MAX_VALUE, 0);
     }
 
     private static final void playSound(@NotNull final SoundEvent sound, final float volume, final float pitch) {
-        final var player = MinecraftClient.getInstance().player;
+        final var player = Minecraft.getInstance().player;
 
         if (null != player) {
             player.playSound(sound, volume, pitch);

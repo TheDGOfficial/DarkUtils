@@ -7,8 +7,8 @@ import gg.darkutils.utils.LogLevel;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,30 +28,30 @@ public final class DarkUtilsConfigScreen {
 
     private static final void addSimpleIntegerSetting(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, final int value, @NotNull final Consumer<Integer> setter, final int defaultValue, final int min, final int max) {
         configCategory.addEntry(configEntryBuilder
-                .startIntField(Text.of(name), value)
+                .startIntField(Component.nullToEmpty(name), value)
                 .setDefaultValue(defaultValue)
                 .setMin(min).setMax(max)
-                .setTooltip(Text.of(desc))
+                .setTooltip(Component.nullToEmpty(desc))
                 .setSaveConsumer(setter)
                 .build());
     }
 
     private static final void addSimpleFloatSetting(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, final float value, @NotNull final Consumer<Float> setter, final float defaultValue, final float min, final float max) {
         configCategory.addEntry(configEntryBuilder
-                .startFloatField(Text.of(name), value)
+                .startFloatField(Component.nullToEmpty(name), value)
                 .setDefaultValue(defaultValue)
                 .setMin(min)
                 .setMax(max)
-                .setTooltip(Text.of(desc))
+                .setTooltip(Component.nullToEmpty(desc))
                 .setSaveConsumer(setter)
                 .build());
     }
 
     private static final void addSimpleBooleanToggle(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, final boolean value, @NotNull final Consumer<Boolean> setter) {
         configCategory.addEntry(configEntryBuilder
-                .startBooleanToggle(Text.of(name), value)
+                .startBooleanToggle(Component.nullToEmpty(name), value)
                 .setDefaultValue(false)
-                .setTooltip(Text.of(desc))
+                .setTooltip(Component.nullToEmpty(desc))
                 .setSaveConsumer(setter)
                 .build());
     }
@@ -59,16 +59,16 @@ public final class DarkUtilsConfigScreen {
     @SuppressWarnings("unchecked") // safe
     private static final <T extends Enum<T>> void addEnumSetting(@NotNull final ConfigEntryBuilder configEntryBuilder, @NotNull final ConfigCategory configCategory, @NotNull final String name, @NotNull final String desc, @NotNull final T value, @NotNull final Consumer<T> setter, @NotNull final T defaultValue, @NotNull final Function<T, String> namePrettifier) {
         configCategory.addEntry(configEntryBuilder
-                .startEnumSelector(Text.of(name), defaultValue.getDeclaringClass(), value)
+                .startEnumSelector(Component.nullToEmpty(name), defaultValue.getDeclaringClass(), value)
                 .setDefaultValue(defaultValue)
                 .setSaveConsumer(setter)
-                .setTooltip(Text.of(desc))
-                .setEnumNameProvider(v -> Text.of(namePrettifier.apply((T) v)))
+                .setTooltip(Component.nullToEmpty(desc))
+                .setEnumNameProvider(v -> Component.nullToEmpty(namePrettifier.apply((T) v)))
                 .build());
     }
 
     private static final void addQualityOfLife(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
-        final var qol = builder.getOrCreateCategory(Text.of("Quality of Life"));
+        final var qol = builder.getOrCreateCategory(Component.nullToEmpty("Quality of Life"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Fishing",
                 "Automatically fishes for you in Hypixel SkyBlock. Does not kill the fished mobs (Recommended to treasure or trophy fish if you are going to leave it unattended). Requires Skyblock Menu->Settings->Personal->Fishing Settings->Fishing Status Holograms and Fishing Timer to be enabled.",
                 config.autoFishing, newValue -> config.autoFishing = newValue);
@@ -155,7 +155,7 @@ public final class DarkUtilsConfigScreen {
     }
 
     private static final void addForaging(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
-        final var foraging = builder.getOrCreateCategory(Text.of("Foraging"));
+        final var foraging = builder.getOrCreateCategory(Component.nullToEmpty("Foraging"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, foraging, "Tree Gift Confirmation",
                 "Displays a title and plays a sound when you get a Tree Gift, to confirm that you can move to the next tree. Also shows if you spawned a mob from the tree or not.",
                 config.treeGiftConfirmation, newValue -> config.treeGiftConfirmation = newValue);
@@ -166,7 +166,7 @@ public final class DarkUtilsConfigScreen {
     }
 
     private static final void addFarming(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
-        final var farming = builder.getOrCreateCategory(Text.of("Farming"));
+        final var farming = builder.getOrCreateCategory(Component.nullToEmpty("Farming"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Pest Cooldown Display",
                 "Shows a display with remaining pest cooldown, e.g., time until you can spawn your next pests.",
                 config.pestCooldownDisplay, newValue -> config.pestCooldownDisplay = newValue);
@@ -203,7 +203,7 @@ public final class DarkUtilsConfigScreen {
     }
 
     private static final void addMining(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
-        final var mining = builder.getOrCreateCategory(Text.of("Mining"));
+        final var mining = builder.getOrCreateCategory(Component.nullToEmpty("Mining"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, mining, "Corpses Per Shaft Display",
                 "Shows corpse statistics like % of found and opened corpses per shaft. Amount of shafts and opened corpses are automatically tracked when enabled.",
                 config.corpsesPerShaftDisplay, newValue -> config.corpsesPerShaftDisplay = newValue);
@@ -214,7 +214,7 @@ public final class DarkUtilsConfigScreen {
     }
 
     private static final void addDungeons(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
-        final var dungeons = builder.getOrCreateCategory(Text.of("Dungeons"));
+        final var dungeons = builder.getOrCreateCategory(Component.nullToEmpty("Dungeons"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Dialogue Skip Timer",
                 "Displays a timer for when to kill blood mobs to perform a watcher dialogue skip, speeding up the blood camp.",
                 config.dialogueSkipTimer, newValue -> config.dialogueSkipTimer = newValue);
@@ -275,7 +275,7 @@ public final class DarkUtilsConfigScreen {
     }
 
     private static final void addVisualTweaks(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
-        final var visual = builder.getOrCreateCategory(Text.of("Visual Tweaks"));
+        final var visual = builder.getOrCreateCategory(Component.nullToEmpty("Visual Tweaks"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Hide Effects HUD",
                 "Hides the potion/effects HUD on the top right of the screen for less visual clutter on screen. You can still see your effects when you open your inventory on the side.",
                 config.hideEffectsHud, newValue -> config.hideEffectsHud = newValue);
@@ -287,10 +287,6 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Transparent Player List",
                 "Makes Player List (Tab List) transparent for better visuals.",
                 config.transparentPlayerList, newValue -> config.transparentPlayerList = newValue);
-
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Remove Chat Scrollbar",
-                "Removes the little chat scrollbar in the right side of the chat from rendering.",
-                config.removeChatScrollbar, newValue -> config.removeChatScrollbar = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Fullbright",
                 "Makes the game appear as if everything had the best light level source.",
@@ -326,7 +322,7 @@ public final class DarkUtilsConfigScreen {
     }
 
     private static final void addPerformance(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
-        final var performance = builder.getOrCreateCategory(Text.of("Performance"));
+        final var performance = builder.getOrCreateCategory(Component.nullToEmpty("Performance"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable Yield",
                 "Disables thread yielding for performance. Vanilla Minecraft yields through Render thread after finishing rendering a frame before starting to render the next frame, which reduces the potential maximum FPS. Disabling the yielding improves FPS.",
                 config.disableYield, newValue -> config.disableYield = newValue);
@@ -411,7 +407,7 @@ public final class DarkUtilsConfigScreen {
     }
 
     private static final void addBugfixes(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
-        final var bugfixes = builder.getOrCreateCategory(Text.of("Bugfixes"));
+        final var bugfixes = builder.getOrCreateCategory(Component.nullToEmpty("Bugfixes"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix GUI Scale After Toggling Fullscreen Off",
                 "Fixes GUI scale getting tiny after leaving fullscreen.",
                 config.fixGuiScaleAfterFullscreen, newValue -> config.fixGuiScaleAfterFullscreen = newValue);
@@ -438,7 +434,7 @@ public final class DarkUtilsConfigScreen {
     }
 
     private static final void addDevelopment(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
-        final var development = builder.getOrCreateCategory(Text.of("Development"));
+        final var development = builder.getOrCreateCategory(Component.nullToEmpty("Development"));
 
         DarkUtilsConfigScreen.addEnumSetting(entryBuilder, development, "In-Game Log Level", "Allows you to change at what threshold log messages should also be printed to in-game chat for development. Do not change unless instructed or know what you are doing.", config.ingameLogLevel, newValue -> config.ingameLogLevel = newValue, LogLevel.WARN, LogLevel::prettyName);
 
@@ -456,7 +452,7 @@ public final class DarkUtilsConfigScreen {
 
         final var builder = ConfigBuilder.create()
                 .setParentScreen(parent)
-                .setTitle(Text.of("DarkUtils v" + version.first() + " for Minecraft " + version.second() + " Settings"))
+                .setTitle(Component.nullToEmpty("DarkUtils v" + version.first() + " for Minecraft " + version.second() + " Settings"))
                 .setSavingRunnable(DarkUtilsConfig::save);
 
         final var entryBuilder = builder.entryBuilder();

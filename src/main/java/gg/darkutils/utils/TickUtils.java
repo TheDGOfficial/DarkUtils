@@ -5,8 +5,8 @@ import gg.darkutils.annotations.PrivateFields;
 import gg.darkutils.events.ServerTickEvent;
 import gg.darkutils.events.base.EventRegistry;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,7 +20,7 @@ public final class TickUtils {
     private static final @NotNull ConcurrentLinkedQueue<TickUtils.Task> tasks = new ConcurrentLinkedQueue<>();
     private static final @NotNull ConcurrentLinkedQueue<TickUtils.Task> serverTasks = new ConcurrentLinkedQueue<>();
 
-    private static final @NotNull Supplier<ClientPlayerEntity> localPlayer = () -> MinecraftClient.getInstance().player;
+    private static final @NotNull Supplier<LocalPlayer> localPlayer = () -> Minecraft.getInstance().player;
 
     static {
         ClientTickEvents.END_CLIENT_TICK.register(client -> TickUtils.processAwaitingTasks());
@@ -112,7 +112,7 @@ public final class TickUtils {
      *
      * @param action The action.
      */
-    public static final void awaitLocalPlayer(@NotNull final Consumer<ClientPlayerEntity> action) {
+    public static final void awaitLocalPlayer(@NotNull final Consumer<LocalPlayer> action) {
         Objects.requireNonNull(action, "action");
 
         if (RenderUtils.isNotCallingFromRenderThread()) {
@@ -133,13 +133,13 @@ public final class TickUtils {
      *
      * @param action The action.
      */
-    private static final void awaitLocalPlayerInternal(@NotNull final Consumer<ClientPlayerEntity> action) {
+    private static final void awaitLocalPlayerInternal(@NotNull final Consumer<LocalPlayer> action) {
         RenderUtils.validateRenderThread();
 
         Objects.requireNonNull(action, "action");
 
         // Array wrapping to bypass final variable requirement inside the lambda
-        final var player = new ClientPlayerEntity[]{TickUtils.localPlayer.get()};
+        final var player = new LocalPlayer[]{TickUtils.localPlayer.get()};
 
         // The player will not be null once they join a (singleplayer) world, (dedicated) server or realm.
         TickUtils.awaitCondition(() -> null != (player[0] = TickUtils.localPlayer.get()), () -> action.accept(player[0]));

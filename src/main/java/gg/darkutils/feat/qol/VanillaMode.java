@@ -7,7 +7,7 @@ import gg.darkutils.events.ConfigScreenOpenEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.TickUtils;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -91,7 +91,7 @@ public final class VanillaMode {
     }
 
     private static final boolean isNoScreenOpen() {
-        return null == MinecraftClient.getInstance().currentScreen;
+        return null == Minecraft.getInstance().screen;
     }
 
     private static final void onJoinSingleplayer() {

@@ -9,12 +9,12 @@ import gg.darkutils.utils.RoundingMode;
 import gg.darkutils.utils.TickUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -64,7 +64,7 @@ public final class ChatUtils {
         EventRegistry.centralRegistry().addListener(ChatUtils::onCommand);
     }
 
-    private static final void onTick(@NotNull final MinecraftClient client) {
+    private static final void onTick(@NotNull final Minecraft client) {
         final var player = client.player;
         if (null == player || ChatUtils.sendMessageQueue.isEmpty()) {
             return;
@@ -78,7 +78,7 @@ public final class ChatUtils {
 
         final var messageOrCommand = ChatUtils.sendMessageQueue.dequeue();
         if (null != messageOrCommand && !messageOrCommand.isEmpty()) {
-            player.networkHandler.sendChatMessage(messageOrCommand);
+            player.connection.sendChat(messageOrCommand);
         }
     }
 
@@ -86,25 +86,25 @@ public final class ChatUtils {
         ChatUtils.sendMessageQueue.enqueue(message);
     }
 
-    public static final void sendMessageToLocalPlayer(@NotNull final Text text) {
+    public static final void sendMessageToLocalPlayer(@NotNull final Component text) {
         // Ensure player is available and no lost messages
         // The awaitLocalPlayer method ensures correct threading behavior internally.
-        TickUtils.awaitLocalPlayer(player -> player.sendMessage(text, false));
+        TickUtils.awaitLocalPlayer(player -> player.displayClientMessage(text, false));
     }
 
-    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleColor color) {
+    public static final boolean hasFormatting(@NotNull final Component text, @NotNull final SimpleColor color) {
         return ChatUtils.hasFormatting(text, SimpleStyle.colored(color));
     }
 
-    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleColor color, @NotNull final SimpleFormatting formatting) {
+    public static final boolean hasFormatting(@NotNull final Component text, @NotNull final SimpleColor color, @NotNull final SimpleFormatting formatting) {
         return ChatUtils.hasFormatting(text, SimpleStyle.colored(color).also(SimpleStyle.formatted(formatting)));
     }
 
-    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleStyle style) {
+    public static final boolean hasFormatting(@NotNull final Component text, @NotNull final SimpleStyle style) {
         return ChatUtils.hasFormatting(text, style, text::getString);
     }
 
-    public static final boolean hasFormatting(@NotNull final Text text, @NotNull final SimpleStyle style, @NotNull final Supplier<String> textString) {
+    public static final boolean hasFormatting(@NotNull final Component text, @NotNull final SimpleStyle style, @NotNull final Supplier<String> textString) {
         final var hasFormattingInComponent = ChatUtils.hasFormattingInsideRootComponent(text, style);
 
         return hasFormattingInComponent || ChatUtils.hasFormattingInsideTextRaw(textString.get(), style);
@@ -114,11 +114,11 @@ public final class ChatUtils {
         return rawText.contains(style.getRawFormattingCharacters());
     }
 
-    private static final boolean hasFormattingInsideRootComponent(@NotNull final Text text, @NotNull final SimpleStyle simpleStyle) {
+    private static final boolean hasFormattingInsideRootComponent(@NotNull final Component text, @NotNull final SimpleStyle simpleStyle) {
         return ChatUtils.hasFormattingInsideRootComponent(text, simpleStyle.toStyle()); // converts from our SimpleStyle wrapper to vanilla Style class
     }
 
-    private static final boolean hasFormattingInsideRootComponent(@NotNull final Text text, @NotNull final Style expected) {
+    private static final boolean hasFormattingInsideRootComponent(@NotNull final Component text, @NotNull final Style expected) {
         return text.visit((resolved, ignored) ->
                         ChatUtils.matches(resolved, expected)
                                 ? Optional.of(true)
@@ -182,18 +182,18 @@ public final class ChatUtils {
     }
 
     @NotNull
-    public static final MutableText gradient(@NotNull final String startHex, @NotNull final String endHex, @NotNull final String text) {
+    public static final MutableComponent gradient(@NotNull final String startHex, @NotNull final String endHex, @NotNull final String text) {
         return ChatUtils.gradient(startHex, endHex, text, false);
     }
 
     @NotNull
-    public static final MutableText gradient(@NotNull final String startHex, @NotNull final String endHex, @NotNull final String text, final boolean bold) {
+    public static final MutableComponent gradient(@NotNull final String startHex, @NotNull final String endHex, @NotNull final String text, final boolean bold) {
         final var start = ChatUtils.hexToRGB(startHex);
         final var end = ChatUtils.hexToRGB(endHex);
 
         final var length = text.length();
 
-        final var root = Text.empty();
+        final var root = Component.empty();
 
         for (var i = 0; i < length; ++i) {
             final var t = 1 == length ? 0.0D : i / (length - 1.0D);
@@ -205,7 +205,7 @@ public final class ChatUtils {
                 style = style.withBold(true);
             }
 
-            root.append(Text.literal(String.valueOf(text.charAt(i)))
+            root.append(Component.literal(String.valueOf(text.charAt(i)))
                     .setStyle(style));
         }
 
@@ -213,12 +213,12 @@ public final class ChatUtils {
     }
 
     @NotNull
-    public static final Text button(@NotNull final String startHex, @NotNull final String endHex, @NotNull final String label, @NotNull final String hover, @NotNull final String command, final boolean centered, final boolean bold) {
+    public static final Component button(@NotNull final String startHex, @NotNull final String endHex, @NotNull final String label, @NotNull final String hover, @NotNull final String command, final boolean centered, final boolean bold) {
         final var hoverText = ChatUtils.gradient(startHex, endHex, hover);
         hoverText.setStyle(hoverText.getStyle().withBold(bold));
 
         final var buttonLabel = '[' + label + ']';
-        final var text = Text.literal("");
+        final var text = Component.literal("");
 
         if (centered) {
             final var fillerSize = ChatUtils.center(buttonLabel, bold).replace(buttonLabel, "").length();
@@ -240,13 +240,13 @@ public final class ChatUtils {
 
     @NotNull
     public static final String center(@NotNull final String text, final boolean bold) {
-        final var mc = MinecraftClient.getInstance();
+        final var mc = Minecraft.getInstance();
 
-        final var width = mc.textRenderer.getWidth(Text.literal(text).setStyle(Style.EMPTY.withBold(bold)));
+        final var width = mc.font.width(Component.literal(text).setStyle(Style.EMPTY.withBold(bold)));
         final var halvedWidth = width >> 1;
 
         final var toCompensate = (ChatUtils.getChatWidth(mc) >> 1) - halvedWidth;
-        final var fillerWidth = mc.textRenderer.getWidth(Text.literal(" ").setStyle(Style.EMPTY.withBold(bold))) + 1;
+        final var fillerWidth = mc.font.width(Component.literal(" ").setStyle(Style.EMPTY.withBold(bold))) + 1;
 
         final var builder = new StringBuilder(text.length());
 
@@ -268,26 +268,26 @@ public final class ChatUtils {
         }
     }
 
-    private static final int getChatWidth(@NotNull final MinecraftClient mc) {
-        final var inGameHud = mc.inGameHud;
+    private static final int getChatWidth(@NotNull final Minecraft mc) {
+        final var inGameHud = mc.gui;
 
         ChatUtils.validateAvailable("inGameHud", inGameHud);
 
-        return inGameHud.getChatHud().getWidth();
+        return inGameHud.getChat().getWidth();
     }
 
     @NotNull
     public static final String fillRemainingOf(final char character, final boolean bold, @NotNull final String middleText) {
-        final var mc = MinecraftClient.getInstance();
+        final var mc = Minecraft.getInstance();
         final var style = Style.EMPTY.withBold(bold);
 
         final var chatWidth = ChatUtils.getChatWidth(mc);
-        final var textRenderer = mc.textRenderer;
+        final var textRenderer = mc.font;
 
         ChatUtils.validateAvailable("textRenderer", textRenderer);
         ChatUtils.validateAvailable("player", mc.player);
 
-        final var middleWidth = textRenderer.getWidth(Text.literal(middleText).setStyle(style));
+        final var middleWidth = textRenderer.width(Component.literal(middleText).setStyle(style));
         final var toCompensate = chatWidth - middleWidth;
 
         // If text is too wide, just return the middle text unchanged
@@ -296,7 +296,7 @@ public final class ChatUtils {
         }
 
         final var characterStr = Character.toString(character);
-        final var fillerWidth = textRenderer.getWidth(Text.literal(characterStr).setStyle(style));
+        final var fillerWidth = textRenderer.width(Component.literal(characterStr).setStyle(style));
 
         if (0 >= fillerWidth) {
             return middleText;
@@ -312,7 +312,7 @@ public final class ChatUtils {
         final var rightFillers = totalFillers - leftFillers;
 
         var best = characterStr.repeat(leftFillers) + middleText + characterStr.repeat(rightFillers);
-        var bestDiff = Math.abs(chatWidth - textRenderer.getWidth(Text.literal(best).setStyle(style)));
+        var bestDiff = Math.abs(chatWidth - textRenderer.width(Component.literal(best).setStyle(style)));
 
         // --- Adjustment Phase ---
         // Try shifting one filler left/right or adding/removing one on either side
@@ -320,7 +320,7 @@ public final class ChatUtils {
         for (var adjust = 0; 16 > adjust; ++adjust) {
             // Try adding one to the right
             var test = best + character;
-            var diff = Math.abs(chatWidth - textRenderer.getWidth(Text.literal(test).setStyle(style)));
+            var diff = Math.abs(chatWidth - textRenderer.width(Component.literal(test).setStyle(style)));
             if (diff < bestDiff) {
                 best = test;
                 bestDiff = diff;
@@ -329,7 +329,7 @@ public final class ChatUtils {
 
             // Try adding one to the left
             test = character + best;
-            diff = Math.abs(chatWidth - textRenderer.getWidth(Text.literal(test).setStyle(style)));
+            diff = Math.abs(chatWidth - textRenderer.width(Component.literal(test).setStyle(style)));
             if (diff < bestDiff) {
                 best = test;
                 bestDiff = diff;

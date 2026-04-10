@@ -4,8 +4,8 @@ import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.OpenScreenEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.text.TranslatableTextContent;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import org.jetbrains.annotations.NotNull;
 
 public final class AutoCloseSecretChests {
@@ -26,9 +26,9 @@ public final class AutoCloseSecretChests {
 
         final var handlerType = event.screenHandlerType();
 
-        if (ScreenHandlerType.GENERIC_9X3 == handlerType || ScreenHandlerType.GENERIC_9X6 == handlerType) {
+        if (MenuType.GENERIC_9x3 == handlerType || MenuType.GENERIC_9x6 == handlerType) {
             final var name = event.name();
-            if (name.getContent() instanceof final TranslatableTextContent translatable) {
+            if (name.getContents() instanceof final TranslatableContents translatable) {
                 final var key = translatable.getKey();
 
                 if ("container.chest".equals(key) || "container.chestDouble".equals(key)) {

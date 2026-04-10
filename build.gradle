@@ -98,10 +98,9 @@ dependencies {
         transitive = false
     }
 
-    mappings("net.fabricmc:yarn:1.21.11+build.4:v2") {
+    mappings(loom.officialMojangMappings()) {
         transitive = false
     }
-    //mappings loom.officialMojangMappings()
 
     modImplementation("net.fabricmc:fabric-loader:0.19.1") {
         transitive = false

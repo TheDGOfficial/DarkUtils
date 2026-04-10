@@ -2,8 +2,8 @@ package gg.darkutils.events;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.screen.slot.Slot;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
  * @param slot              The slot.
  */
 public record SlotClickEvent(@NotNull CancellationState cancellationState,
-                             @NotNull HandledScreen<?> handledScreen,
+                             @NotNull AbstractContainerScreen<?> handledScreen,
                              int slotId,
                              @NotNull Slot slot) implements CancellableEvent {
     /**
@@ -28,7 +28,7 @@ public record SlotClickEvent(@NotNull CancellationState cancellationState,
      * @param slotId        The slot id that was clicked.
      * @param slot          The slot.
      */
-    public SlotClickEvent(@NotNull final HandledScreen<?> handledScreen, final int slotId, @NotNull final Slot slot) {
+    public SlotClickEvent(@NotNull final AbstractContainerScreen<?> handledScreen, final int slotId, @NotNull final Slot slot) {
         this(CancellationState.ofFresh(), handledScreen, slotId, slot);
     }
 }

@@ -4,7 +4,7 @@ import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.YggdrasilServicesKeyInfo;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.mixinquirks.HolderFields;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
@@ -59,8 +59,8 @@ final class YggdrasilServicesKeyInfoMixin {
         }
 
         // Try to resolve current server IP
-        final var client = MinecraftClient.getInstance();
-        final var serverData = client.getCurrentServerEntry();
+        final var client = Minecraft.getInstance();
+        final var serverData = client.getCurrentServer();
         final var formatted = format.replace("{}", arg.toString());
 
         if (null == serverData) {
@@ -69,7 +69,7 @@ final class YggdrasilServicesKeyInfoMixin {
             return;
         }
 
-        final var serverIP = serverData.address;
+        final var serverIP = serverData.ip;
 
         // Only log once per server
         if (HolderFields.ServerValues.WARNED_SERVERS.add(serverIP)) {

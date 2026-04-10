@@ -9,8 +9,8 @@ import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.ScoreboardUtil;
 import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
@@ -126,7 +126,7 @@ public final class MineshaftFeatures {
         event.match(MineshaftFeatures.MESSAGE_HANDLERS);
     }
 
-    private static final void onWorldChange(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
+    private static final void onWorldChange(@NotNull final Minecraft client, @NotNull final ClientLevel world) {
         if (DarkUtilsConfig.INSTANCE.corpsesPerShaftDisplay) {
             MineshaftFeatures.CorpseDataHolder.finalizeAllFound();
         }

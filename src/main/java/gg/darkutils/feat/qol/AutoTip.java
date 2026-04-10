@@ -8,7 +8,7 @@ import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -49,7 +49,7 @@ public final class AutoTip {
         event.match(AutoTip.MESSAGE_HANDLERS);
     }
 
-    private static final void onTick(@NotNull final MinecraftClient client) {
+    private static final void onTick(@NotNull final Minecraft client) {
         if (!DarkUtilsConfig.INSTANCE.autoTip || !LocationUtils.isInHypixel()) {
             return;
         }

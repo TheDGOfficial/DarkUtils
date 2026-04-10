@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.text.Style;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -182,7 +182,7 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
 
         @Override
         public final @NotNull Style applyStyle(final @NotNull Style style) {
-            return style.withFormatting(this.simpleFormatting.toFormatting());
+            return style.applyFormat(this.simpleFormatting.toFormatting());
         }
     }
 

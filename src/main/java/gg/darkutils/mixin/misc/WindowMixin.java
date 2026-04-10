@@ -3,8 +3,8 @@ package gg.darkutils.mixin.misc;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.Window;
+import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.platform.Window;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
@@ -38,7 +38,7 @@ final class WindowMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "onFramebufferSizeChanged", at = @At("RETURN"))
+    @Inject(method = "onFramebufferResize", at = @At("RETURN"))
     private final void darkutils$fixGuiScaleIfEnabled(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.fixGuiScaleAfterFullscreen) {
             final var wayland = DarkUtils.isWindowPlatformWayland();
@@ -61,7 +61,7 @@ final class WindowMixin {
             GLFW.glfwSetWindowPos(this.handle, this.x, this.y);
         }
 
-        MinecraftClient.getInstance().onResolutionChanged();
+        Minecraft.getInstance().resizeDisplay();
     }
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwWindowHint(II)V", remap = false), remap = false)

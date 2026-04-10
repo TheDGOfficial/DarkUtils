@@ -4,8 +4,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.hypixel.data.type.GameType;
 import net.hypixel.modapi.HypixelModAPI;
 import net.hypixel.modapi.packet.impl.clientbound.event.ClientboundLocationPacket;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +34,7 @@ public final class LocationUtils {
         LocationUtils.skyblockIsland = LocationUtils.SkyblockIsland.fromId(packet.getMode().orElse(null));
     }
 
-    private static final void onQuit(@NotNull final ClientPlayNetworkHandler handler, @NotNull final MinecraftClient client) {
+    private static final void onQuit(@NotNull final ClientPacketListener handler, @NotNull final Minecraft client) {
         LocationUtils.isInHypixel = false;
         LocationUtils.isInSkyblock = false;
         LocationUtils.skyblockIsland = null;
@@ -69,7 +69,7 @@ public final class LocationUtils {
     }
 
     public static final boolean isInSingleplayer() {
-        return MinecraftClient.getInstance().isConnectedToLocalServer();
+        return Minecraft.getInstance().isSingleplayer();
     }
 
     private enum SkyblockIsland {

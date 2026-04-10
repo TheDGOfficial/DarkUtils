@@ -2,19 +2,19 @@ package gg.darkutils.utils;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.DrawStyle;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.world.debug.gizmo.GizmoDrawing;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.gizmos.GizmoStyle;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.gizmos.Gizmos;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -36,10 +36,10 @@ public final class RenderUtils {
     /**
      * Holds the formatting to text color cache.
      */
-    private static final @NotNull Supplier<Map<Formatting, TextColor>> FORMATTING_TO_TEXT_COLOR = LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(
-            Set.copyOf(Arrays.asList(Formatting.values())),
+    private static final @NotNull Supplier<Map<ChatFormatting, TextColor>> FORMATTING_TO_TEXT_COLOR = LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(
+            Set.copyOf(Arrays.asList(ChatFormatting.values())),
             formatting -> Objects.requireNonNull(
-                    TextColor.fromFormatting(formatting),
+                    TextColor.fromLegacyFormat(formatting),
                     "Formatting must convert to TextColor"
             )
     ));
@@ -47,13 +47,13 @@ public final class RenderUtils {
      * Holds the item to empty ItemStack cache.
      */
     private static final @NotNull Supplier<Map<Item, ItemStack>> ITEM_TO_ITEM_STACK = LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(
-            Set.copyOf(Registries.ITEM.stream().toList()),
+            Set.copyOf(BuiltInRegistries.ITEM.stream().toList()),
             ItemStack::new
     ));
     /**
      * Holds the empty OrderedText.
      */
-    private static final @NotNull Supplier<OrderedText> EMPTY_ORDERED_TEXT = LazyConstants.lazyConstantOf(() -> Text.of("").asOrderedText());
+    private static final @NotNull Supplier<FormattedCharSequence> EMPTY_ORDERED_TEXT = LazyConstants.lazyConstantOf(() -> Component.nullToEmpty("").getVisualOrderText());
 
     private RenderUtils() {
         super();
@@ -72,15 +72,15 @@ public final class RenderUtils {
     }
 
     private static final int getMiddleOfScreenYCoordinate() {
-        final var client = MinecraftClient.getInstance();
-        return (client.getWindow().getScaledHeight() >> 1) - (client.textRenderer.fontHeight >> 1);
+        final var client = Minecraft.getInstance();
+        return (client.getWindow().getGuiScaledHeight() >> 1) - (client.font.lineHeight >> 1);
     }
 
-    private static final int convertFormattingToRGBA(@NotNull final Formatting color) {
-        return RenderUtils.FORMATTING_TO_TEXT_COLOR.get().get(color).getRgb();
+    private static final int convertFormattingToRGBA(@NotNull final ChatFormatting color) {
+        return RenderUtils.FORMATTING_TO_TEXT_COLOR.get().get(color).getValue();
     }
 
-    private static final int convertFormattingToOpaqueColor(@NotNull final Formatting color) {
+    private static final int convertFormattingToOpaqueColor(@NotNull final ChatFormatting color) {
         // set alpha to 255 otherwise will be invisible
         return 0xFF00_0000 | RenderUtils.convertFormattingToRGBA(color);
     }
@@ -94,41 +94,41 @@ public final class RenderUtils {
         return roundedAlpha << 24 | roundedRed << 16 | roundedGreen << 8 | roundedBlue;
     }
 
-    public static final void renderText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, final int x, final int y, @NotNull final Formatting color) {
+    public static final void renderText(@NotNull final GuiGraphics context, @NotNull final RenderUtils.RenderingText text, final int x, final int y, @NotNull final ChatFormatting color) {
         RenderUtils.renderText(context, text, x, () -> y, color);
     }
 
-    public static final void renderText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, final int x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
+    public static final void renderText(@NotNull final GuiGraphics context, @NotNull final RenderUtils.RenderingText text, final int x, @NotNull final IntSupplier y, @NotNull final ChatFormatting color) {
         RenderUtils.renderText(context, text, () -> x, y, color);
     }
 
-    private static final void renderText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
-        context.drawText(MinecraftClient.getInstance().textRenderer, text.orderedText, x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
+    private static final void renderText(@NotNull final GuiGraphics context, @NotNull final RenderUtils.RenderingText text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final ChatFormatting color) {
+        context.drawString(Minecraft.getInstance().font, text.orderedText, x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
     public static final int middleAlignedXForText(@NotNull final RenderUtils.RenderingText text) {
-        return (MinecraftClient.getInstance().getWindow().getScaledWidth() >> 1) - (text.getWidth() >> 1);
+        return (Minecraft.getInstance().getWindow().getGuiScaledWidth() >> 1) - (text.getWidth() >> 1);
     }
 
-    public static final void renderCenteredText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, @NotNull final IntSupplier y, @NotNull final Formatting color) {
-        context.drawText(MinecraftClient.getInstance().textRenderer, text.orderedText, RenderUtils.middleAlignedXForText(text), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
+    public static final void renderCenteredText(@NotNull final GuiGraphics context, @NotNull final RenderUtils.RenderingText text, @NotNull final IntSupplier y, @NotNull final ChatFormatting color) {
+        context.drawString(Minecraft.getInstance().font, text.orderedText, RenderUtils.middleAlignedXForText(text), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
-    public static final void renderItem(@NotNull final DrawContext context, @NotNull final Item item, final int x, final int y) {
+    public static final void renderItem(@NotNull final GuiGraphics context, @NotNull final Item item, final int x, final int y) {
         RenderUtils.renderItem(context, item, x, () -> y);
     }
 
-    private static final void renderItem(@NotNull final DrawContext context, @NotNull final Item item, final int x, @NotNull final IntSupplier y) {
+    private static final void renderItem(@NotNull final GuiGraphics context, @NotNull final Item item, final int x, @NotNull final IntSupplier y) {
         RenderUtils.renderItem(context, item, () -> x, y);
     }
 
-    private static final void renderItem(@NotNull final DrawContext context, @NotNull final Item item, final IntSupplier x, @NotNull final IntSupplier y) {
-        context.drawItemWithoutEntity(RenderUtils.ITEM_TO_ITEM_STACK.get().get(item), x.getAsInt(), y.getAsInt(), 0);
+    private static final void renderItem(@NotNull final GuiGraphics context, @NotNull final Item item, final IntSupplier x, @NotNull final IntSupplier y) {
+        context.renderFakeItem(RenderUtils.ITEM_TO_ITEM_STACK.get().get(item), x.getAsInt(), y.getAsInt(), 0);
     }
 
     public static final void drawBlockOutline(@NotNull final WorldRenderContext context,
                                               @NotNull final BlockPos pos,
-                                              @NotNull final Formatting color) {
+                                              @NotNull final ChatFormatting color) {
         // Convert Formatting to RGBA floats
         final var rgb = RenderUtils.convertFormattingToRGBA(color);
 
@@ -139,11 +139,11 @@ public final class RenderUtils {
 
         final var argb = RenderUtils.toARGB(alpha, red, green, blue);
 
-        final var style = DrawStyle.stroked(argb);
+        final var style = GizmoStyle.stroke(argb);
 
-        final var immutablePos = pos.toImmutable();
+        final var immutablePos = pos.immutable();
 
-        GizmoDrawing.box(Box.enclosing(immutablePos, immutablePos), style);
+        Gizmos.cuboid(AABB.encapsulatingFullBlocks(immutablePos, immutablePos), style);
     }
 
     /**
@@ -170,7 +170,7 @@ public final class RenderUtils {
         private String text;
 
         @NotNull
-        private OrderedText orderedText;
+        private FormattedCharSequence orderedText;
 
         private int width;
         private boolean widthDirty = true;
@@ -180,10 +180,10 @@ public final class RenderUtils {
         }
 
         private RenderingText(@NotNull final String text) {
-            this(text, Text.of(text).asOrderedText());
+            this(text, Component.nullToEmpty(text).getVisualOrderText());
         }
 
-        private RenderingText(@NotNull final String text, @NotNull final OrderedText orderedText) {
+        private RenderingText(@NotNull final String text, @NotNull final FormattedCharSequence orderedText) {
             super();
 
             this.text = text;
@@ -196,7 +196,7 @@ public final class RenderUtils {
             }
 
             this.text = newText;
-            this.orderedText = Text.of(newText).asOrderedText();
+            this.orderedText = Component.nullToEmpty(newText).getVisualOrderText();
 
             this.widthDirty = true;
         }
@@ -204,7 +204,7 @@ public final class RenderUtils {
         private final int getWidth() {
             if (this.widthDirty) {
                 this.widthDirty = false;
-                return this.width = MinecraftClient.getInstance().textRenderer.getWidth(this.orderedText);
+                return this.width = Minecraft.getInstance().font.width(this.orderedText);
             }
 
             return this.width;

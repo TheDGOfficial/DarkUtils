@@ -8,7 +8,6 @@ import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.SimpleStyle;
 import gg.darkutils.utils.chat.TextBuilder;
-import net.minecraft.text.Text;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,7 @@ final class ReceiveGameMessageEventTest {
     private static final <T extends Event> void clearListeners(final Class<T> event) {
         final var handler = EventRegistry.centralRegistry().getEventHandler(event);
 
-        handler.getListeners().forEach((l) -> handler.removeListener((EventListener<T>) l));
+        handler.getListeners().forEach((l) -> handler.removeListener((EventListener<T>) (Object) l));
     }
 
     @Test
@@ -35,7 +34,7 @@ final class ReceiveGameMessageEventTest {
 
         EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> counter.incrementAndGet());
 
-        new ReceiveGameMessageEvent(Text.literal("Hello")).trigger();
+        new ReceiveGameMessageEvent(TextBuilder.empty().append("Hello").build()).trigger();
 
         Assertions.assertEquals(counter.get(), 1);
     }
@@ -53,7 +52,7 @@ final class ReceiveGameMessageEventTest {
             Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE, SimpleFormatting.BOLD));
         });
 
-        new ReceiveGameMessageEvent(Text.literal("Hello")).trigger();
+        new ReceiveGameMessageEvent(TextBuilder.empty().append("Hello").build()).trigger();
     }
 
     @Test
@@ -88,7 +87,7 @@ final class ReceiveGameMessageEventTest {
             Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE, SimpleFormatting.BOLD));
         });
 
-        new ReceiveGameMessageEvent(Text.literal("§cHello")).trigger();
+        new ReceiveGameMessageEvent(TextBuilder.empty().append("§cHello").build()).trigger();
     }
 
     @Test
@@ -97,7 +96,7 @@ final class ReceiveGameMessageEventTest {
             Assertions.assertEquals(e.extractPart("[Player] ", ':'), "John Doe");
         });
 
-        new ReceiveGameMessageEvent(Text.literal("[Player] John Doe: Hello")).trigger();
+        new ReceiveGameMessageEvent(TextBuilder.empty().append("[Player] John Doe: Hello").build()).trigger();
     }
 
     @Test
@@ -111,7 +110,7 @@ final class ReceiveGameMessageEventTest {
             ));
         });
 
-        new ReceiveGameMessageEvent(Text.literal("Lorem ipsum dolor sit amet")).trigger();
+        new ReceiveGameMessageEvent(TextBuilder.empty().append("Lorem ipsum dolor sit amet").build()).trigger();
 
         Assertions.assertEquals(counter.get(), 1);
     }

@@ -1,16 +1,16 @@
 package gg.darkutils.mixin.visuals;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.core.Holder;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(targets = "net/minecraft/client/gui/hud/InGameHud$HeartType")
+@Mixin(targets = "net.minecraft.client.gui.Gui$HeartType")
 final class HeartTypeMixin {
     private HeartTypeMixin() {
         super();
@@ -24,13 +24,13 @@ final class HeartTypeMixin {
      * passes the original call through unchanged.
      */
     @Redirect(
-            method = "fromPlayerState",
+            method = "forPlayer",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z"
+                    target = "Lnet/minecraft/world/entity/player/Player;hasEffect(Lnet/minecraft/core/Holder;)Z"
             )
     )
-    private static final boolean darkutils$disableWitherOverlayIfEnabled(@NotNull final PlayerEntity player, @NotNull final RegistryEntry<StatusEffect> effectEntry) {
-        return (!DarkUtilsConfig.INSTANCE.noWitherHearts || effectEntry != StatusEffects.WITHER) && player.hasStatusEffect(effectEntry); // Prevents wither hearts
+    private static final boolean darkutils$disableWitherOverlayIfEnabled(@NotNull final Player player, @NotNull final Holder<MobEffect> effectEntry) {
+        return (!DarkUtilsConfig.INSTANCE.noWitherHearts || effectEntry != MobEffects.WITHER) && player.hasEffect(effectEntry); // Prevents wither hearts
     }
 }

@@ -2,9 +2,9 @@ package gg.darkutils.mixin.misc;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.RenderWorldEvent;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,15 +20,15 @@ final class GameRendererMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "getNightVisionStrength", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getNightVisionScale", at = @At("HEAD"), cancellable = true)
     private static final void darkutils$overrideNightVisionIfEnabled(@NotNull final LivingEntity entity, final float tickProgress, @NotNull final CallbackInfoReturnable<Float> cir) {
         if (DarkUtilsConfig.INSTANCE.nightVision) {
             cir.setReturnValue(0.9F);
         }
     }
 
-    @Inject(method = "renderWorld", at = @At(value = "CONSTANT", args = "stringValue=hand", shift = At.Shift.BEFORE))
-    private final void darkutils$onRenderWorld(@NotNull final RenderTickCounter renderTickCounter, @NotNull final CallbackInfo ci) {
+    @Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=hand", shift = At.Shift.BEFORE))
+    private final void darkutils$onRenderWorld(@NotNull final DeltaTracker renderTickCounter, @NotNull final CallbackInfo ci) {
         RenderWorldEvent.INSTANCE.trigger();
     }
 }

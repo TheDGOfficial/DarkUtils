@@ -28,7 +28,7 @@ final class EventSystemTest {
     private static final <T extends Event> void clearListeners(final Class<T> event) {
         final var handler = EventRegistry.centralRegistry().getEventHandler(event);
 
-        handler.getListeners().forEach((l) -> handler.removeListener((EventListener<T>) l));
+        handler.getListeners().forEach((l) -> handler.removeListener((EventListener<T>) (Object) l));
     }
 
     @Test

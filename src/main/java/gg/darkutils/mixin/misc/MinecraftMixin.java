@@ -8,14 +8,14 @@ import gg.darkutils.events.InteractEntityEvent;
 import gg.darkutils.feat.farming.StickyFarmingKeys;
 import gg.darkutils.feat.qol.AutoClicker;
 import gg.darkutils.utils.Helpers;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.EntityHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,15 +24,15 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(MinecraftClient.class)
-final class MinecraftClientMixin {
-    private MinecraftClientMixin() {
+@Mixin(Minecraft.class)
+final class MinecraftMixin {
+    private MinecraftMixin() {
         super();
 
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Redirect(at = @At(value = "INVOKE", target = "Ljava/lang/Thread;yield()V", remap = false), method = "render")
+    @Redirect(at = @At(value = "INVOKE", target = "Ljava/lang/Thread;yield()V", remap = false), method = "runTick")
     private final void darkutils$skipYieldIfEnabled() {
         if (!DarkUtilsConfig.INSTANCE.disableYield) {
             Thread.yield();
@@ -55,40 +55,40 @@ final class MinecraftClientMixin {
         Helpers.resetHeldItemCache();
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;updateCrosshairTarget(F)V", shift = At.Shift.AFTER))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;pick(F)V", shift = At.Shift.AFTER))
     private final void darkutils$afterCrosshairTargetUpdate(@NotNull final CallbackInfo ci) {
         Helpers.resetTargetCache();
     }
 
-    @Inject(method = "handleInputEvents", at = @At("HEAD"))
+    @Inject(method = "handleKeybinds", at = @At("HEAD"))
     private final void darkutils$resetState(@NotNull final CallbackInfo ci) {
         StickyFarmingKeys.resetState();
         AutoClicker.resetState();
     }
 
-    @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;wasPressed()Z"))
-    private final boolean darkutils$wasPressed$modifyReturnValueIfApplicable(@NotNull final KeyBinding keyBinding) {
+    @Redirect(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;consumeClick()Z"))
+    private final boolean darkutils$wasPressed$modifyReturnValueIfApplicable(@NotNull final KeyMapping keyBinding) {
         return AutoClicker.wasPressed(keyBinding, StickyFarmingKeys.wasPressed(keyBinding));
     }
 
-    @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
-    private final boolean darkutils$isPressed$modifyReturnValueIfApplicable(@NotNull final KeyBinding keyBinding) {
+    @Redirect(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;isDown()Z"))
+    private final boolean darkutils$isPressed$modifyReturnValueIfApplicable(@NotNull final KeyMapping keyBinding) {
         return AutoClicker.isPressed(keyBinding, StickyFarmingKeys.isPressed(keyBinding, false));
     }
 
-    @WrapOperation(method = "doItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;interactEntityAtLocation(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/util/hit/EntityHitResult;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"))
-    private final @NotNull ActionResult darkutils$onEntityInteract(@NotNull final ClientPlayerInteractionManager instance, @NotNull final PlayerEntity player, @NotNull final Entity entity, @NotNull final EntityHitResult hitResult, @NotNull final Hand hand, @NotNull final Operation<ActionResult> original) {
-        return new InteractEntityEvent(entity).triggerAndCancelled() ? ActionResult.CONSUME : original.call(instance, player, entity, hitResult, hand);
+    @WrapOperation(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;interactAt(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/EntityHitResult;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
+    private final @NotNull InteractionResult darkutils$onEntityInteract(@NotNull final MultiPlayerGameMode instance, @NotNull final Player player, @NotNull final Entity entity, @NotNull final EntityHitResult hitResult, @NotNull final InteractionHand hand, @NotNull final Operation<InteractionResult> original) {
+        return new InteractEntityEvent(entity).triggerAndCancelled() ? InteractionResult.CONSUME : original.call(instance, player, entity, hitResult, hand);
     }
 
-    @Inject(method = "hasOutline", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "shouldEntityAppearGlowing", at = @At("HEAD"), cancellable = true)
     private final void darkutils$hasOutline$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
         if (DarkUtilsConfig.INSTANCE.disableGlowing) {
             cir.setReturnValue(false);
         }
     }
 
-    @Inject(method = "stop", at = @At("HEAD"))
+    @Inject(method = "destroy", at = @At("HEAD"))
     private final void darkutils$onQuitGame(@NotNull final CallbackInfo ci) {
         // The game will wait as this a blocking task so it should be safe to use non-atomic save here
         PersistentData.save();

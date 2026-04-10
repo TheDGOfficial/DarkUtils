@@ -3,12 +3,12 @@ package gg.darkutils.mixin.visuals;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.BasicTriState;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.core.Holder;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,10 +19,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(LightmapTextureManager.class)
-final class LightmapTextureManagerMixin {
+@Mixin(LightTexture.class)
+final class LightTextureMixin {
     @Shadow
-    private boolean dirty;
+    private boolean updateLightTexture;
     @Unique
     @Nullable
     private BasicTriState darkutils$fullbrightAtLastUpdate;
@@ -30,7 +30,7 @@ final class LightmapTextureManagerMixin {
     @Nullable
     private BasicTriState darkutils$nightVisionAtLastUpdate;
 
-    private LightmapTextureManagerMixin() {
+    private LightTextureMixin() {
         super();
 
         throw new UnsupportedOperationException("mixin class");
@@ -71,7 +71,7 @@ final class LightmapTextureManagerMixin {
         return BasicTriState.of(nv) != lastNv && BasicTriState.DEFAULT != lastNv;
     }
 
-    @Inject(method = "update", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "updateLightTexture", at = @At("HEAD"), cancellable = true)
     private final void darkutils$stopLightUpdatesIfEnabled(final float tickProgress, @NotNull final CallbackInfo ci) {
         final var stopLightUpdates = DarkUtilsConfig.INSTANCE.stopLightUpdates;
         final var forced = this.darkutils$forceUpdate();
@@ -82,29 +82,29 @@ final class LightmapTextureManagerMixin {
         }
 
         if (forced) {
-            this.dirty = true;
+            this.updateLightTexture = true;
         }
 
-        if (this.dirty) {
+        if (this.updateLightTexture) {
             this.darkutils$fullbrightAtLastUpdate = BasicTriState.of(DarkUtilsConfig.INSTANCE.fullbright);
             this.darkutils$nightVisionAtLastUpdate = BasicTriState.of(DarkUtilsConfig.INSTANCE.nightVision);
         }
     }
 
-    @Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/dimension/DimensionType;ambientLight()F"))
+    @Redirect(method = "updateLightTexture", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/dimension/DimensionType;ambientLight()F"))
     private final float darkutils$getAmbientLight(@NotNull final DimensionType dimensionType) {
         return DarkUtilsConfig.INSTANCE.fullbright ? 1.0F : dimensionType.ambientLight();
     }
 
-    @Redirect(method = "update", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F", ordinal = 0))
+    @Redirect(method = "updateLightTexture", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F", ordinal = 0))
     private final float darkutils$fullbrightIfEnabled(final float first, final float second) {
         return Math.max(first, DarkUtilsConfig.INSTANCE.fullbright ? 1_600.0F : second);
     }
 
-    @Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z", ordinal = 0))
-    private final boolean darkutils$overrideNightVisionIfEnabled(@NotNull final ClientPlayerEntity player, @NotNull final RegistryEntry<StatusEffect> effect) {
-        if (StatusEffects.NIGHT_VISION == effect) {
-            return DarkUtilsConfig.INSTANCE.nightVision || player.hasStatusEffect(effect);
+    @Redirect(method = "updateLightTexture", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;hasEffect(Lnet/minecraft/core/Holder;)Z", ordinal = 0))
+    private final boolean darkutils$overrideNightVisionIfEnabled(@NotNull final LocalPlayer player, @NotNull final Holder<MobEffect> effect) {
+        if (MobEffects.NIGHT_VISION == effect) {
+            return DarkUtilsConfig.INSTANCE.nightVision || player.hasEffect(effect);
         }
 
         // Won't be the case unless vanilla moved hasStatusEffect around messing with our ordinal

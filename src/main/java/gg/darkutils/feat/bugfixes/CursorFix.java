@@ -2,8 +2,8 @@ package gg.darkutils.feat.bugfixes;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.TickUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -26,13 +26,13 @@ public final class CursorFix {
             return;
         }
 
-        final var mc = MinecraftClient.getInstance();
-        final var screen = mc.currentScreen;
+        final var mc = Minecraft.getInstance();
+        final var screen = mc.screen;
 
         if (null == screen && null != CursorFix.previousScreen) {
             // A screen was closed. Set cursor back to default cursor.
             // Prevents mouse cursor staying on screen after closing a menu that set a custom cursor.
-            final var windowId = mc.getWindow().getHandle();
+            final var windowId = mc.getWindow().handle();
             GLFW.glfwSetCursor(windowId, 0L);
         }
 
