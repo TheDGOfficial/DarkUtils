@@ -2,7 +2,7 @@ package gg.darkutils.events;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
-import net.minecraft.network.packet.Packet;
+import net.minecraft.network.protocol.Packet;
 import org.jetbrains.annotations.NotNull;
 
 /**

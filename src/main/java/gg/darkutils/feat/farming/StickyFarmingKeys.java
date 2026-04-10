@@ -6,10 +6,10 @@ import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.multiplayer.ClientLevel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,14 +30,14 @@ public final class StickyFarmingKeys {
         TickUtils.queueRepeatingTickTask(StickyFarmingKeys::onTick, 1);
     }
 
-    private static final void onWorldChange(@NotNull final MinecraftClient client, @Nullable final ClientWorld world) {
+    private static final void onWorldChange(@NotNull final Minecraft client, @Nullable final ClientLevel world) {
         StickyFarmingKeys.resetToggledState();
     }
 
     private static final void onTick() {
-        final var mc = MinecraftClient.getInstance();
+        final var mc = Minecraft.getInstance();
 
-        final var screen = mc.currentScreen;
+        final var screen = mc.screen;
         final var previousScreen = StickyFarmingKeys.previousScreen;
 
         var reset = false;
@@ -88,8 +88,8 @@ public final class StickyFarmingKeys {
         }
     }
 
-    public static final boolean isPressed(@NotNull final KeyBinding keyBinding, final boolean playerInput) {
-        final var actual = keyBinding.isPressed();
+    public static final boolean isPressed(@NotNull final KeyMapping keyBinding, final boolean playerInput) {
+        final var actual = keyBinding.isDown();
 
         StickyFarmingKeys.MovementKey movementKey = null;
 
@@ -123,8 +123,8 @@ public final class StickyFarmingKeys {
         return false;
     }
 
-    public static final boolean wasPressed(@NotNull final KeyBinding keyBinding) {
-        final var actual = keyBinding.wasPressed();
+    public static final boolean wasPressed(@NotNull final KeyMapping keyBinding) {
+        final var actual = keyBinding.consumeClick();
 
         if (!DarkUtilsConfig.INSTANCE.stickyFarmingKeys || !actual) {
             return actual;
@@ -140,22 +140,22 @@ public final class StickyFarmingKeys {
     }
 
     private enum MovementKey implements StickyFarmingKeys.CommonKey {
-        Forward(MinecraftClient.getInstance().options.forwardKey), // Typically W
-        Back(MinecraftClient.getInstance().options.backKey), // Typically S
-        Left(MinecraftClient.getInstance().options.leftKey), // Typically A
-        Right(MinecraftClient.getInstance().options.rightKey); // Typically D
+        Forward(Minecraft.getInstance().options.keyUp), // Typically W
+        Back(Minecraft.getInstance().options.keyDown), // Typically S
+        Left(Minecraft.getInstance().options.keyLeft), // Typically A
+        Right(Minecraft.getInstance().options.keyRight); // Typically D
 
         private static final StickyFarmingKeys.MovementKey @NotNull [] VALUES = StickyFarmingKeys.MovementKey.values();
 
         @NotNull
-        private final KeyBinding keyBinding;
+        private final KeyMapping keyBinding;
 
         private boolean toggled;
         private boolean clicking;
 
         private boolean lastPhysicalPressed;
 
-        private MovementKey(@NotNull final KeyBinding keyBinding) {
+        private MovementKey(@NotNull final KeyMapping keyBinding) {
             this.keyBinding = keyBinding;
         }
 
@@ -205,7 +205,7 @@ public final class StickyFarmingKeys {
 
         @NotNull
         @Override
-        public final KeyBinding getKeyBinding() {
+        public final KeyMapping getKeyBinding() {
             return this.keyBinding;
         }
 
@@ -231,23 +231,23 @@ public final class StickyFarmingKeys {
     }
 
     private enum Key implements StickyFarmingKeys.CommonKey {
-        LMB(MinecraftClient.getInstance().options.attackKey);
+        LMB(Minecraft.getInstance().options.keyAttack);
 
         private static final StickyFarmingKeys.Key @NotNull [] VALUES = StickyFarmingKeys.Key.values();
 
         @NotNull
-        private final KeyBinding keyBinding;
+        private final KeyMapping keyBinding;
 
         private boolean toggled;
         private boolean clicking;
 
-        private Key(@NotNull final KeyBinding keyBinding) {
+        private Key(@NotNull final KeyMapping keyBinding) {
             this.keyBinding = keyBinding;
         }
 
         @NotNull
         @Override
-        public final KeyBinding getKeyBinding() {
+        public final KeyMapping getKeyBinding() {
             return this.keyBinding;
         }
 
@@ -274,7 +274,7 @@ public final class StickyFarmingKeys {
 
     private interface CommonKey {
         @NotNull
-        KeyBinding getKeyBinding();
+        KeyMapping getKeyBinding();
 
         boolean isToggled();
 
@@ -284,7 +284,7 @@ public final class StickyFarmingKeys {
 
         void setClicking(final boolean clicking);
 
-        default boolean isForKeyBinding(@NotNull final KeyBinding keyBinding) {
+        default boolean isForKeyBinding(@NotNull final KeyMapping keyBinding) {
             return this.getKeyBinding() == keyBinding;
         }
 

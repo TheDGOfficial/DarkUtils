@@ -8,11 +8,11 @@ import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Items;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.item.Items;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -46,7 +46,7 @@ public final class RejoinCooldownDisplay {
     public static final void init() {
         EventRegistry.centralRegistry().addListener(RejoinCooldownDisplay::onChat);
 
-        HudElementRegistry.addLast(Identifier.of(DarkUtils.MOD_ID, "rejoin_cooldown_display"), (context, tickCounter) -> RejoinCooldownDisplay.renderRejoinCooldownDisplay(context));
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "rejoin_cooldown_display"), (context, tickCounter) -> RejoinCooldownDisplay.renderRejoinCooldownDisplay(context));
     }
 
     private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
@@ -57,12 +57,12 @@ public final class RejoinCooldownDisplay {
         event.match(RejoinCooldownDisplay.MESSAGE_HANDLERS);
     }
 
-    private static final void renderRejoinCooldownDisplay(@NotNull final DrawContext context) {
+    private static final void renderRejoinCooldownDisplay(@NotNull final GuiGraphics context) {
         if (!DarkUtilsConfig.INSTANCE.rejoinCooldownDisplay) {
             return;
         }
 
-        final var client = MinecraftClient.getInstance();
+        final var client = Minecraft.getInstance();
 
         if (null == client.player || 0L == RejoinCooldownDisplay.kickCooldownEnd) {
             return;
@@ -78,7 +78,7 @@ public final class RejoinCooldownDisplay {
             return;
         }
 
-        final var color = 0L == timeLeftSeconds ? Formatting.GREEN : Formatting.RED;
+        final var color = 0L == timeLeftSeconds ? ChatFormatting.GREEN : ChatFormatting.RED;
 
         final var text = RejoinCooldownDisplay.TEXT;
         text.setText(0L == timeLeftSeconds ? "Try rejoining SkyBlock now!" : "Can rejoin SkyBlock in " + timeLeftSeconds + 's');

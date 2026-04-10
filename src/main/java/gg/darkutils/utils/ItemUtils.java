@@ -1,9 +1,9 @@
 package gg.darkutils.utils;
 
 import gg.darkutils.utils.chat.ChatUtils;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,8 +16,8 @@ public final class ItemUtils {
         throw new UnsupportedOperationException("static utility class");
     }
 
-    private static final @NotNull List<Text> getLoreLines(@NotNull final ItemStack stack) {
-        final var lore = stack.getComponents().get(DataComponentTypes.LORE);
+    private static final @NotNull List<Component> getLoreLines(@NotNull final ItemStack stack) {
+        final var lore = stack.getComponents().get(DataComponents.LORE);
 
         return null == lore ? List.of() : lore.lines();
     }

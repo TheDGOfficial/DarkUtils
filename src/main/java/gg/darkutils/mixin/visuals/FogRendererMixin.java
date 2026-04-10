@@ -2,7 +2,7 @@ package gg.darkutils.mixin.visuals;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import gg.darkutils.config.DarkUtilsConfig;
-import net.minecraft.client.render.fog.FogRenderer;
+import net.minecraft.client.renderer.fog.FogRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -14,7 +14,7 @@ final class FogRendererMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @ModifyExpressionValue(method = "getFogColor", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z", ordinal = 0))
+    @ModifyExpressionValue(method = "computeFogColor", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/core/Holder;)Z", ordinal = 0))
     private final boolean darkutils$overrideNightVisionIfEnabled(final boolean original) {
         return original || DarkUtilsConfig.INSTANCE.nightVision;
     }

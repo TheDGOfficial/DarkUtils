@@ -7,11 +7,11 @@ import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.PrettyUtils;
 import gg.darkutils.utils.RenderUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Items;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.item.Items;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.TimeUnit;
@@ -31,7 +31,7 @@ public final class MineshaftDisplay {
     }
 
     public static final void init() {
-        HudElementRegistry.addLast(Identifier.of(DarkUtils.MOD_ID, "mineshaft_display"), (context, tickCounter) -> MineshaftDisplay.renderMineshaftDisplay(context));
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "mineshaft_display"), (context, tickCounter) -> MineshaftDisplay.renderMineshaftDisplay(context));
     }
 
     private static final boolean isEnabled() {
@@ -42,12 +42,12 @@ public final class MineshaftDisplay {
         return nanos < MineshaftDisplay.ONE_MINUTE_IN_NS ? TimeUnit.NANOSECONDS.toSeconds(nanos) + "s" : PrettyUtils.formatNanosAsSeconds(nanos);
     }
 
-    private static final void renderMineshaftDisplay(@NotNull final DrawContext context) {
+    private static final void renderMineshaftDisplay(@NotNull final GuiGraphics context) {
         if (!MineshaftDisplay.isEnabled()) {
             return;
         }
 
-        final var client = MinecraftClient.getInstance();
+        final var client = Minecraft.getInstance();
 
         if (null == client.player || !LocationUtils.isInDwarvenMines() && !LocationUtils.isInMineshaft()) {
             return;
@@ -87,7 +87,7 @@ public final class MineshaftDisplay {
                 text,
                 RenderUtils.CHAT_ALIGNED_X + RenderUtils.CHAT_ALIGNED_X * 10, // use chat's x offset to shift x a bit to the right so that there's a bit of a space after the rendered item before the text
                 RenderUtils.MIDDLE_ALIGNED_Y,
-                Formatting.AQUA
+                ChatFormatting.AQUA
         );
     }
 }

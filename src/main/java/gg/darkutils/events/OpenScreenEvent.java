@@ -2,8 +2,8 @@ package gg.darkutils.events;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.text.Text;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -17,8 +17,8 @@ import org.jetbrains.annotations.NotNull;
  * @param name              Name of the screen.
  */
 public record OpenScreenEvent(@NotNull CancellationState cancellationState,
-                              @NotNull ScreenHandlerType<?> screenHandlerType,
-                              @NotNull Text name) implements CancellableEvent {
+                              @NotNull MenuType<?> screenHandlerType,
+                              @NotNull Component name) implements CancellableEvent {
     /**
      * Creates a new {@link OpenScreenEvent} suitable for triggering the event.
      * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
@@ -26,7 +26,7 @@ public record OpenScreenEvent(@NotNull CancellationState cancellationState,
      * @param screenHandlerType The screen handler type.
      * @param name              The name of the screen.
      */
-    public OpenScreenEvent(@NotNull final ScreenHandlerType<?> screenHandlerType, @NotNull final Text name) {
+    public OpenScreenEvent(@NotNull final MenuType<?> screenHandlerType, @NotNull final Component name) {
         this(CancellationState.ofFresh(), screenHandlerType, name);
     }
 }

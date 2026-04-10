@@ -4,8 +4,8 @@ import gg.darkutils.events.ServerTickEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -72,7 +72,7 @@ public final class ServerTPSCalculator {
         ServerTPSCalculator.tickCount = 0;
     }
 
-    private static final void onWorldUnload(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
+    private static final void onWorldUnload(@NotNull final Minecraft client, @NotNull final ClientLevel world) {
         if (ServerTPSCalculator.enableTPSCalculationTemporarily) {
             ServerTPSCalculator.resetState();
         }

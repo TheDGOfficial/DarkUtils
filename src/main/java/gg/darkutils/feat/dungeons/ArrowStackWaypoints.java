@@ -5,9 +5,9 @@ import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.Minecraft;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -18,12 +18,12 @@ public final class ArrowStackWaypoints {
      * Holds block positions for M7 Dragon Last Breath arrow stacking.
      */
     @NotNull
-    private static final Map<Formatting, BlockPos> STACK_BLOCK_POSITIONS = Map.of(
-            Formatting.GOLD, new BlockPos(83, 19, 57), // Orange/Flame Dragon
-            Formatting.GREEN, new BlockPos(26, 21, 92), // Green/Apex Dragon
-            Formatting.DARK_RED, new BlockPos(27, 19, 56), // Red/Power Dragon
-            Formatting.AQUA, new BlockPos(82, 19, 96), // Blue/Ice Dragon
-            Formatting.DARK_PURPLE, new BlockPos(56, 20, 124) // Purple/Soul Dragon
+    private static final Map<ChatFormatting, BlockPos> STACK_BLOCK_POSITIONS = Map.of(
+            ChatFormatting.GOLD, new BlockPos(83, 19, 57), // Orange/Flame Dragon
+            ChatFormatting.GREEN, new BlockPos(26, 21, 92), // Green/Apex Dragon
+            ChatFormatting.DARK_RED, new BlockPos(27, 19, 56), // Red/Power Dragon
+            ChatFormatting.AQUA, new BlockPos(82, 19, 96), // Blue/Ice Dragon
+            ChatFormatting.DARK_PURPLE, new BlockPos(56, 20, 124) // Purple/Soul Dragon
     );
 
     @NotNull
@@ -49,7 +49,7 @@ public final class ArrowStackWaypoints {
     }
 
     private static final boolean isPlayerBelowNecronPlatformHeight() {
-        final var player = MinecraftClient.getInstance().player;
+        final var player = Minecraft.getInstance().player;
         return null != player && 45.0D >= player.getY();
     }
 

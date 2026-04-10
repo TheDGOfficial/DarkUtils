@@ -1,9 +1,9 @@
 package gg.darkutils.utils.chat;
 
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,18 +14,18 @@ import java.net.URI;
  */
 public final class TextBuilder {
     @NotNull
-    private final MutableText text;
+    private final MutableComponent text;
 
     private TextBuilder() {
         super();
 
-        this.text = Text.empty();
+        this.text = Component.empty();
     }
 
     private TextBuilder(@NotNull final String initialText, @NotNull final SimpleStyle initialTextStyle) {
         super();
 
-        this.text = Text.literal(initialText).setStyle(initialTextStyle.toStyle());
+        this.text = Component.literal(initialText).setStyle(initialTextStyle.toStyle());
     }
 
     @NotNull
@@ -38,15 +38,15 @@ public final class TextBuilder {
         return new TextBuilder(initialText, initialTextStyle);
     }
 
-    private static final void addGradientLink(@NotNull final String startHex, @NotNull final String endHex, @NotNull final MutableText text, @NotNull final LinkData link, final boolean bold) {
+    private static final void addGradientLink(@NotNull final String startHex, @NotNull final String endHex, @NotNull final MutableComponent text, @NotNull final LinkData link, final boolean bold) {
         TextBuilder.addLink(text, ChatUtils.gradient(startHex, endHex, link.hover(), bold), link.link());
     }
 
-    private static final void addLink(@NotNull final MutableText text, @NotNull final LinkData link) {
-        TextBuilder.addLink(text, Text.literal(link.hover()).setStyle(text.getStyle()), link.link());
+    private static final void addLink(@NotNull final MutableComponent text, @NotNull final LinkData link) {
+        TextBuilder.addLink(text, Component.literal(link.hover()).setStyle(text.getStyle()), link.link());
     }
 
-    private static final void addLink(@NotNull final MutableText text, @NotNull final MutableText hover, @NotNull final String link) {
+    private static final void addLink(@NotNull final MutableComponent text, @NotNull final MutableComponent hover, @NotNull final String link) {
         text.setStyle(
                 text.getStyle()
                         .withHoverEvent(new HoverEvent.ShowText(hover))
@@ -96,7 +96,7 @@ public final class TextBuilder {
     }
 
     @NotNull
-    private final TextBuilder append(@NotNull final String text) {
+    public final TextBuilder append(@NotNull final String text) {
         this.text.append(text);
         return this;
     }
@@ -109,7 +109,7 @@ public final class TextBuilder {
     @NotNull
     public final TextBuilder append(@NotNull final String text, @NotNull final SimpleStyle style, @Nullable final LinkData link) {
         final var actualStyle = style.toStyle();
-        final var literal = Text.literal(style.isCentered() ? ChatUtils.center(text, actualStyle.isBold()) : text);
+        final var literal = Component.literal(style.isCentered() ? ChatUtils.center(text, actualStyle.isBold()) : text);
 
         if (!style.isInheritedStyle()) {
             literal.setStyle(actualStyle);
@@ -132,7 +132,7 @@ public final class TextBuilder {
      * @return The built text instance.
      */
     @NotNull
-    public final Text build() {
+    public final Component build() {
         return this.text;
     }
 

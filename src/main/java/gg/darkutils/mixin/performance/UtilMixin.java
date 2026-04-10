@@ -48,7 +48,7 @@ final class UtilMixin {
      * conditions are met.
      */
     @Redirect(
-            method = "createIoWorker",
+            method = "makeIoExecutor",
             at = @At(
                     value = "INVOKE",
                     target = "Ljava/util/concurrent/Executors;newCachedThreadPool(Ljava/util/concurrent/ThreadFactory;)Ljava/util/concurrent/ExecutorService;",

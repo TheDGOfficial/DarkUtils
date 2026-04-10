@@ -55,11 +55,11 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.Window;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
+import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.platform.Window;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.CommonColors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -121,7 +121,7 @@ public final class DarkUtils implements ClientModInitializer {
      * This value will be used for some features like gui scale fix and auto
      * diagnostic features like disallowing setting cursor position in wayland.
      */
-    private static final @NotNull Supplier<String> WINDOW_PLATFORM = LazyConstants.lazyConstantOf(Window::getGlfwPlatform);
+    private static final @NotNull Supplier<String> WINDOW_PLATFORM = LazyConstants.lazyConstantOf(Window::getPlatform);
 
     /**
      * Used for rate-limiting the update checker command so that user can't spam the GH API.
@@ -325,13 +325,13 @@ public final class DarkUtils implements ClientModInitializer {
 
         // If logging before player joins a world/server/realm (e.g. in main menu),
         // we need to wait till player joins one so they can read chat.
-        final var text = Text.literal(message);
+        final var text = Component.literal(message);
         var style = Style.EMPTY;
 
         style = style.withColor(switch (level) {
-            case INFO -> Colors.LIGHT_GRAY;
-            case WARN -> Colors.LIGHT_YELLOW;
-            case ERROR -> Colors.LIGHT_RED;
+            case INFO -> CommonColors.LIGHT_GRAY;
+            case WARN -> CommonColors.SOFT_YELLOW;
+            case ERROR -> CommonColors.SOFT_RED;
         });
 
         text.setStyle(style);
@@ -522,8 +522,8 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final void openConfig() {
-        final var mc = MinecraftClient.getInstance();
-        mc.send(() -> mc.setScreen(DarkUtilsConfigScreen.create(null)));
+        final var mc = Minecraft.getInstance();
+        mc.schedule(() -> mc.setScreen(DarkUtilsConfigScreen.create(null)));
     }
 
     public static final @NotNull String getVersion() {

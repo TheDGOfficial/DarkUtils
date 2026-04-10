@@ -1,39 +1,39 @@
 package gg.darkutils.utils.chat;
 
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
 public enum SimpleColor {
-    BLACK(Formatting.BLACK),
-    DARK_BLUE(Formatting.DARK_BLUE),
-    DARK_GREEN(Formatting.DARK_GREEN),
-    DARK_AQUA(Formatting.DARK_AQUA),
-    DARK_RED(Formatting.DARK_RED),
-    DARK_PURPLE(Formatting.DARK_PURPLE),
-    GOLD(Formatting.GOLD),
-    GRAY(Formatting.GRAY),
-    DARK_GRAY(Formatting.DARK_GRAY),
-    BLUE(Formatting.BLUE),
-    GREEN(Formatting.GREEN),
-    AQUA(Formatting.AQUA),
-    RED(Formatting.RED),
-    LIGHT_PURPLE(Formatting.LIGHT_PURPLE),
-    YELLOW(Formatting.YELLOW),
-    WHITE(Formatting.WHITE);
+    BLACK(ChatFormatting.BLACK),
+    DARK_BLUE(ChatFormatting.DARK_BLUE),
+    DARK_GREEN(ChatFormatting.DARK_GREEN),
+    DARK_AQUA(ChatFormatting.DARK_AQUA),
+    DARK_RED(ChatFormatting.DARK_RED),
+    DARK_PURPLE(ChatFormatting.DARK_PURPLE),
+    GOLD(ChatFormatting.GOLD),
+    GRAY(ChatFormatting.GRAY),
+    DARK_GRAY(ChatFormatting.DARK_GRAY),
+    BLUE(ChatFormatting.BLUE),
+    GREEN(ChatFormatting.GREEN),
+    AQUA(ChatFormatting.AQUA),
+    RED(ChatFormatting.RED),
+    LIGHT_PURPLE(ChatFormatting.LIGHT_PURPLE),
+    YELLOW(ChatFormatting.YELLOW),
+    WHITE(ChatFormatting.WHITE);
 
     @NotNull
-    private final Formatting formatting;
+    private final ChatFormatting formatting;
     private final int rgb;
 
-    private SimpleColor(@NotNull final Formatting formatting) {
+    private SimpleColor(@NotNull final ChatFormatting formatting) {
         this.formatting = Objects.requireNonNull(formatting, "SimpleColor formatting value");
-        this.rgb = Objects.requireNonNull(this.formatting.getColorValue(), "SimpleColor formatting color value");
+        this.rgb = Objects.requireNonNull(this.formatting.getColor(), "SimpleColor formatting color value");
     }
 
     @NotNull
-    public final Formatting toFormatting() {
+    public final ChatFormatting toFormatting() {
         return this.formatting;
     }
 

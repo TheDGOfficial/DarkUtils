@@ -8,7 +8,7 @@ import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.SimpleStyle;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,7 +29,7 @@ import java.util.stream.Stream;
  * @param message           The message.
  */
 public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationState,
-                                      @NotNull Text message,
+                                      @NotNull Component message,
                                       @NotNull Supplier<String> rawContentSupplier,
                                       @NotNull Supplier<String> contentSupplier,
                                       @NotNull Supplier<Map<SimpleStyle, Boolean>> hasFormattingCache) implements CancellableEvent {
@@ -54,7 +54,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * @param rawContentSupplier The raw message.
      * @param contentSupplier    The content supplier.
      */
-    public ReceiveGameMessageEvent(@NotNull final CancellationState cancellationState, @NotNull final Text message, @NotNull final Supplier<String> rawContentSupplier, @NotNull final Supplier<String> contentSupplier) {
+    public ReceiveGameMessageEvent(@NotNull final CancellationState cancellationState, @NotNull final Component message, @NotNull final Supplier<String> rawContentSupplier, @NotNull final Supplier<String> contentSupplier) {
         this(cancellationState, message, rawContentSupplier, contentSupplier, LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(ReceiveGameMessageEvent.ALL_STYLE_COMBINATIONS, style -> ChatUtils.hasFormatting(message, style, rawContentSupplier))));
     }
 
@@ -66,7 +66,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * @param message            The message.
      * @param rawContentSupplier The raw message.
      */
-    public ReceiveGameMessageEvent(@NotNull final CancellationState cancellationState, @NotNull final Text message, @NotNull final Supplier<String> rawContentSupplier) {
+    public ReceiveGameMessageEvent(@NotNull final CancellationState cancellationState, @NotNull final Component message, @NotNull final Supplier<String> rawContentSupplier) {
         this(cancellationState, message, rawContentSupplier, LazyConstants.lazyConstantOf(() -> ChatUtils.removeControlCodes(rawContentSupplier.get())));
     }
 
@@ -76,7 +76,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      *
      * @param message The message.
      */
-    public ReceiveGameMessageEvent(@NotNull final Text message) {
+    public ReceiveGameMessageEvent(@NotNull final Component message) {
         this(CancellationState.ofFresh(), message, LazyConstants.lazyConstantOf(message::getString));
     }
 
@@ -84,7 +84,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
         ClientReceiveMessageEvents.ALLOW_GAME.register(ReceiveGameMessageEvent::post);
     }
 
-    private static final boolean post(@NotNull final Text message, final boolean overlay) {
+    private static final boolean post(@NotNull final Component message, final boolean overlay) {
         return overlay || new ReceiveGameMessageEvent(message).triggerAndNotCancelled();
     }
 

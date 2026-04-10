@@ -1,24 +1,24 @@
 package gg.darkutils.utils.chat;
 
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 import org.jetbrains.annotations.NotNull;
 
 public enum SimpleFormatting {
-    BOLD(Formatting.BOLD),
-    ITALIC(Formatting.ITALIC),
-    UNDERLINE(Formatting.UNDERLINE),
-    STRIKETHROUGH(Formatting.STRIKETHROUGH),
-    OBFUSCATED(Formatting.OBFUSCATED);
+    BOLD(ChatFormatting.BOLD),
+    ITALIC(ChatFormatting.ITALIC),
+    UNDERLINE(ChatFormatting.UNDERLINE),
+    STRIKETHROUGH(ChatFormatting.STRIKETHROUGH),
+    OBFUSCATED(ChatFormatting.OBFUSCATED);
 
     @NotNull
-    private final Formatting formatting;
+    private final ChatFormatting formatting;
 
-    private SimpleFormatting(@NotNull final Formatting formatting) {
+    private SimpleFormatting(@NotNull final ChatFormatting formatting) {
         this.formatting = formatting;
     }
 
     @NotNull
-    public final Formatting toFormatting() {
+    public final ChatFormatting toFormatting() {
         return this.formatting;
     }
 }

@@ -2,10 +2,10 @@ package gg.darkutils.mixin.misc;
 
 import gg.darkutils.events.ReceiveMainThreadPacketEvent;
 import gg.darkutils.events.ServerTickEvent;
-import net.minecraft.network.NetworkSide;
-import net.minecraft.network.listener.PacketListener;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.PacketListener;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.common.ClientboundPingPacket;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(targets = "net.minecraft.network.PacketApplyBatcher$Entry")
+@Mixin(targets = "net.minecraft.network.PacketProcessor$ListenerAndPacket")
 final class PacketApplyBatcherEntryMixin<T extends PacketListener> {
     @Unique
     private static int lastId;
@@ -35,23 +35,23 @@ final class PacketApplyBatcherEntryMixin<T extends PacketListener> {
     }
 
     @Inject(
-            method = "apply",
+            method = "handle",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/network/packet/Packet;apply(Lnet/minecraft/network/listener/PacketListener;)V"
+                    target = "Lnet/minecraft/network/protocol/Packet;handle(Lnet/minecraft/network/PacketListener;)V"
             ),
             cancellable = true
     )
     private final void darkutils$beforeMainThreadPacket(@NotNull final CallbackInfo ci) {
-        if (NetworkSide.CLIENTBOUND != this.listener.getSide()) {
+        if (PacketFlow.CLIENTBOUND != this.listener.flow()) {
             // Integrated server packet. We're on Server thread, the instanceof will always be false, and ReceiveMainThreadPacketEvent expects Client (Render) thread, so just do nothing and return.
             return;
         }
 
         final var packet = this.packet;
 
-        if (packet instanceof final CommonPingS2CPacket p) {
-            final var id = p.getParameter();
+        if (packet instanceof final ClientboundPingPacket p) {
+            final var id = p.getId();
 
             if (0 > id && id != PacketApplyBatcherEntryMixin.lastId) {
                 PacketApplyBatcherEntryMixin.lastId = id;

@@ -7,8 +7,8 @@ import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import org.jetbrains.annotations.NotNull;
 
 public final class SoloCrushTimer {
@@ -26,7 +26,7 @@ public final class SoloCrushTimer {
         ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(SoloCrushTimer::reset);
     }
 
-    private static final void reset(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
+    private static final void reset(@NotNull final Minecraft client, @NotNull final ClientLevel world) {
         SoloCrushTimer.firstLightningReceived = false;
         SoloCrushTimer.inProgress = true;
     }

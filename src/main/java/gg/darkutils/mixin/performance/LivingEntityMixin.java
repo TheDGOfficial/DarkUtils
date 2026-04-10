@@ -1,7 +1,7 @@
 package gg.darkutils.mixin.performance;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,7 +16,7 @@ final class LivingEntityMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "isGlowing", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isCurrentlyGlowing", at = @At("HEAD"), cancellable = true)
     private final void darkutils$isGlowing$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
         if (DarkUtilsConfig.INSTANCE.disableGlowing) {
             cir.setReturnValue(false);

@@ -3,9 +3,9 @@ package gg.darkutils.feat.foraging;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.ObtainTreeGiftEvent;
 import gg.darkutils.events.base.EventRegistry;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
@@ -26,14 +26,14 @@ public final class TreeGiftConfirmation {
             return;
         }
 
-        final var client = MinecraftClient.getInstance();
+        final var client = Minecraft.getInstance();
 
         if (null != client.player) {
             // Play sound only for this client
-            client.player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), 1.0F, 1.0F);
+            client.player.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.0F);
 
             // Show title/subtitle
-            client.inGameHud.setTitle(Text.of("§2Tree Gift!"));
+            client.gui.setTitle(Component.nullToEmpty("§2Tree Gift!"));
             var subtitle = "§7You received the rewards!";
 
             final var mobSpawned = event.treeMobSpawned();
@@ -45,8 +45,8 @@ public final class TreeGiftConfirmation {
                 subtitle = "§7A §d" + prettyName + " §7has spawned!";
             }
 
-            client.inGameHud.setSubtitle(Text.of(subtitle));
-            client.inGameHud.setTitleTicks(10, 70, 20);
+            client.gui.setSubtitle(Component.nullToEmpty(subtitle));
+            client.gui.setTimes(10, 70, 20);
         }
     }
 }
