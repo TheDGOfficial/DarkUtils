@@ -2,15 +2,13 @@ package gg.darkutils.events.base;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Consumer;
-
 /**
  * Listener for an {@link Event}.
  * <p>
  * Single abstract method onEvent(T) keeps this a functional interface while allowing
  * default methods for priority and receiveCancelled behavior.
  * <p>
- * See {@link EventListener#create(Consumer, EventPriority, boolean)} to create a
+ * See {@link EventListener#create(EventConsumer, EventPriority, boolean)} to create a
  * listener with custom priority or receiveCancelled behavior.
  *
  * @param <T> The type of the event the listener is listening for.
@@ -24,7 +22,7 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
      * @return The new event listener that delegates to the passed consumer.
      */
     @NotNull
-    static <T extends Event> EventListener<T> create(@NotNull final Consumer<? super T> listener) {
+    static <T extends Event> EventListener<T> create(@NotNull final EventConsumer<? super T> listener) {
         return EventListener.create(listener, EventPriority.NORMAL);
     }
 
@@ -38,7 +36,7 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
      * to the passed consumer.
      */
     @NotNull
-    static <T extends Event> EventListener<T> create(@NotNull final Consumer<? super T> listener, @NotNull final EventPriority priority) {
+    static <T extends Event> EventListener<T> create(@NotNull final EventConsumer<? super T> listener, @NotNull final EventPriority priority) {
         return EventListener.create(listener, priority, false);
     }
 
@@ -54,8 +52,8 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
      */
     @NotNull
     @SuppressWarnings("unchecked")
-    static <T extends Event> EventListener<T> create(@NotNull final Consumer<? super T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled) {
-        return new EventListener.Impl<>((Consumer<T>) listener, priority, receiveCancelled);
+    static <T extends Event> EventListener<T> create(@NotNull final EventConsumer<? super T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled) {
+        return new EventListener.Impl<>((EventConsumer<T>) listener, priority, receiveCancelled);
     }
 
     /**
@@ -90,7 +88,7 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
      * @param receiveCancelled The custom receiveCancelled behavior.
      * @param <T>              The type of the event.
      */
-    public record Impl<T extends Event>(@NotNull Consumer<T> listener, @NotNull EventPriority priority,
+    public record Impl<T extends Event>(@NotNull EventConsumer<T> listener, @NotNull EventPriority priority,
                                         boolean receiveCancelled) implements EventListener<T> {
         @Override
         public final void accept(@NotNull final T event) {

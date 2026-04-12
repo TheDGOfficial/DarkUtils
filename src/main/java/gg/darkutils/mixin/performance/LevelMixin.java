@@ -3,8 +3,8 @@ package gg.darkutils.mixin.performance;
 import com.llamalad7.mixinextras.sugar.Local;
 import gg.darkutils.config.DarkUtilsConfig;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.BlockEntityTickInvoker;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.TickingBlockEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -19,17 +19,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Iterator;
 import java.util.List;
 
-@Mixin(World.class)
-final class WorldMixin {
+@Mixin(Level.class)
+final class LevelMixin {
     @Final
     @Shadow
     @NotNull
-    private List<BlockEntityTickInvoker> blockEntityTickers;
+    private List<TickingBlockEntity> blockEntityTickers;
     @Unique
     @Nullable
-    private ReferenceOpenHashSet<BlockEntityTickInvoker> toRemove;
+    private ReferenceOpenHashSet<TickingBlockEntity> toRemove;
 
-    private WorldMixin() {
+    private LevelMixin() {
         super();
 
         throw new UnsupportedOperationException("mixin class");
@@ -44,7 +44,7 @@ final class WorldMixin {
     }
 
     @Redirect(at = @At(target = "Ljava/util/Iterator;remove()V", value = "INVOKE"), method = "tickBlockEntities")
-    private final void darkutils$addToRemove(@NotNull final Iterator<BlockEntityTickInvoker> instance, @Local @NotNull final BlockEntityTickInvoker blockEntityTickInvoker) {
+    private final void darkutils$addToRemove(@NotNull final Iterator<TickingBlockEntity> instance, @Local @NotNull final TickingBlockEntity blockEntityTickInvoker) {
         if (DarkUtilsConfig.INSTANCE.blockEntityUnloadLagFix) {
             final var toRemoveLocal = this.toRemove;
             if (null != toRemoveLocal) { // may happen if feature is toggled in between calls

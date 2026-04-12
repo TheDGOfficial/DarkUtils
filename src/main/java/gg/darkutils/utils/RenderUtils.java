@@ -1,32 +1,25 @@
 package gg.darkutils.utils;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import gg.darkutils.DarkUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderPhase;
-import net.minecraft.client.render.VertexRendering;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.registry.Registries;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.gizmos.GizmoStyle;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.gizmos.Gizmos;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -41,35 +34,12 @@ public final class RenderUtils {
      */
     public static final @NotNull IntSupplier MIDDLE_ALIGNED_Y = RenderUtils::getMiddleOfScreenYCoordinate;
     /**
-     * Represents the render pipeline that does culling to hide when out of screen and suitable for rendering lines.
-     */
-    private static final @NotNull RenderPipeline OUTLINE_CULL_RENDER_PIPELINE = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.RENDERTYPE_LINES_SNIPPET)
-            .withLocation(Identifier.of(DarkUtils.MOD_ID, "pipeline/" + DarkUtils.MOD_ID + "_outline_cull"))
-            .build());
-    /**
-     * Represents the custom line width parameter.
-     */
-    private static final @NotNull RenderLayer.MultiPhaseParameters.Builder LINES_PARAMETER = RenderLayer.MultiPhaseParameters.builder()
-            .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
-            .lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(3.69)));
-    /**
-     * Represents the box outline layer.
-     */
-    private static final @NotNull RenderLayer.MultiPhase BOX_OUTLINE_LAYER = RenderLayer.of(
-            DarkUtils.MOD_ID + "_box_outline",
-            RenderLayer.DEFAULT_BUFFER_SIZE,
-            false,
-            false,
-            RenderUtils.OUTLINE_CULL_RENDER_PIPELINE,
-            RenderUtils.LINES_PARAMETER.build(false)
-    );
-    /**
      * Holds the formatting to text color cache.
      */
-    private static final @NotNull Supplier<Map<Formatting, TextColor>> FORMATTING_TO_TEXT_COLOR = LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(
-            Set.copyOf(Arrays.asList(Formatting.values())),
+    private static final @NotNull Supplier<Map<ChatFormatting, TextColor>> FORMATTING_TO_TEXT_COLOR = LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(
+            Set.copyOf(Arrays.asList(ChatFormatting.values())),
             formatting -> Objects.requireNonNull(
-                    TextColor.fromFormatting(formatting),
+                    TextColor.fromLegacyFormat(formatting),
                     "Formatting must convert to TextColor"
             )
     ));
@@ -77,13 +47,13 @@ public final class RenderUtils {
      * Holds the item to empty ItemStack cache.
      */
     private static final @NotNull Supplier<Map<Item, ItemStack>> ITEM_TO_ITEM_STACK = LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(
-        Set.copyOf(Registries.ITEM.stream().toList()),
-        ItemStack::new
+            Set.copyOf(BuiltInRegistries.ITEM.stream().toList()),
+            ItemStack::new
     ));
     /**
      * Holds the empty OrderedText.
      */
-    private static final @NotNull OrderedText EMPTY_ORDERED_TEXT = Text.of("").asOrderedText();
+    private static final @NotNull Supplier<FormattedCharSequence> EMPTY_ORDERED_TEXT = LazyConstants.lazyConstantOf(() -> Component.nullToEmpty("").getVisualOrderText());
 
     private RenderUtils() {
         super();
@@ -102,105 +72,85 @@ public final class RenderUtils {
     }
 
     private static final int getMiddleOfScreenYCoordinate() {
-        final var client = MinecraftClient.getInstance();
-        return (client.getWindow().getScaledHeight() >> 1) - (client.textRenderer.fontHeight >> 1);
+        final var client = Minecraft.getInstance();
+        return (client.getWindow().getGuiScaledHeight() >> 1) - (client.font.lineHeight >> 1);
     }
 
-    private static final int convertFormattingToRGBA(@NotNull final Formatting color) {
-        return RenderUtils.FORMATTING_TO_TEXT_COLOR.get().get(color).getRgb();
+    private static final int convertFormattingToRGBA(@NotNull final ChatFormatting color) {
+        return RenderUtils.FORMATTING_TO_TEXT_COLOR.get().get(color).getValue();
     }
 
-    private static final int convertFormattingToOpaqueColor(@NotNull final Formatting color) {
+    private static final int convertFormattingToOpaqueColor(@NotNull final ChatFormatting color) {
         // set alpha to 255 otherwise will be invisible
         return 0xFF00_0000 | RenderUtils.convertFormattingToRGBA(color);
     }
 
-    public static final void renderText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, final int x, final int y, @NotNull final Formatting color) {
+    private static final int toARGB(final double alpha, final double red, final double green, final double blue) {
+        final var roundedAlpha = (int) Math.round(alpha * 255.0D) & 0xFF;
+        final var roundedRed = (int) Math.round(red * 255.0D) & 0xFF;
+        final var roundedGreen = (int) Math.round(green * 255.0D) & 0xFF;
+        final var roundedBlue = (int) Math.round(blue * 255.0D) & 0xFF;
+
+        return roundedAlpha << 24 | roundedRed << 16 | roundedGreen << 8 | roundedBlue;
+    }
+
+    public static final void renderText(@NotNull final GuiGraphics context, @NotNull final RenderUtils.RenderingText text, final int x, final int y, @NotNull final ChatFormatting color) {
         RenderUtils.renderText(context, text, x, () -> y, color);
     }
 
-    public static final void renderText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, final int x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
+    public static final void renderText(@NotNull final GuiGraphics context, @NotNull final RenderUtils.RenderingText text, final int x, @NotNull final IntSupplier y, @NotNull final ChatFormatting color) {
         RenderUtils.renderText(context, text, () -> x, y, color);
     }
 
-    private static final void renderText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final Formatting color) {
-        context.drawText(MinecraftClient.getInstance().textRenderer, text.orderedText, x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
+    private static final void renderText(@NotNull final GuiGraphics context, @NotNull final RenderUtils.RenderingText text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final ChatFormatting color) {
+        context.drawString(Minecraft.getInstance().font, text.orderedText, x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
     public static final int middleAlignedXForText(@NotNull final RenderUtils.RenderingText text) {
-        return (MinecraftClient.getInstance().getWindow().getScaledWidth() >> 1) - (text.getWidth() >> 1);
+        return (Minecraft.getInstance().getWindow().getGuiScaledWidth() >> 1) - (text.getWidth() >> 1);
     }
 
-    public static final void renderCenteredText(@NotNull final DrawContext context, @NotNull final RenderUtils.RenderingText text, @NotNull final IntSupplier y, @NotNull final Formatting color) {
-        context.drawText(MinecraftClient.getInstance().textRenderer, text.orderedText, RenderUtils.middleAlignedXForText(text), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
+    public static final void renderCenteredText(@NotNull final GuiGraphics context, @NotNull final RenderUtils.RenderingText text, @NotNull final IntSupplier y, @NotNull final ChatFormatting color) {
+        context.drawString(Minecraft.getInstance().font, text.orderedText, RenderUtils.middleAlignedXForText(text), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
-    public static final void renderItem(@NotNull final DrawContext context, @NotNull final Item item, final int x, final int y) {
+    public static final void renderItem(@NotNull final GuiGraphics context, @NotNull final Item item, final int x, final int y) {
         RenderUtils.renderItem(context, item, x, () -> y);
     }
 
-    private static final void renderItem(@NotNull final DrawContext context, @NotNull final Item item, final int x, @NotNull final IntSupplier y) {
+    private static final void renderItem(@NotNull final GuiGraphics context, @NotNull final Item item, final int x, @NotNull final IntSupplier y) {
         RenderUtils.renderItem(context, item, () -> x, y);
     }
 
-    private static final void renderItem(@NotNull final DrawContext context, @NotNull final Item item, final IntSupplier x, @NotNull final IntSupplier y) {
-        context.drawItemWithoutEntity(RenderUtils.ITEM_TO_ITEM_STACK.get().get(item), x.getAsInt(), y.getAsInt(), 0);
+    private static final void renderItem(@NotNull final GuiGraphics context, @NotNull final Item item, final IntSupplier x, @NotNull final IntSupplier y) {
+        context.renderFakeItem(RenderUtils.ITEM_TO_ITEM_STACK.get().get(item), x.getAsInt(), y.getAsInt(), 0);
     }
 
     public static final void drawBlockOutline(@NotNull final WorldRenderContext context,
                                               @NotNull final BlockPos pos,
-                                              @NotNull final Formatting color) {
-        final var matrices = context.matrices();
-
-        if (null == matrices) {
-            return;
-        }
-
-        final var consumers = context.consumers();
-
-        if (null == consumers) {
-            return;
-        }
-
-        final var buffer = consumers.getBuffer(RenderUtils.BOX_OUTLINE_LAYER);
-
+                                              @NotNull final ChatFormatting color) {
         // Convert Formatting to RGBA floats
         final var rgb = RenderUtils.convertFormattingToRGBA(color);
-
-        // Translate block position relative to camera
-        matrices.push();
-
-        final var camPos = context.gameRenderer().getCamera().getPos().negate();
-
-        matrices.translate(
-                camPos.x,
-                camPos.y,
-                camPos.z
-        );
-
-        final var immutablePos = pos.toImmutable();
 
         final var red = (rgb >> 16 & 0xFF) / 255.0D;
         final var green = (rgb >> 8 & 0xFF) / 255.0D;
         final var blue = (rgb & 0xFF) / 255.0D;
         final var alpha = 1.0D; // fully opaque
 
-        // Draw outline for a single block using RGBA color
-        VertexRendering.drawBox(
-                matrices.peek(),
-                buffer,
-                Box.enclosing(immutablePos, immutablePos),
-                (float) red, (float) green, (float) blue, (float) alpha
-        );
+        final var argb = RenderUtils.toARGB(alpha, red, green, blue);
 
-        matrices.pop();
+        final var style = GizmoStyle.stroke(argb);
+
+        final var immutablePos = pos.immutable();
+
+        Gizmos.cuboid(AABB.encapsulatingFullBlocks(immutablePos, immutablePos), style);
     }
 
     /**
      * Checks if the current thread is not the render thread and returns true if so.
-     *
+     * <p>
      * Typically used to re-schedule an action next tick to ensure thread-safety when called from external thread,
-     * if you need to fail-fast and reject external thread call, use {@link RenderUtils#checkCallerThread()} instead.
+     * if you need to fail-fast and reject external thread call, use {@link RenderUtils#validateRenderThread()} instead.
      */
     public static final boolean isNotCallingFromRenderThread() {
         return !RenderSystem.isOnRenderThread();
@@ -220,20 +170,20 @@ public final class RenderUtils {
         private String text;
 
         @NotNull
-        private OrderedText orderedText;
+        private FormattedCharSequence orderedText;
 
         private int width;
         private boolean widthDirty = true;
 
         private RenderingText() {
-            this("", RenderUtils.EMPTY_ORDERED_TEXT);
+            this("", RenderUtils.EMPTY_ORDERED_TEXT.get());
         }
 
         private RenderingText(@NotNull final String text) {
-            this(text, Text.of(text).asOrderedText());
+            this(text, Component.nullToEmpty(text).getVisualOrderText());
         }
 
-        private RenderingText(@NotNull final String text, @NotNull final OrderedText orderedText) {
+        private RenderingText(@NotNull final String text, @NotNull final FormattedCharSequence orderedText) {
             super();
 
             this.text = text;
@@ -246,15 +196,26 @@ public final class RenderUtils {
             }
 
             this.text = newText;
-            this.orderedText = Text.of(newText).asOrderedText();
+            this.orderedText = Component.nullToEmpty(newText).getVisualOrderText();
 
+            this.widthDirty = true;
+        }
+
+        /**
+         * Overrides shown text directly. Bypasses cache. The textual {@link #text} field will not be updated.
+         * Use carefully, if you compile the {@link FormattedCharSequence} per frame it will reduce performance.
+         *
+         * @param newText The new shown text.
+         */
+        public final void setShownText(@NotNull final FormattedCharSequence newText) {
+            this.orderedText = newText;
             this.widthDirty = true;
         }
 
         private final int getWidth() {
             if (this.widthDirty) {
                 this.widthDirty = false;
-                return this.width = MinecraftClient.getInstance().textRenderer.getWidth(this.orderedText);
+                return this.width = Minecraft.getInstance().font.width(this.orderedText);
             }
 
             return this.width;

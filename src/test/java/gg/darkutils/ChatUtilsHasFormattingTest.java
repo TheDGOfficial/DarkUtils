@@ -5,9 +5,6 @@ import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.SimpleStyle;
 import gg.darkutils.utils.chat.TextBuilder;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -62,7 +59,7 @@ final class ChatUtilsHasFormattingTest {
         final var legacyFormatted =
                 style.getRawFormattingCharacters() + "Hello";
 
-        final var text = Text.literal(legacyFormatted);
+        final var text = TextBuilder.empty().append(legacyFormatted).build();
 
         final var result = ChatUtils.hasFormatting(text, SimpleColor.GREEN);
 
@@ -188,8 +185,7 @@ final class ChatUtilsHasFormattingTest {
 
     @Test
     final void shouldDetectVanillaFormattingColorAgainstRgbConstructedStyle() {
-        final var text = Text.literal("Hello")
-                .setStyle(Style.EMPTY.withFormatting(Formatting.GREEN));
+        final var text = TextBuilder.withInitial("Hello", SimpleStyle.colored(SimpleColor.GREEN)).build();
 
         final var result = ChatUtils.hasFormatting(
                 text,

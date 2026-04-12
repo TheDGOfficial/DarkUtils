@@ -1,16 +1,13 @@
 package gg.darkutils.utils.network;
 
-import java.io.IOException;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-
-import java.util.List;
 import java.util.Map;
-
-import org.jetbrains.annotations.NotNull;
 
 public final class NetworkUtils {
     @NotNull
@@ -23,16 +20,16 @@ public final class NetworkUtils {
     }
 
     @NotNull
-    public static final SendableHttpRequest newGetRequest(@NotNull final String url, @NotNull final List<Map.Entry<String, String>> headers) {
+    public static final NetworkUtils.SendableHttpRequest newGetRequest(@NotNull final String url, @NotNull final Iterable<Map.Entry<String, String>> headers) {
         final var builder = HttpRequest.newBuilder().uri(URI.create(url));
 
         NetworkExtras.applyExtraSettings(builder);
         headers.forEach(e -> builder.header(e.getKey(), e.getValue()));
 
-        return new SendableHttpRequest(
-            builder
-                .GET()
-                .build()
+        return new NetworkUtils.SendableHttpRequest(
+                builder
+                        .GET()
+                        .build()
         );
     }
 

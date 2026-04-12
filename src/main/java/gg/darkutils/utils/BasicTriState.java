@@ -10,11 +10,11 @@ public enum BasicTriState {
     TRUE,
     DEFAULT;
 
-    @NotNull
-    public static final BasicTriState of(final boolean b) {
-        return b ? BasicTriState.TRUE : BasicTriState.FALSE;
+    private BasicTriState() {
     }
 
-    private BasicTriState() {
+    @NotNull
+    public static final BasicTriState of(final boolean state) {
+        return state ? BasicTriState.TRUE : BasicTriState.FALSE;
     }
 }

@@ -4,8 +4,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.hypixel.data.type.GameType;
 import net.hypixel.modapi.HypixelModAPI;
 import net.hypixel.modapi.packet.impl.clientbound.event.ClientboundLocationPacket;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +34,7 @@ public final class LocationUtils {
         LocationUtils.skyblockIsland = LocationUtils.SkyblockIsland.fromId(packet.getMode().orElse(null));
     }
 
-    private static final void onQuit(@NotNull final ClientPlayNetworkHandler handler, @NotNull final MinecraftClient client) {
+    private static final void onQuit(@NotNull final ClientPacketListener handler, @NotNull final Minecraft client) {
         LocationUtils.isInHypixel = false;
         LocationUtils.isInSkyblock = false;
         LocationUtils.skyblockIsland = null;
@@ -52,6 +52,14 @@ public final class LocationUtils {
         return LocationUtils.SkyblockIsland.GARDEN == LocationUtils.skyblockIsland;
     }
 
+    public static final boolean isInDwarvenMines() {
+        return LocationUtils.SkyblockIsland.DWARVEN_MINES == LocationUtils.skyblockIsland;
+    }
+
+    public static final boolean isInMineshaft() {
+        return LocationUtils.SkyblockIsland.MINESHAFT == LocationUtils.skyblockIsland;
+    }
+
     public static final boolean isInSkyblock() {
         return LocationUtils.isInSkyblock;
     }
@@ -61,13 +69,15 @@ public final class LocationUtils {
     }
 
     public static final boolean isInSingleplayer() {
-        return MinecraftClient.getInstance().isConnectedToLocalServer();
+        return Minecraft.getInstance().isSingleplayer();
     }
 
     private enum SkyblockIsland {
         DUNGEONS,
         GALATEA,
-        GARDEN;
+        GARDEN,
+        DWARVEN_MINES,
+        MINESHAFT;
 
         private SkyblockIsland() {
         }
@@ -77,6 +87,8 @@ public final class LocationUtils {
                 case "dungeon" -> LocationUtils.SkyblockIsland.DUNGEONS;
                 case "foraging_2" -> LocationUtils.SkyblockIsland.GALATEA;
                 case "garden" -> LocationUtils.SkyblockIsland.GARDEN;
+                case "mining_3" -> LocationUtils.SkyblockIsland.DWARVEN_MINES;
+                case "mineshaft" -> LocationUtils.SkyblockIsland.MINESHAFT;
                 default -> null;
             };
         }

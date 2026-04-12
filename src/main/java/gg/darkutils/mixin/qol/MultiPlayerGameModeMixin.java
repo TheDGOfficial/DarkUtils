@@ -2,39 +2,39 @@ package gg.darkutils.mixin.qol;
 
 import gg.darkutils.events.UseItemEvent;
 import gg.darkutils.utils.Helpers;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ClientPlayerInteractionManager.class)
-final class ClientPlayerInteractionManagerMixin {
-    private ClientPlayerInteractionManagerMixin() {
+@Mixin(MultiPlayerGameMode.class)
+final class MultiPlayerGameModeMixin {
+    private MultiPlayerGameModeMixin() {
         super();
 
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "interactItem(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;",
+    @Inject(method = "useItem(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;",
             at = @At("HEAD"), cancellable = true)
-    private final void darkutils$onInteractItem$cancelIfEnabled(@NotNull final PlayerEntity player, @NotNull final Hand hand, @NotNull final CallbackInfoReturnable<ActionResult> cir) {
+    private final void darkutils$onInteractItem$cancelIfEnabled(@NotNull final Player player, @NotNull final InteractionHand hand, @NotNull final CallbackInfoReturnable<InteractionResult> cir) {
         final var stack = Helpers.getItemStackInHand(hand);
 
         if (new UseItemEvent(stack, hand).triggerAndCancelled()) {
-            cir.setReturnValue(ActionResult.PASS);
+            cir.setReturnValue(InteractionResult.PASS);
         }
     }
 
-    @Inject(method = "interactBlock(Lnet/minecraft/client/network/ClientPlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;",
+    @Inject(method = "useItemOn(Lnet/minecraft/client/player/LocalPlayer;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;",
             at = @At("HEAD"), cancellable = true)
-    private final void darkutils$onInteractBlock$cancelIfEnabled(@NotNull final ClientPlayerEntity player, @NotNull final Hand hand, @NotNull final BlockHitResult blockHitResult, @NotNull final CallbackInfoReturnable<ActionResult> cir) {
+    private final void darkutils$onInteractBlock$cancelIfEnabled(@NotNull final LocalPlayer player, @NotNull final InteractionHand hand, @NotNull final BlockHitResult blockHitResult, @NotNull final CallbackInfoReturnable<InteractionResult> cir) {
         final var stack = Helpers.getItemStackInHand(hand);
 
         // Treat looking at a regular block the same as clicking in air, so cancelling is allowed.
@@ -55,7 +55,7 @@ final class ClientPlayerInteractionManagerMixin {
                         .or(Helpers.isRedstoneBlock())
                         .or(Helpers.isWoodenDoor())
         ) && new UseItemEvent(stack, hand).triggerAndCancelled()) {
-            cir.setReturnValue(ActionResult.PASS);
+            cir.setReturnValue(InteractionResult.PASS);
         }
     }
 }

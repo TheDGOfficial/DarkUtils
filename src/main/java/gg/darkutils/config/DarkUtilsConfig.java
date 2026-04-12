@@ -15,10 +15,10 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.AtomicMoveNotSupportedException;
 
 public final class DarkUtilsConfig {
     private static final @NotNull Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -26,7 +26,7 @@ public final class DarkUtilsConfig {
             FabricLoader.getInstance().getConfigDir().toFile(),
             "darkutils"
     );
-    private static final @NotNull File NEW_FILE = new File(CONFIG_DIR, "darkutils.json");
+    private static final @NotNull File NEW_FILE = new File(DarkUtilsConfig.CONFIG_DIR, "darkutils.json");
     private static final @NotNull File OLD_FILE = new File(
             FabricLoader.getInstance().getConfigDir().toFile(),
             "darkutils.json"
@@ -71,6 +71,12 @@ public final class DarkUtilsConfig {
     public boolean stickyRight;
     public boolean enforceZorrosCape;
 
+    // === Mining ===
+    public boolean corpsesPerShaftDisplay;
+    public boolean mineshaftDisplay;
+    public boolean willOWispDisplay;
+    public boolean littlefootDisplay;
+
     // === Dungeons ===
     public boolean dialogueSkipTimer;
     public boolean soloCrushTimer;
@@ -83,8 +89,8 @@ public final class DarkUtilsConfig {
     public boolean arrowStackWaypoints;
     public boolean dungeonTimer;
     public float dungeonTimerScale = 1.0F;
-    public int dungeonTimerOffsetX = 0;
-    public int dungeonTimerOffsetY = 0;
+    public int dungeonTimerOffsetX;
+    public int dungeonTimerOffsetY;
     public boolean dungeonTimerNoItemIcon;
     public boolean bloodClearedNotification;
 
@@ -92,7 +98,6 @@ public final class DarkUtilsConfig {
     public boolean hideEffectsHud;
     public boolean hideEffectsInInventory;
     public boolean transparentPlayerList;
-    public boolean removeChatScrollbar;
     public boolean fullbright;
     public boolean nightVision;
     public boolean hideFireOverlay;
@@ -103,14 +108,12 @@ public final class DarkUtilsConfig {
     public boolean noWitherHearts;
 
     // === Performance ===
-    public boolean armorStandOptimizer;
-    public int armorStandLimit = 50;
     public boolean disableYield;
     public boolean alwaysPrioritizeRenderThread;
     public boolean optimizeExceptions;
     public boolean alwaysUseNoErrorContext;
     public boolean disableErrorCheckingEntirely;
-    public boolean reenableAmdGameOptimizations;
+    public boolean reEnableAmdGameOptimizations;
     public boolean disableCampfireSmokeParticles;
     public boolean removeMainMenuFrameLimit;
     public boolean logCleaner;

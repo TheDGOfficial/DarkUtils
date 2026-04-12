@@ -3,9 +3,9 @@ package gg.darkutils.feat.qol;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.LocationUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -29,7 +29,7 @@ public final class LaggyServerDetector {
         return !DarkUtilsConfig.INSTANCE.laggyServerDetector;
     }
 
-    private static final void onWorldChange(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
+    private static final void onWorldChange(@NotNull final Minecraft client, @NotNull final ClientLevel world) {
         if (LaggyServerDetector.isNotEnabled() || LocationUtils.isInSingleplayer()) {
             return;
         }
@@ -37,7 +37,7 @@ public final class LaggyServerDetector {
         Arrays.fill(LaggyServerDetector.TPS_SAMPLES, 0);
         LaggyServerDetector.currentIndex = 0;
 
-        if (null != MinecraftClient.getInstance().getCurrentServerEntry()) {
+        if (null != Minecraft.getInstance().getCurrentServer()) {
             ServerTPSCalculator.startCalculatingTPS(LaggyServerDetector::onTPSUpdate);
         }
     }
@@ -45,10 +45,10 @@ public final class LaggyServerDetector {
     private static final @NotNull LaggyServerDetector.TPSCommentAndColor getTpsStatus(final double tps) {
         return 19.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Good)", "§a")
                 : 18.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Decent)", "§2")
-                : 17.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Fine)", "§6")
-                : 16.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Bearable)", "§e")
-                : 15.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Bad)", "§c")
-                : new LaggyServerDetector.TPSCommentAndColor(" (Very Bad)", "§4");
+                : 17.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Bearable)", "§6")
+                : 16.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Bad)", "§e")
+                : 15.0 <= tps ? new LaggyServerDetector.TPSCommentAndColor(" (Horrible)", "§c")
+                : new LaggyServerDetector.TPSCommentAndColor(" (Horrendous)", "§4");
     }
 
     private static final void onTPSUpdate(final int tps) {
@@ -74,10 +74,10 @@ public final class LaggyServerDetector {
             final var tpsAverageOver30SecondsFormatted = String.format(Locale.ROOT, "%.2f", tpsAverageOver30Seconds);
 
             final var tpsStatus = LaggyServerDetector.getTpsStatus(tpsAverageOver30Seconds);
-            final var client = MinecraftClient.getInstance();
+            final var client = Minecraft.getInstance();
 
-            client.inGameHud.setTitle(Text.of("§d30s TPS AVG: " + tpsStatus.color() + tpsAverageOver30SecondsFormatted + tpsStatus.comment()));
-            client.inGameHud.setTitleTicks(10, 70, 20);
+            client.gui.setTitle(Component.nullToEmpty("§d30s TPS AVG: " + tpsStatus.color() + tpsAverageOver30SecondsFormatted + tpsStatus.comment()));
+            client.gui.setTimes(10, 70, 20);
         }
     }
 

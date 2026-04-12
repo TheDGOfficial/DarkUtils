@@ -6,24 +6,26 @@ import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.LocationUtils;
+import gg.darkutils.utils.MathUtils;
+import gg.darkutils.utils.PrettyUtils;
 import gg.darkutils.utils.RenderUtils;
+import gg.darkutils.utils.ScoreboardUtil;
 import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2fStack;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,15 +33,9 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.joml.Matrix3x2fStack;
-
 public final class DungeonTimer {
     private static final long TICK_NANOS = TimeUnit.MILLISECONDS.toNanos(50L);
     private static final long MIN_DISPLAY_LAG_NANO = TimeUnit.MILLISECONDS.toNanos(100L);
-    private static final long SECONDS_PER_DAY = TimeUnit.DAYS.toSeconds(1L);
-    private static final long SECONDS_PER_HOUR = TimeUnit.HOURS.toSeconds(1L);
-    private static final long SECONDS_PER_MINUTE = TimeUnit.MINUTES.toSeconds(1L);
-    private static final long HUNDRED_MS_AS_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
     private static final long FIVE_SECOND_NANOS = TimeUnit.SECONDS.toNanos(5L);
     @NotNull
     private static final ArrayList<DungeonTimer.RenderableLine> PHASE_LINES =
@@ -86,7 +82,7 @@ public final class DungeonTimer {
 
                     if (DarkUtilsConfig.INSTANCE.bloodClearedNotification) {
                         final var seconds = DungeonTimer.getPhaseTimeInSecondsForPhase(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, false);
-                        Helpers.notify(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, "§cBlood Cleared! (" + seconds + "s)", 60);
+                        Helpers.notify(SoundEvents.EXPERIENCE_ORB_PICKUP, "§cBlood Cleared! (" + seconds + "s)", 60);
                     }
                 }
             }),
@@ -168,7 +164,7 @@ public final class DungeonTimer {
 
         TickUtils.queueRepeatingTickTask(DungeonTimer::updateDungeonFloor, 1);
         TickUtils.queueRepeatingTickTask(DungeonTimer::updateDungeonTimer, 1);
-        HudElementRegistry.addLast(Identifier.of(DarkUtils.MOD_ID, "dungeon_timer"), (context, tickCounter) -> DungeonTimer.renderDungeonTimer(context));
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "dungeon_timer"), (context, tickCounter) -> DungeonTimer.renderDungeonTimer(context));
     }
 
     private static final void onServerTick() {
@@ -232,80 +228,7 @@ public final class DungeonTimer {
         return lagNano;
     }
 
-    @NotNull
-    private static final String formatSeconds(final long seconds) {
-        if (60L > seconds) {
-            return seconds + "s";
-        }
-
-        var remainingSeconds = seconds;
-
-        final var days = remainingSeconds / DungeonTimer.SECONDS_PER_DAY;
-        remainingSeconds -= days * DungeonTimer.SECONDS_PER_DAY;
-
-        final var hours = remainingSeconds / DungeonTimer.SECONDS_PER_HOUR;
-        remainingSeconds -= hours * DungeonTimer.SECONDS_PER_HOUR;
-
-        final var minutes = remainingSeconds / DungeonTimer.SECONDS_PER_MINUTE;
-        remainingSeconds -= minutes * DungeonTimer.SECONDS_PER_MINUTE;
-
-        final var builder = new StringBuilder(8);
-        var needsSpace = false;
-
-        if (0L < days) {
-            builder.append(days).append('d');
-            needsSpace = true;
-        }
-
-        if (0L < hours) {
-            if (needsSpace) {
-                builder.append(' ');
-            }
-            builder.append(hours).append('h');
-            needsSpace = true;
-        }
-
-        if (0L < minutes) {
-            if (needsSpace) {
-                builder.append(' ');
-            }
-            builder.append(minutes).append('m');
-            needsSpace = true;
-        }
-
-        if (0L < remainingSeconds || !needsSpace) {
-            if (needsSpace) {
-                builder.append(' ');
-            }
-            builder.append(remainingSeconds).append('s');
-        }
-
-        return builder.toString();
-    }
-
-    @NotNull
-    private static final String formatNanosAsSeconds(final long nanos) {
-        if (0L >= nanos) {
-            return "0s";
-        }
-
-        // truncate to 1 decimal (no rounding up - monotonic-safe)
-        final var secondsTimes10 = nanos / DungeonTimer.HUNDRED_MS_AS_NANOS;
-
-        final var wholeSeconds = secondsTimes10 / 10L;
-
-        if (60L > wholeSeconds) {
-            final var decimal = secondsTimes10 % 10L;
-            return 0L == decimal
-                    ? wholeSeconds + "s"
-                    : wholeSeconds + "." + decimal + 's';
-        }
-
-        // fall back to existing formatter for large values
-        return DungeonTimer.formatSeconds(wholeSeconds);
-    }
-
-    private static final void line(@NotNull final DungeonTimer.DungeonPhase start, @NotNull final DungeonTimer.DungeonPhase end, @NotNull final String prettyName, @NotNull final Formatting color, @Nullable Item optionalItemIcon) {
+    private static final void line(@NotNull final DungeonTimer.DungeonPhase start, @NotNull final DungeonTimer.DungeonPhase end, @NotNull final String prettyName, @NotNull final ChatFormatting color, @Nullable Item optionalItemIcon) {
         if (null != optionalItemIcon && DarkUtilsConfig.INSTANCE.dungeonTimerNoItemIcon) {
             optionalItemIcon = null;
         }
@@ -351,9 +274,9 @@ public final class DungeonTimer {
         final var lagNano = DungeonTimer.getPhaseLagTimeInNanos(startTime, endTime);
 
         final var text = DungeonTimer.MIN_DISPLAY_LAG_NANO <= lagNano
-                ? prettyName + ": " + DungeonTimer.formatSeconds(phaseTime)
-                + " (-" + DungeonTimer.formatNanosAsSeconds(lagNano) + " lag)"
-                : prettyName + ": " + DungeonTimer.formatSeconds(phaseTime);
+                ? prettyName + ": " + PrettyUtils.formatSeconds(phaseTime)
+                  + " (-" + PrettyUtils.formatNanosAsSeconds(lagNano) + " lag)"
+                : prettyName + ": " + PrettyUtils.formatSeconds(phaseTime);
 
         line.renderingText().setText(text);
         DungeonTimer.activeLines.add(line);
@@ -388,7 +311,7 @@ public final class DungeonTimer {
     }
 
     private static final void updateDungeonTimer() {
-        if (!DarkUtilsConfig.INSTANCE.dungeonTimer || null == MinecraftClient.getInstance().player || null == MinecraftClient.getInstance().world || !LocationUtils.isInDungeons()) {
+        if (!DarkUtilsConfig.INSTANCE.dungeonTimer || null == Minecraft.getInstance().player || null == Minecraft.getInstance().level || !LocationUtils.isInDungeons()) {
             DungeonTimer.skipRender = true;
             return;
         }
@@ -512,29 +435,13 @@ public final class DungeonTimer {
     }
 
     private static final void updateDungeonFloor() {
-        final var mc = MinecraftClient.getInstance();
+        final var mc = Minecraft.getInstance();
 
-        if (null == mc.player || null == mc.world || !LocationUtils.isInDungeons() || null != DungeonTimer.dungeonFloor && DungeonTimer.isPhaseFinished(DungeonTimer.DungeonPhase.DUNGEON_START)) { // If you join an F7 and then join M7 with the command without leaving the F7, the world change event triggers while the scoreboard still says F7, and so you will be in a bugged state in M7 with the floor being detected as F7. To fix this rare bug, we keep re-assigning the dungeon floor till the dungeon starts in addition to the null check.
+        if (null == mc.player || null == mc.level || !LocationUtils.isInDungeons() || null != DungeonTimer.dungeonFloor && DungeonTimer.isPhaseFinished(DungeonTimer.DungeonPhase.DUNGEON_START)) { // If you join an F7 and then join M7 with the command without leaving the F7, the world change event triggers while the scoreboard still says F7, and so you will be in a bugged state in M7 with the floor being detected as F7. To fix this rare bug, we keep re-assigning the dungeon floor till the dungeon starts in addition to the null check.
             return;
         }
 
-        // TODO Extract to a ScoreboardUtil class later
-        final var scoreboard = mc.player.networkHandler.getScoreboard();
-        final var objective = scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR);
-
-        if (null == objective) {
-            return;
-        }
-
-        for (final var scoreHolder : scoreboard.getKnownScoreHolders()) {
-            final var team = scoreboard.getScoreHolderTeam(scoreHolder.getNameForScoreboard());
-
-            if (null == team) {
-                continue;
-            }
-
-            final var line = ChatUtils.removeControlCodes(team.getPrefix().getString() + team.getSuffix().getString());
-
+        ScoreboardUtil.forEachScoreboardLine(line -> {
             if (line.contains("The Catacombs (")) {
                 final var floor = DungeonTimer.parseFloorFromScoreboard(line);
 
@@ -542,9 +449,11 @@ public final class DungeonTimer {
                     DungeonTimer.dungeonFloor = floor;
                 }
 
-                return;
+                return ScoreboardUtil.BREAK;
             }
-        }
+
+            return ScoreboardUtil.CONTINUE;
+        });
     }
 
     private static final void updateLines() {
@@ -554,55 +463,51 @@ public final class DungeonTimer {
             return;
         }
 
-        DungeonTimer.line(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BLOOD_OPEN, "Blood Open", Formatting.WHITE, Items.SUGAR);
-        DungeonTimer.line(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, "Blood Done", Formatting.RED, Items.REDSTONE);
-        DungeonTimer.line(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_ENTRY, "Boss Entry", Formatting.DARK_GREEN, Items.END_PORTAL_FRAME);
+        DungeonTimer.line(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BLOOD_OPEN, "Blood Open", ChatFormatting.WHITE, Items.SUGAR);
+        DungeonTimer.line(DungeonTimer.DungeonPhase.BLOOD_OPEN, DungeonTimer.DungeonPhase.BLOOD_CLEAR, "Blood Done", ChatFormatting.RED, Items.REDSTONE);
+        DungeonTimer.line(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_ENTRY, "Boss Entry", ChatFormatting.DARK_GREEN, Items.END_PORTAL_FRAME);
 
         // Floor 6
         if (6 == floor.floor) {
-            DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.TERRAS_CLEAR, "Terracottas", Formatting.GOLD, Items.BROWN_TERRACOTTA);
-            DungeonTimer.line(DungeonTimer.DungeonPhase.TERRAS_CLEAR, DungeonTimer.DungeonPhase.GIANTS_CLEAR, "Giants", Formatting.AQUA, Items.DIAMOND_SWORD);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.TERRAS_CLEAR, "Terracottas", ChatFormatting.GOLD, Items.BROWN_TERRACOTTA);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.TERRAS_CLEAR, DungeonTimer.DungeonPhase.GIANTS_CLEAR, "Giants", ChatFormatting.AQUA, Items.DIAMOND_SWORD);
         }
 
         // Floor 7 & Master Floor 7
         if (7 == floor.floor) {
             // Both regular and master 7 have those phases
-            DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_1_CLEAR, "Maxor", Formatting.AQUA, Items.END_CRYSTAL);
-            DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_1_CLEAR, DungeonTimer.DungeonPhase.PHASE_2_CLEAR, "Storm", Formatting.DARK_PURPLE, Items.BLAZE_ROD);
-            DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_2_CLEAR, DungeonTimer.DungeonPhase.TERMINALS_CLEAR, "Terminals", Formatting.YELLOW, Items.COMMAND_BLOCK);
-            DungeonTimer.line(DungeonTimer.DungeonPhase.TERMINALS_CLEAR, DungeonTimer.DungeonPhase.PHASE_3_CLEAR, "Goldor", Formatting.GOLD, Items.GOLDEN_SWORD);
-            DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_3_CLEAR, DungeonTimer.DungeonPhase.PHASE_4_CLEAR, "Necron", Formatting.DARK_RED, Items.STICK);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_1_CLEAR, "Maxor", ChatFormatting.AQUA, Items.END_CRYSTAL);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_1_CLEAR, DungeonTimer.DungeonPhase.PHASE_2_CLEAR, "Storm", ChatFormatting.DARK_PURPLE, Items.BLAZE_ROD);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_2_CLEAR, DungeonTimer.DungeonPhase.TERMINALS_CLEAR, "Terminals", ChatFormatting.YELLOW, Items.COMMAND_BLOCK);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.TERMINALS_CLEAR, DungeonTimer.DungeonPhase.PHASE_3_CLEAR, "Goldor", ChatFormatting.GOLD, Items.GOLDEN_SWORD);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_3_CLEAR, DungeonTimer.DungeonPhase.PHASE_4_CLEAR, "Necron", ChatFormatting.DARK_RED, Items.STICK);
 
             // Master Floor 7 specific phase
             if (floor.master) {
-                DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_4_CLEAR, DungeonTimer.DungeonPhase.PHASE_5_CLEAR, "Wither King", Formatting.GRAY, Items.WITHER_SKELETON_SKULL);
+                DungeonTimer.line(DungeonTimer.DungeonPhase.PHASE_4_CLEAR, DungeonTimer.DungeonPhase.PHASE_5_CLEAR, "Wither King", ChatFormatting.GRAY, Items.WITHER_SKELETON_SKULL);
             }
         }
 
-        DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.BOSS_CLEAR, "Boss Total", Formatting.LIGHT_PURPLE, Items.DRAGON_HEAD); // TODO sometimes is 1s off from the sum of all phases, maybe because BOSS_ENTRY lag lost time is also included in the boss total?
-        DungeonTimer.line(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_CLEAR, "Total", Formatting.GREEN, Items.CLOCK); // TODO add DUNGEON_END phase for clarity (semantically same as BOSS_CLEAR, as that's where dungeon ends)
+        DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.BOSS_CLEAR, "Boss Total", ChatFormatting.LIGHT_PURPLE, Items.DRAGON_HEAD); // TODO sometimes is 1s off from the sum of all phases, maybe because BOSS_ENTRY lag lost time is also included in the boss total?
+        DungeonTimer.line(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_CLEAR, "Total", ChatFormatting.GREEN, Items.CLOCK); // TODO add DUNGEON_END phase for clarity (semantically same as BOSS_CLEAR, as that's where dungeon ends)
     }
 
-    private static final void renderDungeonTimer(@NotNull final DrawContext context) {
+    private static final void renderDungeonTimer(@NotNull final GuiGraphics context) {
         if (DungeonTimer.skipRender) {
             return;
         }
 
-        final var client = MinecraftClient.getInstance();
+        final var client = Minecraft.getInstance();
 
-        final var textRenderer = client.textRenderer;
+        final var textRenderer = client.font;
 
-        final var lineHeight = textRenderer.fontHeight;
+        final var lineHeight = textRenderer.lineHeight;
         final var lineSpacing = 7; // TODO find best value, maybe increase it to 8
-
-        final var iconSize = 16;
-        final var iconTextGap = 4;
 
         final var offsetX = DarkUtilsConfig.INSTANCE.dungeonTimerOffsetX;
         final var offsetY = DarkUtilsConfig.INSTANCE.dungeonTimerOffsetY;
 
         final var baseTextX = RenderUtils.CHAT_ALIGNED_X + RenderUtils.CHAT_ALIGNED_X * 10 + offsetX;
-        final var baseIconX = baseTextX - (iconSize + iconTextGap);
 
         final var totalHeight = DungeonTimer.linesSize * (lineHeight + lineSpacing) - lineSpacing;
         final var baseY = RenderUtils.MIDDLE_ALIGNED_Y.getAsInt() - (totalHeight >> 1) + offsetY;
@@ -611,14 +516,18 @@ public final class DungeonTimer {
 
         Matrix3x2fStack matrices = null;
 
-        if (1.0F != scale) {
-            matrices = context.getMatrices();
+        if (!MathUtils.isNearEqual(1.0D, scale)) {
+            matrices = context.pose();
             matrices.pushMatrix();
 
             matrices.translate(baseTextX, baseY);
             matrices.scale(scale, scale);
             matrices.translate(-baseTextX, -baseY);
         }
+
+        final var iconSize = 16;
+        final var iconTextGap = 4;
+        final var baseIconX = baseTextX - (iconSize + iconTextGap);
 
         for (int i = 0, len = DungeonTimer.linesSize; i < len; ++i) {
             final var line = DungeonTimer.activeLines.get(i);
@@ -631,7 +540,7 @@ public final class DungeonTimer {
                         context,
                         line.optionalItemIcon(),
                         baseIconX,
-                        y - ((iconSize - lineHeight) >> 1)
+                        y - (iconSize - lineHeight >> 1)
                 );
             }
 
@@ -730,7 +639,7 @@ public final class DungeonTimer {
         DungeonTimer.lastClientNow = System.nanoTime();
     }
 
-    private static final void reset(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
+    private static final void reset(@NotNull final Minecraft client, @NotNull final ClientLevel world) {
         DungeonTimer.resetLagModel();
 
         DungeonTimer.dungeonFloor = null;
@@ -776,14 +685,6 @@ public final class DungeonTimer {
             }
 
             return DungeonTimer.DungeonFloor.VALUES[index];
-        }
-
-        private final int floor() {
-            return this.floor;
-        }
-
-        private final boolean isMaster() {
-            return this.master;
         }
     }
 
@@ -929,7 +830,7 @@ public final class DungeonTimer {
 
     private record RenderableLine(
             RenderUtils.RenderingText renderingText,
-            Formatting color,
+            ChatFormatting color,
             @Nullable Item optionalItemIcon
     ) {
     }

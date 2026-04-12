@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
  * This is usually more performant than using a Pair class while also being shorter and cleaner.
  * <p>
  * Note that this still not the most performant solution if the types are wrapper classes of primitives.
- * Use the primitive variants, e.g. {@link Pair.Int}
+ * Create a record for the primitive variants you need in that case.
  *
  * @param first  The first value.
  * @param second The second value.

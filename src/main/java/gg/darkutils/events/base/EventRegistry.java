@@ -4,11 +4,10 @@ import gg.darkutils.events.base.impl.EventRegistryImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.function.Consumer;
-
 /**
  * Defines a {@link EventRegistry}.
  */
+@FunctionalInterface
 public interface EventRegistry {
     /**
      * Returns a basic central {@link EventRegistry} that can be used to register events.
@@ -40,7 +39,7 @@ public interface EventRegistry {
      * @param <T>                    The type of the event.
      */
     @SuppressWarnings("unchecked")
-    default <T extends Event> void addListener(@NotNull final Consumer<T> listener, @NotNull final EventPriority priority, @Nullable final T... doNotPassThisParameter) {
+    default <T extends Event> void addListener(@NotNull final EventConsumer<T> listener, @NotNull final EventPriority priority, @Nullable final T... doNotPassThisParameter) {
         this.addListener(EventListener.create(listener, priority), doNotPassThisParameter); // Passing it here is OK
     }
 
@@ -55,7 +54,7 @@ public interface EventRegistry {
      * @param <T>                    The type of the event.
      */
     @SuppressWarnings("unchecked")
-    default <T extends Event> void addListener(@NotNull final Consumer<T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled, @Nullable final T... doNotPassThisParameter) {
+    default <T extends Event> void addListener(@NotNull final EventConsumer<T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled, @Nullable final T... doNotPassThisParameter) {
         this.addListener(EventListener.create(listener, priority, receiveCancelled), doNotPassThisParameter); // Passing it here is OK
     }
 
@@ -68,7 +67,7 @@ public interface EventRegistry {
      * @param <T>                    The type of the event.
      */
     @SuppressWarnings("unchecked")
-    default <T extends Event> void addListener(@NotNull final Consumer<T> listener, @Nullable final T... doNotPassThisParameter) {
+    default <T extends Event> void addListener(@NotNull final EventConsumer<T> listener, @Nullable final T... doNotPassThisParameter) {
         this.addListener(EventListener.create(listener), doNotPassThisParameter); // Passing it here is OK
     }
 

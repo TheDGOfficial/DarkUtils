@@ -29,14 +29,14 @@ final class WorkaroundsMixin {
             @NotNull final Object value
     ) {
         if (value instanceof final Enum<?> enumValue) {
-            final String name = enumValue.name();
+            final var name = enumValue.name();
 
             if (DarkUtilsConfig.INSTANCE.alwaysUseNoErrorContext
                     && "NO_ERROR_CONTEXT_UNSUPPORTED".equals(name)) {
                 return false;
             }
 
-            if (DarkUtilsConfig.INSTANCE.reenableAmdGameOptimizations
+            if (DarkUtilsConfig.INSTANCE.reEnableAmdGameOptimizations
                     && "AMD_GAME_OPTIMIZATION_BROKEN".equals(name)) {
                 return false;
             }

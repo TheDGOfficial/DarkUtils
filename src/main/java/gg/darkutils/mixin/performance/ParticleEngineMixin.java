@@ -2,30 +2,30 @@ package gg.darkutils.mixin.performance;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleManager;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.client.particle.ParticleEngine;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ParticleManager.class)
-final class ParticleManagerMixin {
-    private ParticleManagerMixin() {
+@Mixin(ParticleEngine.class)
+final class ParticleEngineMixin {
+    private ParticleEngineMixin() {
         super();
 
         throw new UnsupportedOperationException("mixin class");
     }
 
     @Inject(
-            method = "addParticle(Lnet/minecraft/particle/ParticleEffect;DDDDDD)Lnet/minecraft/client/particle/Particle;",
+            method = "createParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)Lnet/minecraft/client/particle/Particle;",
             at = @At("HEAD"),
             cancellable = true
     )
     private final void darkutils$disableCampfireSmokeParticlesIfEnabled(
-            @NotNull final ParticleEffect effect, final double x, final double y, final double z,
+            @NotNull final ParticleOptions effect, final double x, final double y, final double z,
             final double velocityX, final double velocityY, final double velocityZ,
             @NotNull final CallbackInfoReturnable<Particle> cir
     ) {

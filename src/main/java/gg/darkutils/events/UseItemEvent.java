@@ -2,8 +2,8 @@ package gg.darkutils.events;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.InteractionHand;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -16,14 +16,14 @@ import org.jetbrains.annotations.NotNull;
  */
 public record UseItemEvent(@NotNull CancellationState cancellationState,
                            @NotNull ItemStack itemStack,
-                           @NotNull Hand hand) implements CancellableEvent {
+                           @NotNull InteractionHand hand) implements CancellableEvent {
     /**
      * Creates a new {@link UseItemEvent} suitable for triggering the event.
      * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
      *
      * @param itemStack The item that is going to be used if not canceled.
      */
-    public UseItemEvent(@NotNull final ItemStack itemStack, @NotNull final Hand hand) {
+    public UseItemEvent(@NotNull final ItemStack itemStack, @NotNull final InteractionHand hand) {
         this(CancellationState.ofFresh(), itemStack, hand);
     }
 }

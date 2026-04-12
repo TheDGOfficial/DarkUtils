@@ -16,7 +16,7 @@
  *}
  *
  * <b>Registering a listener</b><br>
- * Register listeners for events using {@link gg.darkutils.events.base.EventRegistry#addListener(java.util.function.Consumer, gg.darkutils.events.base.Event[])}:
+ * Register listeners for events using {@link gg.darkutils.events.base.EventRegistry#addListener(gg.darkutils.events.base.EventConsumer, gg.darkutils.events.base.Event[])}:
  * {@snippet :
  * // Don't forget to call .init()!
  * public void init() {
@@ -34,7 +34,7 @@
  * <p>
  * <b>Listener priority</b><br>
  * Listeners may optionally be registered with a priority using
- * {@link gg.darkutils.events.base.EventRegistry#addListener(java.util.function.Consumer, gg.darkutils.events.base.EventPriority, gg.darkutils.events.base.Event[])}.
+ * {@link gg.darkutils.events.base.EventRegistry#addListener(gg.darkutils.events.base.EventConsumer, gg.darkutils.events.base.EventPriority, gg.darkutils.events.base.Event[])}.
  * <p>
  * Priorities control the order in which listeners are executed (higher priority runs earlier).
  * See {@link gg.darkutils.events.base.EventPriority} for the full ordering guarantees.
@@ -88,7 +88,7 @@
  * <b>Receiving canceled events</b><br>
  * Listeners can optionally be registered to receive events that have already
  * been canceled by earlier listeners using
- * {@link gg.darkutils.events.base.EventRegistry#addListener(java.util.function.Consumer, gg.darkutils.events.base.EventPriority, boolean, gg.darkutils.events.base.Event[])}:
+ * {@link gg.darkutils.events.base.EventRegistry#addListener(gg.darkutils.events.base.EventConsumer, gg.darkutils.events.base.EventPriority, boolean, gg.darkutils.events.base.Event[])}:
  * {@snippet :
  * EventRegistry.centralRegistry().addListener(
  *         this::onMyEvent,

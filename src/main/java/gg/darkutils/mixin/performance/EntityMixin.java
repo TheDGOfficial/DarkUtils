@@ -1,7 +1,7 @@
 package gg.darkutils.mixin.performance;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,14 +16,14 @@ final class EntityMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "isGlowing", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isCurrentlyGlowing", at = @At("HEAD"), cancellable = true)
     private final void darkutils$isGlowing$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
         if (DarkUtilsConfig.INSTANCE.disableGlowing) {
             cir.setReturnValue(false);
         }
     }
 
-    @Inject(method = "doesRenderOnFire", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "displayFireAnimation", at = @At("HEAD"), cancellable = true)
     private final void darkutils$doesRenderOnFire$disableIfEnabled(@NotNull final CallbackInfoReturnable<Boolean> cir) {
         if (DarkUtilsConfig.INSTANCE.noBurningEntities) {
             cir.setReturnValue(false);

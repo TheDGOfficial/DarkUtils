@@ -5,16 +5,15 @@ import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BooleanSupplier;
 
 public final class SoloCrushWaypoint {
     @NotNull
-    private static final Formatting SOLO_CRUSH_WAYPOINT_COLOR = Formatting.DARK_PURPLE;
+    private static final ChatFormatting SOLO_CRUSH_WAYPOINT_COLOR = ChatFormatting.DARK_PURPLE;
     @NotNull
     private static final BlockPos SOLO_CRUSH_WAYPOINT_POS = new BlockPos(100, 186, 68);
     @NotNull

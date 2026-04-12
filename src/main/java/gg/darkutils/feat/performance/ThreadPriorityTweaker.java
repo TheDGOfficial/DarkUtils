@@ -2,6 +2,7 @@ package gg.darkutils.feat.performance;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.utils.LazyConstants;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public final class ThreadPriorityTweaker {
@@ -23,10 +25,10 @@ public final class ThreadPriorityTweaker {
      * time. There's unfortunately no JDK API that triggers when a new thread is spawned, so we must do this.
      */
     @NotNull
-    private static final ScheduledExecutorService threadPriorityTweakerScheduler = Executors.newSingleThreadScheduledExecutor(r -> Thread.ofPlatform()
+    private static final Supplier<ScheduledExecutorService> threadPriorityTweakerScheduler = LazyConstants.lazyConstantOf(() -> Executors.newSingleThreadScheduledExecutor(r -> Thread.ofPlatform()
             .name("DarkUtils Thread Priority Tweaker Thread")
             .daemon(true)
-            .unstarted(r));
+            .unstarted(r)));
 
     /**
      * Holds all tweaks.
@@ -135,7 +137,7 @@ public final class ThreadPriorityTweaker {
      */
     private static final void scheduleTweakTask() {
         // initialDelay as 0L runs the task, while interval as 60L runs it periodically every minute.
-        ThreadPriorityTweaker.threadPriorityTweakerScheduler.scheduleWithFixedDelay(ThreadPriorityTweaker::tweakPriorities, 0L, 60L, TimeUnit.SECONDS);
+        ThreadPriorityTweaker.threadPriorityTweakerScheduler.get().scheduleWithFixedDelay(ThreadPriorityTweaker::tweakPriorities, 0L, 60L, TimeUnit.SECONDS);
     }
 
     /**

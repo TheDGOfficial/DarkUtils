@@ -9,7 +9,9 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,18 +22,24 @@ final class UtilMixin {
     @Unique
     private static boolean overrideSuccessful;
 
-    static {
-        TickUtils.awaitLocalPlayer(player -> { // Player will only be available after all Mixins are applied and executors are created.
-            if (DarkUtilsConfig.INSTANCE.useVirtualThreadsForTextureDownloading && !UtilMixin.overrideSuccessful) {
-                DarkUtils.warn("@fileName@", "Overriding texture downloading executor from cached thread pool to virtual thread per task executor failed. Please notify developers to update the necessary mixin(s).");
-            }
-        });
-    }
-
     private UtilMixin() {
         super();
 
         throw new UnsupportedOperationException("mixin class");
+    }
+
+    @Inject(method = "<clinit>", at = @At("RETURN"))
+    private static final void darkutils$postclinit(@NotNull final CallbackInfo ci) {
+        try {
+            TickUtils.awaitLocalPlayer(player -> { // Player will only be available after all Mixins are applied and executors are created.
+                if (DarkUtilsConfig.INSTANCE.useVirtualThreadsForTextureDownloading && !UtilMixin.overrideSuccessful) {
+                    DarkUtils.warn("@fileName@", "Overriding texture downloading executor from cached thread pool to virtual thread per task executor failed. Please notify developers to update the necessary mixin(s).");
+                }
+            });
+        } catch (final Throwable error) {
+            // We must catch all errors so that we do not fail loading of the vanilla util class and hard crash the game if any of our code above throws
+            DarkUtils.error("@fileName@", "Error during post-<clinit> code", error);
+        }
     }
 
     /**
@@ -40,7 +48,7 @@ final class UtilMixin {
      * conditions are met.
      */
     @Redirect(
-            method = "createIoWorker",
+            method = "makeIoExecutor",
             at = @At(
                     value = "INVOKE",
                     target = "Ljava/util/concurrent/Executors;newCachedThreadPool(Ljava/util/concurrent/ThreadFactory;)Ljava/util/concurrent/ExecutorService;",
