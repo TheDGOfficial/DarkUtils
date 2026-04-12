@@ -4,14 +4,14 @@ import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
@@ -22,12 +22,12 @@ public final class GhostBlockKey {
      * The keybinding for the trigger.
      */
     @NotNull
-    private static final KeyBinding KEYBIND = KeyBindingHelper.registerKeyBinding(
-            new KeyBinding(
+    private static final KeyMapping KEYBIND = KeyBindingHelper.registerKeyBinding(
+            new KeyMapping(
                     "key.darkutils.createGhostBlock",
-                    InputUtil.Type.KEYSYM,
+                    InputConstants.Type.KEYSYM,
                     GLFW.GLFW_KEY_G,
-                    KeyBinding.Category.create(Identifier.of(DarkUtils.MOD_ID, "main"))
+                    KeyMapping.Category.register(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "main"))
             )
     );
 
@@ -60,23 +60,23 @@ public final class GhostBlockKey {
         ClientTickEvents.END_CLIENT_TICK.register(GhostBlockKey::onTick);
     }
 
-    private static final void onTick(@NotNull final MinecraftClient client) {
+    private static final void onTick(@NotNull final Minecraft client) {
         if (!DarkUtilsConfig.INSTANCE.ghostBlockKey) {
             return;
         }
 
-        while (GhostBlockKey.KEYBIND.wasPressed()) {
+        while (GhostBlockKey.KEYBIND.consumeClick()) {
             GhostBlockKey.tryCreateGhostBlock(client);
         }
     }
 
-    private static final void tryCreateGhostBlock(@NotNull final MinecraftClient client) {
+    private static final void tryCreateGhostBlock(@NotNull final Minecraft client) {
         // What the player is currently looking at
-        final var hit = client.crosshairTarget;
+        final var hit = client.hitResult;
 
         // Obviously we can't ghost block entities/players or thin air, so check for block hit result
         if (hit instanceof final BlockHitResult blockHit) {
-            final var world = client.world;
+            final var world = client.level;
 
             // This should not happen but is a safeguard
             if (null == world) {
@@ -89,12 +89,12 @@ public final class GhostBlockKey {
             final var targetBlock = state.getBlock();
 
             // Do not ghost buttons or other hardcoded blacklisted blocks
-            if (state.isIn(BlockTags.BUTTONS) || GhostBlockKey.BLACKLIST.contains(targetBlock)) {
+            if (state.is(BlockTags.BUTTONS) || GhostBlockKey.BLACKLIST.contains(targetBlock)) {
                 return;
             }
 
             // Replace block with air *client side only*
-            world.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
+            world.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
         }
     }
 }

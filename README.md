@@ -12,14 +12,14 @@ You need all of the Required Runtime Dependency criterias met to launch the game
 The versions listed are the ones the mod was tested and developed against, not necessarily what you should use. Forward compatibility is often the case so latest versions are recommended.
 
 Required Dependencies:
-- Minecraft 1.21.10 or later.
-- Fabric Loader 0.18.4 or later.
-- Fabric API 0.138.4 or later.
-- Cloth Config API 20.0.149 or later.
+- Minecraft 1.21.11 or later.
+- Fabric Loader 0.19.1 or later.
+- Fabric API 0.141.3 or later.
+- Cloth Config API 21.11.153 or later.
 - Hypixel Mod API 1.0.1 or later.
 
 Optional Dependencies:
-- Mod Menu 16.0.0-rc.2 or later.
+- Mod Menu 17.0.0 or later.
 
 # Quality of Life
 ## Never Reset Cursor Position
@@ -30,6 +30,8 @@ Optional Dependencies:
  Automatically run /tip all every 15 minutes taking into account command throttling if you entered a command before it would trigger, and automatically hiding no boosters available to tip responses from the server. This is a very simplified version of the AutoTip mod from 1.8.9 that does not connect to an external server and save/send statistics, everything is done locally and no network connections are made.
 ## Welcome Message
  Sends a cool welcome message when you first join a world confirming the mod has been loaded, welcoming you, showing the mod version and providing a quick button in chat to open the mod's settings menu.
+## Update Checker
+ Checks mod updates once at startup and asynchronously (e.g., does not affect startup performance) and notifies you in-game on chat if any updates are available. You can disable this from settings easily, it is completely optional. The updates are NOT downloaded or installed automatically, it merely checks for them and only notifies you.
 ## Disable Useless Block-Hit
  Disables useless block-hit when you are holding a sword without an ability. If you right-click on air or on a block that's not an interaction like opening a chest, the right click is handled to simulate the 1.8 blockhit slowdown in Hypixel and can even lag you back. This feature prevents you from rightclicking with a sword that doesn't have an ability and if the click was not on a interaction block or entity/NPC.
 ## Disable Cells Alignment
@@ -42,13 +44,27 @@ Optional Dependencies:
  Shows 30 second TPS Average 30 seconds after joining/changing servers.
 ## Rejoin Cooldown Display
  Displays the time you have to wait until you can rejoin SkyBlock after getting kicked while joining a server (changing island).
+## Middle Click Fix
+ Enables use of middle click for example to disable Witherborn armor ability, just like in 1.8.
+## Disable Mod Announcer
+ Disables Firmament's mod stitch feature which sends the list of mods you have to Hypixel automatically to increase your privacy.
 
 # Foraging
 ## Tree Gift Confirmation
  Plays a sound and displays an on-screen message whenever you get a Tree Gift to confirm that the current tree is finished breaking fully. Also displays if a mob spawned from the tree (such as Phanpyre, Phanflare or Dreadwing), helpful for the David's Cloak Foraging Fortune (Forest Hunts) milestones.
 ## Tree Gifts Per Hour
  Displays a HUD element with Tree Gifts/Hour rate.
- 
+
+# Farming
+## Pest Cooldown Display
+ Shows a display with remaining pest cooldown, e.g., time until you can spawn your next pests.
+## Persistent Tablist while Farming
+ Always shows tablist while you are actively farming. Tablist shows useful info while farming in Garden, such as the percentage to the next crop milestone for the crop you are farming, the visitors in your garden, and more.
+## Sticky Farming Keys
+ Turns the keys to move forward, back, left, right and the key to attack into toggle instead of hold whilst you are farming. Note: Only one sticky movement key is active at a time. You must enable them indiviually below. Pressing any movement key will disable other sticky keys even if that movement key's sticky setting is disabled.
+## Enforce Zorro's Cape
+ Enforces having Zorro's Cape equipped before claiming any contest. You might need to open your equipment menu the first time to let the mod know you have it equipped, but after that the mod will remember your last equipped cloak.
+
 # Dungeons
 ## Dialogue Skip Timer
  Shows a timer for when to start killing blood mobs to perform a Watcher Dialogue Skip for faster Blood Camp times.
@@ -58,6 +74,12 @@ Optional Dependencies:
  Solver for the third device in Goldor terminals phase, with block incorrect clicks and pre-dev support. Compatible with the AutoClicker so you can finish it fast by holding down right click (block incorrect clicks will automatically stop once an arrow is rotated enough times). Uses vanilla item label rendering - you need to hover over the item frame to see how many clicks is needed, but this a non-issue since you need to hover over to rotate the arrow anyways.
 ## Arrow Stack Waypoints
  Displays arrow stack waypoints in the Wither King dragon fight showing where to shoot your Last Breath arrows for optimal stacking.
+## Blood Cleared Notification
+ Shows a message on screen when the blood room is cleared with how much time it took for it.
+## Dungeon Timer HUD
+ Displays dungeon timer on left side of the screen, showing time took to finish each phase. Shows live time if not finished yet, and shows how much time is lost to server lag, with fancy item icons, seperate colors, and non-phase informational splits, like Boss Total. Includes sub-options: Dungeon Timer Scale, Dungeon Timer Offset X, Dungeon Timer Offset Y, Dungeon Timer No Item Icon.
+## Solo Crush Waypoint
+ Renders a waypoint for the block you need to lower the purple crusher into so that it can crush Storm the next time you lower it.
 
 # Visual Tweaks
 ## Hide Effects HUD
@@ -100,6 +122,8 @@ Optional Dependencies:
  Optimizes Exceptions when playing on non-vanilla servers such as Hypixel, which are actually on 1.8 and use a translation layer and non-vanilla server software, therefore sometimes send packets that cause errors to be logged. This feature currently only optimizes Signature Errors. It will still log the exception the first time it happens to not make it a silent failure, but repeated errors will not be logged for optimization.
 ## Always Use No Error Context
  Always uses No Error Context to improve performance. Sodium has a workaround for a bug that no longer occurs that disables No Error Context feature if it detects X11/Wayland. This feature forces Sodium to skip doing the workaround as the bug no longer occurs and performance is precious.
+## Disable Error Checking Entirely
+ Overrides glGetError to always return no error to disable error checking completely.
 ## Disable Campfire Smoke Particles
  Disables Campfire Smoke Particles which trigger unoptimized repeating collideMovement calls in Galatea to reduce memory allocation pressure.
 ## Remove Main Menu Frame Limit
@@ -127,6 +151,12 @@ Optional Dependencies:
  Fixes vanilla Minecraft bug, where lag occurs when unloading large amount of block entities.
 ## Disable Signature Verification
  Disables signature verification to improve performance by skipping the verification step, also possibly fixing missing textures in certain servers.
+## Optimize Enum Values
+ Optimizes memory allocation rate by eliminating enum values array copying in some places, currently only a single place.
+## Viewport Cache
+ Caches viewport GL calls if the viewport did not change, improving performance.
+## Re-Enable AMD Game Optimizations
+ Sodium disables some of the AMD driver's game optimizations for Minecraft due to bugs with a workaround. This option re-enables it. It is not guaranteed this would do anything as it depends on driver. Additionally, the workaround was not supposed to be applied in Linux systems, but is bugged, enabling this will fix it.
 
 # Bugfixes
 ## Fix GUI Scale After Toggling Out Fullscreen
@@ -137,3 +167,5 @@ Optional Dependencies:
  Fixes vanilla Minecraft bug, where sounds are played when they shouldn't in certain cases near item frames.
 ## Cursor Fix
  Fixes mouse cursor staying on screen after closing a menu.
+## Cursor Pos Wayland GL Error Fix
+ Fixes a bug where Minecraft tries to call glfwSetCursorPos in Wayland desktop environment, where setting the cursor position is not supported, by cancelling the call. This prevents the GL error while preserving behaviour, as setting the position fails with the GL error anyways.

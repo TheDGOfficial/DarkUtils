@@ -2,8 +2,7 @@ package gg.darkutils.events;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
-import gg.darkutils.events.base.EventRegistry;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -18,11 +17,11 @@ public record InteractEntityEvent(@NotNull CancellationState cancellationState,
                                   @NotNull Entity entity) implements CancellableEvent {
     /**
      * Creates a new {@link InteractEntityEvent} suitable for triggering the event.
-     * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.
+     * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
      *
      * @param entity The entity.
      */
     public InteractEntityEvent(@NotNull final Entity entity) {
-        this(CancellationState.ofCached(), entity);
+        this(CancellationState.ofFresh(), entity);
     }
 }

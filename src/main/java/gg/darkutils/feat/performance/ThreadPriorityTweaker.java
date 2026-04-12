@@ -1,17 +1,20 @@
 package gg.darkutils.feat.performance;
 
+import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.utils.LazyConstants;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public final class ThreadPriorityTweaker {
@@ -22,14 +25,15 @@ public final class ThreadPriorityTweaker {
      * time. There's unfortunately no JDK API that triggers when a new thread is spawned, so we must do this.
      */
     @NotNull
-    private static final ScheduledExecutorService threadPriorityTweakerScheduler = Executors.newSingleThreadScheduledExecutor(r -> Thread.ofPlatform()
+    private static final Supplier<ScheduledExecutorService> threadPriorityTweakerScheduler = LazyConstants.lazyConstantOf(() -> Executors.newSingleThreadScheduledExecutor(r -> Thread.ofPlatform()
             .name("DarkUtils Thread Priority Tweaker Thread")
-            .unstarted(r));
+            .daemon(true)
+            .unstarted(r)));
 
     /**
      * Holds all tweaks.
      */
-    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> tweaks = ThreadPriorityTweaker.getAllTweaks();
+    private static final @NotNull List<ThreadPriorityTweaker.ThreadPriorityTweak> tweaks = ThreadPriorityTweaker.getAllTweaks();
     /**
      * Holds only the exact tweaks for O(1) HashMap access.
      */
@@ -39,12 +43,14 @@ public final class ThreadPriorityTweaker {
             .collect(Collectors.toUnmodifiableMap(ThreadPriorityTweaker.ThreadPriorityTweak::threadName, Function.identity()));
     /**
      * Holds other tweaks that need to do more complex checks than equality.
-     * We can't use hash here and so it will be O(n) in terms of algorithmic complexity.
+     * We can't use hash map here and so it will be O(n) in terms of algorithmic complexity.
      */
-    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> others = ThreadPriorityTweaker.tweaks
+    private static final @NotNull List<ThreadPriorityTweaker.ThreadPriorityTweak> others = ThreadPriorityTweaker.tweaks
             .stream()
             .filter(tweak -> ThreadPriorityTweaker.NameMatcherMode.EXACT != tweak.nameMatcherMode())
-            .collect(Collectors.toUnmodifiableSet());
+            .toList();
+    @NotNull
+    private static final ThreadGroup ROOT_THREAD_GROUP = ThreadPriorityTweaker.findRootThreadGroup();
 
     private ThreadPriorityTweaker() {
         super();
@@ -55,23 +61,23 @@ public final class ThreadPriorityTweaker {
     /**
      * Gets all tweaks.
      */
-    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> getAllTweaks() {
-        final var set = HashSet.<ThreadPriorityTweaker.ThreadPriorityTweak>newHashSet(32);
+    private static final @NotNull List<ThreadPriorityTweaker.ThreadPriorityTweak> getAllTweaks() {
+        final var list = new ArrayList<ThreadPriorityTweaker.ThreadPriorityTweak>(32);
 
-        set.addAll(ThreadPriorityTweaker.getCriticalTweaks());
-        set.addAll(ThreadPriorityTweaker.getOtherTweaks());
+        list.addAll(ThreadPriorityTweaker.getCriticalTweaks());
+        list.addAll(ThreadPriorityTweaker.getOtherTweaks());
 
-        return Set.copyOf(set);
+        return List.copyOf(list);
     }
 
-    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> getCriticalTweaks() {
+    private static final @NotNull List<ThreadPriorityTweaker.ThreadPriorityTweak> getCriticalTweaks() {
         final var crit = ThreadPriorityTweaker.ThreadPriority.CRITICAL;
         final var highest = ThreadPriorityTweaker.ThreadPriority.HIGHEST;
         final var veryHigh = ThreadPriorityTweaker.ThreadPriority.VERY_HIGH;
         final var high = ThreadPriorityTweaker.ThreadPriority.HIGH;
         final var aboveNormal = ThreadPriorityTweaker.ThreadPriority.ABOVE_NORMAL;
 
-        return Set.of(
+        return List.of(
                 // Keep important I/O at the top to not cause unexpected latency increase after turning on the tweaker.
                 ThreadPriorityTweaker.startsWith("Netty ", crit),
                 ThreadPriorityTweaker.startsWith("Ixeris ", crit),
@@ -92,13 +98,13 @@ public final class ThreadPriorityTweaker {
         );
     }
 
-    private static final @NotNull Set<ThreadPriorityTweaker.ThreadPriorityTweak> getOtherTweaks() {
+    private static final @NotNull List<ThreadPriorityTweaker.ThreadPriorityTweak> getOtherTweaks() {
         final var low = ThreadPriorityTweaker.ThreadPriority.LOW;
         final var veryLow = ThreadPriorityTweaker.ThreadPriority.VERY_LOW;
         final var lowest = ThreadPriorityTweaker.ThreadPriority.LOWEST;
         final var idle = ThreadPriorityTweaker.ThreadPriority.IDLE;
 
-        return Set.of(
+        return List.of(
                 ThreadPriorityTweaker.exactMatch("Yggdrasil Key Fetcher", low),
                 ThreadPriorityTweaker.startsWith("Worker", low),
                 ThreadPriorityTweaker.startsWith("IO", low),
@@ -130,7 +136,8 @@ public final class ThreadPriorityTweaker {
      * in case new threads are spawned.
      */
     private static final void scheduleTweakTask() {
-        ThreadPriorityTweaker.threadPriorityTweakerScheduler.scheduleWithFixedDelay(ThreadPriorityTweaker::tweakPriorities, 0L, 60L, TimeUnit.SECONDS);
+        // initialDelay as 0L runs the task, while interval as 60L runs it periodically every minute.
+        ThreadPriorityTweaker.threadPriorityTweakerScheduler.get().scheduleWithFixedDelay(ThreadPriorityTweaker::tweakPriorities, 0L, 60L, TimeUnit.SECONDS);
     }
 
     /**
@@ -148,18 +155,22 @@ public final class ThreadPriorityTweaker {
      * Tweaks priorities of currently live threads. This action is done on a separate thread to not cause any lag in-game.
      */
     private static final void tweakPriorities() {
-        if (!ThreadPriorityTweaker.isEnabled()) {
-            return;
-        }
-
-        for (final var thread : ThreadPriorityTweaker.getAllThreads()) {
-            final var name = thread.getName();
-
-            if (ThreadPriorityTweaker.tweakPriorityExact(name, thread)) {
-                continue;
+        try {
+            if (!ThreadPriorityTweaker.isEnabled()) {
+                return;
             }
 
-            ThreadPriorityTweaker.tweakPriority(thread, name);
+            for (final var thread : ThreadPriorityTweaker.getAllThreads()) {
+                final var name = thread.getName();
+
+                if (ThreadPriorityTweaker.tweakPriorityExact(name, thread)) {
+                    continue;
+                }
+
+                ThreadPriorityTweaker.tweakPriority(thread, name);
+            }
+        } catch (final Throwable error) {
+            DarkUtils.error(ThreadPriorityTweaker.class, "Error while running Thread Priority Tweaker", error);
         }
     }
 
@@ -175,20 +186,17 @@ public final class ThreadPriorityTweaker {
     }
 
     private static final void tweakPriority(@NotNull final Thread thread, @NotNull final String name) {
-        var noMatchingTweakerFound = true;
-
         for (final var tweaker : ThreadPriorityTweaker.others) {
             if (tweaker.appliesTo(name)) {
-                noMatchingTweakerFound = false;
-
                 tweaker.applyTo(thread);
-                break;
+                return; // Return when one matches
             }
         }
 
-        if (noMatchingTweakerFound && ThreadPriorityTweaker.ThreadPriority.NORMAL.getPriority() < thread.getPriority()) {
+        // No matching tweaker found if we reached here
+        if (ThreadPriorityTweaker.ThreadPriority.NORMAL.getPriority() < thread.getPriority()) {
             // Unknown thread names with higher than NORMAL priority gets set back to NORMAL.
-            ThreadPriorityTweaker.tweakPriority(thread, ThreadPriorityTweaker.ThreadPriority.NORMAL.getPriority());
+            ThreadPriorityTweaker.ThreadPriority.NORMAL.applyTo(thread);
         }
     }
 
@@ -201,11 +209,10 @@ public final class ThreadPriorityTweaker {
     }
 
     @NotNull
-    private static final ThreadGroup getRootThreadGroup() {
+    private static final ThreadGroup findRootThreadGroup() {
         var threadGroup = Thread.currentThread().getThreadGroup();
 
-        ThreadGroup parent;
-        while (null != (parent = threadGroup.getParent())) {
+        for (ThreadGroup parent; null != (parent = threadGroup.getParent()); ) {
             threadGroup = parent;
         }
 
@@ -214,18 +221,18 @@ public final class ThreadPriorityTweaker {
 
     @NotNull
     private static final Thread @NotNull [] getAllThreads() {
-        final var threadGroup = ThreadPriorityTweaker.getRootThreadGroup();
+        final var threadGroup = ThreadPriorityTweaker.ROOT_THREAD_GROUP;
         var count = threadGroup.activeCount();
 
         Thread[] threads;
         do {
-            threads = new Thread[count];
+            threads = new Thread[count + (count >> 1) + 1];
             count = threadGroup.enumerate(threads, true);
-        } while (count > threads.length);
+        } while (count >= threads.length);
 
         var nonNullCount = 0;
         for (final var thread : threads) {
-            if (null != thread) {
+            if (null != thread && thread.isAlive()) {
                 threads[nonNullCount] = thread;
                 ++nonNullCount;
             }
@@ -262,8 +269,14 @@ public final class ThreadPriorityTweaker {
         HIGHEST, // java prio 9, os prio (nice level) -4
         CRITICAL; // java prio 10, os prio (nice level) -5
 
+        private final int priority = this.ordinal() + 1;
+
         private final int getPriority() {
-            return this.ordinal() + 1;
+            return this.priority;
+        }
+
+        private final void applyTo(@NotNull final Thread thread) {
+            ThreadPriorityTweaker.tweakPriority(thread, this.priority);
         }
     }
 
@@ -275,7 +288,7 @@ public final class ThreadPriorityTweaker {
         }
 
         private final void applyTo(@NotNull final Thread thread) {
-            ThreadPriorityTweaker.tweakPriority(thread, this.priority.getPriority());
+            this.priority.applyTo(thread);
         }
     }
 }

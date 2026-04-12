@@ -1,0 +1,202 @@
+package gg.darkutils.feat.mining;
+
+import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.data.PersistentData;
+import gg.darkutils.events.ReceiveGameMessageEvent;
+import gg.darkutils.events.base.EventRegistry;
+import gg.darkutils.utils.ActivityState;
+import gg.darkutils.utils.LocationUtils;
+import gg.darkutils.utils.ScoreboardUtil;
+import gg.darkutils.utils.TickUtils;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
+
+public final class MineshaftFeatures {
+    private static final long MINESHAFT_DESPAWN_TIME = TimeUnit.SECONDS.toNanos(30L);
+    private static final long TICK_NANOS = TimeUnit.MILLISECONDS.toNanos(50L);
+
+    @NotNull
+    private static final BooleanSupplier IN_GLACITE_TUNNELS =
+            TickUtils.queueUpdatingCondition(MineshaftFeatures::isInGlaciteTunnels);
+
+    public static long mineshaftDespawnsAt;
+
+    @NotNull
+    private static final Map<String, Consumer<ReceiveGameMessageEvent>> MESSAGE_HANDLERS = Map.of(
+            "  LAPIS CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.LAPIS),
+            "  UMBER CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.UMBER),
+            "  TUNGSTEN CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.TUNGSTEN),
+            "  VANGUARD CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.VANGUARD),
+            "WOW! You found a Glacite Mineshaft portal!", e -> MineshaftFeatures.mineshaftDespawnsAt = System.nanoTime() + MineshaftFeatures.MINESHAFT_DESPAWN_TIME
+    );
+
+    public static long mineshaftEnter;
+    public static long activeMiningTimeSinceLastShaft;
+
+    public static double averageSpawnTime;
+
+    private MineshaftFeatures() {
+        super();
+
+        throw new UnsupportedOperationException("static-only class");
+    }
+
+    public static final void init() {
+        EventRegistry.centralRegistry().addListener(MineshaftFeatures::onChat);
+        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(MineshaftFeatures::onWorldChange);
+        TickUtils.queueRepeatingTickTask(MineshaftFeatures::detectMineshaft, 1);
+
+        MineshaftFeatures.updateAverageSpawnTime();
+    }
+
+    private static final void detectMineshaft() {
+        final var isInShaft = LocationUtils.isInMineshaft();
+
+        if (isInShaft) {
+            if (0L == MineshaftFeatures.mineshaftEnter) {
+                MineshaftFeatures.mineshaftEnter = System.nanoTime();
+
+                final var timeTook = MineshaftFeatures.activeMiningTimeSinceLastShaft;
+
+                if (0L != timeTook) {
+                    MineshaftFeatures.appendTime(timeTook);
+                    MineshaftFeatures.activeMiningTimeSinceLastShaft = 0L;
+                }
+            }
+        } else {
+            MineshaftFeatures.mineshaftEnter = 0L;
+
+            if (ActivityState.isActivelyMining() && LocationUtils.isInDwarvenMines() && MineshaftFeatures.IN_GLACITE_TUNNELS.getAsBoolean()) {
+                MineshaftFeatures.activeMiningTimeSinceLastShaft += MineshaftFeatures.TICK_NANOS;
+            }
+        }
+    }
+
+    private static final boolean isInGlaciteTunnels() {
+        return ScoreboardUtil.forEachScoreboardLine(line -> line.contains("Glacite Tunnels") ? ScoreboardUtil.returning(true) : ScoreboardUtil.continuing(), false);
+    }
+
+    private static final void appendTime(final long duration) {
+        if (null == PersistentData.INSTANCE.timeTookForShafts) {
+            PersistentData.INSTANCE.timeTookForShafts = new long[]{duration};
+            MineshaftFeatures.averageSpawnTime = duration;
+            return;
+        }
+
+        final var originalTimeTookValues = PersistentData.INSTANCE.timeTookForShafts;
+
+        final var newLength = originalTimeTookValues.length + 1;
+
+        final var newTimeTookValues = Arrays.copyOf(originalTimeTookValues, newLength);
+        newTimeTookValues[newLength - 1] = duration;
+
+        PersistentData.INSTANCE.timeTookForShafts = newTimeTookValues;
+
+        MineshaftFeatures.updateAverageSpawnTime();
+    }
+
+    private static final void updateAverageSpawnTime() {
+        if (null == PersistentData.INSTANCE.timeTookForShafts) {
+            MineshaftFeatures.averageSpawnTime = 0L;
+            return;
+        }
+
+        MineshaftFeatures.averageSpawnTime = Arrays.stream(PersistentData.INSTANCE.timeTookForShafts)
+                .mapToDouble(value -> value)
+                .average()
+                .orElse(0.0);
+    }
+
+    private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
+        if (!DarkUtilsConfig.INSTANCE.corpsesPerShaftDisplay && !DarkUtilsConfig.INSTANCE.mineshaftDisplay) {
+            return;
+        }
+
+        event.match(MineshaftFeatures.MESSAGE_HANDLERS);
+    }
+
+    private static final void onWorldChange(@NotNull final Minecraft client, @NotNull final ClientLevel world) {
+        if (DarkUtilsConfig.INSTANCE.corpsesPerShaftDisplay) {
+            MineshaftFeatures.CorpseDataHolder.finalizeAllFound();
+        }
+
+        if (DarkUtilsConfig.INSTANCE.mineshaftDisplay) {
+            MineshaftFeatures.mineshaftDespawnsAt = 0L;
+        }
+    }
+
+    private enum CorpseType {
+        LAPIS(v -> PersistentData.INSTANCE.lapisCorpsesOpened += v),
+        UMBER(v -> PersistentData.INSTANCE.umberCorpsesOpened += v),
+        TUNGSTEN(v -> PersistentData.INSTANCE.tungstenCorpsesOpened += v),
+        VANGUARD(v -> PersistentData.INSTANCE.vanguardCorpsesOpened += v);
+
+        private final @NonNull IntConsumer incrementer;
+
+        private CorpseType(final @NonNull IntConsumer incrementer) {
+            this.incrementer = incrementer;
+        }
+
+        private final void increment(final int amount) {
+            this.incrementer.accept(amount);
+        }
+    }
+
+    private static final class CorpseDataHolder {
+        private static final int @NonNull [] foundCorpseForType = new int[MineshaftFeatures.CorpseType.values().length];
+        private static final int @NonNull [] lastFoundCorpseForType = new int[MineshaftFeatures.CorpseType.values().length];
+
+        private CorpseDataHolder() {
+            super();
+
+            throw new UnsupportedOperationException("static-only class");
+        }
+
+        private static final void incrementFound(@NotNull final MineshaftFeatures.CorpseType type) {
+            ++MineshaftFeatures.CorpseDataHolder.foundCorpseForType[type.ordinal()];
+        }
+
+        private static final void finalizeAllFound() {
+            var atLeastOne = false;
+
+            for (int i = 0, len = MineshaftFeatures.CorpseDataHolder.foundCorpseForType.length; i < len; ++i) {
+                final var foundAmount = MineshaftFeatures.CorpseDataHolder.foundCorpseForType[i];
+                if (0 != foundAmount) {
+                    MineshaftFeatures.CorpseDataHolder.lastFoundCorpseForType[i] = foundAmount;
+                    MineshaftFeatures.CorpseDataHolder.foundCorpseForType[i] = 0;
+
+                    atLeastOne = true;
+                }
+            }
+
+            if (atLeastOne) {
+                MineshaftFeatures.CorpseDataHolder.finalizeShaftFoundCorpses();
+            }
+        }
+
+        private static final void finalizeShaftFoundCorpses() {
+            ++PersistentData.INSTANCE.shaftsEntered;
+
+            final var types = MineshaftFeatures.CorpseType.values();
+            for (int i = 0, len = MineshaftFeatures.CorpseDataHolder.lastFoundCorpseForType.length; i < len; ++i) {
+                final var foundAmount = MineshaftFeatures.CorpseDataHolder.lastFoundCorpseForType[i];
+
+                if (0 != foundAmount) {
+                    types[i].increment(foundAmount);
+                }
+            }
+        }
+    }
+}
+

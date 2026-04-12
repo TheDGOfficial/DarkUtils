@@ -2,8 +2,7 @@ package gg.darkutils.events;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
-import gg.darkutils.events.base.EventRegistry;
-import net.minecraft.network.packet.Packet;
+import net.minecraft.network.protocol.Packet;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -20,11 +19,11 @@ public record ReceiveMainThreadPacketEvent(@NotNull CancellationState cancellati
                                            @NotNull Packet<?> packet) implements CancellableEvent {
     /**
      * Creates a new {@link ReceiveMainThreadPacketEvent} suitable for triggering the event.
-     * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.
+     * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
      *
      * @param packet The packet.
      */
     public ReceiveMainThreadPacketEvent(@NotNull final Packet<?> packet) {
-        this(CancellationState.ofCached(), packet);
+        this(CancellationState.ofFresh(), packet);
     }
 }

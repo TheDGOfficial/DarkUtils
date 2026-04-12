@@ -2,12 +2,13 @@ package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.ReceiveGameMessageEvent;
+import gg.darkutils.events.base.EventPriority;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
-import gg.darkutils.utils.chat.BasicColor;
 import gg.darkutils.utils.chat.ChatUtils;
+import gg.darkutils.utils.chat.SimpleColor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -15,9 +16,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public final class AutoTip {
+    private static final long QUARTER_MINUTES_NANOS = TimeUnit.MINUTES.toNanos(15L);
     @NotNull
     private static final Consumer<ReceiveGameMessageEvent> MESSAGE_ACTION = event -> {
-        if (event.isStyledWith(BasicColor.RED)) {
+        if (event.isStyledWith(SimpleColor.RED)) {
             event.cancellationState().cancel();
         }
     };
@@ -35,26 +37,26 @@ public final class AutoTip {
     }
 
     public static final void init() {
-        EventRegistry.centralRegistry().addListener(AutoTip::onChat);
+        EventRegistry.centralRegistry().addListener(AutoTip::onChat, EventPriority.ABOVE_NORMAL);
         ClientTickEvents.END_CLIENT_TICK.register(AutoTip::onTick);
     }
 
     private static final void onChat(@NotNull final ReceiveGameMessageEvent event) {
-        if (!DarkUtilsConfig.INSTANCE.autoTip) {
+        if (!DarkUtilsConfig.INSTANCE.autoTip || !LocationUtils.isInHypixel()) {
             return;
         }
 
         event.match(AutoTip.MESSAGE_HANDLERS);
     }
 
-    private static final void onTick(@NotNull final MinecraftClient client) {
+    private static final void onTick(@NotNull final Minecraft client) {
         if (!DarkUtilsConfig.INSTANCE.autoTip || !LocationUtils.isInHypixel()) {
             return;
         }
 
         final var now = 0L == AutoTip.lastTipAt ? 0L : System.nanoTime();
 
-        if (0L == AutoTip.lastTipAt || now - AutoTip.lastTipAt > TimeUnit.MINUTES.toNanos(15L)) {
+        if (0L == AutoTip.lastTipAt || now - AutoTip.lastTipAt > AutoTip.QUARTER_MINUTES_NANOS) {
             AutoTip.lastTipAt = 0L == AutoTip.lastTipAt ? System.nanoTime() : now;
             ChatUtils.addToSendMessageQueue("/tip all");
         }

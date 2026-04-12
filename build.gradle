@@ -1,3 +1,23 @@
+import javassist.bytecode.ClassFile
+import net.fabricmc.loom.task.RemapJarTask
+import org.apache.tools.ant.filters.ReplaceTokens
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.tree.*
+import org.objectweb.asm.util.CheckClassAdapter
+import proguard.gradle.ProGuardTask
+
+import java.nio.file.Path as NioPath
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.util.concurrent.TimeUnit
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
+
 buildscript {
     repositories {
         mavenCentral()
@@ -5,14 +25,18 @@ buildscript {
 
     dependencies {
         classpath 'org.javassist:javassist:3.30.2-GA'
+
+        classpath 'org.ow2.asm:asm:9.9.1'
+        classpath 'org.ow2.asm:asm-tree:9.9.1'
+        classpath 'org.ow2.asm:asm-commons:9.9.1'
+
+        classpath 'com.guardsquare:proguard-gradle:7.9.1'
+        classpath 'com.guardsquare:proguard-core:9.3.2'
     }
 }
 
-import javassist.bytecode.ClassFile
-import javassist.bytecode.MethodInfo
-
 plugins {
-    id 'fabric-loom' version "${loom_version}"
+    id 'net.fabricmc.fabric-loom-remap' version "1.15.5"
     id 'maven-publish'
 }
 
@@ -52,6 +76,8 @@ repositories {
 }
 
 loom {
+    accessWidenerPath = file('src/main/resources/darkutils.classtweaker')
+
     mods {
         'darkutils' {
             sourceSet sourceSets.main
@@ -68,25 +94,86 @@ loom {
 
 dependencies {
     // To change the versions see the gradle.properties file
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    //mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    minecraft("com.mojang:minecraft:1.21.11") {
+        transitive = false
+    }
+
+    mappings(loom.officialMojangMappings()) {
+        transitive = false
+    }
+
+    modImplementation("net.fabricmc:fabric-loader:0.19.1") {
+        transitive = false
+    }
 
     // Fabric API. This is technically optional, but you probably want it anyway.
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    // Pulls in all Fabric API modules, may uncomment during development. Explicitly declare below and comment it again after.
+    //modImplementation("net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11")
 
-    modApi('me.shedaniel.cloth:cloth-config-fabric:21.11.153') {
-        exclude(group: 'net.fabricmc.fabric-api')
+    modImplementation("net.fabricmc.fabric-api:fabric-api-base:1.0.5+4ebb5c083e") {
+        transitive = false
+    }
+    modImplementation("net.fabricmc.fabric-api:fabric-lifecycle-events-v1:2.6.15+4ebb5c083e") {
+        transitive = false
+    }
+    modImplementation("net.fabricmc.fabric-api:fabric-command-api-v2:2.4.7+6b42a6003e") {
+        transitive = false
+    }
+    modImplementation("net.fabricmc.fabric-api:fabric-message-api-v1:6.1.12+4ebb5c083e") {
+        transitive = false
+    }
+    modImplementation("net.fabricmc.fabric-api:fabric-rendering-v1:16.2.10+0290ad933e") {
+        transitive = false
+    }
+    modImplementation("net.fabricmc.fabric-api:fabric-key-binding-api-v1:1.1.7+4fc5413f3e") {
+        transitive = false
+    }
+    modImplementation("net.fabricmc.fabric-api:fabric-networking-api-v1:5.1.5+ae1e07683e") {
+        transitive = false
     }
 
-    modApi('com.terraformersmc:modmenu:18.0.0-alpha.6') {
-        exclude(group: 'net.fabricmc.fabric-api')
+    modImplementation('me.shedaniel.cloth:cloth-config-fabric:21.11.153') {
+        transitive = false
     }
 
-    modApi('net.hypixel:mod-api:1.0.1') {
-        exclude(group: 'net.fabricmc.fabric-api')
+    implementation('com.terraformersmc:modmenu:18.0.0-alpha.6') {
+        transitive = false
     }
+
+    modImplementation('net.hypixel:mod-api:1.0.2') {
+        transitive = false
+    }
+
+    testImplementation('org.junit.jupiter:junit-jupiter:6.1.0-M1')
+    testImplementation('org.junit.jupiter:junit-jupiter-api:6.1.0-M1')
+
+    testRuntimeOnly('org.junit.platform:junit-platform-launcher:6.1.0-M1')
+
+    compileOnly('com.google.errorprone:error_prone_annotations:2.49.0')
+}
+
+tasks {
+    test {
+        useJUnitPlatform()
+
+        testLogging {
+            exceptionFormat = TestExceptionFormat.FULL
+            showStandardStreams = true
+        }
+    }
+}
+
+configurations {
+    testImplementation.extendsFrom compileOnly
+}
+
+tasks.withType(Test).configureEach {
+    reports {
+        html.required = false
+        junitXml.required = false
+    }
+
+    it.systemProperty('inside.junit', 'true')
 }
 
 processResources {
@@ -97,12 +184,66 @@ processResources {
     inputs.property('version', modVersion)
 
     filesMatching('fabric.mod.json') {
-        expand(["version": modVersion])
+        expand(['version': modVersion])
     }
+}
+
+@CacheableTask
+abstract class PreprocessMixinNamesTask extends DefaultTask {
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract DirectoryProperty getInputDir()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+
+    @Inject
+    abstract FileSystemOperations getFs()
+
+    @TaskAction
+    final void preprocess() {
+        logger.lifecycle('Preprocessing Mixin names...')
+
+        final def inputDirectory = inputDir.get().asFile
+        final def outputDirectory = outputDir.get().asFile
+
+        fs.delete {
+            it.delete(outputDir)
+        }
+
+        fs.copy { final def spec ->
+            spec.from(inputDirectory)
+            spec.into(outputDirectory)
+            spec.include('**/*.java')
+
+            spec.filesMatching('**/mixin/**/*.java') {
+                final def name = it.name.substring(0, it.name.lastIndexOf('.'))
+
+                it.filter(ReplaceTokens, tokens: [
+                        fileName: name
+                ])
+            }
+        }
+    }
+}
+
+tasks.register('preprocessMixinNames', PreprocessMixinNamesTask) {
+    inputDir.set(layout.projectDirectory.dir('src/main/java'))
+    outputDir.set(layout.buildDirectory.dir('preprocessed/java'))
+}
+
+tasks.named('compileJava', JavaCompile).configure {
+    dependsOn(tasks.named('preprocessMixinNames'))
+
+    source = fileTree(tasks.named('preprocessMixinNames').get().outputDir)
 }
 
 tasks.withType(JavaCompile).configureEach {
     it.options.release = 21
+    it.options.compilerArgs += '-Xlint:all'
+
+    it.options.compilerArgs += '-g'
+    it.options.compilerArgs += '-parameters'
 }
 
 tasks.named('jar', Jar) {
@@ -121,16 +262,6 @@ tasks.named('jar', Jar) {
                 'Name': 'gg/darkutils/'
         )
     }
-}
-
-java {
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    // If you remove this line, sources will not be generated.
-    withSourcesJar()
-
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
@@ -160,41 +291,933 @@ publishing {
     }
 }
 
-// Task class for full configuration-cache compatibility
-abstract class CheckMethodSizesTask extends DefaultTask {
-    @InputFiles
-    abstract ConfigurableFileCollection getClassesDirectories()
+final class BatchedMessageCollector {
+    private static final HashMap<Integer, ArrayList<String>> MESSAGES = new HashMap<>()
 
-    @TaskAction
-    void checkMethods() {
-        final def thresholds = [huge: 8000, large: 2000, nonsmall: 325]
-        final def issues = []
+    private static final void add(final int messageCategory, final String message) {
+        BatchedMessageCollector.MESSAGES.computeIfAbsent(messageCategory, { final def category -> new ArrayList<>() }).add(message)
+    }
 
-        getClassesDirectories().each { final File directory ->
-            if (!directory.exists()) return
+    private static final void logAll(final Logger logger) {
+        for (final def entry : BatchedMessageCollector.MESSAGES.entrySet()) {
+            final def category = entry.key
+            final def messages = entry.value
 
-            directory.eachFileRecurse { final File file ->
-                if (!file.name.endsWith('.class')) return
+            logger.lifecycle("Category: ${category}")
+            for (final def message : messages) {
+                logger.lifecycle(message)
+            }
+        }
+        MESSAGES.clear()
+    }
+}
 
-                final def relativePath = directory.toPath().relativize(file.toPath()).toString()
-                final def className = relativePath.replace(File.separator, '.').replaceAll('[.]class$', '')
+final class JrtHolder {
+    private static final def JRT_FILESYSTEM = FileSystems.getFileSystem(URI.create('jrt:/'))
 
-                file.withInputStream { final inputStream ->
-                    new DataInputStream(inputStream).withCloseable { final dataInputStream ->
-                        final def classFile = new ClassFile(dataInputStream)
-                        classFile.methods.each { final MethodInfo methodInfo ->
-                            final def codeAttribute = methodInfo.codeAttribute
-                            if (codeAttribute == null) return
-                            final def size = codeAttribute.code.length
+    static final def getJrt() {
+        return JRT_FILESYSTEM
+    }
+}
 
-                            if (size > thresholds.huge) issues << "Huge method: $className#${methodInfo.name} (bytecode size: $size)"
-                            else if (size > thresholds.large) issues << "Large method: $className#${methodInfo.name} (bytecode size: $size)"
-                            else if (size > thresholds.nonsmall) issues << "Non trivial method: $className#${methodInfo.name} (bytecode size: $size)"
+final class JrtIndexHolder {
+    private static final Map<String, NioPath> CLASS_INDEX = JrtIndexHolder.buildIndex()
+
+    private static final Map<String, NioPath> buildIndex() {
+        final def index = new HashMap<String, NioPath>()
+
+        final def modules = JrtHolder.jrt.getPath('/modules')
+
+        try (final def stream = Files.walk(modules)) {
+            stream
+                .filter { Files.isRegularFile(it) }
+                .filter { it.toString().endsWith('.class') }
+                .forEach { final def path ->
+                    final def relative = modules.relativize(path).toString().replace('\\', '/')
+                    final def className = relative.substring(relative.indexOf('/') + 1)
+                    index.putIfAbsent(className, path)
+                }
+        }
+
+        return Map.copyOf(index)
+    }
+
+    static final NioPath lookup(final String entry) {
+        return JrtIndexHolder.CLASS_INDEX.get(entry)
+    }
+}
+
+@CacheableTask
+abstract class AsmPreprocessTask extends DefaultTask {
+    private static final def NAME_DESC               = 'Lgg/darkutils/annotations/Name;'
+    private static final def SYNTHETIC_DESC          = 'Lgg/darkutils/annotations/Synthetic;'
+    private static final def BRIDGE_DESC             = 'Lgg/darkutils/annotations/Bridge;'
+    private static final def PRIVATE_DESC            = 'Lgg/darkutils/annotations/Private;'
+    private static final def PACKAGE_PRIVATE_DESC    = 'Lgg/darkutils/annotations/PackagePrivate;'
+    private static final def PRIVATE_FIELDS_DESC     = 'Lgg/darkutils/annotations/PrivateFields;'
+
+    private static final def MIXIN_OVERWRITE_DESC    = 'Lorg/spongepowered/asm/mixin/Overwrite;'
+
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract DirectoryProperty getInputClassesDir()
+
+    @Classpath
+    abstract ConfigurableFileCollection getProcessorClasspath()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputClassesDir()
+
+    @Inject
+    abstract FileSystemOperations getFs()
+
+    protected final void copyFile(final File from, final File into) {
+        fs.copy {
+            it.from(from)
+            it.into(into.parentFile)
+
+            it.rename { into.name }
+        }
+    }
+
+    protected final boolean overridesSomething(final ClassNode owner, final MethodNode method, final Set<File> classpath, final HashMap<String, ClassNode> classNodeCache) {
+        final def name = method.name
+        final def desc = method.desc
+
+        return this.hierarchyHasMethod(owner, name, desc, classpath, classNodeCache)
+    }
+
+    protected final boolean hierarchyHasMethod(final ClassNode owner, final String name, final String desc, final Set<File> classpath, final HashMap<String, ClassNode> classNodeCache) {
+        final def queue   = new ArrayDeque<String>()
+        final def visited = new HashSet<String>()
+
+        if (null != owner.superName) {
+            queue.add(owner.superName)
+        }
+
+        queue.addAll(owner.interfaces)
+
+        while (!queue.empty) {
+            final def internalName = queue.removeFirst()
+
+            if (!visited.add(internalName)) {
+                continue
+            }
+
+            final def cn = this.loadClassNode(internalName, classpath, classNodeCache)
+
+            if (null == cn) {
+                logger.error("Failed to load class: ${internalName} from classpath")
+                continue
+            }
+
+            for (final def mn : cn.methods) {
+                if (mn.name == name && mn.desc == desc) {
+                    return true
+                }
+            }
+
+            if (null != cn.superName) {
+                queue.add(cn.superName)
+            }
+
+            queue.addAll(cn.interfaces)
+        }
+
+        return false
+    }
+
+    protected final ClassNode loadClassNode(final String internalName, final Set<File> classpath, final HashMap<String, ClassNode> classNodeCache) {
+        return classNodeCache.computeIfAbsent(internalName, { final def name -> AsmPreprocessTask.loadClassNode0(name, classpath) })
+    }
+
+    private static final ClassNode loadClassNode0(final String internalName, final Set<File> classpath) {
+        final def entry = internalName + '.class'
+
+        for (final def root : classpath) {
+            if (root.directory) {
+                final def file = new File(root, entry)
+
+                if (!file.exists()) {
+                    continue
+                }
+
+                return AsmPreprocessTask.readNode(file.bytes)
+            }
+
+            if (root.name.endsWith('.jar')) {
+                try (final def jarFile = new JarFile(root)) {
+                    final def jarEntry = jarFile.getJarEntry(entry)
+
+                    if (null != jarEntry) {
+                        try (final def input = jarFile.getInputStream(jarEntry)) {
+                            return AsmPreprocessTask.readNode(input.bytes)
                         }
                     }
                 }
             }
         }
+
+        /*
+         * ---------- JDK MODULE FALLBACK ----------
+         */
+
+        final def jrtPath = JrtIndexHolder.lookup(entry)
+
+        if (null != jrtPath) {
+            return AsmPreprocessTask.readNode(Files.readAllBytes(jrtPath))
+        }
+
+        return null
+    }
+
+    private static final ClassNode readNode(final byte[] bytes) {
+        final def cr = new ClassReader(bytes)
+        final def cn = new ClassNode()
+
+        cr.accept(cn, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+
+        return cn
+    }
+
+    private static final boolean hasAnnotation(final MethodNode mn, final String desc) {
+        final def annotationNodes = mn.visibleAnnotations
+
+        if (null != annotationNodes) {
+            for (final def annotationNode : annotationNodes) {
+                if (annotationNode.desc == desc) {
+                    return true
+                }
+            }
+        }
+
+        final def invisibleAnnotationNodes = mn.invisibleAnnotations
+
+        if (null != invisibleAnnotationNodes) {
+            for (final def annotationNode : invisibleAnnotationNodes) {
+                if (annotationNode.desc == desc) {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+    protected final List<Boolean> process(final HashMap<String, HashSet<String>> privatizedMethodsByClass, final HashMap<String, Long> constantFields, final HashMap<String, ClassNode> classNodeCache, final boolean verbose, final boolean constantFold, final ClassNode cn) {
+        def changed = false
+        def renamed = false
+
+        if (constantFold) {
+            final def fieldsBySig = HashMap.<String, FieldNode>newHashMap(cn.fields.size())
+
+            for (final def fn : cn.fields) {
+                fieldsBySig[fn.name + fn.desc] = fn
+            }
+
+            for (final def mn : cn.methods) {
+                if ('<clinit>' != mn.name || null == mn.instructions) continue
+
+                for (def insn = mn.instructions.first; insn != null; ) {
+                    final def next = insn.next
+
+                    /*
+                     * --------------------------------------------------
+                     * 1. TimeUnit constant folding
+                     * --------------------------------------------------
+                     */
+                    if (Opcodes.INVOKEVIRTUAL == insn.opcode) {
+                        final def mInsn = (MethodInsnNode) insn
+
+                        if ('java/util/concurrent/TimeUnit' == mInsn.owner
+                                && '(J)J' == mInsn.desc
+                                && mInsn.name.startsWith('to')) {
+
+                            final def constNode = insn.previous
+                            final def enumNode  = constNode?.previous
+
+                            if (enumNode instanceof FieldInsnNode
+                                    && Opcodes.GETSTATIC == enumNode.opcode
+                                    && 'java/util/concurrent/TimeUnit' == enumNode.owner) {
+                                long value
+
+                                switch (constNode.opcode) {
+                                    case Opcodes.LCONST_0: value = 0L; break
+                                    case Opcodes.LCONST_1: value = 1L; break
+                                    case Opcodes.LDC:
+                                        if (constNode instanceof LdcInsnNode && constNode.cst instanceof Long) {
+                                            value = constNode.cst as long
+                                        } else {
+                                            insn = next; continue
+                                        }
+                                        break
+                                    default:
+                                        insn = next; continue
+                                }
+
+                                final def timeUnit = TimeUnit.valueOf(enumNode.name)
+                                long result
+
+                                switch (mInsn.name) {
+                                    case 'toNanos':   result = timeUnit.toNanos(value); break
+                                    case 'toMicros':  result = timeUnit.toMicros(value); break
+                                    case 'toMillis':  result = timeUnit.toMillis(value); break
+                                    case 'toSeconds': result = timeUnit.toSeconds(value); break
+                                    case 'toMinutes': result = timeUnit.toMinutes(value); break
+                                    case 'toHours':   result = timeUnit.toHours(value); break
+                                    case 'toDays':    result = timeUnit.toDays(value); break
+                                    default:
+                                        logger.warn("unsupported TimeUnit method for compile-time evaluation used: ${mInsn.name}"); insn = next; continue
+                                }
+
+                                final def ldc = new LdcInsnNode(result)
+                                mn.instructions.insert(insn, ldc)
+                                mn.instructions.remove(enumNode)
+                                mn.instructions.remove(constNode)
+                                mn.instructions.remove(insn)
+
+                                changed = true
+                                insn = ldc
+                                if (verbose) BatchedMessageCollector.add(26, "Replaced TimeUnit conversion with evaluated value: TimeUnit.${enumNode.name}.${mInsn.name}(${value}) = ${result} inlined.")
+                                continue
+                            }
+                        }
+                    }
+
+                    /*
+                     * --------------------------------------------------
+                     * 2 + 3. Collect & remove constant PUTSTATIC
+                     * --------------------------------------------------
+                     */
+                    if (Opcodes.PUTSTATIC == insn.opcode) {
+                        final def put = (FieldInsnNode) insn
+                        final def prev = put.previous
+
+                        final def fn = fieldsBySig[put.name + put.desc]
+
+                        if ((0 != (fn.access & Opcodes.ACC_PRIVATE)) && (0 != (fn.access & Opcodes.ACC_STATIC)) && (0 != (fn.access & Opcodes.ACC_FINAL)) && prev instanceof LdcInsnNode && prev.cst instanceof Long) {
+                            constantFields[put.owner + put.name + put.desc] = prev.cst as long
+
+                            mn.instructions.remove(prev)
+                            mn.instructions.remove(insn)
+
+                            changed = true
+                            if (verbose) BatchedMessageCollector.add(29, "Removed putstatic to constant field ${cn.name}#${fn.name} = ${prev.cst}")
+                        }
+                    }
+
+                    insn = next
+                }
+            }
+        }
+
+        for (final def it = cn.fields.iterator(); it.hasNext(); ) {
+            final def f = it.next()
+            final def key = cn.name + f.name + f.desc
+
+            if (constantFields.containsKey(key)) {
+                it.remove()
+                changed = true
+                if (verbose) BatchedMessageCollector.add(28, "Removed constant folded field ${cn.name}#${f.name}")
+            }
+        }
+
+        final def clsAnns = cn.invisibleAnnotations
+        final def privateClass = 0 != (cn.access & Opcodes.ACC_PRIVATE)
+
+        def privateFields = false
+
+        if (null != clsAnns) {
+            for (final def an : clsAnns) {
+                switch (an.desc) {
+                    case PRIVATE_FIELDS_DESC:
+                        privateFields = true
+                        break
+                    case SYNTHETIC_DESC:
+                        changed = true
+                        cn.access |= Opcodes.ACC_SYNTHETIC
+                        if (verbose) BatchedMessageCollector.add(0, "Added ACC_SYNTHETIC to ${cn.name}")
+                        break
+                    case PACKAGE_PRIVATE_DESC:
+                        changed = true
+                        cn.access &= ~Opcodes.ACC_PUBLIC
+                        cn.access &= ~Opcodes.ACC_PROTECTED
+                        if (privateClass) {
+                            logger.error("Already private class ${cn.name} annotated with @PackagePrivate")
+                        }
+                        if (verbose) BatchedMessageCollector.add(1, "Added package-private to ${cn.name}")
+                        break
+                    case PRIVATE_DESC:
+                        changed = true
+                        cn.access &= ~Opcodes.ACC_PUBLIC
+                        cn.access &= ~Opcodes.ACC_PROTECTED
+                        cn.access |= Opcodes.ACC_PRIVATE
+                        if (verbose) BatchedMessageCollector.add(2, "Added private to ${cn.name}")
+                        break
+                    case NAME_DESC:
+                        final def vals = an.values
+
+                        for (def i = 0; i < vals.size(); i += 2) {
+                            if ('value' != vals[i]) {
+                                continue
+                            }
+
+                            final def oldName = cn.name
+                            final def newName = vals[i + 1]
+
+                            if (oldName != newName) {
+                                changed = true
+                                cn.name = newName
+                                if (verbose) BatchedMessageCollector.add(3, "Renamed ${oldName} into ${cn.name}")
+                            }
+                        }
+                        break
+                }
+            }
+        }
+
+        final def classPublic = 0 != (cn.access & Opcodes.ACC_PUBLIC)
+
+        for (final def fn : cn.fields) {
+            if (privateFields) {
+                fn.access &= ~Opcodes.ACC_PUBLIC
+                fn.access &= ~Opcodes.ACC_PROTECTED
+                fn.access |= Opcodes.ACC_PRIVATE
+                changed = true
+                if (verbose) BatchedMessageCollector.add(8, "Removed public from field ${cn.name}#${fn.name}")
+                if (verbose) BatchedMessageCollector.add(9, "Removed protected from field ${cn.name}#${fn.name}")
+                if (verbose) BatchedMessageCollector.add(10, "Add private to field ${cn.name}#${fn.name}")
+            }
+
+            if (!classPublic) {
+                if (0 != (fn.access & Opcodes.ACC_PUBLIC)) {
+                    changed = true
+                    fn.access &= ~Opcodes.ACC_PUBLIC
+                    if (verbose) BatchedMessageCollector.add(17, "Removed public from field ${cn.name}#${fn.name}")
+                }
+
+                if (0 != (fn.access & Opcodes.ACC_PROTECTED)) {
+                    changed = true
+                    fn.access &= ~Opcodes.ACC_PROTECTED
+                    if (verbose) BatchedMessageCollector.add(18, "Removed protected from field ${cn.name}#${fn.name}")
+                }
+            }
+
+            /*if (0 != (fn.access & Opcodes.ACC_STATIC) && 0 != (fn.access & Opcodes.ACC_FINAL) && 1 != fn.desc.length() && 'Ljava/util/function/Supplier;' != fn.desc && 'Ljava/lang/String;' != fn.desc && 'Ljava/util/Map;' != fn.desc && '$VALUES' != fn.name && 'INSTANCE' != fn.name && (0 == (fn.access & Opcodes.ACC_ENUM) || ('L' + cn.name + ';') != fn.desc)) {
+                logger.lifecycle("Possible lazy initialization of ${cn.name}#${fn.name} via LazyConstants")
+            }*/
+
+            final def anns = fn.invisibleAnnotations
+
+            if (null != anns) {
+                for (final def an : anns) {
+                    switch (an.desc) {
+                        case SYNTHETIC_DESC:
+                            fn.access |= Opcodes.ACC_SYNTHETIC
+                            changed = true
+                            if (verbose) BatchedMessageCollector.add(4, "Added ACC_SYNTHETIC to ${cn.name}#${fn.name}")
+                            break
+
+                        case PACKAGE_PRIVATE_DESC:
+                            fn.access &= ~Opcodes.ACC_PUBLIC
+                            fn.access &= ~Opcodes.ACC_PROTECTED
+                            changed = true
+                            if (0 != (fn.access & Opcodes.ACC_PRIVATE)) {
+                                logger.error("Already private field ${cn.name}#${fn.name} annotated with @PackagePrivate")
+                            }
+                            if (verbose) BatchedMessageCollector.add(5, "Added package-private to ${cn.name}#${fn.name}")
+                            break
+
+                        case PRIVATE_DESC:
+                            fn.access &= ~Opcodes.ACC_PUBLIC
+                            fn.access &= ~Opcodes.ACC_PROTECTED
+                            fn.access |= Opcodes.ACC_PRIVATE
+                            changed = true
+                            if (verbose) BatchedMessageCollector.add(6, "Added private to ${cn.name}#${fn.name}")
+                            break
+
+                        case NAME_DESC:
+                            final def vals = an.values
+                            for (def i = 0; i < vals.size(); i += 2) {
+                                if ('value' == vals[i]) {
+                                    final def oldName = fn.name
+                                    final def newName = vals[i + 1]
+                                    fn.name = newName
+                                    changed = true
+                                    if (verbose) BatchedMessageCollector.add(7, "Renamed ${cn.name}#${oldName} into ${cn.name}#${fn.name}")
+                                }
+                            }
+                            break
+                    }
+                }
+            }
+        }
+
+        /*
+         * -----------------------------
+         * CLASS PROCESSING
+         * -----------------------------
+         */
+        if (0 != (cn.access & Opcodes.ACC_SYNTHETIC)) {
+            changed = true
+            cn.access |= Opcodes.ACC_FINAL
+            if (verbose) BatchedMessageCollector.add(16, "Made ${cn.name} final")
+        }
+
+        final def isInterface = 0 != (cn.access & Opcodes.ACC_INTERFACE)
+
+        if (classPublic) {
+            if (cn.name.contains('mixin') && !cn.name.contains('accessor') && !cn.name.contains('mixinquirks')) {
+                logger.warn('Non-accessor mixin class declared public')
+            }
+        }
+
+        /*
+         * -----------------------------
+         * METHOD PROCESSING
+         * -----------------------------
+         */
+        final def isRecord = 0 != (cn.access & Opcodes.ACC_RECORD)
+
+        final def methodsBySig = HashMap.<String, MethodNode>newHashMap(cn.methods.size())
+
+        for (final def mn : cn.methods) {
+            /*
+             * FINALIZATION
+             */
+            final def abstractMethod = 0 != (mn.access & Opcodes.ACC_ABSTRACT)
+            final def bridge = 0 != (mn.access & Opcodes.ACC_BRIDGE)
+            final def synthetic = 0 != (mn.access & Opcodes.ACC_SYNTHETIC)
+
+            methodsBySig[mn.name + mn.desc] = mn
+
+            if (!isInterface && !abstractMethod && '<clinit>' != mn.name && '<init>' != mn.name && 0 == (mn.access & Opcodes.ACC_FINAL)) {
+                if ((isRecord || bridge || synthetic || mn.name.contains('$') || 'values' == mn.name || 'valueOf' == mn.name)) {
+                    changed = true
+                    mn.access |= Opcodes.ACC_FINAL
+                    if (!isRecord && !bridge && !synthetic && 'values' != mn.name && 'valueOf' != mn.name) {
+                        logger.warn("Method ${cn.name}#${mn.name} should be final")
+                    }
+                    if (verbose) BatchedMessageCollector.add(21, "Added final to ${cn.name}#${mn.name}")
+                    continue
+                } else {
+                    logger.warn("Method ${cn.name}#${mn.name} should be final")
+                }
+            }
+
+            if (0 == (mn.access & Opcodes.ACC_FINAL) && '<init>' != mn.name && '<clinit>' != mn.name && !isInterface) {
+                logger.warn("Non-final method: ${cn.name}#${mn.name}")
+            }
+
+            if (!classPublic) {
+                if ('<clinit>' == mn.name || 0 != (mn.access & Opcodes.ACC_PRIVATE) || AsmPreprocessTask.hasAnnotation(mn, MIXIN_OVERWRITE_DESC)) {
+                    continue
+                }
+
+                if (0 == (mn.access & Opcodes.ACC_STATIC) && '<init>' != mn.name && this.overridesSomething(cn, mn, processorClasspath.files, classNodeCache)) {
+                    continue
+                }
+
+                if (0 == (mn.access & Opcodes.ACC_BRIDGE) && mn.name.contains('mixin')) {
+                    logger.warn("Method ${cn.name}#${mn.name} should be package-private or private")
+                }
+
+                if (0 != (mn.access & Opcodes.ACC_PUBLIC) && !bridge && !isInterface) {
+                    changed = true
+                    mn.access &= ~Opcodes.ACC_PUBLIC
+                    if (verbose) BatchedMessageCollector.add(19, "Removed public from method ${cn.name}#${mn.name}")
+                }
+
+                if (0 != (mn.access & Opcodes.ACC_PROTECTED) && !bridge) {
+                    changed = true
+                    mn.access &= ~Opcodes.ACC_PROTECTED
+                    if (verbose) BatchedMessageCollector.add(20, "Removed protected from method ${cn.name}#${mn.name}")
+                }
+            }
+
+            /*
+             * METHOD ANNOTATIONS
+             */
+            final def anns =
+                    mn.invisibleAnnotations
+
+            if (null != anns) {
+                for (final def an : anns) {
+                    if (NAME_DESC == an.desc) {
+                        final def vals = an.values
+
+                        for (def i = 0; i < vals.size(); i += 2) {
+                            if ('value' != vals[i]) {
+                                continue
+                            }
+
+                            final def oldName = mn.name
+                            final def newName = vals[i + 1]
+
+                            if (oldName != newName) {
+                                changed = true
+                                renamed = true
+                                mn.name = newName
+                                if (verbose) BatchedMessageCollector.add(11, "Renamed ${cn.name}#${oldName} into ${cn.name}#${mn.name}")
+                            }
+                        }
+                    }
+
+                    if (SYNTHETIC_DESC == an.desc) {
+                        changed = true
+                        mn.access |= Opcodes.ACC_SYNTHETIC
+                        if (verbose) BatchedMessageCollector.add(12, "Added ACC_SYNTHETIC to ${cn.name}#${mn.name}")
+                    }
+
+                    if (PACKAGE_PRIVATE_DESC == an.desc && !bridge) {
+                        changed = true
+                        mn.access &= ~Opcodes.ACC_PUBLIC
+                        mn.access &= ~Opcodes.ACC_PROTECTED
+                        if (0 != (mn.access & Opcodes.ACC_PRIVATE)) {
+                            logger.error("Already private method ${cn.name}#${mn.name} annotated with @PackagePrivate")
+                        }
+                        if (verbose) BatchedMessageCollector.add(13, "Made method package-private: ${cn.name}#${mn.name}")
+                    }
+
+                    if (PRIVATE_DESC == an.desc && !bridge) {
+                        changed = true
+                        mn.access &= ~Opcodes.ACC_PUBLIC
+                        mn.access &= ~Opcodes.ACC_PROTECTED
+                        mn.access |= Opcodes.ACC_PRIVATE
+                        privatizedMethodsByClass.computeIfAbsent(cn.name, { final def className -> new HashSet<String>() }).add("${mn.name}${mn.desc}")
+                        if (verbose) BatchedMessageCollector.add(14, "Made method private: ${cn.name}#${mn.name}")
+                    }
+
+                    if (BRIDGE_DESC == an.desc) {
+                        changed = true
+                        mn.access |= Opcodes.ACC_BRIDGE
+                        if (verbose) BatchedMessageCollector.add(15, "Added ACC_BRIDGE to ${cn.name}#${mn.name}")
+                    }
+                }
+            }
+        }
+
+        if (0 == (cn.access & Opcodes.ACC_FINAL) && !isInterface && 0 == (cn.access & Opcodes.ACC_ABSTRACT)) {
+            logger.warn("Non-final class: ${cn.name}")
+        }
+
+        final def privatized = privatizedMethodsByClass.getOrDefault(cn.name, Collections.emptySet())
+
+        for (final def ownerMethod : cn.methods) {
+            if (null == ownerMethod.instructions) continue
+
+            for (def insn = ownerMethod.instructions.first; insn != null;) {
+                final def next = insn.next
+
+                switch (insn.opcode) {
+                    /*
+                     * ------------------------------
+                     * GETSTATIC constant folding
+                     * ------------------------------
+                     */
+                    case Opcodes.GETSTATIC:
+                        if (constantFold) {
+                            final def fieldInsn = (FieldInsnNode) insn
+                            final def value = constantFields[fieldInsn.owner + fieldInsn.name + fieldInsn.desc]
+
+                            if (null != value) {
+                                ownerMethod.instructions.set(insn, new LdcInsnNode(value))
+                                changed = true
+                                if (verbose) BatchedMessageCollector.add(27, "Inlined constant ${fieldInsn.owner}.${fieldInsn.name} = ${value} in ${cn.name}.${ownerMethod.name}")
+                            }
+                        }
+                        break
+
+                    /*
+                     * ------------------------------
+                     * invokevirtual to invokespecial conversion
+                     * ------------------------------
+                     */
+                    case Opcodes.INVOKEVIRTUAL:
+                        final def mInsn = (MethodInsnNode) insn
+                        if (cn.name != mInsn.owner) break
+
+                        final def key = mInsn.name + mInsn.desc
+                        final def target = methodsBySig[key]
+                        if (null == target) break
+
+                        if (0 == (target.access & Opcodes.ACC_PRIVATE)) break
+                        if (0 != (target.access & Opcodes.ACC_STATIC)) break
+
+                        if (privatized.contains(key)) {
+                            if (!changed) throw new AssertionError("changed != true shouldn't happen here after ASM privatized the method before, class=${cn.name},method=${ownerMethod.name},callingToMethod=${mInsn.name},desc=${mInsn.desc}")
+                            if (verbose) BatchedMessageCollector.add(22, "Fixed invokevirtual --> invokespecial for ASM-privatized method: ${cn.name}#${mInsn.name}${mInsn.desc}")
+                        } else {
+                            if (changed) {
+                                if (verbose) BatchedMessageCollector.add(23, "Fixed invokevirtual --> invokespecial for javac generated method: ${cn.name}#${mInsn.name}${mInsn.desc}")
+                            } else {
+                                if (verbose) BatchedMessageCollector.add(24, "Fixed invokevirtual --> invokespecial for javac generated method: ${cn.name}#${mInsn.name}${mInsn.desc} - the ASM processor did not touch this class before.")
+                            }
+                        }
+
+                        ownerMethod.instructions.set(mInsn, new MethodInsnNode(Opcodes.INVOKESPECIAL, mInsn.owner, mInsn.name, mInsn.desc, mInsn.itf))
+                        changed = true
+                        break
+                }
+
+                insn = next
+            }
+        }
+
+        return List.of(changed, renamed)
+    }
+
+    @TaskAction
+    final void run() {
+        logger.lifecycle('Performing ASM preprocessing...')
+
+        final def inputDir = inputClassesDir.get().asFile
+        final def outputDir = outputClassesDir.get().asFile
+
+        fs.delete {
+            it.delete(outputDir)
+        }
+
+        final def privatizedMethodsByClass = new HashMap<String, HashSet<String>>()
+        final def constantFields = new HashMap<String, Long>()
+        final def classNodeCache = new HashMap<String, ClassNode>()
+
+        final def verbose = false
+        final def constantFold = true
+
+        inputDir.eachFileRecurse { final def inputFile ->
+            if (!inputFile.file) {
+                return
+            }
+
+            final def relative = inputDir.toPath().relativize(inputFile.toPath())
+            final def outputFile = new File(outputDir, relative.toString())
+
+            /*
+             * Non-class files must be copied as-is
+             */
+            if (!inputFile.name.endsWith('.class')) {
+                fs.copy {
+                    it.from(inputFile)
+                    it.into(outputFile.parentFile)
+                    it.rename { outputFile.name }
+                }
+                return
+            }
+
+            final def bytes = inputFile.bytes
+
+            final def cr = new ClassReader(bytes)
+            final def cn = new ClassNode()
+
+            cr.accept(cn, ClassReader.EXPAND_FRAMES)
+
+            def changed = false
+            def renamed = false
+
+            final def result = this.process(privatizedMethodsByClass, constantFields, classNodeCache, verbose, constantFold, cn)
+
+            changed = result.first
+            renamed = result.last
+
+            def output = bytes
+            def cw = new ClassWriter(0)
+
+            if (changed) {
+                if (renamed) {
+                    cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
+                        @Override
+                        protected final String getCommonSuperClass(final String type1, final String type2) {
+                            // We get class not found errors with default ASM implementation of this method, so override it to always return Object
+                            // Does not seem to cause any problems, but might be fixed later if we tweak compileClasspath passed to the task.
+                            return 'java/lang/Object'
+                        }
+                    }
+                }
+            }
+
+            try {
+                if (verbose) BatchedMessageCollector.add(25, "Checking class ${cn.name} changed=${changed},renamed=${renamed}")
+
+                cn.accept(new CheckClassAdapter(cw, true))
+
+                if (changed) {
+                    output = cw.toByteArray()
+                }
+            } catch (final Throwable error) {
+                throw new RuntimeException("class ${cn.name} has error: ${error.message}")
+            }
+
+            if (!changed) {
+                fs.copy {
+                    it.from(inputFile)
+                    it.into(outputFile.parentFile)
+                    it.rename { outputFile.name }
+                }
+                return
+            }
+
+            outputFile.parentFile.mkdirs() // allowed here: we're writing declared @OutputDirectory
+
+            outputFile.newOutputStream().withCloseable {
+                it.write(output)
+            }
+        }
+
+        if (constantFold) {
+            // We must do a second pass to handle inner class'es getstatic calls to the outer class constant-replaced fields.
+            outputDir.eachFileRecurse { final def inputFile ->
+                if (!inputFile.file) {
+                    return
+                }
+
+                final def relative = outputDir.toPath().relativize(inputFile.toPath())
+                final def outputFile = new File(outputDir, relative.toString())
+
+                if (!inputFile.name.endsWith('.class')) {
+                    return
+                }
+
+                final def bytes = inputFile.bytes
+
+                final def cr = new ClassReader(bytes)
+                final def cn = new ClassNode()
+
+                cr.accept(cn, ClassReader.EXPAND_FRAMES)
+
+                def changed = false
+
+                for (final def ownerMethod : cn.methods) {
+                    if (null == ownerMethod.instructions) continue
+
+                    for (def insn = ownerMethod.instructions.first; insn != null;) {
+                        final def next = insn.next
+
+                        switch (insn.opcode) {
+                            /*
+                             * ------------------------------
+                             * GETSTATIC constant folding
+                             * ------------------------------
+                             */
+                            case Opcodes.GETSTATIC:
+                                final def fieldInsn = (FieldInsnNode) insn
+                                final def value = constantFields[fieldInsn.owner + fieldInsn.name + fieldInsn.desc]
+
+                                if (null != value) {
+                                    ownerMethod.instructions.set(insn, new LdcInsnNode(value))
+                                    changed = true
+                                    if (verbose) BatchedMessageCollector.add(30, "Inlined constant (second pass) ${fieldInsn.owner}.${fieldInsn.name} = ${value} in ${cn.name}.${ownerMethod.name}")
+                                }
+                                break
+                        }
+
+                        insn = next
+                    }
+                }
+
+                if (!changed) {
+                    return
+                }
+
+                final def cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
+                    @Override
+                    protected final String getCommonSuperClass(final String type1, final String type2) {
+                        // We get class not found errors with default ASM implementation of this method, so override it to always return Object
+                        // Does not seem to cause any problems, but might be fixed later if we tweak compileClasspath passed to the task.
+                        return 'java/lang/Object'
+                    }
+                }
+
+                def output
+
+                try {
+                    if (verbose) BatchedMessageCollector.add(25, "Checking class (second pass) ${cn.name} changed=${changed}")
+
+                    cn.accept(new CheckClassAdapter(cw, true))
+                    output = cw.toByteArray()
+                } catch (final Throwable error) {
+                    throw new RuntimeException("class ${cn.name} has error (second pass): ${error.message}")
+                }
+
+                outputFile.newOutputStream().withCloseable {
+                    it.write(output)
+                }
+            }
+        }
+
+        if (verbose) {
+            BatchedMessageCollector.logAll(logger)
+        }
+    }
+}
+
+tasks.register('asmPreprocess', AsmPreprocessTask) {
+    inputClassesDir.set(tasks.named('compileJava', JavaCompile).flatMap { it.destinationDirectory })
+    outputClassesDir.set(layout.buildDirectory.dir('asmProcessedClasses'))
+}
+
+tasks.named('asmPreprocess', AsmPreprocessTask).configure {
+    processorClasspath.from(sourceSets.main.runtimeClasspath)
+}
+
+final def compileOutputDirProvider = tasks.named('compileJava', JavaCompile).flatMap(JavaCompile::getDestinationDirectory)
+final def asmOutputProvider = tasks.named('asmPreprocess').flatMap(AsmPreprocessTask::getOutputClassesDir)
+
+tasks.named('jar', Jar).configure { final def jarTask ->
+    dependsOn(tasks.named('asmPreprocess'))
+
+    // include ASM-processed classes
+    from(asmOutputProvider)
+
+    // exclude ORIGINAL compiled classes from jar
+    exclude { final def details ->
+        final def compileDir = compileOutputDirProvider.get().asFile.toPath()
+        final def filePath = details.file.toPath()
+
+        filePath.startsWith(compileDir)
+    }
+}
+
+// Task class for full configuration-cache compatibility
+@CacheableTask
+abstract class CheckMethodSizesTask extends DefaultTask {
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract ConfigurableFileCollection getClassesDirectories()
+
+    @OutputFile
+    abstract RegularFileProperty getReportFile()
+
+    @TaskAction
+    final void checkMethods() {
+        final def thresholds = [huge: 8000, large: 2000, nonsmall: 325]
+        final def issues = []
+
+        classesDirectories.asFileTree.matching { include '**/*.class' }.each { final def file ->
+            final def directory = classesDirectories.files.find { file.toPath().startsWith(it.toPath()) }
+
+            final def relativePath = directory.toPath().relativize(file.toPath()).toString()
+            final def className = relativePath.replace(File.separator, '.').replaceAll('[.]class$', '')
+
+            file.withInputStream { final def inputStream ->
+                new DataInputStream(inputStream).withCloseable { final def dataInputStream ->
+                    final def classFile = new ClassFile(dataInputStream)
+                    classFile.methods.each { final def methodInfo ->
+                        final def codeAttribute = methodInfo.codeAttribute
+                        if (codeAttribute == null) return
+                        final def size = codeAttribute.code.length
+
+                        if (size > thresholds.huge) issues << "Huge method: $className#${methodInfo.name} (bytecode size: $size)"
+                        else if (size > thresholds.large) issues << "Large method: $className#${methodInfo.name} (bytecode size: $size)"
+                        else if (size > thresholds.nonsmall) issues << "Non trivial method: $className#${methodInfo.name} (bytecode size: $size)"
+                    }
+                }
+            }
+        }
+
+        final def report = reportFile.get().asFile
+        report.parentFile.mkdirs()
+        report.text = issues.join('\n')
 
         if (issues.empty) {
             println 'All methods are within size thresholds.'
@@ -213,14 +1236,239 @@ tasks.register('checkMethodSizes', CheckMethodSizesTask) {
 
     // Use a FileCollection as input (lazy, configuration-cache safe)
     classesDirectories.from(
-        layout.buildDirectory.dir("classes/java/main")
+        tasks.named('asmPreprocess').flatMap { it.outputClassesDir }
     )
 
-    dependsOn tasks.named('classes')
+    reportFile.set(
+        layout.buildDirectory.file('reports/methodSizes.txt')
+    )
 }
 
-// Make it run after check
-tasks.named('check') {
+// Make it run after asmPreprocess
+tasks.named('asmPreprocess') {
     finalizedBy tasks.named('checkMethodSizes')
+}
+
+@CacheableTask
+abstract class CreateJrtModulesLibraryJarTask extends DefaultTask {
+    @Input
+    abstract Property<String> getJavaVendor()
+
+    @Input
+    abstract Property<String> getJavaVersion()
+
+    @OutputFile
+    abstract RegularFileProperty getOutputJar()
+
+    @Inject
+    abstract FileSystemOperations getFs()
+
+    @TaskAction
+    final void generate() {
+        logger.lifecycle('Generating java.base jrt libraryjar...')
+
+        final def outputFile = outputJar.get().asFile
+
+        outputFile.parentFile.mkdirs()
+
+        fs.delete {
+            it.delete(outputFile)
+        }
+
+        final def modules = [
+                '/modules/java.base',
+                '/modules/java.net.http'
+        ]
+
+        try (final def jarOutputStream = new JarOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)))) {
+            modules.each { final def moduleName ->
+                final def modulePath = JrtHolder.jrt.getPath(moduleName)
+
+                try (final def files = Files.walk(modulePath)) {
+                    files.forEach { final def path ->
+                        if (!Files.isRegularFile(path) || !path.toString().endsWith('.class')) {
+                            return
+                        }
+
+                        final def entryName = modulePath.relativize(path).toString().replace('\\', '/')
+
+                        if (entryName == 'module-info.class') {
+                            return
+                        }
+
+                        jarOutputStream.putNextEntry(new JarEntry(entryName))
+                        Files.copy(path, jarOutputStream)
+
+                        jarOutputStream.closeEntry()
+                    }
+                }
+            }
+        }
+    }
+}
+
+final def jdk = layout.buildDirectory.file('proguard/java-base-from-jrt.jar')
+
+tasks.register('createJrtModulesLibraryJar', CreateJrtModulesLibraryJarTask) {
+    javaVendor.set(System.getProperty('java.vendor'))
+    javaVersion.set(System.getProperty('java.version'))
+
+    outputJar.set(jdk)
+}
+
+final def proguardOutput = layout.buildDirectory.file("libs/${project.archives_base_name}-${project.version}-dev.jar")
+
+tasks.register('proguard', ProGuardTask) {
+    dependsOn jar
+    dependsOn tasks.named('createJrtModulesLibraryJar')
+
+    doFirst {
+        logger.lifecycle('Creating optimized JAR...')
+    }
+
+    injars jar.archiveFile.get().asFile
+    outjars proguardOutput.get().asFile
+
+    libraryjars jdk
+    libraryjars configurations.compileClasspath
+
+    configuration 'configuration.pro'
+}
+
+tasks.named('remapJar', RemapJarTask) {
+    dependsOn proguard
+    inputFile.set(proguardOutput)
+
+    doFirst {
+        logger.lifecycle('Remapping optimized JAR...')
+    }
+}
+
+static final Provider<File> resolveMinecraftDir(final Project project) {
+    final def providers = project.providers
+    final def layout = project.layout
+
+    final def devPropsFile = layout.projectDirectory.file('dev.properties')
+
+    final def fromProps =
+            providers.fileContents(devPropsFile)
+                    .asText
+                    .map { final def text ->
+                        final def props = new Properties()
+                        new StringReader(text).withCloseable { final def reader ->
+                            props.load(reader)
+                        }
+                        props.getProperty('minecraftDir')
+                    }
+
+    final def envFile = layout.projectDirectory.file('.env')
+
+    final def fromEnv =
+            providers.fileContents(envFile)
+                    .asText
+                    .map { final def text ->
+                        text.readLines()
+                                .find { it.startsWith('MINECRAFT_DIR=') }
+                                ?.split('=', 2)
+                                ?.getAt(1)
+                    }
+
+    final def defaultDir =
+            providers.systemProperty('user.home')
+                    .map { it + '/.minecraft' }
+
+    final def finalPath =
+            fromProps
+                    .orElse(fromEnv)
+                    .orElse(defaultDir)
+
+    return finalPath.map { new File(it) }
+}
+
+@DisableCachingByDefault(because = 'Installs to external Minecraft mods directory')
+abstract class InstallToModFolderTask extends DefaultTask {
+    @Classpath
+    @InputFile
+    abstract RegularFileProperty getInputJar()
+
+    @Input
+    abstract Property<String> getModVersion()
+
+    @OutputDirectory
+    abstract DirectoryProperty getTargetModsDir()
+
+    @Inject
+    abstract FileSystemOperations getFs()
+
+    @TaskAction
+    final void install() {
+        final def input = inputJar.get().asFile.toPath()
+        final def modsDir = targetModsDir.get().asFile.toPath()
+
+        if (!Files.exists(modsDir)) return
+
+        final def fileName = input.fileName.toString()
+        final def baseName =
+                fileName.replaceFirst("-${modVersion.get()}\\.jar\$", '')
+
+        // Delete previous versions of the mod
+        try (final def files = Files.list(modsDir)) {
+                files.filter { it.fileName.toString().startsWith(baseName + '-') }
+                     .filter { it.fileName.toString().endsWith('.jar') }
+                     .forEach {
+                         logger.lifecycle("Removing old mod jar: ${it.fileName}")
+                         Files.deleteIfExists(it)
+                     }
+        }
+
+        final def target = modsDir.resolve(fileName)
+
+        Files.copy(
+                input,
+                target,
+                StandardCopyOption.REPLACE_EXISTING
+        )
+
+        logger.lifecycle('DarkUtils jar installed successfully:')
+        logger.lifecycle("${fileName} -> ${modsDir}")
+        logger.lifecycle('')
+        logger.lifecycle('You do not need to copy manually to your mod folder.')
+    }
+}
+
+tasks.register('installToModFolder', InstallToModFolderTask) {
+    dependsOn tasks.named('remapJar')
+
+    inputJar.set(
+        tasks.named('remapJar').flatMap { it.archiveFile }
+    )
+
+    modVersion.set(project.version.toString())
+
+    targetModsDir.set(
+            project.layout.dir(
+                    resolveMinecraftDir(project)
+                            .map { new File(it, 'mods') }
+            )
+    )
+}
+
+tasks.named('checkMethodSizes') {
+    finalizedBy tasks.named('installToModFolder')
+}
+
+tasks.named('installToModFolder', InstallToModFolderTask).configure {
+    onlyIf(new Spec<Task>() {
+        @Override
+        final boolean isSatisfiedBy(final Task t) {
+            final def dir = ((InstallToModFolderTask) t)
+                    .targetModsDir
+                    .orNull
+
+            return null == System.getenv('CI') &&
+                   null != dir &&
+                    dir.asFile.exists()
+        }
+    })
 }
 

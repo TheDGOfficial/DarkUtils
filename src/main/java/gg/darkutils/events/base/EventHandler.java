@@ -1,6 +1,5 @@
 package gg.darkutils.events.base;
 
-import gg.darkutils.events.base.impl.BasicEventHandler;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -13,12 +12,12 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface EventHandler<T extends Event> {
     /**
-     * Gets a sorted, unmodifiable list of active listeners listening to the event this {@link BasicEventHandler} is handling.
+     * Gets a sorted, unmodifiable list of active listeners listening to the event this {@link EventHandler} is handling.
      *
      * @return A sorted, unmodifiable list of active listeners listening to the event.
      */
     @NotNull
-    Iterable<EventListener<T>> getListeners();
+    Iterable<EventListener<? super Event>> getListeners();
 
     /**
      * Adds an {@link EventListener} to listen for the event this handler is handling.
@@ -29,7 +28,25 @@ public interface EventHandler<T extends Event> {
      *
      * @param listener An {@link EventListener} to add to the list of listeners.
      */
-    void addListener(final @NotNull EventListener<T> listener);
+    void addListener(final @NotNull EventListener<? super Event> listener);
+
+    /**
+     * Adds an {@link EventListener} to listen for the event this handler is handling.
+     * The listener list will be copied for thread-safety and sorted by {@link EventPriority}
+     * as part of this modification to the list of listeners.
+     * <p>
+     * If the listener is already registered, an {@link IllegalStateException} will be thrown.
+     *
+     * @param listener An {@link EventListener} to add to the list of listeners.
+     * @return The created event listener, which might be passed to {@link EventHandler#removeListener(EventListener)}.
+     */
+    @NotNull
+    default EventListener<Event> addListener(final @NotNull EventConsumer<? super Event> listener) {
+        final var eventListener = EventListener.create(listener);
+        this.addListener(eventListener);
+
+        return eventListener;
+    }
 
     /**
      * Adds an {@link EventListener} to listen for the event this handler is handling.
@@ -45,25 +62,29 @@ public interface EventHandler<T extends Event> {
      * @param receiveCancelled Whether this {@link EventListener} should receive canceled events or not.
      *                         Can be used to uncancel canceled events, allowing other {@link EventListener}s
      *                         coming after to run and the event to happen.
+     * @return The created event listener, which might be passed to {@link EventHandler#removeListener(EventListener)}.
      */
-    default void addListener(final @NotNull EventListener<T> listener, final @NotNull EventPriority priority, final boolean receiveCancelled) {
-        this.addListener(EventListener.create(listener, priority, receiveCancelled));
+    @NotNull
+    default EventListener<Event> addListener(final @NotNull EventConsumer<? super Event> listener, final @NotNull EventPriority priority, final boolean receiveCancelled) {
+        final var eventListener = EventListener.create(listener, priority, receiveCancelled);
+        this.addListener(eventListener);
+
+        return eventListener;
     }
 
     /**
      * Removes an {@link EventListener} from listening for the event this handler is handling.
-     * The listener list will be copied for thread-safety and sorted by {@link EventPriority}
-     * as part of this modification to the list of listeners.
+     * The listener list will be copied for thread-safety as part of this modification to the list of listeners.
      *
      * @param listener An {@link EventListener} to remove from the list of listeners.
      */
     void removeListener(final @NotNull EventListener<T> listener);
 
     /**
-     * Triggers an event, calling all listeners {@link EventListener#accept(Event)} sequentially in the calling thread,
+     * Triggers a cancellable event, calling all listeners {@link EventListener#accept(Event)} sequentially in the calling thread,
      * ordered based on {@link EventPriority}.
      * <p>
-     * If the event is {@link CancellableEvent} and any {@link EventListener} cancels the event, the further event listeners
+     * If any {@link EventListener} cancels the event, the further event listeners
      * won't be called unless they return true from {@link EventListener#receiveCancelled()}.
      * <p>
      * If an event is canceled by an {@link EventListener} and then uncanceled at a later point by an event receiving canceled
@@ -74,15 +95,19 @@ public interface EventHandler<T extends Event> {
      * {@link EventListener}s from receiving the event.
      *
      * @param event The event to trigger.
-     * @return The {@link FinalCancellationState} of the event after going through all listeners mutations to the state. Calling
-     * {@link CancellationState#isCancelled()} will throw a {@link UnsupportedOperationException} if this event is not a {@link CancellableEvent}.
-     * <p>
-     * Calling {@link CancellationState#setCancelled(boolean)} on the returned {@link FinalCancellationState} will always throw
-     * {@link UnsupportedOperationException}.
-     * <p>
-     * {@link CancellationState#isCancelled()} should only be called only once and on the thread that called
-     * this method or else an {@link IllegalStateException} will be thrown.
+     * @return The {@link CancellationResult} of the event after going through all listeners mutations to the state.
      */
     @NotNull
-    FinalCancellationState triggerEvent(final @NotNull T event);
+    <E extends CancellableEvent> CancellationResult triggerCancellableEvent(final @NotNull E event);
+
+    /**
+     * Triggers a non-cancellable event, calling all listeners {@link EventListener#accept(Event)} sequentially in the calling thread,
+     * ordered based on {@link EventPriority}.
+     * <p>
+     * Implementors must ensure that even if any of the listeners at any point throw any exceptions, it should not stop the further
+     * {@link EventListener}s from receiving the event.
+     *
+     * @param event The event to trigger.
+     */
+    <E extends NonCancellableEvent> void triggerNonCancellableEvent(final @NotNull E event);
 }

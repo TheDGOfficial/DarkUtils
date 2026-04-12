@@ -1,12 +1,13 @@
 package gg.darkutils.events.base;
 
-import gg.darkutils.events.base.impl.BasicEventRegistry;
+import gg.darkutils.events.base.impl.EventRegistryImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Defines a {@link EventRegistry}.
  */
+@FunctionalInterface
 public interface EventRegistry {
     /**
      * Returns a basic central {@link EventRegistry} that can be used to register events.
@@ -15,18 +16,7 @@ public interface EventRegistry {
      */
     @NotNull
     static EventRegistry centralRegistry() {
-        return BasicEventRegistry.getInstance();
-    }
-
-    @SuppressWarnings("unchecked")
-    @NotNull
-    private static <T extends Event> Class<T> getEventClass(@NotNull final T event) {
-        return (Class<T>) event.getClass();
-    }
-
-    @NotNull
-    private <T extends Event> EventHandler<T> getEventHandler(@NotNull final T event) {
-        return this.getEventHandler(EventRegistry.getEventClass(event));
+        return EventRegistryImpl.INSTANCE;
     }
 
     /**
@@ -44,14 +34,41 @@ public interface EventRegistry {
      *
      * @param listener               The listener.
      * @param priority               The priority.
+     * @param doNotPassThisParameter Do not pass this parameter, it is automatically
+     *                               passed by the compiler and used for type inference.
+     * @param <T>                    The type of the event.
+     */
+    @SuppressWarnings("unchecked")
+    default <T extends Event> void addListener(@NotNull final EventConsumer<T> listener, @NotNull final EventPriority priority, @Nullable final T... doNotPassThisParameter) {
+        this.addListener(EventListener.create(listener, priority), doNotPassThisParameter); // Passing it here is OK
+    }
+
+    /**
+     * Adds the given listener to be run for the compiler inferred event type.
+     *
+     * @param listener               The listener.
+     * @param priority               The priority.
      * @param receiveCancelled       Whether the listener should receive canceled events or not.
      * @param doNotPassThisParameter Do not pass this parameter, it is automatically
      *                               passed by the compiler and used for type inference.
      * @param <T>                    The type of the event.
      */
     @SuppressWarnings("unchecked")
-    default <T extends Event> void addListener(@NotNull final EventListener<T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled, @Nullable final T... doNotPassThisParameter) {
+    default <T extends Event> void addListener(@NotNull final EventConsumer<T> listener, @NotNull final EventPriority priority, final boolean receiveCancelled, @Nullable final T... doNotPassThisParameter) {
         this.addListener(EventListener.create(listener, priority, receiveCancelled), doNotPassThisParameter); // Passing it here is OK
+    }
+
+    /**
+     * Adds the given listener to be run for the compiler inferred event type.
+     *
+     * @param listener               The listener.
+     * @param doNotPassThisParameter Do not pass this parameter, it is automatically
+     *                               passed by the compiler and used for type inference.
+     * @param <T>                    The type of the event.
+     */
+    @SuppressWarnings("unchecked")
+    default <T extends Event> void addListener(@NotNull final EventConsumer<T> listener, @Nullable final T... doNotPassThisParameter) {
+        this.addListener(EventListener.create(listener), doNotPassThisParameter); // Passing it here is OK
     }
 
     /**
@@ -83,21 +100,22 @@ public interface EventRegistry {
             throw new IllegalArgumentException("listener method has wrong parameter with type " + eventType.getName());
         }
 
-        this.getEventHandler((Class<T>) eventType).addListener(listener);
+        this.getEventHandler((Class<T>) eventType).addListener((EventListener<? super Event>) (Object) listener);
     }
 
     /**
      * Triggers a {@link CancellableEvent}, which will run all its listeners in the order of {@link EventPriority}
      * and handling {@link CancellationState}, taking into account {@link EventListener#receiveCancelled()} and returning
-     * a {@link FinalCancellationState}.
+     * a {@link CancellationResult}.
      *
      * @param event The event.
      * @param <T>   The type of the event.
-     * @return The {@link FinalCancellationState}.
+     * @return The {@link CancellationResult}.
      */
+    @SuppressWarnings("unchecked")
     @NotNull
-    default <T extends CancellableEvent> FinalCancellationState triggerEvent(@NotNull final T event) {
-        return this.getEventHandler(event).triggerEvent(event);
+    default <T extends CancellableEvent> CancellationResult triggerEvent(@NotNull final T event) {
+        return this.getEventHandler((Class<T>) event.getClass()).triggerCancellableEvent(event);
     }
 
     /**
@@ -106,7 +124,8 @@ public interface EventRegistry {
      * @param event The event.
      * @param <T>   The type of the event.
      */
+    @SuppressWarnings("unchecked")
     default <T extends NonCancellableEvent> void triggerEvent(@NotNull final T event) {
-        this.getEventHandler(event).triggerEvent(event);
+        this.getEventHandler((Class<T>) event.getClass()).triggerNonCancellableEvent(event);
     }
 }

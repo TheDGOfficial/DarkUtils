@@ -1,22 +1,22 @@
 package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.mixin.accessors.MinecraftClientAccessor;
+import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.chat.BasicColor;
-import gg.darkutils.utils.chat.BasicFormatting;
 import gg.darkutils.utils.chat.ChatUtils;
+import gg.darkutils.utils.chat.SimpleColor;
+import gg.darkutils.utils.chat.SimpleFormatting;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.ArmorStandEntity;
-import net.minecraft.entity.projectile.FishingBobberEntity;
-import net.minecraft.item.Items;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.projectile.FishingHook;
+import net.minecraft.world.item.Items;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +31,7 @@ public final class AutoFishingRod {
             Pattern.compile("(\\d+(\\.\\d+)?)").matcher("");
     private static final @NotNull SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    private static @Nullable WeakReference<ArmorStandEntity> countdownArmorStand;
+    private static @Nullable WeakReference<ArmorStand> countdownArmorStand;
     private static boolean hooking;
 
     private AutoFishingRod() {
@@ -51,38 +51,38 @@ public final class AutoFishingRod {
         ClientEntityEvents.ENTITY_LOAD.register(AutoFishingRod::onEntityJoinWorld);
     }
 
-    private static final void onWorldChange(@NotNull final MinecraftClient client, @NotNull final ClientWorld world) {
+    private static final void onWorldChange(@NotNull final Minecraft client, @NotNull final ClientLevel world) {
         AutoFishingRod.resetState();
     }
 
-    private static final void onEntityJoinWorld(@NotNull final Entity entity, @NotNull final ClientWorld world) {
+    private static final void onEntityJoinWorld(@NotNull final Entity entity, @NotNull final ClientLevel world) {
         if (!DarkUtilsConfig.INSTANCE.autoFishing) {
             return;
         }
 
-        final var client = MinecraftClient.getInstance();
+        final var client = Minecraft.getInstance();
         final var player = client.player;
 
-        if (null != player && entity instanceof final FishingBobberEntity bobber && bobber.getOwner() == player) {
+        if (null != player && entity instanceof final FishingHook bobber && bobber.getOwner() == player) {
             AutoFishingRod.resetState();
         }
     }
 
-    private static final boolean isCountdownArmorStand(@Nullable final Text customName) {
-        return null != customName && AutoFishingRod.COUNTDOWN_MATCHER.reset(customName.getString()).matches() && ChatUtils.hasFormatting(customName, BasicColor.YELLOW, BasicFormatting.BOLD);
+    private static final boolean isCountdownArmorStand(@Nullable final Component customName) {
+        return null != customName && AutoFishingRod.COUNTDOWN_MATCHER.reset(customName.getString()).matches() && ChatUtils.hasFormatting(customName, SimpleColor.YELLOW, SimpleFormatting.BOLD);
     }
 
-    private static final boolean isNotHoldingRod(@Nullable final ClientPlayerEntity player) {
+    private static final boolean isNotHoldingRod(@Nullable final LocalPlayer player) {
         return null == player
-                || !player.getMainHandStack().isOf(Items.FISHING_ROD);
+                || !Helpers.getItemStackInMainHand().is(Items.FISHING_ROD);
     }
 
     @Nullable
-    private static final ArmorStandEntity findAndAssignCountdownArmorStand(@NotNull final MinecraftClient client) {
-        final var world = client.world;
+    private static final ArmorStand findAndAssignCountdownArmorStand(@NotNull final Minecraft client) {
+        final var world = client.level;
         if (null != world && AutoFishingRod.hasActiveBobber(client)) {
-            for (final var entity : world.getEntities()) {
-                if (entity instanceof final ArmorStandEntity stand && AutoFishingRod.isCountdownArmorStand(stand.getCustomName())) {
+            for (final var entity : world.entitiesForRendering()) {
+                if (entity instanceof final ArmorStand stand && AutoFishingRod.isCountdownArmorStand(stand.getCustomName())) {
                     AutoFishingRod.countdownArmorStand = new WeakReference<>(stand);
                     return stand;
                 }
@@ -91,7 +91,7 @@ public final class AutoFishingRod {
         return null;
     }
 
-    private static final @Nullable ArmorStandEntity getOrFindCountdownArmorStand(@NotNull final MinecraftClient client) {
+    private static final @Nullable ArmorStand getOrFindCountdownArmorStand(@NotNull final Minecraft client) {
         if (null == AutoFishingRod.countdownArmorStand) {
             return AutoFishingRod.findAndAssignCountdownArmorStand(client);
         }
@@ -99,22 +99,22 @@ public final class AutoFishingRod {
         return null == cached ? AutoFishingRod.findAndAssignCountdownArmorStand(client) : cached;
     }
 
-    private static final boolean hasActiveBobber(final MinecraftClient client) {
+    private static final boolean hasActiveBobber(final Minecraft client) {
         final var player = client.player;
-        final var world = client.world;
+        final var world = client.level;
         if (null == world || AutoFishingRod.isNotHoldingRod(player)) {
             return false;
         }
 
-        for (final var entity : world.getEntities()) {
-            if (entity instanceof final FishingBobberEntity bobber && bobber.getOwner() == player) {
+        for (final var entity : world.entitiesForRendering()) {
+            if (entity instanceof final FishingHook bobber && bobber.getOwner() == player) {
                 return true;
             }
         }
         return false;
     }
 
-    private static final void hook(@NotNull final MinecraftClient client) {
+    private static final void hook(@NotNull final Minecraft client) {
         if (AutoFishingRod.hooking || null == client.player) {
             return;
         }
@@ -142,12 +142,12 @@ public final class AutoFishingRod {
                 : min;
 
         TickUtils.queueTickTask(() -> {
-            final var mc = MinecraftClient.getInstance();
-            if (DarkUtilsConfig.INSTANCE.autoFishingWorkThroughMenus || null == mc.currentScreen) {
-                ((MinecraftClientAccessor) mc).callDoItemUse();
+            final var mc = Minecraft.getInstance();
+            if (DarkUtilsConfig.INSTANCE.autoFishingWorkThroughMenus || null == mc.screen) {
+                mc.startUseItem();
                 continuation.run();
             }
-        }, delay);
+        }, Math.max(1, delay));
     }
 
     private static final void resetState() {
@@ -158,7 +158,7 @@ public final class AutoFishingRod {
         AutoFishingRod.hooking = false;
     }
 
-    private static final void tick(@NotNull final MinecraftClient client) {
+    private static final void tick(@NotNull final Minecraft client) {
         if (!DarkUtilsConfig.INSTANCE.autoFishing) {
             AutoFishingRod.resetState();
             return;
@@ -166,14 +166,14 @@ public final class AutoFishingRod {
 
         final var player = client.player;
 
-        if (null == client.world || null == player || AutoFishingRod.hooking || AutoFishingRod.isNotHoldingRod(player)) {
+        if (null == client.level || null == player || AutoFishingRod.hooking || AutoFishingRod.isNotHoldingRod(player)) {
             return;
         }
 
         final var armorStand = AutoFishingRod.getOrFindCountdownArmorStand(client);
         if (null != armorStand) {
             final var customName = armorStand.getCustomName();
-            if (null != customName && AutoFishingRod.READY.equals(customName.getString()) && ChatUtils.hasFormatting(customName, BasicColor.RED, BasicFormatting.BOLD)) {
+            if (null != customName && AutoFishingRod.READY.equals(ChatUtils.removeControlCodes(customName.getString())) && ChatUtils.hasFormatting(customName, SimpleColor.RED, SimpleFormatting.BOLD)) {
                 AutoFishingRod.hook(client);
             }
         }

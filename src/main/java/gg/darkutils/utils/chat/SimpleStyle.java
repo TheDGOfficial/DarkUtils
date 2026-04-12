@@ -1,7 +1,11 @@
 package gg.darkutils.utils.chat;
 
+import gg.darkutils.annotations.PackagePrivate;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.text.Style;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -13,25 +17,43 @@ import java.util.Objects;
  */
 public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleStyle.ColoredStyle, SimpleStyle.FormattedStyle, SimpleStyle.CenteredStyle, SimpleStyle.CompositeStyle {
     // === Static factory methods ===
-
     static @NotNull SimpleStyle.InheritedStyle inherited() {
         return SimpleStyle.InheritedStyle.INSTANCE;
     }
 
-    static @NotNull SimpleStyle.ColoredStyle colored(@NotNull final BasicColor color) {
+    static @NotNull SimpleStyle colored(@NotNull final SimpleColor color) {
         return SimpleStyle.colored(color.toRgb());
     }
 
-    static @NotNull SimpleStyle.ColoredStyle colored(final int rgb) {
+    static @NotNull SimpleStyle colored(final int rgb) {
         return new SimpleStyle.ColoredStyle(rgb);
     }
 
-    static @NotNull SimpleStyle.FormattedStyle formatted(final @NotNull BasicFormatting basicFormatting) {
-        return new SimpleStyle.FormattedStyle(Objects.requireNonNull(basicFormatting, "basicFormatting"));
+    static @NotNull SimpleStyle formatted(final @NotNull SimpleFormatting simpleFormatting) {
+        return new SimpleStyle.FormattedStyle(Objects.requireNonNull(simpleFormatting, "simpleFormatting"));
     }
 
-    static @NotNull SimpleStyle.CenteredStyle centered() {
+    static @NotNull SimpleStyle centered() {
         return SimpleStyle.CenteredStyle.INSTANCE;
+    }
+
+    private static void appendLegacyFormatting(@NotNull final StringBuilder builder, @NotNull final SimpleStyle style) {
+        if (style instanceof SimpleStyle.ColoredStyle(final var rgb)) {
+            SimpleStyle.appendColor(builder, rgb);
+        } else if (style instanceof SimpleStyle.FormattedStyle(final var formatting)) {
+            builder.append(formatting.toFormatting());
+        }
+        // Ignore CenteredStyle & InheritedStyle
+    }
+
+    private static void appendColor(@NotNull final StringBuilder builder, final int rgb) {
+        // Match against SimpleColor values
+        final var legacy = SimpleStyle.LegacyRgb.RGB_TO_LEGACY.get(rgb);
+        if (null != legacy) {
+            builder.append(legacy);
+        }
+
+        // Unsupported RGB (likely HEX color code, no legacy equivalent) - do nothing
     }
 
     default boolean isCentered() {
@@ -99,8 +121,52 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         return finalStyle;
     }
 
+    /**
+     * Returns legacy raw formatting characters (e.g. "§6§l").
+     * <p>
+     * CompositeStyle preserves insertion order.
+     * Non-composite styles use deterministic ordering (color first).
+     */
+    default @NotNull String getRawFormattingCharacters() {
+        if (this instanceof SimpleStyle.CompositeStyle(final var styles)) {
+            final var builder = new StringBuilder(styles.size() << 1);
+            for (final var style : styles) {
+                SimpleStyle.appendLegacyFormatting(builder, style);
+            }
+            return builder.toString();
+        }
+
+        // Non-composite: add color first, then formatting
+        final var builder = new StringBuilder(4);
+        SimpleStyle.appendLegacyFormatting(builder, this);
+
+        return builder.toString();
+    }
+
+    @PackagePrivate
+    final class LegacyRgb {
+        @NotNull
+        private static final Int2ObjectMap<String> RGB_TO_LEGACY = SimpleStyle.LegacyRgb.createRgbLookup();
+
+        private LegacyRgb() {
+            super();
+
+            throw new UnsupportedOperationException("static utility class");
+        }
+
+        private static final @NotNull Int2ObjectMap<String> createRgbLookup() {
+            final var values = SimpleColor.values();
+            final var map = new Int2ObjectOpenHashMap<String>(values.length);
+            for (final var color : values) {
+                map.put(color.toRgb(), color.toFormatting().toString());
+            }
+            return Int2ObjectMaps.unmodifiable(map);
+        }
+    }
+
     // === Implementations ===
 
+    @PackagePrivate
     record ColoredStyle(int rgb) implements SimpleStyle {
         @Override
         public final @NotNull Style applyStyle(final @NotNull Style style) {
@@ -108,14 +174,15 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         }
     }
 
-    record FormattedStyle(@NotNull BasicFormatting basicFormatting) implements SimpleStyle {
+    @PackagePrivate
+    record FormattedStyle(@NotNull SimpleFormatting simpleFormatting) implements SimpleStyle {
         public FormattedStyle {
-            Objects.requireNonNull(basicFormatting, "basicFormatting");
+            Objects.requireNonNull(simpleFormatting, "simpleFormatting");
         }
 
         @Override
         public final @NotNull Style applyStyle(final @NotNull Style style) {
-            return style.withFormatting(this.basicFormatting.toFormatting());
+            return style.applyFormat(this.simpleFormatting.toFormatting());
         }
     }
 
@@ -123,7 +190,8 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
      * Marker style that signals text should be rendered with inherited style.
      * Does not modify the Minecraft {@link Style} itself.
      */
-    public final class InheritedStyle implements SimpleStyle {
+    @PackagePrivate
+    final class InheritedStyle implements SimpleStyle {
         @NotNull
         private static final SimpleStyle.InheritedStyle INSTANCE = new SimpleStyle.InheritedStyle();
 
@@ -132,7 +200,7 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         }
 
         @Override
-        public @NotNull Style applyStyle(final @NotNull Style style) {
+        public final @NotNull Style applyStyle(final @NotNull Style style) {
             return style; // no change
         }
     }
@@ -141,7 +209,8 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
      * Marker style that signals text should be rendered centered.
      * Does not modify the Minecraft {@link Style} itself.
      */
-    public final class CenteredStyle implements SimpleStyle {
+    @PackagePrivate
+    final class CenteredStyle implements SimpleStyle {
         @NotNull
         private static final SimpleStyle.CenteredStyle INSTANCE = new SimpleStyle.CenteredStyle();
 
@@ -150,7 +219,7 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
         }
 
         @Override
-        public @NotNull Style applyStyle(final @NotNull Style style) {
+        public final @NotNull Style applyStyle(final @NotNull Style style) {
             return style; // no change
         }
     }
@@ -160,7 +229,8 @@ public sealed interface SimpleStyle permits SimpleStyle.InheritedStyle, SimpleSt
      *
      * @param styles The styles.
      */
-    record CompositeStyle(@NotNull List<@NotNull SimpleStyle> styles) implements SimpleStyle {
+    @PackagePrivate
+    record CompositeStyle(@NotNull List<SimpleStyle> styles) implements SimpleStyle {
         public CompositeStyle {
             Objects.requireNonNull(styles, "styles");
             if (styles.isEmpty()) {

@@ -1,0 +1,118 @@
+package gg.darkutils;
+
+import gg.darkutils.events.ReceiveGameMessageEvent;
+import gg.darkutils.events.base.Event;
+import gg.darkutils.events.base.EventListener;
+import gg.darkutils.events.base.EventRegistry;
+import gg.darkutils.utils.chat.SimpleColor;
+import gg.darkutils.utils.chat.SimpleFormatting;
+import gg.darkutils.utils.chat.SimpleStyle;
+import gg.darkutils.utils.chat.TextBuilder;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+final class ReceiveGameMessageEventTest {
+    @BeforeEach
+    final void resetRegistry() {
+        clearListeners(ReceiveGameMessageEvent.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static final <T extends Event> void clearListeners(final Class<T> event) {
+        final var handler = EventRegistry.centralRegistry().getEventHandler(event);
+
+        handler.getListeners().forEach((l) -> handler.removeListener((EventListener<T>) (Object) l));
+    }
+
+    @Test
+    final void testEventTriggerAndReceive() {
+        final var counter = new AtomicInteger(0);
+
+        EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> counter.incrementAndGet());
+
+        new ReceiveGameMessageEvent(TextBuilder.empty().append("Hello").build()).trigger();
+
+        Assertions.assertEquals(counter.get(), 1);
+    }
+
+    @Test
+    final void testContentAndRawContent() {
+        EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
+            Assertions.assertEquals(e.content(), "Hello");
+            Assertions.assertEquals(e.rawContent(), "Hello");
+
+            Assertions.assertTrue(e.matches("Hello"));
+
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.RED));
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE));
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE, SimpleFormatting.BOLD));
+        });
+
+        new ReceiveGameMessageEvent(TextBuilder.empty().append("Hello").build()).trigger();
+    }
+
+    @Test
+    void testContentAndRawContentFormatted() {
+        EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
+            Assertions.assertEquals(e.content(), "Hello");
+            Assertions.assertEquals(e.rawContent(), "Hello");
+
+            Assertions.assertTrue(e.matches("Hello"));
+
+            Assertions.assertTrue(e.isStyledWith(SimpleColor.RED));
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE));
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE, SimpleFormatting.BOLD));
+        });
+
+        new ReceiveGameMessageEvent(TextBuilder
+                .withInitial("Hello", SimpleStyle.colored(SimpleColor.RED))
+                .build()
+        ).trigger();
+    }
+
+    @Test
+    final void testContentAndRawContentLegacyFormatted() {
+        EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
+            Assertions.assertEquals(e.content(), "Hello");
+            Assertions.assertEquals(e.rawContent(), "§cHello");
+
+            Assertions.assertTrue(e.matches("Hello"));
+
+            Assertions.assertTrue(e.isStyledWith(SimpleColor.RED));
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE));
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE, SimpleFormatting.BOLD));
+        });
+
+        new ReceiveGameMessageEvent(TextBuilder.empty().append("§cHello").build()).trigger();
+    }
+
+    @Test
+    final void testExtractPart() {
+        EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
+            Assertions.assertEquals(e.extractPart("[Player] ", ':'), "John Doe");
+        });
+
+        new ReceiveGameMessageEvent(TextBuilder.empty().append("[Player] John Doe: Hello").build()).trigger();
+    }
+
+    @Test
+    final void testMatch() {
+        final var counter = new AtomicInteger(0);
+
+        EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
+            e.match(Map.of(
+                    "Lorem ipsum dolor sit amet",
+                    (ev) -> counter.incrementAndGet()
+            ));
+        });
+
+        new ReceiveGameMessageEvent(TextBuilder.empty().append("Lorem ipsum dolor sit amet").build()).trigger();
+
+        Assertions.assertEquals(counter.get(), 1);
+    }
+}
+

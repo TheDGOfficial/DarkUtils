@@ -2,15 +2,15 @@ package gg.darkutils.events;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
-import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LazyConstants;
-import gg.darkutils.utils.chat.BasicColor;
-import gg.darkutils.utils.chat.BasicFormatting;
 import gg.darkutils.utils.chat.ChatUtils;
+import gg.darkutils.utils.chat.SimpleColor;
+import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.SimpleStyle;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Set;
@@ -29,16 +29,17 @@ import java.util.stream.Stream;
  * @param message           The message.
  */
 public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationState,
-                                      @NotNull Text message,
+                                      @NotNull Component message,
+                                      @NotNull Supplier<String> rawContentSupplier,
                                       @NotNull Supplier<String> contentSupplier,
                                       @NotNull Supplier<Map<SimpleStyle, Boolean>> hasFormattingCache) implements CancellableEvent {
     @NotNull
     private static final Set<SimpleStyle> ALL_STYLE_COMBINATIONS = Set.copyOf(Stream.concat(
                     // all colors without formatting
-                    Stream.of(BasicColor.values()).map(SimpleStyle::colored),
+                    Stream.of(SimpleColor.values()).map(SimpleStyle::colored),
                     // all color + formatting combinations
-                    Stream.of(BasicColor.values()).flatMap(color ->
-                            Stream.of(BasicFormatting.values())
+                    Stream.of(SimpleColor.values()).flatMap(color ->
+                            Stream.of(SimpleFormatting.values())
                                     .map(format -> SimpleStyle.colored(color).also(SimpleStyle.formatted(format)))
                     )
             )
@@ -46,19 +47,44 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
 
     /**
      * Creates a new {@link ReceiveGameMessageEvent} suitable for triggering the event.
-     * A cached {@link CancellationState#ofCached()} will be used with non-canceled state by default.
+     * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
+     *
+     * @param cancellationState  The cancellation state holder.
+     * @param message            The message.
+     * @param rawContentSupplier The raw message.
+     * @param contentSupplier    The content supplier.
+     */
+    public ReceiveGameMessageEvent(@NotNull final CancellationState cancellationState, @NotNull final Component message, @NotNull final Supplier<String> rawContentSupplier, @NotNull final Supplier<String> contentSupplier) {
+        this(cancellationState, message, rawContentSupplier, contentSupplier, LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(ReceiveGameMessageEvent.ALL_STYLE_COMBINATIONS, style -> ChatUtils.hasFormatting(message, style, rawContentSupplier))));
+    }
+
+    /**
+     * Creates a new {@link ReceiveGameMessageEvent} suitable for triggering the event.
+     * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
+     *
+     * @param cancellationState  The cancellation state holder.
+     * @param message            The message.
+     * @param rawContentSupplier The raw message.
+     */
+    public ReceiveGameMessageEvent(@NotNull final CancellationState cancellationState, @NotNull final Component message, @NotNull final Supplier<String> rawContentSupplier) {
+        this(cancellationState, message, rawContentSupplier, LazyConstants.lazyConstantOf(() -> ChatUtils.removeControlCodes(rawContentSupplier.get())));
+    }
+
+    /**
+     * Creates a new {@link ReceiveGameMessageEvent} suitable for triggering the event.
+     * A fresh {@link CancellationState#ofFresh()} will be used with non-canceled state by default.
      *
      * @param message The message.
      */
-    public ReceiveGameMessageEvent(@NotNull final Text message) {
-        this(CancellationState.ofCached(), message, LazyConstants.lazyConstantOf(message::getString), LazyConstants.lazyConstantOf(() -> LazyConstants.lazyMapOf(ReceiveGameMessageEvent.ALL_STYLE_COMBINATIONS, style -> ChatUtils.hasFormatting(message, style))));
+    public ReceiveGameMessageEvent(@NotNull final Component message) {
+        this(CancellationState.ofFresh(), message, LazyConstants.lazyConstantOf(message::getString));
     }
 
     public static final void init() {
         ClientReceiveMessageEvents.ALLOW_GAME.register(ReceiveGameMessageEvent::post);
     }
 
-    private static final boolean post(@NotNull final Text message, final boolean overlay) {
+    private static final boolean post(@NotNull final Component message, final boolean overlay) {
         return overlay || new ReceiveGameMessageEvent(message).triggerAndNotCancelled();
     }
 
@@ -73,12 +99,23 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
     }
 
     /**
+     * Returns the cached raw content of the message.
+     * For legacy formatting, this might have color characters.
+     *
+     * @return The cached raw content of the message.
+     */
+    @NotNull
+    public final String rawContent() {
+        return this.rawContentSupplier.get();
+    }
+
+    /**
      * Checks if the message has the given color.
      *
      * @param color The color.
      * @return Whether the message has the given color or not.
      */
-    public final boolean isStyledWith(@NotNull final BasicColor color) {
+    public final boolean isStyledWith(@NotNull final SimpleColor color) {
         final var style = SimpleStyle.colored(color);
 
         return this.isStyledWith(style);
@@ -91,7 +128,7 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * @param formatting The formatting.
      * @return Whether the message has the given color and formatting.
      */
-    public final boolean isStyledWith(@NotNull final BasicColor color, @NotNull final BasicFormatting formatting) {
+    public final boolean isStyledWith(@NotNull final SimpleColor color, @NotNull final SimpleFormatting formatting) {
         final var style = SimpleStyle.colored(color).also(SimpleStyle.formatted(formatting));
 
         return this.isStyledWith(style);
@@ -120,10 +157,41 @@ public record ReceiveGameMessageEvent(@NotNull CancellationState cancellationSta
      * event.matches("search") // same result
      *}
      *
+     * @param search The string that is being searched for exact equality.
      * @return Whether the received (plain) message matches the given search or not.
      */
     public final boolean matches(@NotNull final String search) {
         return search.equals(this.content());
+    }
+
+    /**
+     * Extracts a substring from the message, strictly starting after the given {@code strictStart}
+     * (exclusive) and ending before the first occurrence of the specified {@code end} delimiter
+     * (exclusive).
+     *
+     * <p>This method requires the message to start with {@code strictStart}. The {@code end}
+     * delimiter must appear after the prefix.</p>
+     *
+     * <p>This implementation is optimized for strict prefix-based extraction and is the
+     * fastest approach for this specific use case.</p>
+     *
+     * @param strictStart the required starting prefix (must match at index 0)
+     * @param end         the delimiter marking the end of the extracted section
+     * @return the extracted substring, or {@code null} if the message does not start with
+     * {@code strictStart} or if the {@code end} delimiter is not found after it
+     */
+    @Nullable
+    public final String extractPart(@NotNull final String strictStart, final char end) {
+        final var content = this.content();
+
+        if (!content.startsWith(strictStart)) {
+            return null;
+        }
+
+        final var from = strictStart.length();
+        final var to = content.indexOf(end, from);
+
+        return -1 == to ? null : content.substring(from, to);
     }
 
     /**

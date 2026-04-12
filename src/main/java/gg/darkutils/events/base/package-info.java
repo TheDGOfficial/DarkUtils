@@ -1,6 +1,6 @@
 /**
  * A feature-complete, type-safe, and performant event system designed with
- * thread-safety, error handling, listener priorities, and cancellation semantics in mind.
+ * thread-safety, error handling, listener priorities, cancellation semantics and re-entrance in mind.
  * <p>
  * <b>Defining an event</b><br>
  * To define a new event, simply declare a record implementing either
@@ -16,7 +16,7 @@
  *}
  *
  * <b>Registering a listener</b><br>
- * Register listeners for events using {@link gg.darkutils.events.base.EventRegistry#addListener(gg.darkutils.events.base.EventListener, gg.darkutils.events.base.Event[])}:
+ * Register listeners for events using {@link gg.darkutils.events.base.EventRegistry#addListener(gg.darkutils.events.base.EventConsumer, gg.darkutils.events.base.Event[])}:
  * {@snippet :
  * // Don't forget to call .init()!
  * public void init() {
@@ -30,6 +30,21 @@
  * }
  *}
  * Remember to invoke your {@code init()} method from your mod or feature entrypoint.
+ *
+ * <p>
+ * <b>Listener priority</b><br>
+ * Listeners may optionally be registered with a priority using
+ * {@link gg.darkutils.events.base.EventRegistry#addListener(gg.darkutils.events.base.EventConsumer, gg.darkutils.events.base.EventPriority, gg.darkutils.events.base.Event[])}.
+ * <p>
+ * Priorities control the order in which listeners are executed (higher priority runs earlier).
+ * See {@link gg.darkutils.events.base.EventPriority} for the full ordering guarantees.
+ * {@snippet :
+ * EventRegistry.centralRegistry().addListener(
+ *         this::onMyEvent,
+ *         EventPriority.ABOVE_NORMAL
+ * );
+ *}
+ *
  * <p>
  * <b>Triggering an event</b><br>
  * You can trigger an event anywhere using:
@@ -47,25 +62,50 @@
  *         implements CancellableEvent {
  *
  *     public MyCancellableEvent(@NotNull MyEventParam1 param1, @NotNull MyEventParam2 param2) {
- *         this(CancellationState.ofCached(), param1, param2);
+ *         this(CancellationState.ofFresh(), param1, param2);
  *     }
  * }
  *}
  * <p>
- * Listeners for cancellable events work the same way, except they may cancel the event:
+ * Listeners for cancellable events work the same way, except they may cancel
+ * or uncancel the event:
  * {@snippet :
  * private void onMyEvent(@NotNull MyCancellableEvent event) {
  *     event.cancellationState().cancel();
+ *     // or:
+ *     event.cancellationState().uncancel(); // you need receiveCancelled = true on your addListener and event has to be cancelled by a previously ran listener for this to have any effect
  * }
  *}
  * <p>
  * Triggering cancellable events allows checking the result:
  * {@snippet :
- * if (new MyCancellableEvent(new MyEventParam1(), new MyEventParam2()).triggerAndNotCancelled()) {
+ * if (new MyCancellableEvent(new MyEventParam1(), new MyEventParam2()).triggerAndNotCancelled()) { // a triggerAndCancelled method also exists for convenience so you don't have to invert the result manually with !
  *     // Event was not cancelled
  * }
  *}
  *
+ * <p>
+ * <b>Receiving canceled events</b><br>
+ * Listeners can optionally be registered to receive events that have already
+ * been canceled by earlier listeners using
+ * {@link gg.darkutils.events.base.EventRegistry#addListener(gg.darkutils.events.base.EventConsumer, gg.darkutils.events.base.EventPriority, boolean, gg.darkutils.events.base.Event[])}:
+ * {@snippet :
+ * EventRegistry.centralRegistry().addListener(
+ *         this::onMyEvent,
+ *         EventPriority.ABOVE_NORMAL,
+ *         true
+ * );
+ *}
+ * The {@code receiveCancelled} parameter determines whether the listener should still be
+ * invoked if the event has already been canceled by a previously executed listener.
+ * <p>
+ * Cancellation is not terminal. If a listener with {@code receiveCancelled = true}
+ * receives a canceled event and subsequently uncancels it, then the remaining
+ * listeners (those with lower priority, or later registration order if
+ * {@link gg.darkutils.events.base.EventPriority#NORMAL}) will receive the event
+ * normally, even if they were registered with {@code receiveCancelled = false}.
+ *
+ * <p>
  * <b>Advanced usage</b><br>
  * For advanced cases, you can implement your own
  * {@link gg.darkutils.events.base.EventRegistry} to customize event routing,

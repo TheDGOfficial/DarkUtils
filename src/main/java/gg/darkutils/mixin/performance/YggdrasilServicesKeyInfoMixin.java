@@ -3,28 +3,18 @@ package gg.darkutils.mixin.performance;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.YggdrasilServicesKeyInfo;
 import gg.darkutils.config.DarkUtilsConfig;
-import net.minecraft.client.MinecraftClient;
+import gg.darkutils.mixinquirks.HolderFields;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 @Mixin(YggdrasilServicesKeyInfo.class)
 final class YggdrasilServicesKeyInfoMixin {
-    /**
-     * Tracks servers we've already warned about.
-     */
-    @Unique
-    private static final @NotNull Set<String> darkutils$warnedServers =
-            ConcurrentHashMap.newKeySet(1);
-
     private YggdrasilServicesKeyInfoMixin() {
         super();
 
@@ -63,26 +53,26 @@ final class YggdrasilServicesKeyInfoMixin {
             logger.error(format, arg, arg2);
 
             // Reset state if feature is turned off
-            YggdrasilServicesKeyInfoMixin.darkutils$warnedServers.clear();
+            HolderFields.ServerValues.WARNED_SERVERS.clear();
 
             return;
         }
 
         // Try to resolve current server IP
-        final var client = MinecraftClient.getInstance();
-        final var serverData = client.getCurrentServerEntry();
+        final var client = Minecraft.getInstance();
+        final var serverData = client.getCurrentServer();
         final var formatted = format.replace("{}", arg.toString());
 
         if (null == serverData) {
-            // Singleplayer or no server IP available → fallback to logging normally
+            // Singleplayer or no server IP available - fallback to logging normally
             logger.error("{}: {}", formatted, arg2 instanceof final Throwable t ? t.getMessage() : "");
             return;
         }
 
-        final var serverIP = serverData.address;
+        final var serverIP = serverData.ip;
 
         // Only log once per server
-        if (YggdrasilServicesKeyInfoMixin.darkutils$warnedServers.add(serverIP)) {
+        if (HolderFields.ServerValues.WARNED_SERVERS.add(serverIP)) {
             logger.error("Signature error on server {}: {}: {} - repeating signature errors for this server in this game session will not be logged anymore.", serverIP, formatted, arg2 instanceof final Throwable t ? t.getMessage() : "");
         }
     }

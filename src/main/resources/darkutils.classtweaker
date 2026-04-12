@@ -1,0 +1,5 @@
+classTweaker v1 named
+accessible field net/minecraft/world/entity/LivingEntity equipment Lnet/minecraft/world/entity/EntityEquipment;
+accessible method net/minecraft/client/Minecraft startUseItem ()V
+accessible field net/minecraft/world/inventory/AbstractContainerMenu menuType Lnet/minecraft/world/inventory/MenuType;
+accessible method net/minecraft/client/gui/components/ChatComponent getWidth ()I

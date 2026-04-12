@@ -1,10 +1,10 @@
 package gg.darkutils.mixin.misc;
 
+import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
-import gg.darkutils.utils.LazyConstants;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.Window;
+import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.platform.Window;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
@@ -16,14 +16,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.function.Supplier;
-
 @Mixin(Window.class)
 final class WindowMixin {
-    @Unique
-    @Final
-    @NotNull
-    private static final Supplier<String> darkutils$platform = LazyConstants.lazyConstantOf(Window::getGlfwPlatform);
     @Shadow
     private boolean fullscreen;
     @Shadow
@@ -44,15 +38,10 @@ final class WindowMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Unique
-    private static final boolean darkutils$isWayland() {
-        return "wayland".equals(WindowMixin.darkutils$platform.get());
-    }
-
-    @Inject(method = "onFramebufferSizeChanged", at = @At("RETURN"))
+    @Inject(method = "onFramebufferResize", at = @At("RETURN"))
     private final void darkutils$fixGuiScaleIfEnabled(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.fixGuiScaleAfterFullscreen) {
-            final var wayland = WindowMixin.darkutils$isWayland();
+            final var wayland = DarkUtils.isWindowPlatformWayland();
 
             if (!wayland && 480 > this.framebufferHeight) {
                 this.darkutils$fixFramebufferHeight(true);
@@ -72,7 +61,7 @@ final class WindowMixin {
             GLFW.glfwSetWindowPos(this.handle, this.x, this.y);
         }
 
-        MinecraftClient.getInstance().onResolutionChanged();
+        Minecraft.getInstance().resizeDisplay();
     }
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwWindowHint(II)V", remap = false), remap = false)

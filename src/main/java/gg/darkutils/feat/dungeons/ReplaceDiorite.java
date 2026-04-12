@@ -1,18 +1,19 @@
 package gg.darkutils.feat.dungeons;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.utils.LocationUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.chunk.EmptyChunk;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -60,7 +61,7 @@ public final class ReplaceDiorite {
                 case GREEN -> Blocks.GREEN_STAINED_GLASS;
                 case RED -> Blocks.RED_STAINED_GLASS;
                 case BLACK -> Blocks.BLACK_STAINED_GLASS;
-            }).getDefaultState();
+            }).defaultBlockState();
 
             glassStates[color.ordinal()] = state;
         }
@@ -104,25 +105,25 @@ public final class ReplaceDiorite {
         }
     }
 
-    private static final void onTick(@NotNull final MinecraftClient client) {
-        final var world = client.world;
+    private static final void onTick(@NotNull final Minecraft client) {
+        final var world = client.level;
 
         if (null == world) {
             return;
         }
 
-        if (DarkUtilsConfig.INSTANCE.replaceDiorite && DungeonTimer.isInBetweenPhases(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_2_CLEAR)) {
+        if (DarkUtilsConfig.INSTANCE.replaceDiorite && LocationUtils.isInDungeons() && DungeonTimer.isInBetweenPhases(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.PHASE_2_CLEAR)) {
             ReplaceDiorite.replaceDiorite(world);
         }
     }
 
-    private static final void replaceDiorite(@NotNull final ClientWorld world) {
+    private static final void replaceDiorite(@NotNull final ClientLevel world) {
         for (final var entry : ReplaceDiorite.chunkToPositions.long2ObjectEntrySet()) {
             final var key = entry.getLongKey();
 
-            final var chunk = world.getChunkAsView((int) (key >> 32), (int) (key & 0xFFFF_FFFFL));
+            final var chunk = world.getChunkForCollisions((int) (key >> 32), (int) (key & 0xFFFF_FFFFL));
 
-            if (null == chunk || chunk instanceof EmptyChunk) {
+            if (null == chunk || chunk instanceof EmptyLevelChunk) {
                 continue; // skip unloaded
             }
 
@@ -137,18 +138,18 @@ public final class ReplaceDiorite {
         }
     }
 
-    private static final void setGlassIfDiorite(@NotNull final ClientWorld world, @NotNull final BlockView view, @NotNull final BlockPos pos) {
+    private static final void setGlassIfDiorite(@NotNull final ClientLevel world, @NotNull final BlockGetter view, @NotNull final BlockPos pos) {
         final var state = view.getBlockState(pos);
 
-        if (state.isOf(Blocks.DIORITE) || state.isOf(Blocks.POLISHED_DIORITE)) {
+        if (state.is(Blocks.DIORITE) || state.is(Blocks.POLISHED_DIORITE)) {
             ReplaceDiorite.setGlass(world, pos);
         }
     }
 
-    private static final void setGlass(@NotNull final ClientWorld world, @NotNull final BlockPos pos) {
+    private static final void setGlass(@NotNull final ClientLevel world, @NotNull final BlockPos pos) {
         final var color = ReplaceDiorite.posToColor.getOrDefault(pos, -1);
         if (-1 != color) {
-            world.setBlockState(pos, ReplaceDiorite.glassStates.get(color), 3);
+            world.setBlock(pos, ReplaceDiorite.glassStates.get(color), 3);
         }
     }
 }

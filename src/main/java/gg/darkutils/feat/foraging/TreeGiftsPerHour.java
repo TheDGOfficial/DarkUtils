@@ -4,22 +4,34 @@ import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.ObtainTreeGiftEvent;
 import gg.darkutils.events.base.EventRegistry;
+import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.MathUtils;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.RoundingMode;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Items;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.item.Items;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public final class TreeGiftsPerHour {
     private static final int SAMPLE_SIZE = 5;
+
+    private static final long ONE_MINUTE_NANOS = TimeUnit.MINUTES.toNanos(1L);
+    private static final long ONE_HOUR_MILLIS = TimeUnit.HOURS.toMillis(1L);
+    private static final long ONE_MILLIS_NANOS = TimeUnit.MILLISECONDS.toNanos(1L);
+
+    @NotNull
+    private static final RenderUtils.RenderingText TEXT =
+            RenderUtils.createRenderingText();
+
     private static final long @NotNull [] giftTimes = new long[TreeGiftsPerHour.SAMPLE_SIZE];
+
     private static int giftCount; // how many valid entries
     private static int giftIndex; // next index to write
     private static long lastGiftTime;
@@ -31,6 +43,7 @@ public final class TreeGiftsPerHour {
     }
 
     private static final void reset() {
+        Arrays.fill(TreeGiftsPerHour.giftTimes, 0L);
         TreeGiftsPerHour.lastGiftTime = 0L;
         TreeGiftsPerHour.giftCount = 0;
         TreeGiftsPerHour.giftIndex = 0;
@@ -50,51 +63,56 @@ public final class TreeGiftsPerHour {
         }
         var sumNanos = 0L;
         for (var i = 0; TreeGiftsPerHour.giftCount > i; ++i) {
-            sumNanos += TreeGiftsPerHour.giftTimes[(TreeGiftsPerHour.giftIndex + TreeGiftsPerHour.SAMPLE_SIZE - TreeGiftsPerHour.giftCount + i) % TreeGiftsPerHour.SAMPLE_SIZE];
+            sumNanos = Math.addExact(sumNanos, TreeGiftsPerHour.giftTimes[(TreeGiftsPerHour.giftIndex + TreeGiftsPerHour.SAMPLE_SIZE - TreeGiftsPerHour.giftCount + i) % TreeGiftsPerHour.SAMPLE_SIZE]);
         }
         final var avgNanos = (double) sumNanos / TreeGiftsPerHour.giftCount;
-        return avgNanos / TimeUnit.MILLISECONDS.toNanos(1L);
+        return avgNanos / TreeGiftsPerHour.ONE_MILLIS_NANOS;
     }
 
     private static final double getGiftsPerHour() {
         final var avgMillis = TreeGiftsPerHour.getAvgGiftTimeMillis();
-        return 0.0 >= avgMillis ? 0.0 : TimeUnit.HOURS.toMillis(1L) / avgMillis;
+        return 0.0D >= avgMillis ? 0.0D : TreeGiftsPerHour.ONE_HOUR_MILLIS / avgMillis;
     }
 
     public static final void init() {
         EventRegistry.centralRegistry().addListener(TreeGiftsPerHour::onTreeGift);
-        HudElementRegistry.addLast(Identifier.of(DarkUtils.MOD_ID, "tree_gifts_per_hour"), (context, tickCounter) -> TreeGiftsPerHour.renderTreeGifts(context));
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "tree_gifts_per_hour"), (context, tickCounter) -> TreeGiftsPerHour.renderTreeGifts(context));
     }
 
-    private static final void renderTreeGifts(@NotNull final DrawContext context) {
+    private static final void renderTreeGifts(@NotNull final GuiGraphics context) {
         if (!DarkUtilsConfig.INSTANCE.treeGiftsPerHour) {
             // Prevent leaking samples if feature is turned off after using it
             TreeGiftsPerHour.reset();
             return;
         }
 
-        final var client = MinecraftClient.getInstance();
+        final var client = Minecraft.getInstance();
 
-        if (null == client.player) {
+        // Skip if in main menu or if no trees cut yet
+        if (null == client.player || 0L == TreeGiftsPerHour.lastGiftTime) {
             return;
         }
 
         // Skip if last gift was more than 1 minute ago
-        if (0L != TreeGiftsPerHour.lastGiftTime) {
-            final var now = System.nanoTime();
-            final var oneMinuteNanos = TimeUnit.MINUTES.toNanos(1L);
-            if (now - TreeGiftsPerHour.lastGiftTime > oneMinuteNanos) {
-                return;
-            }
+        final var now = System.nanoTime();
+        if (now - TreeGiftsPerHour.lastGiftTime > TreeGiftsPerHour.ONE_MINUTE_NANOS) {
+            return;
         }
 
+        // Skip if gifts per hour is negative or zero, or it's a very big value (max double value)
         final var perHour = TreeGiftsPerHour.getGiftsPerHour();
 
         if (0.0 >= perHour || MathUtils.isNearEqual(Double.MAX_VALUE, perHour)) { // overflow protection
             return;
         }
 
-        final var text = "Tree Gifts/Hour: " + MathUtils.round(perHour, RoundingMode.HALF_DOWN);
+        // Skip if not in galatea (Only relevant foraging island for this feature at the moment)
+        if (!LocationUtils.isInGalatea()) {
+            return;
+        }
+
+        final var text = TreeGiftsPerHour.TEXT;
+        text.setText("Tree Gifts/Hour: " + MathUtils.round(perHour, RoundingMode.HALF_DOWN));
 
         RenderUtils.renderItem(
                 context,
@@ -108,7 +126,7 @@ public final class TreeGiftsPerHour {
                 text,
                 RenderUtils.CHAT_ALIGNED_X + RenderUtils.CHAT_ALIGNED_X * 10, // use chat's x offset to shift x a bit to the right so that there's a bit of a space after the rendered item before the text
                 RenderUtils.MIDDLE_ALIGNED_Y,
-                Formatting.DARK_GREEN
+                ChatFormatting.DARK_GREEN
         );
     }
 

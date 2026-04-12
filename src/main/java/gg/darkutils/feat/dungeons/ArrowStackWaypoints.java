@@ -5,10 +5,9 @@ import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.Minecraft;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -19,12 +18,12 @@ public final class ArrowStackWaypoints {
      * Holds block positions for M7 Dragon Last Breath arrow stacking.
      */
     @NotNull
-    private static final Map<Formatting, BlockPos> STACK_BLOCK_POSITIONS = Map.of(
-            Formatting.GOLD, new BlockPos(83, 19, 57), // Orange/Flame Dragon
-            Formatting.GREEN, new BlockPos(26, 21, 92), // Green/Apex Dragon
-            Formatting.DARK_RED, new BlockPos(27, 19, 56), // Red/Power Dragon
-            Formatting.AQUA, new BlockPos(82, 19, 96), // Blue/Ice Dragon
-            Formatting.DARK_PURPLE, new BlockPos(56, 20, 124) // Purple/Soul Dragon
+    private static final Map<ChatFormatting, BlockPos> STACK_BLOCK_POSITIONS = Map.of(
+            ChatFormatting.GOLD, new BlockPos(83, 19, 57), // Orange/Flame Dragon
+            ChatFormatting.GREEN, new BlockPos(26, 21, 92), // Green/Apex Dragon
+            ChatFormatting.DARK_RED, new BlockPos(27, 19, 56), // Red/Power Dragon
+            ChatFormatting.AQUA, new BlockPos(82, 19, 96), // Blue/Ice Dragon
+            ChatFormatting.DARK_PURPLE, new BlockPos(56, 20, 124) // Purple/Soul Dragon
     );
 
     @NotNull
@@ -45,16 +44,21 @@ public final class ArrowStackWaypoints {
         return DarkUtilsConfig.INSTANCE.arrowStackWaypoints;
     }
 
-    private static final boolean shouldRender() {
-        final ClientPlayerEntity player;
+    private static final boolean isInM7() {
+        return DungeonTimer.isOnDungeonFloor(DungeonTimer.DungeonFloor.MASTER_FLOOR_VII);
+    }
 
-        return ArrowStackWaypoints.isEnabled()
-                && (
-                DungeonTimer.isPhaseFinished(DungeonTimer.DungeonPhase.PHASE_4_CLEAR)
-                        || null != (player = MinecraftClient.getInstance().player) && 45.0D >= player.getY()
-        )
-                && DungeonTimer.isPhaseNotFinished(DungeonTimer.DungeonPhase.PHASE_5_CLEAR)
-                && DungeonTimer.isPhaseFinished(DungeonTimer.DungeonPhase.BOSS_ENTRY)/* && LocationUtils.isInM7() */;
+    private static final boolean isPlayerBelowNecronPlatformHeight() {
+        final var player = Minecraft.getInstance().player;
+        return null != player && 45.0D >= player.getY();
+    }
+
+    private static final boolean isP3FinishedWhileP5IsNot() {
+        return DungeonTimer.isInBetweenPhases(DungeonTimer.DungeonPhase.PHASE_3_CLEAR, DungeonTimer.DungeonPhase.PHASE_5_CLEAR);
+    }
+
+    private static final boolean shouldRender() {
+        return ArrowStackWaypoints.isEnabled() && ArrowStackWaypoints.isInM7() && ArrowStackWaypoints.isP3FinishedWhileP5IsNot() && ArrowStackWaypoints.isPlayerBelowNecronPlatformHeight();
     }
 
     private static final void renderArrowStackWaypoints(@NotNull final WorldRenderContext context) {
