@@ -1,5 +1,4 @@
 import javassist.bytecode.ClassFile
-import net.fabricmc.loom.task.RemapJarTask
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.objectweb.asm.ClassReader
@@ -36,7 +35,7 @@ buildscript {
 }
 
 plugins {
-    id 'net.fabricmc.fabric-loom-remap' version "1.16.1"
+    id 'net.fabricmc.fabric-loom' version "1.16.1"
     id 'maven-publish'
 }
 
@@ -94,55 +93,51 @@ loom {
 
 dependencies {
     // To change the versions see the gradle.properties file
-    minecraft("com.mojang:minecraft:1.21.11") {
+    minecraft("com.mojang:minecraft:26.1.2") {
         transitive = false
     }
 
-    mappings(loom.officialMojangMappings()) {
+    implementation("net.fabricmc:fabric-loader:0.19.1") {
         transitive = false
     }
 
-    modImplementation("net.fabricmc:fabric-loader:0.19.1") {
-        transitive = false
-    }
-
-    final def fabricApiVersion = "0.141.3+1.21.11"
+    final def fabricApiVersion = "0.145.4+26.1.2"
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     // Pulls in all Fabric API modules, may uncomment during development. Explicitly declare below and comment it again after.
-    //modImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
+    //implementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
 
-    modImplementation(fabricApi.module("fabric-api-base", fabricApiVersion)) {
+    implementation(fabricApi.module("fabric-api-base", fabricApiVersion)) {
         transitive = false
     }
-    modImplementation(fabricApi.module("fabric-lifecycle-events-v1", fabricApiVersion)) {
+    implementation(fabricApi.module("fabric-lifecycle-events-v1", fabricApiVersion)) {
         transitive = false
     }
-    modImplementation(fabricApi.module("fabric-command-api-v2", fabricApiVersion)) {
+    implementation(fabricApi.module("fabric-command-api-v2", fabricApiVersion)) {
         transitive = false
     }
-    modImplementation(fabricApi.module("fabric-message-api-v1", fabricApiVersion)) {
+    implementation(fabricApi.module("fabric-message-api-v1", fabricApiVersion)) {
         transitive = false
     }
-    modImplementation(fabricApi.module("fabric-rendering-v1", fabricApiVersion)) {
+    implementation(fabricApi.module("fabric-rendering-v1", fabricApiVersion)) {
         transitive = false
     }
-    modImplementation(fabricApi.module("fabric-key-binding-api-v1", fabricApiVersion)) {
+    implementation(fabricApi.module("fabric-key-mapping-api-v1", fabricApiVersion)) {
         transitive = false
     }
-    modImplementation(fabricApi.module("fabric-networking-api-v1", fabricApiVersion)) {
-        transitive = false
-    }
-
-    modImplementation('me.shedaniel.cloth:cloth-config-fabric:21.11.153') {
+    implementation(fabricApi.module("fabric-networking-api-v1", fabricApiVersion)) {
         transitive = false
     }
 
-    modImplementation('com.terraformersmc:modmenu:17.0.0') {
+    implementation('me.shedaniel.cloth:cloth-config-fabric:26.1.154') {
         transitive = false
     }
 
-    modImplementation('net.hypixel:mod-api:1.0.2') {
+    implementation('com.terraformersmc:modmenu:18.0.0-alpha.6') {
+        transitive = false
+    }
+
+    implementation('net.hypixel:mod-api:1.0.2') {
         transitive = false
     }
 
@@ -1337,15 +1332,6 @@ tasks.register('proguard', ProGuardTask) {
     configuration 'configuration.pro'
 }
 
-tasks.named('remapJar', RemapJarTask) {
-    dependsOn proguard
-    inputFile.set(proguardOutput)
-
-    doFirst {
-        logger.lifecycle('Remapping optimized JAR...')
-    }
-}
-
 static final Provider<File> resolveMinecraftDir(final Project project) {
     final def providers = project.providers
     final def layout = project.layout
@@ -1439,10 +1425,10 @@ abstract class InstallToModFolderTask extends DefaultTask {
 }
 
 tasks.register('installToModFolder', InstallToModFolderTask) {
-    dependsOn tasks.named('remapJar')
+    dependsOn tasks.named('jar')
 
     inputJar.set(
-        tasks.named('remapJar').flatMap { it.archiveFile }
+        tasks.named('jar').flatMap { it.archiveFile }
     )
 
     modVersion.set(project.version.toString())

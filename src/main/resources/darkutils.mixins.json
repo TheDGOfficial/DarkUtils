@@ -40,7 +40,7 @@
     "visuals.HeartTypeMixin",
     "visuals.GuiMixin",
     "visuals.ScreenEffectRendererMixin",
-    "visuals.LightTextureMixin",
+    "visuals.LightmapRenderStateExtractorMixin",
     "visuals.LightningBoltRendererMixin",
     "visuals.PlayerTabOverlayMixin",
     "visuals.EffectsInInventoryMixin"

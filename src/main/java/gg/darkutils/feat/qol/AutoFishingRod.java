@@ -8,7 +8,7 @@ import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.SimpleFormatting;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -45,7 +45,7 @@ public final class AutoFishingRod {
         ClientTickEvents.END_CLIENT_TICK.register(AutoFishingRod::tick);
 
         // Resets cached armor stand + state when world changes
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(AutoFishingRod::onWorldChange);
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(AutoFishingRod::onWorldChange);
 
         // Resets state when a new bobber owned by us spawns
         ClientEntityEvents.ENTITY_LOAD.register(AutoFishingRod::onEntityJoinWorld);

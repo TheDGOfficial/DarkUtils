@@ -10,7 +10,7 @@ import gg.darkutils.utils.PrettyUtils;
 import gg.darkutils.utils.Helpers;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.Items;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.Identifier;
@@ -70,7 +70,7 @@ public final class PickaxeAbilityDisplay {
         return DarkUtilsConfig.INSTANCE.pickaxeAbilityDisplay;
     }
 
-    private static final void renderPickaxeAbilityDisplay(@NotNull final GuiGraphics context) {
+    private static final void renderPickaxeAbilityDisplay(@NotNull final GuiGraphicsExtractor context) {
         if (!PickaxeAbilityDisplay.isEnabled()) {
             return;
         }

@@ -9,7 +9,7 @@ import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -82,7 +82,7 @@ public final class LittlefootDisplay {
         return DarkUtilsConfig.INSTANCE.littlefootDisplay;
     }
 
-    private static final void renderLittlefootDisplay(@NotNull final GuiGraphics context) {
+    private static final void renderLittlefootDisplay(@NotNull final GuiGraphicsExtractor context) {
         if (!LittlefootDisplay.isEnabled()) {
             return;
         }

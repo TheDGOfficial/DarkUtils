@@ -61,7 +61,7 @@ final class WindowMixin {
             GLFW.glfwSetWindowPos(this.handle, this.x, this.y);
         }
 
-        Minecraft.getInstance().resizeDisplay();
+        Minecraft.getInstance().resizeGui();
     }
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwWindowHint(II)V", remap = false), remap = false)

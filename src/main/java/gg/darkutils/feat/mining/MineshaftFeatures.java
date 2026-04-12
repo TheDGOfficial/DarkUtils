@@ -8,7 +8,7 @@ import gg.darkutils.utils.ActivityState;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.ScoreboardUtil;
 import gg.darkutils.utils.TickUtils;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import org.jetbrains.annotations.NotNull;
@@ -57,7 +57,7 @@ public final class MineshaftFeatures {
 
     public static final void init() {
         EventRegistry.centralRegistry().addListener(MineshaftFeatures::onChat);
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(MineshaftFeatures::onWorldChange);
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(MineshaftFeatures::onWorldChange);
         TickUtils.queueRepeatingTickTask(MineshaftFeatures::detectMineshaft, 1);
 
         MineshaftFeatures.updateAverageSpawnTime();

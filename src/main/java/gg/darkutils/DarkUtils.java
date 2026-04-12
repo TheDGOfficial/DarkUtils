@@ -54,7 +54,7 @@ import gg.darkutils.utils.chat.SimpleFormatting;
 import gg.darkutils.utils.chat.SimpleStyle;
 import gg.darkutils.utils.chat.TextBuilder;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.loader.api.FabricLoader;
@@ -520,7 +520,7 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     private static final @NotNull LiteralCommandNode<FabricClientCommandSource> registerCommand(@NotNull final CommandDispatcher<FabricClientCommandSource> dispatcher, @NotNull final String command, @NotNull final Command<FabricClientCommandSource> onExecute) {
-        return dispatcher.register(ClientCommandManager.literal(command)
+        return dispatcher.register(ClientCommands.literal(command)
                 .executes(onExecute));
     }
 

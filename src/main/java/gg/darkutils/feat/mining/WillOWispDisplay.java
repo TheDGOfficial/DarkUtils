@@ -9,7 +9,7 @@ import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -79,7 +79,7 @@ public final class WillOWispDisplay {
         return DarkUtilsConfig.INSTANCE.willOWispDisplay;
     }
 
-    private static final void renderWillOWispDisplay(@NotNull final GuiGraphics context) {
+    private static final void renderWillOWispDisplay(@NotNull final GuiGraphicsExtractor context) {
         if (!WillOWispDisplay.isEnabled()) {
             return;
         }

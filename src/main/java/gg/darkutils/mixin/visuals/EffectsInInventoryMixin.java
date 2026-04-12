@@ -1,7 +1,7 @@
 package gg.darkutils.mixin.visuals;
 
 import gg.darkutils.config.DarkUtilsConfig;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.EffectsInInventory;
 import net.minecraft.world.effect.MobEffectInstance;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +21,7 @@ final class EffectsInInventoryMixin {
     }
 
     @Inject(method = "renderEffects", at = @At("HEAD"), cancellable = true)
-    private final void darkutils$cancelDrawIfEnabled(@NotNull final GuiGraphics context, @NotNull final Collection<MobEffectInstance> effects, final int x, final int height, final int mouseX, final int mouseY, final int width, @NotNull final CallbackInfo ci) {
+    private final void darkutils$cancelDrawIfEnabled(@NotNull final GuiGraphicsExtractor context, @NotNull final Collection<MobEffectInstance> effects, final int x, final int height, final int mouseX, final int mouseY, final int width, @NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.hideEffectsInInventory) {
             ci.cancel();
         }

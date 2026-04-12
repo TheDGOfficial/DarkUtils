@@ -10,7 +10,7 @@ import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.TabListUtil;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.Items;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.Identifier;
@@ -113,7 +113,7 @@ public final class MineshaftDisplay {
         return "Mineshaft: ".equals(t.trim()) ? "No shafts yet" : t;
     }
 
-    private static final void renderMineshaftDisplay(@NotNull final GuiGraphics context) {
+    private static final void renderMineshaftDisplay(@NotNull final GuiGraphicsExtractor context) {
         if (!MineshaftDisplay.isEnabled()) {
             return;
         }
@@ -146,7 +146,7 @@ public final class MineshaftDisplay {
         MineshaftDisplay.renderPity(context);
     }
 
-    private static final void renderPity(@NotNull final GuiGraphics context) {
+    private static final void renderPity(@NotNull final GuiGraphicsExtractor context) {
         final var pity = MineshaftDisplay.mineShaftPity;
         final var required = MineshaftDisplay.mineShaftPityRequired;
 
