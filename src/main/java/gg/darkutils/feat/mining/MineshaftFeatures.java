@@ -42,9 +42,12 @@ public final class MineshaftFeatures {
     );
 
     public static long mineshaftEnter;
+
     public static long activeMiningTimeSinceLastShaft;
+    public static long timeSinceShaftEnter;
 
     public static double averageSpawnTime;
+    public static double averageTimeInShaft;
 
     private MineshaftFeatures() {
         super();
@@ -58,6 +61,7 @@ public final class MineshaftFeatures {
         TickUtils.queueRepeatingTickTask(MineshaftFeatures::detectMineshaft, 1);
 
         MineshaftFeatures.updateAverageSpawnTime();
+        MineshaftFeatures.updateAverageSpentTime();
     }
 
     private static final void detectMineshaft() {
@@ -70,12 +74,21 @@ public final class MineshaftFeatures {
                 final var timeTook = MineshaftFeatures.activeMiningTimeSinceLastShaft;
 
                 if (0L != timeTook) {
-                    MineshaftFeatures.appendTime(timeTook);
+                    MineshaftFeatures.appendSpawnTime(timeTook);
                     MineshaftFeatures.activeMiningTimeSinceLastShaft = 0L;
+                    MineshaftFeatures.timeSinceShaftEnter = 0L;
                 }
+            } else {
+                MineshaftFeatures.timeSinceShaftEnter += MineshaftFeatures.TICK_NANOS;
             }
         } else {
             MineshaftFeatures.mineshaftEnter = 0L;
+
+            final var timeInShaft = MineshaftFeatures.timeSinceShaftEnter;
+            if (0L != timeInShaft) {
+                MineshaftFeatures.appendSpentTime(timeInShaft);
+                MineshaftFeatures.timeSinceShaftEnter = 0L;
+            }
 
             if (ActivityState.isActivelyMining() && LocationUtils.isInDwarvenMines() && MineshaftFeatures.IN_GLACITE_TUNNELS.getAsBoolean()) {
                 MineshaftFeatures.activeMiningTimeSinceLastShaft += MineshaftFeatures.TICK_NANOS;
@@ -84,10 +97,15 @@ public final class MineshaftFeatures {
     }
 
     private static final boolean isInGlaciteTunnels() {
-        return ScoreboardUtil.forEachScoreboardLine(line -> line.contains("Glacite Tunnels") ? ScoreboardUtil.returning(true) : ScoreboardUtil.continuing(), false);
+        for (final var line : ScoreboardUtil.scoreboardLines()) {
+            if (line.contains("Glacite Tunnels")) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    private static final void appendTime(final long duration) {
+    private static final void appendSpawnTime(final long duration) {
         if (null == PersistentData.INSTANCE.timeTookForShafts) {
             PersistentData.INSTANCE.timeTookForShafts = new long[]{duration};
             MineshaftFeatures.averageSpawnTime = duration;
@@ -107,12 +125,47 @@ public final class MineshaftFeatures {
     }
 
     private static final void updateAverageSpawnTime() {
-        if (null == PersistentData.INSTANCE.timeTookForShafts) {
+        final var times = PersistentData.INSTANCE.timeTookForShafts;
+
+        if (null == times) {
             MineshaftFeatures.averageSpawnTime = 0L;
             return;
         }
 
-        MineshaftFeatures.averageSpawnTime = Arrays.stream(PersistentData.INSTANCE.timeTookForShafts)
+        MineshaftFeatures.averageSpawnTime = Arrays.stream(times)
+                .mapToDouble(value -> value)
+                .average()
+                .orElse(0.0);
+    }
+
+    private static final void appendSpentTime(final long duration) {
+        if (null == PersistentData.INSTANCE.timeSpentInShafts) {
+            PersistentData.INSTANCE.timeSpentInShafts = new long[]{duration};
+            MineshaftFeatures.averageTimeInShaft = duration;
+            return;
+        }
+
+        final var originalTimeSpentValues = PersistentData.INSTANCE.timeSpentInShafts;
+
+        final var newLength = originalTimeSpentValues.length + 1;
+
+        final var newTimeSpentValues = Arrays.copyOf(originalTimeSpentValues, newLength);
+        newTimeSpentValues[newLength - 1] = duration;
+
+        PersistentData.INSTANCE.timeSpentInShafts = newTimeSpentValues;
+
+        MineshaftFeatures.updateAverageSpentTime();
+    }
+
+    private static final void updateAverageSpentTime() {
+        final var times = PersistentData.INSTANCE.timeSpentInShafts;
+
+        if (null == times) {
+            MineshaftFeatures.averageTimeInShaft = 0L;
+            return;
+        }
+
+        MineshaftFeatures.averageTimeInShaft = Arrays.stream(times)
                 .mapToDouble(value -> value)
                 .average()
                 .orElse(0.0);
@@ -155,7 +208,6 @@ public final class MineshaftFeatures {
 
     private static final class CorpseDataHolder {
         private static final int @NonNull [] foundCorpseForType = new int[MineshaftFeatures.CorpseType.values().length];
-        private static final int @NonNull [] lastFoundCorpseForType = new int[MineshaftFeatures.CorpseType.values().length];
 
         private CorpseDataHolder() {
             super();
@@ -170,10 +222,11 @@ public final class MineshaftFeatures {
         private static final void finalizeAllFound() {
             var atLeastOne = false;
 
+            final var types = MineshaftFeatures.CorpseType.values();
             for (int i = 0, len = MineshaftFeatures.CorpseDataHolder.foundCorpseForType.length; i < len; ++i) {
                 final var foundAmount = MineshaftFeatures.CorpseDataHolder.foundCorpseForType[i];
                 if (0 != foundAmount) {
-                    MineshaftFeatures.CorpseDataHolder.lastFoundCorpseForType[i] = foundAmount;
+                    types[i].increment(foundAmount);
                     MineshaftFeatures.CorpseDataHolder.foundCorpseForType[i] = 0;
 
                     atLeastOne = true;
@@ -181,20 +234,7 @@ public final class MineshaftFeatures {
             }
 
             if (atLeastOne) {
-                MineshaftFeatures.CorpseDataHolder.finalizeShaftFoundCorpses();
-            }
-        }
-
-        private static final void finalizeShaftFoundCorpses() {
-            ++PersistentData.INSTANCE.shaftsEntered;
-
-            final var types = MineshaftFeatures.CorpseType.values();
-            for (int i = 0, len = MineshaftFeatures.CorpseDataHolder.lastFoundCorpseForType.length; i < len; ++i) {
-                final var foundAmount = MineshaftFeatures.CorpseDataHolder.lastFoundCorpseForType[i];
-
-                if (0 != foundAmount) {
-                    types[i].increment(foundAmount);
-                }
+                ++PersistentData.INSTANCE.shaftsEntered;
             }
         }
     }

@@ -36,7 +36,7 @@ buildscript {
 }
 
 plugins {
-    id 'net.fabricmc.fabric-loom-remap' version "1.15.5"
+    id 'net.fabricmc.fabric-loom-remap' version "1.16.1"
     id 'maven-publish'
 }
 
@@ -106,29 +106,31 @@ dependencies {
         transitive = false
     }
 
+    final def fabricApiVersion = "0.141.3+1.21.11"
+
     // Fabric API. This is technically optional, but you probably want it anyway.
     // Pulls in all Fabric API modules, may uncomment during development. Explicitly declare below and comment it again after.
-    //modImplementation("net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11")
+    //modImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
 
-    modImplementation("net.fabricmc.fabric-api:fabric-api-base:1.0.5+4ebb5c083e") {
+    modImplementation(fabricApi.module("fabric-api-base", fabricApiVersion)) {
         transitive = false
     }
-    modImplementation("net.fabricmc.fabric-api:fabric-lifecycle-events-v1:2.6.15+4ebb5c083e") {
+    modImplementation(fabricApi.module("fabric-lifecycle-events-v1", fabricApiVersion)) {
         transitive = false
     }
-    modImplementation("net.fabricmc.fabric-api:fabric-command-api-v2:2.4.7+6b42a6003e") {
+    modImplementation(fabricApi.module("fabric-command-api-v2", fabricApiVersion)) {
         transitive = false
     }
-    modImplementation("net.fabricmc.fabric-api:fabric-message-api-v1:6.1.12+4ebb5c083e") {
+    modImplementation(fabricApi.module("fabric-message-api-v1", fabricApiVersion)) {
         transitive = false
     }
-    modImplementation("net.fabricmc.fabric-api:fabric-rendering-v1:16.2.10+0290ad933e") {
+    modImplementation(fabricApi.module("fabric-rendering-v1", fabricApiVersion)) {
         transitive = false
     }
-    modImplementation("net.fabricmc.fabric-api:fabric-key-binding-api-v1:1.1.7+4fc5413f3e") {
+    modImplementation(fabricApi.module("fabric-key-binding-api-v1", fabricApiVersion)) {
         transitive = false
     }
-    modImplementation("net.fabricmc.fabric-api:fabric-networking-api-v1:5.1.5+ae1e07683e") {
+    modImplementation(fabricApi.module("fabric-networking-api-v1", fabricApiVersion)) {
         transitive = false
     }
 

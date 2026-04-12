@@ -39,8 +39,9 @@ public final class CorpsesPerShaftDisplay {
         }
 
         final var client = Minecraft.getInstance();
+        final var mineshaft = LocationUtils.isInMineshaft();
 
-        if (null == client.player || !LocationUtils.isInDwarvenMines() && !LocationUtils.isInMineshaft()) {
+        if (null == client.player || !LocationUtils.isInDwarvenMines() && !mineshaft) {
             return;
         }
 
@@ -64,7 +65,7 @@ public final class CorpsesPerShaftDisplay {
             );
         }
 
-        final var Y_OFFSET = 20; // offset a bit so that it shows under mineshaft display if enabled
+        final var Y_OFFSET = mineshaft ? 20 : 40; // offset a bit so that it shows under mineshaft display if enabled
 
         RenderUtils.renderItem(
                 context,

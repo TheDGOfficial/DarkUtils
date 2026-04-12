@@ -4,96 +4,86 @@ import gg.darkutils.utils.chat.ChatUtils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.Scoreboard;
+import net.minecraft.world.scores.ScoreHolder;
 
 import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Objects;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public final class ScoreboardUtil {
-    public static final ScoreboardUtil.@NonNull Continue<Void> CONTINUE = new ScoreboardUtil.Continue<>();
-    public static final ScoreboardUtil.@NonNull Return<Void> BREAK = () -> null;
-
     private ScoreboardUtil() {
         super();
 
         throw new UnsupportedOperationException("static-only class");
     }
 
-    public static final <T> ScoreboardUtil.Return<T> returning(@NotNull final T value) {
-        return ScoreboardUtil.Return.of(value);
-    }
-
-    public static final <T> ScoreboardUtil.Continue<T> continuing() {
-        return new ScoreboardUtil.Continue<>();
-    }
-
-    public static final void forEachScoreboardLine(@NotNull final ScoreboardUtil.ScoreboardLineConsumer<Void> action) {
-        ScoreboardUtil.queryScoreboardLines(action, null);
-    }
-
-    public static final <T> @NotNull T forEachScoreboardLine(@NotNull final ScoreboardUtil.ScoreboardLineConsumer<T> action, @NotNull final T defaultValue) {
-        final var result = ScoreboardUtil.queryScoreboardLines(action, defaultValue);
-        return Objects.requireNonNullElse(result, defaultValue);
-    }
-
-    private static final <T> @Nullable T queryScoreboardLines(@NotNull final ScoreboardUtil.ScoreboardLineConsumer<T> action, @Nullable final T defaultValue) {
+    public static final @NotNull Iterable<String> scoreboardLines() {
         final var mc = Minecraft.getInstance();
+        final var player = mc.player;
 
-        if (null == mc.player || null == mc.level) {
-            return defaultValue;
+        if (null == player || null == mc.level) {
+            return Collections::emptyIterator;
         }
 
-        final var scoreboard = mc.player.connection.scoreboard();
+        final var scoreboard = player.connection.scoreboard();
         final var objective = scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR);
 
         if (null == objective) {
-            return defaultValue;
+            return Collections::emptyIterator;
         }
 
-        for (final var scoreHolder : scoreboard.getTrackedPlayers()) {
-            final var team = scoreboard.getPlayersTeam(scoreHolder.getScoreboardName());
+        return () -> new ScoreboardUtil.ScoreboardIterator(scoreboard);
+    }
 
-            if (null == team) {
-                continue;
+    private static final class ScoreboardIterator implements Iterator<String> {
+        private final @NotNull Iterator<ScoreHolder> trackedPlayers;
+        private final @NotNull Scoreboard scoreboard;
+
+        private @Nullable String nextLine;
+
+        private ScoreboardIterator(final @NotNull Scoreboard scoreboard) {
+            this.scoreboard = scoreboard;
+            this.trackedPlayers = scoreboard.getTrackedPlayers().iterator();
+        }
+
+        @Override
+        public final boolean hasNext() {
+            if (null != this.nextLine) {
+                return true;
             }
 
-            final var line = ChatUtils.removeControlCodes(team.getPlayerPrefix().getString() + team.getPlayerSuffix().getString());
-            final var result = action.accept(line);
+            final var scoreboard = this.scoreboard;
+            final var players = this.trackedPlayers;
 
-            switch (result) {
-                case final ScoreboardUtil.Return<T> returning -> {
-                    return returning.getReturnValue();
+            while (players.hasNext()) {
+                final var scoreHolder = players.next();
+                final var team = scoreboard.getPlayersTeam(scoreHolder.getScoreboardName());
+
+                if (null == team) {
+                    continue;
                 }
 
-                case ScoreboardUtil.Continue<?>() -> {
-                    // implicit continue
-                }
+                this.nextLine = ChatUtils.removeControlCodes(team.getPlayerPrefix().getString() + team.getPlayerSuffix().getString());
+                return true;
             }
+
+            return false;
         }
 
-        return defaultValue;
-    }
+        @Override
+        public final @NotNull String next() {
+            if (!this.hasNext()) {
+                throw new NoSuchElementException();
+            }
 
-    public sealed interface IterationDecision<T> permits ScoreboardUtil.Continue, ScoreboardUtil.Return {
-    }
+            final var result = this.nextLine;
+            this.nextLine = null;
 
-    @FunctionalInterface
-    public non-sealed interface Return<T> extends ScoreboardUtil.IterationDecision<T> {
-        static <T> ScoreboardUtil.Return<T> of(@NotNull final T value) {
-            return () -> value;
+            return result;
         }
-
-        @Nullable T getReturnValue();
-    }
-
-    @FunctionalInterface
-    public interface ScoreboardLineConsumer<T> {
-        @NotNull ScoreboardUtil.IterationDecision<T> accept(final @NotNull String line);
-    }
-
-    public static final record Continue<T>() implements ScoreboardUtil.IterationDecision<T> {
     }
 }
-

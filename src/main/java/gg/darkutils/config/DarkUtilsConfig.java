@@ -76,6 +76,7 @@ public final class DarkUtilsConfig {
     public boolean mineshaftDisplay;
     public boolean willOWispDisplay;
     public boolean littlefootDisplay;
+    public boolean pickaxeAbilityDisplay;
 
     // === Dungeons ===
     public boolean dialogueSkipTimer;

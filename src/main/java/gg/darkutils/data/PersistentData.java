@@ -65,6 +65,7 @@ public final class PersistentData {
     public int tungstenCorpsesOpened;
     public int vanguardCorpsesOpened;
     public long @Nullable [] timeTookForShafts;
+    public long @Nullable [] timeSpentInShafts;
 
     // ================================
 

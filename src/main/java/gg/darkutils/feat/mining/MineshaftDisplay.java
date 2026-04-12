@@ -6,6 +6,8 @@ import gg.darkutils.utils.ActivityState;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.PrettyUtils;
 import gg.darkutils.utils.RenderUtils;
+import gg.darkutils.utils.TickUtils;
+import gg.darkutils.utils.TabListUtil;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -24,6 +26,13 @@ public final class MineshaftDisplay {
     private static final RenderUtils.RenderingText TEXT =
             RenderUtils.createRenderingText();
 
+    @NotNull
+    private static final RenderUtils.RenderingText PITY_TEXT =
+            RenderUtils.createRenderingText();
+
+    private static int mineShaftPity = -1;
+    private static int mineShaftPityRequired = -1; // normally always 2000, but just in case it changes in future
+
     private MineshaftDisplay() {
         super();
 
@@ -31,15 +40,77 @@ public final class MineshaftDisplay {
     }
 
     public static final void init() {
+        TickUtils.queueRepeatingTickTask(MineshaftDisplay::updateTabData, 60); // tab updates every 3s server-side anyways, no need to update more frequently
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "mineshaft_display"), (context, tickCounter) -> MineshaftDisplay.renderMineshaftDisplay(context));
+    }
+
+    private static final void updateTabData() {
+        MineshaftDisplay.mineShaftPity = -1;
+        MineshaftDisplay.mineShaftPityRequired = -1;
+
+        for (final var line : TabListUtil.tabListLines()) {
+            if (line.startsWith(" Glacite Mineshafts: ")) {
+                final var cleaned = line.replace(" Glacite Mineshafts: ", "");
+                final var split = cleaned.split("/");
+                final var pity = split[0];
+                final var pityRequired = split[1];
+
+                final int parsedPity;
+
+                try {
+                    parsedPity = Integer.parseInt(pity.replace(",", ""));
+                } catch (final NumberFormatException nfe) {
+                    DarkUtils.error(MineshaftDisplay.class, "Error parsing Mineshaft pity \"" + pity + "\" from tablist widget", nfe);
+                    return;
+                }
+
+                final int parsedPityRequired;
+
+                try {
+                    parsedPityRequired = Integer.parseInt(pityRequired.replace(",", "")); // doesn't have commas but just in case
+                } catch (final NumberFormatException nfe) {
+                    DarkUtils.error(MineshaftDisplay.class, "Error parsing Mineshaft pity required \"" + pityRequired + "\" from tablist widget", nfe);
+                    return;
+                }
+
+                MineshaftDisplay.mineShaftPity = parsedPity;
+                MineshaftDisplay.mineShaftPityRequired = parsedPityRequired;
+
+                break;
+            }
+        }
     }
 
     private static final boolean isEnabled() {
         return DarkUtilsConfig.INSTANCE.mineshaftDisplay;
     }
 
-    private static final @NotNull String prettifyNanosToSeconds(final long nanos) {
-        return nanos < MineshaftDisplay.ONE_MINUTE_IN_NS ? TimeUnit.NANOSECONDS.toSeconds(nanos) + "s" : PrettyUtils.formatNanosAsSeconds(nanos);
+    private static final @NotNull String buildDisplayText() {
+        final var now = System.nanoTime();
+
+        final var shaftEntered = MineshaftFeatures.mineshaftEnter;
+        final var shaftUptime = now - shaftEntered;
+
+        final var timeSinceLastShaft = PrettyUtils.prettifyNanosToSeconds(MineshaftFeatures.activeMiningTimeSinceLastShaft);
+
+        final var averageSpawnTime = PrettyUtils.prettifyNanosToSeconds((long) MineshaftFeatures.averageSpawnTime);
+        final var averageTimeInShaft = PrettyUtils.prettifyNanosToSeconds((long) MineshaftFeatures.averageTimeInShaft);
+
+        final var hasUnenteredMineshaft = 0L != MineshaftFeatures.mineshaftDespawnsAt;
+
+        final var remainingTimeToDespawnNs = MineshaftFeatures.mineshaftDespawnsAt - now;
+        final var remainingTimeToDespawn = remainingTimeToDespawnNs >= MineshaftDisplay.ONE_SECOND_IN_NS ? PrettyUtils.prettifyNanosToSeconds(remainingTimeToDespawnNs) : "Despawned";
+
+        final var omitLast = hasUnenteredMineshaft || "0s".equals(timeSinceLastShaft);
+        final var omitAvgSpawn = "0s".equals(averageSpawnTime);
+
+        final var t = "Mineshaft: " +
+                (omitLast ? "" : "Mining for " + timeSinceLastShaft + (ActivityState.isActivelyMining() ? "" : " [PAUSED]")) +
+                (omitAvgSpawn ? "" : (omitLast ? "Avg " : ", Avg ") + averageSpawnTime + " to spawn") +
+                ("0s".equals(averageTimeInShaft) ? "" : (omitAvgSpawn && omitLast ? "Avg " : ", Avg ") + averageTimeInShaft + " to loot") +
+                (0L == shaftEntered ? hasUnenteredMineshaft ? " - Time till despawn: " + remainingTimeToDespawn : "" : shaftUptime >= MineshaftDisplay.ONE_MINUTE_IN_NS ? " - In shaft for: " + PrettyUtils.prettifyNanosToSeconds(shaftUptime) : " - Time till warp closure: " + PrettyUtils.prettifyNanosToSeconds(MineshaftDisplay.ONE_MINUTE_IN_NS - shaftUptime));
+
+        return "Mineshaft: ".equals(t.trim()) ? "No shafts yet" : t;
     }
 
     private static final void renderMineshaftDisplay(@NotNull final GuiGraphics context) {
@@ -53,27 +124,9 @@ public final class MineshaftDisplay {
             return;
         }
 
-        final var shaftEntered = MineshaftFeatures.mineshaftEnter;
-        final var shaftUptime = System.nanoTime() - shaftEntered;
-
-        final var timeSinceLastShaft = MineshaftDisplay.prettifyNanosToSeconds(MineshaftFeatures.activeMiningTimeSinceLastShaft);
-
-        final var averageSpawnTime = MineshaftDisplay.prettifyNanosToSeconds((long) MineshaftFeatures.averageSpawnTime);
-
-        final var hasUnenteredMineshaft = 0L != MineshaftFeatures.mineshaftDespawnsAt;
-
-        final var remainingTimeToDespawnNs = MineshaftFeatures.mineshaftDespawnsAt - System.nanoTime();
-        final var remainingTimeToDespawn = remainingTimeToDespawnNs >= MineshaftDisplay.ONE_SECOND_IN_NS ? MineshaftDisplay.prettifyNanosToSeconds(remainingTimeToDespawnNs) : "Despawned";
-
-        final var omitLast = hasUnenteredMineshaft || "0s".equals(timeSinceLastShaft);
-
         final var text = MineshaftDisplay.TEXT;
 
-        text.setText("Mineshaft: " +
-                (omitLast ? "" : "Last " + timeSinceLastShaft + " ago" + (ActivityState.isActivelyMining() ? "" : " [PAUSED]")) +
-                ("0s".equals(averageSpawnTime) ? "" : (omitLast ? "Avg " : ", Avg ") + averageSpawnTime + " to spawn") +
-                (0L == shaftEntered ? hasUnenteredMineshaft ? " - Time till despawn: " + remainingTimeToDespawn : "" : shaftUptime >= MineshaftDisplay.ONE_MINUTE_IN_NS ? " - In shaft for: " + MineshaftDisplay.prettifyNanosToSeconds(shaftUptime) : " - Time till warp closure: " + MineshaftDisplay.prettifyNanosToSeconds(MineshaftDisplay.ONE_MINUTE_IN_NS - shaftUptime))
-        );
+        text.setText(MineshaftDisplay.buildDisplayText());
 
         RenderUtils.renderItem(
                 context,
@@ -88,6 +141,35 @@ public final class MineshaftDisplay {
                 RenderUtils.CHAT_ALIGNED_X + RenderUtils.CHAT_ALIGNED_X * 10, // use chat's x offset to shift x a bit to the right so that there's a bit of a space after the rendered item before the text
                 RenderUtils.MIDDLE_ALIGNED_Y,
                 ChatFormatting.AQUA
+        );
+
+        MineshaftDisplay.renderPity(context);
+    }
+
+    private static final void renderPity(@NotNull final GuiGraphics context) {
+        final var pity = MineshaftDisplay.mineShaftPity;
+        final var required = MineshaftDisplay.mineShaftPityRequired;
+
+        final var Y_OFFSET = 20; // offset a bit so that it shows under mineshaft display
+
+        final var pityText = MineshaftDisplay.PITY_TEXT;
+        final var known = -1 != pity && -1 != required;
+
+        pityText.setText(known ? "Mineshaft Pity: " + pity + "/" + required : "Please enable the pity widget!");
+
+        RenderUtils.renderItem(
+                context,
+                Items.GOLD_INGOT,
+                RenderUtils.CHAT_ALIGNED_X,
+                RenderUtils.MIDDLE_ALIGNED_Y.getAsInt() - (RenderUtils.CHAT_ALIGNED_X << 1) + Y_OFFSET // use chat's x offset to shift y a bit upwards so that it doesn't render under the text
+        );
+
+        RenderUtils.renderText(
+                context,
+                pityText,
+                RenderUtils.CHAT_ALIGNED_X + RenderUtils.CHAT_ALIGNED_X * 10, // use chat's x offset to shift x a bit to the right so that there's a bit of a space after the rendered item before the text
+                RenderUtils.MIDDLE_ALIGNED_Y.getAsInt() + Y_OFFSET,
+                known ? ChatFormatting.DARK_GREEN : ChatFormatting.RED
         );
     }
 }

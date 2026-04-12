@@ -241,6 +241,37 @@ public final class Helpers {
         return name -> name.contains("Aspect of the Void");
     }
 
+    public static final @Nullable String extractNumbers(@NotNull final String input) {
+        return Helpers.extractNumbers(input, false);
+    }
+
+    public static final @Nullable String extractNumbers(@NotNull final String input, final boolean includeSuffix) {
+        final var length = input.length();
+
+        var start = -1;
+        var end = -1;
+
+        for (var i = 0; i < length; ++i) {
+            final var c = input.charAt(i);
+
+            if (Character.isDigit(c)) {
+                if (-1 == start) {
+                    start = i;
+
+                    if (includeSuffix) {
+                        return input.substring(start);
+                    }
+                }
+
+                end = i + 1;
+            } else if (-1 != start) {
+                break;
+            }
+        }
+
+        return -1 == start ? null : input.substring(start, end);
+    }
+
     public static final void displayCountdownTitles(@NotNull final String color, @NotNull final String finalText, final int seconds) {
         Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueTickTask);
     }

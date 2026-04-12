@@ -219,6 +219,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, mining, "Littlefoot Display",
                 "Shows a list of Littlefoot entities nametags in your screen, allowing you to see whether any littlefoots remain in current shaft, or if there were none, along with their health.",
                 config.littlefootDisplay, newValue -> config.littlefootDisplay = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, mining, "Pickaxe Ability Display",
+                "Shows a timer of remaining time for your Pickaxe Ability on screen.",
+                config.pickaxeAbilityDisplay, newValue -> config.pickaxeAbilityDisplay = newValue);
     }
 
     private static final void addDungeons(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

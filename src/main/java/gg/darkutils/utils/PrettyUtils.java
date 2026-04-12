@@ -11,6 +11,8 @@ public final class PrettyUtils {
 
     private static final long HUNDRED_MS_AS_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
 
+    private static final long ONE_MINUTE_IN_NS = TimeUnit.MINUTES.toNanos(1L);
+
     private PrettyUtils() {
         super();
 
@@ -76,6 +78,11 @@ public final class PrettyUtils {
         }
 
         return builder.toString();
+    }
+
+    @NotNull
+    public static final String prettifyNanosToSeconds(final long nanos) {
+        return nanos < PrettyUtils.ONE_MINUTE_IN_NS ? TimeUnit.NANOSECONDS.toSeconds(nanos) + "s" : PrettyUtils.formatNanosAsSeconds(nanos);
     }
 
     @NotNull

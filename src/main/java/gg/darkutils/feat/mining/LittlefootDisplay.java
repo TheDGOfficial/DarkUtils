@@ -88,12 +88,13 @@ public final class LittlefootDisplay {
         }
 
         final var client = Minecraft.getInstance();
+        final var mineshaft = LocationUtils.isInMineshaft();
 
-        if (null == client.player || !LocationUtils.isInMineshaft()) {
+        if (null == client.player || !mineshaft) {
             return;
         }
 
-        final var Y_OFFSET = 60; // offset a bit so that it shows under will o wisp display if enabled
+        final var Y_OFFSET = mineshaft ? 80 : 100; // offset a bit so that it shows under will o wisp display if enabled
         final var Y_OFFSET_PER_LITTLEFOOT = 20; // offset each line a bit
 
         final var littlefoots = LittlefootDisplay.littlefoots;

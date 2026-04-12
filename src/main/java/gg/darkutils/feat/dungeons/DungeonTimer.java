@@ -441,7 +441,7 @@ public final class DungeonTimer {
             return;
         }
 
-        ScoreboardUtil.forEachScoreboardLine(line -> {
+        for (final var line : ScoreboardUtil.scoreboardLines()) {
             if (line.contains("The Catacombs (")) {
                 final var floor = DungeonTimer.parseFloorFromScoreboard(line);
 
@@ -449,11 +449,9 @@ public final class DungeonTimer {
                     DungeonTimer.dungeonFloor = floor;
                 }
 
-                return ScoreboardUtil.BREAK;
+                break;
             }
-
-            return ScoreboardUtil.CONTINUE;
-        });
+        }
     }
 
     private static final void updateLines() {

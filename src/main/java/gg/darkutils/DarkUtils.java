@@ -27,6 +27,7 @@ import gg.darkutils.feat.mining.MineshaftDisplay;
 import gg.darkutils.feat.mining.MineshaftFeatures;
 import gg.darkutils.feat.mining.WillOWispDisplay;
 import gg.darkutils.feat.mining.LittlefootDisplay;
+import gg.darkutils.feat.mining.PickaxeAbilityDisplay;
 import gg.darkutils.feat.performance.LogCleaner;
 import gg.darkutils.feat.performance.SoundLagFix;
 import gg.darkutils.feat.performance.ThreadPriorityTweaker;
@@ -696,6 +697,7 @@ public final class DarkUtils implements ClientModInitializer {
                 MineshaftDisplay::init,
                 WillOWispDisplay::init,
                 LittlefootDisplay::init,
+                PickaxeAbilityDisplay::init,
                 LogCleaner::init,
                 AutoCloseSecretChests::init,
                 DialogueSkipTimer::init,

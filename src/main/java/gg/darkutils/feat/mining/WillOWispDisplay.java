@@ -85,8 +85,9 @@ public final class WillOWispDisplay {
         }
 
         final var client = Minecraft.getInstance();
+        final var mineshaft = LocationUtils.isInMineshaft();
 
-        if (null == client.player || !LocationUtils.isInDwarvenMines() && !LocationUtils.isInMineshaft()) {
+        if (null == client.player || !LocationUtils.isInDwarvenMines() && !mineshaft) {
             return;
         }
 
@@ -97,7 +98,7 @@ public final class WillOWispDisplay {
 
         text.setText("Will-o'-wisp " + (hasTime ? time : "NOT ACTIVE"));
 
-        final var Y_OFFSET = 40; // offset a bit so that it shows under corpses per shaft display if enabled
+        final var Y_OFFSET = mineshaft ? 60 : 80; // offset a bit so that it shows under pickaxe ability display if enabled
 
         RenderUtils.renderItem(
                 context,
