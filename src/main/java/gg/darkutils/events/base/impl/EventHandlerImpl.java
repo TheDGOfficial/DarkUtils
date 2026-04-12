@@ -37,12 +37,12 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
      * Creates a new {@link EventHandlerImpl}.
      */
     EventHandlerImpl(@NotNull final Class<T> eventClass) {
-        super();
-
         if (CancellableEvent.class.isAssignableFrom(eventClass) && NonCancellableEvent.class.isAssignableFrom(eventClass)) {
             // Sanity check
             throw new IllegalArgumentException("Event class " + eventClass.getName() + " implements both CancellableEvent and NonCancellableEvent");
         }
+
+        super();
     }
 
     private static final void handleListenerError(@NotNull final EventListener<? extends Event> listener, @NotNull final Event event, @NotNull final Throwable error) {
