@@ -7,9 +7,14 @@ import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -30,6 +35,8 @@ public final class LittlefootDisplay {
     @Nullable
     private static List<FormattedCharSequence> littlefoots;
 
+    private static boolean notified;
+
     private LittlefootDisplay() {
         super();
 
@@ -39,6 +46,11 @@ public final class LittlefootDisplay {
     public static final void init() {
         TickUtils.queueRepeatingTickTask(LittlefootDisplay::update, 1);
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "littlefoot_display"), (context, tickCounter) -> LittlefootDisplay.renderLittlefootDisplay(context));
+        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(LittlefootDisplay::onWorldChange);
+    }
+
+    private static final void onWorldChange(@NotNull final Minecraft client, @NotNull final ClientLevel world) {
+        LittlefootDisplay.notified = false;
     }
 
     private static final void update() {
@@ -120,6 +132,12 @@ public final class LittlefootDisplay {
             );
 
             return;
+        }
+
+        if (!notified) {
+            notified = true;
+
+            client.getToastManager().addToast(SystemToast.multiline(client, SystemToast.SystemToastId.PERIODIC_NOTIFICATION, Component.literal("Littlefoot").setStyle(Style.EMPTY.withColor(ChatFormatting.DARK_PURPLE)), Component.literal("Littlefoot(s) found!").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD))));
         }
 
         if (littlefoots.size() != lines.length) {
