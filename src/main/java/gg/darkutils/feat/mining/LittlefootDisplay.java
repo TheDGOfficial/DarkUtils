@@ -94,6 +94,14 @@ public final class LittlefootDisplay {
         return DarkUtilsConfig.INSTANCE.littlefootDisplay;
     }
 
+    private static final void sendLittlefootToast(@NotNull final Minecraft client) {
+        if (!notified) {
+            notified = true;
+
+            client.getToastManager().addToast(SystemToast.multiline(client, SystemToast.SystemToastId.PERIODIC_NOTIFICATION, Component.literal("Littlefoot").setStyle(Style.EMPTY.withColor(ChatFormatting.DARK_PURPLE)), Component.literal("Littlefoot(s) found!").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD))));
+        }
+    }
+
     private static final void renderLittlefootDisplay(@NotNull final GuiGraphics context) {
         if (!LittlefootDisplay.isEnabled()) {
             return;
@@ -134,11 +142,7 @@ public final class LittlefootDisplay {
             return;
         }
 
-        if (!notified) {
-            notified = true;
-
-            client.getToastManager().addToast(SystemToast.multiline(client, SystemToast.SystemToastId.PERIODIC_NOTIFICATION, Component.literal("Littlefoot").setStyle(Style.EMPTY.withColor(ChatFormatting.DARK_PURPLE)), Component.literal("Littlefoot(s) found!").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD))));
-        }
+        LittlefootDisplay.sendLittlefootToast(client);
 
         if (littlefoots.size() != lines.length) {
             throw new IllegalStateException("Data inconsistency");

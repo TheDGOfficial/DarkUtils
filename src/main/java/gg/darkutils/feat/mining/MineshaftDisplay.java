@@ -99,6 +99,13 @@ public final class MineshaftDisplay {
         return DarkUtilsConfig.INSTANCE.mineshaftDisplay;
     }
 
+    private static final void displayWarpCloseTimer(final long shaftEntered, final long shaftUptime, final long warpRemaining) {
+        if (0L != shaftEntered && shaftUptime < MineshaftDisplay.ONE_MINUTE_IN_NS && warpRemaining <= MineshaftDisplay.TEN_SECOND_IN_NS && !MineshaftDisplay.shownWarpClose) {
+            MineshaftDisplay.shownWarpClose = true;
+            Helpers.displayCountdownTitles("§6", "Warping closed", 10);
+        }
+    }
+
     private static final @NotNull String buildDisplayText() {
         final var now = System.nanoTime();
 
@@ -113,7 +120,6 @@ public final class MineshaftDisplay {
         final var hasUnenteredMineshaft = 0L != MineshaftFeatures.mineshaftDespawnsAt;
 
         final var remainingTimeToDespawnNs = MineshaftFeatures.mineshaftDespawnsAt - now;
-        final var remainingTimeToDespawn = remainingTimeToDespawnNs >= MineshaftDisplay.ONE_SECOND_IN_NS ? PrettyUtils.prettifyNanosToSeconds(remainingTimeToDespawnNs) : "Despawned";
 
         final var warpRemaining = MineshaftDisplay.ONE_MINUTE_IN_NS - shaftUptime;
 
@@ -124,12 +130,9 @@ public final class MineshaftDisplay {
                 (omitLast ? "" : "Mining for " + timeSinceLastShaftSpawn + (ActivityState.isActivelyMining() ? "" : " [PAUSED]")) +
                 (omitAvgSpawn ? "" : (omitLast ? "Avg " : ", Avg ") + averageSpawnTime + " to spawn") +
                 ("0s".equals(averageTimeInShaft) ? "" : (omitAvgSpawn && omitLast ? "Avg " : ", Avg ") + averageTimeInShaft + " to loot") +
-                (0L == shaftEntered ? hasUnenteredMineshaft ? " - Time till despawn: " + remainingTimeToDespawn : "" : shaftUptime >= MineshaftDisplay.ONE_MINUTE_IN_NS ? " - In shaft for: " + PrettyUtils.prettifyNanosToSeconds(shaftUptime) : " - Time till warp closure: " + PrettyUtils.prettifyNanosToSeconds(warpRemaining));
+                (0L == shaftEntered ? hasUnenteredMineshaft ? " - Time till despawn: " + (remainingTimeToDespawnNs >= MineshaftDisplay.ONE_SECOND_IN_NS ? PrettyUtils.prettifyNanosToSeconds(remainingTimeToDespawnNs) : "Despawned") : "" : shaftUptime >= MineshaftDisplay.ONE_MINUTE_IN_NS ? " - In shaft for: " + PrettyUtils.prettifyNanosToSeconds(shaftUptime) : " - Time till warp closure: " + PrettyUtils.prettifyNanosToSeconds(warpRemaining));
 
-        if (0L != shaftEntered && shaftUptime < MineshaftDisplay.ONE_MINUTE_IN_NS && warpRemaining <= MineshaftDisplay.TEN_SECOND_IN_NS && !MineshaftDisplay.shownWarpClose) {
-            MineshaftDisplay.shownWarpClose = true;
-            Helpers.displayCountdownTitles("§6", "Warping closed", 10);
-        }
+        MineshaftDisplay.displayWarpCloseTimer(shaftEntered, shaftUptime, warpRemaining);
 
         return "Mineshaft: ".equals(t.trim()) ? "No shafts yet" : t;
     }
