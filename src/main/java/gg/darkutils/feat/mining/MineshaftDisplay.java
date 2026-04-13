@@ -119,8 +119,9 @@ public final class MineshaftDisplay {
         }
 
         final var client = Minecraft.getInstance();
+        final var mineshaft = LocationUtils.isInMineshaft();
 
-        if (null == client.player || !LocationUtils.isInDwarvenMines() && !LocationUtils.isInMineshaft()) {
+        if (null == client.player || !LocationUtils.isInDwarvenMines() && !mineshaft) {
             return;
         }
 
@@ -143,7 +144,9 @@ public final class MineshaftDisplay {
                 ChatFormatting.AQUA
         );
 
-        MineshaftDisplay.renderPity(context);
+        if (!mineshaft) {
+            MineshaftDisplay.renderPity(context);
+        }
     }
 
     private static final void renderPity(@NotNull final GuiGraphics context) {
