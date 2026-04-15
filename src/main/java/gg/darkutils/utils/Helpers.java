@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.function.ObjIntConsumer;
 import java.util.function.Predicate;
 
@@ -273,25 +274,40 @@ public final class Helpers {
     }
 
     public static final void displayCountdownTitles(@NotNull final String color, @NotNull final String finalText, final int seconds) {
-        Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueTickTask);
+        Helpers.displayCountdownTitles(color, finalText, seconds, () -> true);
+    }
+
+    public static final void displayCountdownTitles(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final BooleanSupplier precondition) {
+        Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueTickTask, precondition);
     }
 
     public static final void displayCountdownTitlesInServerTicks(@NotNull final String color, @NotNull final String finalText, final int seconds) {
-        Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueServerTickTask);
+        Helpers.displayCountdownTitlesInServerTicks(color, finalText, seconds, () -> true);
     }
 
-    private static final void displayCountdownTitlesInternal(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final ObjIntConsumer<TickUtils.TaskAction> queueMethod) {
+    public static final void displayCountdownTitlesInServerTicks(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final BooleanSupplier precondition) {
+        Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueServerTickTask, precondition);
+    }
+
+    private static final void displayCountdownTitlesInternal(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final ObjIntConsumer<TickUtils.TaskAction> queueMethod, @NotNull final BooleanSupplier precondition) {
         // Show the first number immediately
         Helpers.notify(SoundEvents.EXPERIENCE_ORB_PICKUP, color + seconds);
 
         // Queue the rest
         for (var i = seconds - 1; 0 < i; --i) {
+            if (!precondition.getAsBoolean()) {
+                return;
+            }
             final var value = i;
             final var delay = 20 * (seconds - i);
             queueMethod.accept(
                     () -> Helpers.notify(SoundEvents.EXPERIENCE_ORB_PICKUP, color + value),
                     delay
             );
+        }
+
+        if (!precondition.getAsBoolean()) {
+            return;
         }
 
         // Queue the final text

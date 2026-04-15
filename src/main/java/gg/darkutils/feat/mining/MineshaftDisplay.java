@@ -102,7 +102,7 @@ public final class MineshaftDisplay {
     private static final void displayWarpCloseTimer(final long shaftEntered, final long shaftUptime, final long warpRemaining) {
         if (0L != shaftEntered && shaftUptime < MineshaftDisplay.ONE_MINUTE_IN_NS && warpRemaining <= MineshaftDisplay.TEN_SECOND_IN_NS && !MineshaftDisplay.shownWarpClose) {
             MineshaftDisplay.shownWarpClose = true;
-            Helpers.displayCountdownTitles("§6", "Warping closed", 10);
+            Helpers.displayCountdownTitles("§6", "Warping closed", 10, LocationUtils::isInMineshaft);
         }
     }
 

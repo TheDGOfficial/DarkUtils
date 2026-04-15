@@ -107,10 +107,6 @@ public final class DarkUtils implements ClientModInitializer {
     public static final boolean INSIDE_JUNIT = "true".equals(System.getProperty("inside.junit")); // roughly same as Boolean#getBoolean but this is case-sensitive
 
     /**
-     * This logger is used to write text to the console and the log file.
-     * It is considered best practice to use your mod id as the logger's name.
-     * That way, it's clear which mod wrote info, warnings, and errors.
-     * <p>
      * This class has methods to use for logging so this is field is private.
      * The custom methods log errors in-game to the chat as well with a
      * user-friendly short string representation of the error.
@@ -778,9 +774,6 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.checkUpdates();
     }
 
-    /**
-     * This entrypoint is suitable for setting up client-specific logic, such as rendering.
-     */
     @Override
     public final void onInitializeClient() {
         try {

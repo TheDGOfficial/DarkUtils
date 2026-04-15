@@ -12,7 +12,7 @@
     "sources": "https://github.com/TheDGOfficial/DarkUtils",
     "issues": "https://github.com/TheDGOfficial/DarkUtils/issues"
   },
-  "license": "GPL-3.0",
+  "license": "GPL-3.0-or-later",
   "icon": "assets/darkutils/icon.png",
   "environment": "client",
   "entrypoints": {
