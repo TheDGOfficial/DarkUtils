@@ -107,11 +107,16 @@ public final class MineshaftFeatures {
     }
 
     private static final boolean isInGlaciteTunnels() {
+        if (!LocationUtils.isInDwarvenMines()) {
+            return false;
+        }
+
         for (final var line : ScoreboardUtil.scoreboardLines()) {
             if (line.contains("Glacite Tunnels")) {
                 return true;
             }
         }
+
         return false;
     }
 

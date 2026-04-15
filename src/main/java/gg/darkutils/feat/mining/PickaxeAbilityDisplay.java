@@ -39,6 +39,10 @@ public final class PickaxeAbilityDisplay {
     }
 
     private static final void update() {
+        if (!LocationUtils.isInDwarvenMines() && !LocationUtils.isInMineshaft()) {
+            return;
+        }
+
         PickaxeAbilityDisplay.expiresAt = 0L;
 
         for (final var it = TabListUtil.tabListLinesIterator(); it.hasNext(); ) {
@@ -78,7 +82,7 @@ public final class PickaxeAbilityDisplay {
         final var client = Minecraft.getInstance();
         final var mineshaft = LocationUtils.isInMineshaft();
 
-        if (null == client.player || !LocationUtils.isInDwarvenMines() && !mineshaft) {
+        if (null == client.player || (!LocationUtils.isInDwarvenMines() && !mineshaft)) {
             return;
         }
 

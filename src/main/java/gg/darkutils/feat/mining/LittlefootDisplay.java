@@ -54,7 +54,7 @@ public final class LittlefootDisplay {
     }
 
     private static final void update() {
-        if (!LittlefootDisplay.isEnabled()) {
+        if (!LittlefootDisplay.isEnabled() || !LocationUtils.isInMineshaft()) {
             return;
         }
 
@@ -64,29 +64,27 @@ public final class LittlefootDisplay {
         final var player = mc.player;
 
         if (null != world && null != player) {
-            if (LocationUtils.isInMineshaft()) {
-                final var littlefoots = new ArrayList<FormattedCharSequence>();
+            final var littlefoots = new ArrayList<FormattedCharSequence>();
 
-                for (final var entity : world.entitiesForRendering()) {
-                    if (entity instanceof final ArmorStand stand) {
-                        final var name = stand.getCustomName();
-                        if (null != name) {
-                            final var clean = ChatUtils.removeControlCodes(name.getString());
-                            if (clean.contains("Littlefoot")) {
-                                littlefoots.add(name.getVisualOrderText());
-                            }
+            for (final var entity : world.entitiesForRendering()) {
+                if (entity instanceof final ArmorStand stand) {
+                    final var name = stand.getCustomName();
+                    if (null != name) {
+                        final var clean = ChatUtils.removeControlCodes(name.getString());
+                        if (clean.contains("Littlefoot")) {
+                            littlefoots.add(name.getVisualOrderText());
                         }
                     }
                 }
-
-                final var newArray = new RenderUtils.RenderingText[littlefoots.size()];
-                for (int i = 0, len = newArray.length; i < len; ++i) {
-                    newArray[i] = RenderUtils.createRenderingText();
-                }
-
-                LittlefootDisplay.LINES = newArray;
-                LittlefootDisplay.littlefoots = littlefoots;
             }
+
+            final var newArray = new RenderUtils.RenderingText[littlefoots.size()];
+            for (int i = 0, len = newArray.length; i < len; ++i) {
+                newArray[i] = RenderUtils.createRenderingText();
+            }
+
+            LittlefootDisplay.LINES = newArray;
+            LittlefootDisplay.littlefoots = littlefoots;
         }
     }
 

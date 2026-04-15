@@ -59,6 +59,10 @@ public final class MineshaftDisplay {
     }
     
     private static final void updateTabData() {
+        if (!LocationUtils.isInDwarvenMines()) {
+            return;
+        }
+
         MineshaftDisplay.mineShaftPity = -1;
         MineshaftDisplay.mineShaftPityRequired = -1;
 

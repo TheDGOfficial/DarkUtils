@@ -37,11 +37,13 @@ public final class WillOWispDisplay {
     }
 
     private static final void update() {
-        WillOWispDisplay.timeLeft = null;
+        final var mineshaft = LocationUtils.isInMineshaft();
 
-        if (!WillOWispDisplay.isEnabled()) {
+        if (!WillOWispDisplay.isEnabled() || (!mineshaft && !LocationUtils.isInDwarvenMines())) {
             return;
         }
+
+        WillOWispDisplay.timeLeft = null;
 
         final var mc = Minecraft.getInstance();
 
@@ -49,14 +51,14 @@ public final class WillOWispDisplay {
         final var player = mc.player;
 
         if (null != world && null != player) {
-            if (LocationUtils.isInMineshaft()) {
+            if (mineshaft) {
                 // range is infinite when in a shaft
                 for (final var entity : world.entitiesForRendering()) {
                     if (entity instanceof final ArmorStand stand) {
                         WillOWispDisplay.processPossibleWillOWispTag(stand);
                     }
                 }
-            } else if (LocationUtils.isInDwarvenMines()) {
+            } else {
                 // 30 block range
                 for (final var stand : world.getEntities(EntityType.ARMOR_STAND, player.getBoundingBox().inflate(30.0D), ignored -> true)) {
                     WillOWispDisplay.processPossibleWillOWispTag(stand);
@@ -87,7 +89,7 @@ public final class WillOWispDisplay {
         final var client = Minecraft.getInstance();
         final var mineshaft = LocationUtils.isInMineshaft();
 
-        if (null == client.player || !LocationUtils.isInDwarvenMines() && !mineshaft) {
+        if (null == client.player || (!LocationUtils.isInDwarvenMines() && !mineshaft)) {
             return;
         }
 
