@@ -114,6 +114,7 @@ public final class ThreadPriorityTweaker {
                 ThreadPriorityTweaker.startsWith("spark", veryLow),
                 ThreadPriorityTweaker.startsWith("Scheduler", veryLow),
                 ThreadPriorityTweaker.startsWith("Log4j2", lowest),
+                ThreadPriorityTweaker.exactMatch("AsyncLog Thread", lowest),
                 ThreadPriorityTweaker.exactMatch("Timer hack thread", idle),
                 ThreadPriorityTweaker.exactMatch("Snooper timer", idle),
                 ThreadPriorityTweaker.startsWith("DarkUtils", idle)
