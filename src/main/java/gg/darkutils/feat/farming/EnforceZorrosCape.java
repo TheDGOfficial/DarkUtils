@@ -6,6 +6,7 @@ import gg.darkutils.data.PersistentData;
 import gg.darkutils.events.SlotClickEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.TickUtils;
+import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.chat.ChatUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
@@ -81,7 +82,7 @@ public final class EnforceZorrosCape {
         final var handledScreen = event.handledScreen();
         final ItemStack stack;
 
-        if (!DarkUtilsConfig.INSTANCE.enforceZorrosCape || MenuType.GENERIC_9x6 != handledScreen.getMenu().menuType || (stack = event.slot().getItem()).isEmpty() || !"Your Contests".equals(ChatUtils.removeControlCodes(handledScreen.getTitle().getString()))) {
+        if (!DarkUtilsConfig.INSTANCE.enforceZorrosCape || MenuType.GENERIC_9x6 != handledScreen.getMenu().menuType || (stack = event.slot().getItem()).isEmpty() || !"Your Contests".equals(ChatUtils.removeControlCodes(handledScreen.getTitle().getString())) || LocationUtils.isInGalatea()) { // Agatha Contests also have Your Contests title
             return;
         }
 
