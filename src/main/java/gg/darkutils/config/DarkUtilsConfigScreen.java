@@ -335,9 +335,6 @@ public final class DarkUtilsConfigScreen {
 
     private static final void addPerformance(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var performance = builder.getOrCreateCategory(Component.nullToEmpty("Performance"));
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable Yield",
-                "Disables thread yielding for performance. Vanilla Minecraft yields through Render thread after finishing rendering a frame before starting to render the next frame, which reduces the potential maximum FPS. Disabling the yielding improves FPS.",
-                config.disableYield, newValue -> config.disableYield = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Always Prioritize Render Thread",
                 "Forces Render thread priority at maximum. Vanilla already does this for processors with more than or equal to 4 threads, but always prioritizing is better.",
