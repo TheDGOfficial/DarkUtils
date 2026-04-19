@@ -20,7 +20,7 @@ final class EffectsInInventoryMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "renderEffects", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractEffects", at = @At("HEAD"), cancellable = true)
     private final void darkutils$cancelDrawIfEnabled(@NotNull final GuiGraphicsExtractor context, @NotNull final Collection<MobEffectInstance> effects, final int x, final int height, final int mouseX, final int mouseY, final int width, @NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.hideEffectsInInventory) {
             ci.cancel();
