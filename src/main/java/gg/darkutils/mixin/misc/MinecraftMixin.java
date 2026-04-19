@@ -53,10 +53,6 @@ final class MinecraftMixin {
     @Inject(method = "tick", at = @At("HEAD"))
     private final void darkutils$onStartTick(@NotNull final CallbackInfo ci) {
         Helpers.resetHeldItemCache();
-    }
-
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;pick(F)V", shift = At.Shift.AFTER))
-    private final void darkutils$afterCrosshairTargetUpdate(@NotNull final CallbackInfo ci) {
         Helpers.resetTargetCache();
     }
 
