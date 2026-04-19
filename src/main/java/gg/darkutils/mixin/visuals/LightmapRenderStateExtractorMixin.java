@@ -92,11 +92,6 @@ final class LightmapRenderStateExtractorMixin {
         }
     }
 
-    /*@Redirect(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/dimension/DimensionType;ambientLight()F"))
-    private final float darkutils$getAmbientLight(@NotNull final DimensionType dimensionType) {
-        return DarkUtilsConfig.INSTANCE.fullbright ? 1.0F : dimensionType.ambientLight();
-    }*/
-
     @Redirect(method = "extract", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F", ordinal = 0))
     private final float darkutils$fullbrightIfEnabled(final float first, final float second) {
         return Math.max(first, DarkUtilsConfig.INSTANCE.fullbright ? 1_600.0F : second);

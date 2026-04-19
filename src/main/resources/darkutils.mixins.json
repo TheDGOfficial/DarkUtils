@@ -44,7 +44,8 @@
     "visuals.LightmapRenderStateExtractorMixin",
     "visuals.LightningBoltRendererMixin",
     "visuals.PlayerTabOverlayMixin",
-    "visuals.EffectsInInventoryMixin"
+    "visuals.EffectsInInventoryMixin",
+    "visuals.LightmapMixin"
   ],
   "injectors": {
     "defaultRequire": 1
