@@ -90,10 +90,6 @@ dependencies {
         transitive = false
     }
 
-    implementation("net.fabricmc:fabric-loader:0.19.1") {
-        transitive = false
-    }
-
     implementation("net.fabricmc:fabric-loader:0.19.2") {
         transitive = false
     }
