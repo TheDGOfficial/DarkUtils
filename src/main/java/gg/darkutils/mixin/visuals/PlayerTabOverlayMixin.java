@@ -17,7 +17,7 @@ final class PlayerTabOverlayMixin {
     }
 
     @Redirect(
-            method = "render",
+            method = "extractRenderState",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/gui/GuiGraphics;fill(IIIII)V"
