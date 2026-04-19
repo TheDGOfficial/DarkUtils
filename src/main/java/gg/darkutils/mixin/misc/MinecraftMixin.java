@@ -32,16 +32,6 @@ final class MinecraftMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Redirect(at = @At(value = "INVOKE", target = "Ljava/lang/Thread;yield()V", remap = false), method = "runTick")
-    private final void darkutils$skipYieldIfEnabled() {
-        if (!DarkUtilsConfig.INSTANCE.disableYield) {
-            Thread.yield();
-        }
-        // skip a yield call that reduces fps
-        // the call was put to make sure rendering does not stall other threads such as chunk loading, but that's OS scheduler's job to handle,
-        // the code should utilize maximum resources so this yield call is unnecessary.
-    }
-
     @Inject(at = @At("HEAD"), method = "run")
     private final void darkutils$adjustPriorityIfEnabled(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.alwaysPrioritizeRenderThread) {
