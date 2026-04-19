@@ -36,7 +36,6 @@ buildscript {
 
 plugins {
     id 'net.fabricmc.fabric-loom' version "1.16.1"
-    id 'maven-publish'
 }
 
 version = project.mod_version
@@ -47,11 +46,6 @@ base {
 }
 
 repositories {
-    // Add repositories to retrieve artifacts from in here.
-    // You should only use this when depending on other mods because
-    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-    // for more information about repositories.
     maven {
         url = 'https://maven.shedaniel.me/'
         content {
@@ -92,7 +86,6 @@ loom {
 }
 
 dependencies {
-    // To change the versions see the gradle.properties file
     minecraft("com.mojang:minecraft:26.1.2") {
         transitive = false
     }
@@ -101,9 +94,12 @@ dependencies {
         transitive = false
     }
 
-    final def fabricApiVersion = "0.145.4+26.1.2"
+    modImplementation("net.fabricmc:fabric-loader:0.19.2") {
+        transitive = false
+    }
 
-    // Fabric API. This is technically optional, but you probably want it anyway.
+    final def fabricApiVersion = "0.146.1+26.1.2"
+
     // Pulls in all Fabric API modules, may uncomment during development. Explicitly declare below and comment it again after.
     //implementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
 
@@ -267,24 +263,6 @@ jar {
 
     from('LICENSE') {
         rename { "${it}_${archiveName}" }
-    }
-}
-
-// configure the maven publication
-publishing {
-    publications {
-        create('mavenJava', MavenPublication) {
-            artifactId = project.archives_base_name
-            from components.java
-        }
-    }
-
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-    repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
     }
 }
 

@@ -4,15 +4,13 @@
 # against bad commits.
 
 name: build
-
-permissions:
-  contents: read
-  pull-requests: write
-
 on: [ pull_request, push ]
 
 jobs:
   build:
+    permissions:
+      contents: read
+      pull-requests: write
     runs-on: ubuntu-24.04
     steps:
       - name: checkout repository
@@ -29,13 +27,10 @@ jobs:
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
           add-job-summary-as-pr-comment: 'on-failure'
-          allow-snapshot-wrappers: true
+          allow-snapshot-wrappers: false
           build-scan-publish: true
           build-scan-terms-of-use-url: 'https://gradle.com/terms-of-service'
           build-scan-terms-of-use-agree: 'yes'
-
-      - name: make gradle wrapper executable
-        run: chmod +x ./gradlew
 
       - name: build
         run: ./gradlew build --scan

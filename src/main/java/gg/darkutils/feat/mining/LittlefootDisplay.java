@@ -7,9 +7,14 @@ import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -30,6 +35,8 @@ public final class LittlefootDisplay {
     @Nullable
     private static List<FormattedCharSequence> littlefoots;
 
+    private static boolean notified;
+
     private LittlefootDisplay() {
         super();
 
@@ -39,10 +46,15 @@ public final class LittlefootDisplay {
     public static final void init() {
         TickUtils.queueRepeatingTickTask(LittlefootDisplay::update, 1);
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "littlefoot_display"), (context, tickCounter) -> LittlefootDisplay.renderLittlefootDisplay(context));
+        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(LittlefootDisplay::onWorldChange);
+    }
+
+    private static final void onWorldChange(@NotNull final Minecraft client, @NotNull final ClientLevel world) {
+        LittlefootDisplay.notified = false;
     }
 
     private static final void update() {
-        if (!LittlefootDisplay.isEnabled()) {
+        if (!LittlefootDisplay.isEnabled() || !LocationUtils.isInMineshaft()) {
             return;
         }
 
@@ -52,34 +64,40 @@ public final class LittlefootDisplay {
         final var player = mc.player;
 
         if (null != world && null != player) {
-            if (LocationUtils.isInMineshaft()) {
-                final var littlefoots = new ArrayList<FormattedCharSequence>();
+            final var littlefoots = new ArrayList<FormattedCharSequence>();
 
-                for (final var entity : world.entitiesForRendering()) {
-                    if (entity instanceof final ArmorStand stand) {
-                        final var name = stand.getCustomName();
-                        if (null != name) {
-                            final var clean = ChatUtils.removeControlCodes(name.getString());
-                            if (clean.contains("Littlefoot")) {
-                                littlefoots.add(name.getVisualOrderText());
-                            }
+            for (final var entity : world.entitiesForRendering()) {
+                if (entity instanceof final ArmorStand stand) {
+                    final var name = stand.getCustomName();
+                    if (null != name) {
+                        final var clean = ChatUtils.removeControlCodes(name.getString());
+                        if (clean.contains("Littlefoot")) {
+                            littlefoots.add(name.getVisualOrderText());
                         }
                     }
                 }
-
-                final var newArray = new RenderUtils.RenderingText[littlefoots.size()];
-                for (int i = 0, len = newArray.length; i < len; ++i) {
-                    newArray[i] = RenderUtils.createRenderingText();
-                }
-
-                LittlefootDisplay.LINES = newArray;
-                LittlefootDisplay.littlefoots = littlefoots;
             }
+
+            final var newArray = new RenderUtils.RenderingText[littlefoots.size()];
+            for (int i = 0, len = newArray.length; i < len; ++i) {
+                newArray[i] = RenderUtils.createRenderingText();
+            }
+
+            LittlefootDisplay.LINES = newArray;
+            LittlefootDisplay.littlefoots = littlefoots;
         }
     }
 
     private static final boolean isEnabled() {
         return DarkUtilsConfig.INSTANCE.littlefootDisplay;
+    }
+
+    private static final void sendLittlefootToast(@NotNull final Minecraft client) {
+        if (!notified) {
+            notified = true;
+
+            client.getToastManager().addToast(SystemToast.multiline(client, SystemToast.SystemToastId.PERIODIC_NOTIFICATION, Component.literal("Littlefoot").setStyle(Style.EMPTY.withColor(ChatFormatting.DARK_PURPLE)), Component.literal("Littlefoot(s) found!").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD))));
+        }
     }
 
     private static final void renderLittlefootDisplay(@NotNull final GuiGraphicsExtractor context) {
@@ -121,6 +139,8 @@ public final class LittlefootDisplay {
 
             return;
         }
+
+        LittlefootDisplay.sendLittlefootToast(client);
 
         if (littlefoots.size() != lines.length) {
             throw new IllegalStateException("Data inconsistency");

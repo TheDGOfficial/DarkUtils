@@ -107,10 +107,6 @@ public final class DarkUtils implements ClientModInitializer {
     public static final boolean INSIDE_JUNIT = "true".equals(System.getProperty("inside.junit")); // roughly same as Boolean#getBoolean but this is case-sensitive
 
     /**
-     * This logger is used to write text to the console and the log file.
-     * It is considered best practice to use your mod id as the logger's name.
-     * That way, it's clear which mod wrote info, warnings, and errors.
-     * <p>
      * This class has methods to use for logging so this is field is private.
      * The custom methods log errors in-game to the chat as well with a
      * user-friendly short string representation of the error.
@@ -153,9 +149,20 @@ public final class DarkUtils implements ClientModInitializer {
      * Not a definitive solution to server-side rate limit, just a safety against spamming.
      */
     private static long lastManualUpdateCheckTimeNs;
+    /**
+     * Used for determining if we should send chat messages for errors or not.
+     * <p>
+     * During a shutdown hook, if an error occurs, the error logging methods will not try to notify
+     * the player about the error if this is true.
+     */
+    private static volatile boolean shuttingDown;
 
     public DarkUtils() {
         super();
+    }
+
+    public static final void setShuttingDown() {
+        DarkUtils.shuttingDown = true;
     }
 
     public static final boolean isWindowPlatformWayland() {
@@ -279,7 +286,9 @@ public final class DarkUtils implements ClientModInitializer {
                 DarkUtils.logError(formattedMessage, error);
             }
 
-            DarkUtils.logInGame(level, formattedMessage);
+            if (!DarkUtils.shuttingDown) {
+                DarkUtils.logInGame(level, formattedMessage);
+            }
         } catch (final Throwable e) {
             // Error when handling error; fallback to simple JDK printStackTrace as last resort
             e.printStackTrace();
@@ -778,9 +787,6 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.checkUpdates();
     }
 
-    /**
-     * This entrypoint is suitable for setting up client-specific logic, such as rendering.
-     */
     @Override
     public final void onInitializeClient() {
         try {

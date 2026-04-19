@@ -1,5 +1,6 @@
 package gg.darkutils.feat.mining;
 
+import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.data.PersistentData;
 import gg.darkutils.events.ReceiveGameMessageEvent;
@@ -8,6 +9,7 @@ import gg.darkutils.utils.ActivityState;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.ScoreboardUtil;
 import gg.darkutils.utils.TickUtils;
+import gg.darkutils.utils.PrettyUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -38,12 +40,12 @@ public final class MineshaftFeatures {
             "  UMBER CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.UMBER),
             "  TUNGSTEN CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.TUNGSTEN),
             "  VANGUARD CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.VANGUARD),
-            "WOW! You found a Glacite Mineshaft portal!", e -> MineshaftFeatures.mineshaftDespawnsAt = System.nanoTime() + MineshaftFeatures.MINESHAFT_DESPAWN_TIME
+            "WOW! You found a Glacite Mineshaft portal!", e -> MineshaftFeatures.onShaftSpawn()
     );
 
     public static long mineshaftEnter;
 
-    public static long activeMiningTimeSinceLastShaft;
+    public static long activeMiningTimeSinceLastShaftSpawn;
     public static long timeSinceShaftEnter;
 
     public static double averageSpawnTime;
@@ -64,20 +66,28 @@ public final class MineshaftFeatures {
         MineshaftFeatures.updateAverageSpentTime();
     }
 
+    private static final void onShaftSpawn() {
+        MineshaftFeatures.mineshaftDespawnsAt = System.nanoTime() + MineshaftFeatures.MINESHAFT_DESPAWN_TIME;
+
+        final var timeTook = MineshaftFeatures.activeMiningTimeSinceLastShaftSpawn;
+
+        if (0L != timeTook) {
+            MineshaftFeatures.appendSpawnTime(timeTook);
+            MineshaftFeatures.activeMiningTimeSinceLastShaftSpawn = 0L;
+
+            if (DarkUtilsConfig.INSTANCE.mineshaftDisplay) {
+                DarkUtils.user("Mineshaft took " + PrettyUtils.prettifyNanosToSeconds(timeTook) + " to spawn.", DarkUtils.UserMessageLevel.USER_INFO);
+            }
+        }
+    }
+
     private static final void detectMineshaft() {
         final var isInShaft = LocationUtils.isInMineshaft();
 
         if (isInShaft) {
             if (0L == MineshaftFeatures.mineshaftEnter) {
                 MineshaftFeatures.mineshaftEnter = System.nanoTime();
-
-                final var timeTook = MineshaftFeatures.activeMiningTimeSinceLastShaft;
-
-                if (0L != timeTook) {
-                    MineshaftFeatures.appendSpawnTime(timeTook);
-                    MineshaftFeatures.activeMiningTimeSinceLastShaft = 0L;
-                    MineshaftFeatures.timeSinceShaftEnter = 0L;
-                }
+                MineshaftFeatures.timeSinceShaftEnter = 0L;
             } else {
                 MineshaftFeatures.timeSinceShaftEnter += MineshaftFeatures.TICK_NANOS;
             }
@@ -91,17 +101,22 @@ public final class MineshaftFeatures {
             }
 
             if (ActivityState.isActivelyMining() && LocationUtils.isInDwarvenMines() && MineshaftFeatures.IN_GLACITE_TUNNELS.getAsBoolean()) {
-                MineshaftFeatures.activeMiningTimeSinceLastShaft += MineshaftFeatures.TICK_NANOS;
+                MineshaftFeatures.activeMiningTimeSinceLastShaftSpawn += MineshaftFeatures.TICK_NANOS;
             }
         }
     }
 
     private static final boolean isInGlaciteTunnels() {
+        if (!LocationUtils.isInDwarvenMines()) {
+            return false;
+        }
+
         for (final var line : ScoreboardUtil.scoreboardLines()) {
             if (line.contains("Glacite Tunnels")) {
                 return true;
             }
         }
+
         return false;
     }
 
