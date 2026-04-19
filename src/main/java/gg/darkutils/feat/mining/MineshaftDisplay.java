@@ -47,7 +47,7 @@ public final class MineshaftDisplay {
     }
 
     public static final void init() {
-        ClientWorldEvents.AFTER_CLIENT_LEVEL_CHANGE.register(MineshaftDisplay::onWorldChange);
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(MineshaftDisplay::onWorldChange);
 
         TickUtils.queueRepeatingTickTask(MineshaftDisplay::updateTabData, 60); // tab updates every 3s server-side anyways, no need to update more frequently
 
