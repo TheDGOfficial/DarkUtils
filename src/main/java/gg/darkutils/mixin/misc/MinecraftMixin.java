@@ -62,7 +62,7 @@ final class MinecraftMixin {
         return AutoClicker.isPressed(keyBinding, StickyFarmingKeys.isPressed(keyBinding, false));
     }
 
-    @WrapOperation(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;interactAt(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/EntityHitResult;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
+    @WrapOperation(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;interact(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/EntityHitResult;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
     private final @NotNull InteractionResult darkutils$onEntityInteract(@NotNull final MultiPlayerGameMode instance, @NotNull final Player player, @NotNull final Entity entity, @NotNull final EntityHitResult hitResult, @NotNull final InteractionHand hand, @NotNull final Operation<InteractionResult> original) {
         return new InteractEntityEvent(entity).triggerAndCancelled() ? InteractionResult.CONSUME : original.call(instance, player, entity, hitResult, hand);
     }
