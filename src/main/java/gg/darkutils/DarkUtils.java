@@ -149,9 +149,20 @@ public final class DarkUtils implements ClientModInitializer {
      * Not a definitive solution to server-side rate limit, just a safety against spamming.
      */
     private static long lastManualUpdateCheckTimeNs;
+    /**
+     * Used for determining if we should send chat messages for errors or not.
+     * <p>
+     * During a shutdown hook, if an error occurs, the error logging methods will not try to notify
+     * the player about the error if this is true.
+     */
+    private static volatile boolean shuttingDown;
 
     public DarkUtils() {
         super();
+    }
+
+    public static final void setShuttingDown() {
+        DarkUtils.shuttingDown = true;
     }
 
     public static final boolean isWindowPlatformWayland() {
@@ -275,7 +286,9 @@ public final class DarkUtils implements ClientModInitializer {
                 DarkUtils.logError(formattedMessage, error);
             }
 
-            DarkUtils.logInGame(level, formattedMessage);
+            if (!DarkUtils.shuttingDown) {
+                DarkUtils.logInGame(level, formattedMessage);
+            }
         } catch (final Throwable e) {
             // Error when handling error; fallback to simple JDK printStackTrace as last resort
             e.printStackTrace();

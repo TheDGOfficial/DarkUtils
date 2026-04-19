@@ -90,7 +90,6 @@ final class MinecraftMixin {
 
     @Inject(method = "destroy", at = @At("HEAD"))
     private final void darkutils$onQuitGame(@NotNull final CallbackInfo ci) {
-        // The game will wait as this a blocking task so it should be safe to use non-atomic save here
-        PersistentData.save();
+        PersistentData.saveAtomicIfDirtyThreadSafe(true);
     }
 }

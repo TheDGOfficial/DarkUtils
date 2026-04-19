@@ -18,6 +18,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.locks.ReentrantLock;
 
 public final class PersistentData {
     public static final @NotNull PersistentData INSTANCE;
@@ -32,7 +36,15 @@ public final class PersistentData {
     );
     private static final @NotNull Path TEMP_FILE =
             PersistentData.FILE.toPath().resolveSibling(PersistentData.FILE.getName() + ".tmp");
-    private static @Nullable String lastSavedJson;
+    private static volatile @Nullable String lastSavedJson;
+    private static final @NotNull ReentrantLock SAVE_LOCK = new ReentrantLock();
+    private static final @NotNull ScheduledExecutorService SAVE_EXECUTOR =
+            Executors.newSingleThreadScheduledExecutor(
+                    Thread.ofPlatform()
+                            .daemon(true)
+                            .name("DarkUtils PersistentData Autosave")
+                            .factory()
+            );
 
     static {
         PersistentData.cleanupTempFile();
@@ -44,12 +56,26 @@ public final class PersistentData {
                 Thread.ofPlatform()
                         .name("DarkUtils PersistentData Shutdown Saver")
                         .unstarted(() -> {
+                            DarkUtils.setShuttingDown();
                             try {
-                                PersistentData.saveAtomicIfDirty();
+                                PersistentData.saveAtomicIfDirtyThreadSafe(true);
+                                PersistentData.SAVE_EXECUTOR.shutdownNow();
                             } catch (final Throwable error) {
-                                throw JavaUtils.sneakyThrow(error);
+                                DarkUtils.error(PersistentData.class, "Shutdown save failed", error);
                             }
                         })
+        );
+
+        PersistentData.SAVE_EXECUTOR.scheduleWithFixedDelay(
+                () -> {
+                    if (PersistentData.SAVE_EXECUTOR.isShutdown()) {
+                        return;
+                    }
+                    PersistentData.saveAtomicIfDirtyThreadSafe(false);
+                },
+                30L,
+                30L,
+                TimeUnit.SECONDS
         );
     }
 
@@ -126,11 +152,40 @@ public final class PersistentData {
         }
     }
 
+    public static final void saveAtomicIfDirtyThreadSafe(final boolean block) {
+        if (block) {
+            PersistentData.lockForSaving();
+        } else if (!PersistentData.tryLockForSaving()) {
+            return;
+        }
+
+        try {
+            PersistentData.saveAtomicIfDirty();
+        } finally {
+            PersistentData.unlockForSaving();
+        }
+    }
+
+    private static final boolean tryLockForSaving() {
+        return PersistentData.SAVE_LOCK.tryLock();
+    }
+
+    private static final void lockForSaving() {
+        PersistentData.SAVE_LOCK.lock();
+    }
+
+    private static final void unlockForSaving() {
+        PersistentData.SAVE_LOCK.unlock();
+    }
+
+    private static final boolean isDirty(@NotNull final String json) {
+        return !Objects.equals(PersistentData.lastSavedJson, json);
+    }
+
     private static final void saveAtomicIfDirty() {
-        final var lastJson = PersistentData.lastSavedJson;
         final var json = PersistentData.GSON.toJson(PersistentData.INSTANCE);
 
-        if (!Objects.equals(lastJson, json)) {
+        if (PersistentData.isDirty(json)) {
             PersistentData.saveAtomic(json);
         }
     }
