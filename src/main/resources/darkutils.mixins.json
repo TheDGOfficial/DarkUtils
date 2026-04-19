@@ -16,6 +16,7 @@
     "misc.MinecraftMixin",
     "misc.PacketApplyBatcherEntryMixin",
     "misc.WindowMixin",
+    "misc.GlBackendMixin",
     "performance.MemoryReserveMixin",
     "performance.EntityMixin",
     "performance.ChatFormattingMixin",
