@@ -7,7 +7,7 @@ import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -46,7 +46,7 @@ public final class LittlefootDisplay {
     public static final void init() {
         TickUtils.queueRepeatingTickTask(LittlefootDisplay::update, 1);
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "littlefoot_display"), (context, tickCounter) -> LittlefootDisplay.renderLittlefootDisplay(context));
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(LittlefootDisplay::onWorldChange);
+        ClientWorldEvents.AFTER_CLIENT_LEVEL_CHANGE.register(LittlefootDisplay::onWorldChange);
     }
 
     private static final void onWorldChange(@NotNull final Minecraft client, @NotNull final ClientLevel world) {
