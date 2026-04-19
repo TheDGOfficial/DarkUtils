@@ -17,7 +17,7 @@ final class LightmapMixin {
     }
 
     @Redirect(method = "getBrightness", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/dimension/DimensionType;ambientLight()F"))
-    private final float darkutils$getAmbientLight(@NotNull final DimensionType dimensionType) {
+    private static final float darkutils$getAmbientLight(@NotNull final DimensionType dimensionType) {
         return DarkUtilsConfig.INSTANCE.fullbright ? 1.0F : dimensionType.ambientLight();
     }
 }
