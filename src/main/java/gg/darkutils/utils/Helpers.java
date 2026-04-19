@@ -295,24 +295,25 @@ public final class Helpers {
 
         // Queue the rest
         for (var i = seconds - 1; 0 < i; --i) {
-            if (!precondition.getAsBoolean()) {
-                return;
-            }
             final var value = i;
             final var delay = 20 * (seconds - i);
             queueMethod.accept(
-                    () -> Helpers.notify(SoundEvents.EXPERIENCE_ORB_PICKUP, color + value),
+                    () -> {
+                        if (precondition.getAsBoolean()) {
+                            Helpers.notify(SoundEvents.EXPERIENCE_ORB_PICKUP, color + value);
+                        }
+                    },
                     delay
             );
         }
 
-        if (!precondition.getAsBoolean()) {
-            return;
-        }
-
         // Queue the final text
         queueMethod.accept(
-                () -> Helpers.notify(SoundEvents.NOTE_BLOCK_PLING.value(), color + finalText),
+                () -> {
+                    if (precondition.getAsBoolean()) {
+                        Helpers.notify(SoundEvents.NOTE_BLOCK_PLING.value(), color + finalText);
+                    }
+                },
                 20 * seconds
         );
     }
