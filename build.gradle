@@ -94,7 +94,7 @@ dependencies {
         transitive = false
     }
 
-    modImplementation("net.fabricmc:fabric-loader:0.19.2") {
+    implementation("net.fabricmc:fabric-loader:0.19.2") {
         transitive = false
     }
 
