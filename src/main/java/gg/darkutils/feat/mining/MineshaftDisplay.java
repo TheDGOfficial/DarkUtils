@@ -10,7 +10,7 @@ import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.TabListUtil;
 import gg.darkutils.utils.Helpers;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -47,7 +47,7 @@ public final class MineshaftDisplay {
     }
 
     public static final void init() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(MineshaftDisplay::onWorldChange);
+        ClientWorldEvents.AFTER_CLIENT_LEVEL_CHANGE.register(MineshaftDisplay::onWorldChange);
 
         TickUtils.queueRepeatingTickTask(MineshaftDisplay::updateTabData, 60); // tab updates every 3s server-side anyways, no need to update more frequently
 
