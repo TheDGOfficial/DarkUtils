@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LightmapRenderStateExtractor.class)
 final class LightmapRenderStateExtractorMixin {
     @Shadow
-    private boolean updateLightTexture;
+    private boolean needsUpdate;
     @Unique
     @Nullable
     private BasicTriState darkutils$fullbrightAtLastUpdate;
@@ -83,10 +83,10 @@ final class LightmapRenderStateExtractorMixin {
         }
 
         if (forced) {
-            this.updateLightTexture = true;
+            this.needsUpdate = true;
         }
 
-        if (this.updateLightTexture) {
+        if (this.needsUpdate) {
             this.darkutils$fullbrightAtLastUpdate = BasicTriState.of(DarkUtilsConfig.INSTANCE.fullbright);
             this.darkutils$nightVisionAtLastUpdate = BasicTriState.of(DarkUtilsConfig.INSTANCE.nightVision);
         }
