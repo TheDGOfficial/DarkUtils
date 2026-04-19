@@ -46,7 +46,7 @@ public final class LittlefootDisplay {
     public static final void init() {
         TickUtils.queueRepeatingTickTask(LittlefootDisplay::update, 1);
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "littlefoot_display"), (context, tickCounter) -> LittlefootDisplay.renderLittlefootDisplay(context));
-        ClientWorldEvents.AFTER_CLIENT_LEVEL_CHANGE.register(LittlefootDisplay::onWorldChange);
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(LittlefootDisplay::onWorldChange);
     }
 
     private static final void onWorldChange(@NotNull final Minecraft client, @NotNull final ClientLevel world) {
