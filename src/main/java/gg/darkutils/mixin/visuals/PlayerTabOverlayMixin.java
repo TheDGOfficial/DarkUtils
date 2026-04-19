@@ -20,7 +20,7 @@ final class PlayerTabOverlayMixin {
             method = "extractRenderState",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/GuiGraphics;fill(IIIII)V"
+                    target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"
             )
     )
     private final void darkutils$transparentPlayerListIfEnabled(@NotNull final GuiGraphicsExtractor ctx, final int x1, final int y1, final int x2, final int y2, final int color) {
