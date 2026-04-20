@@ -1248,7 +1248,8 @@ abstract class CreateJrtModulesLibraryJarTask extends DefaultTask {
 
         final def modules = [
                 '/modules/java.base',
-                '/modules/java.net.http'
+                '/modules/java.net.http',
+                '/modules/java.desktop'
         ]
 
         try (final def jarOutputStream = new JarOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)))) {

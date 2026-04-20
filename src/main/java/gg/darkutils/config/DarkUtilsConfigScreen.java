@@ -413,6 +413,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Viewport Cache",
                 "Caches viewport GL calls if the viewport did not change, improving performance.",
                 config.viewportCache, newValue -> config.viewportCache = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Prefer Wayland",
+                "Prefers Wayland over XWayland when running a Wayland session in Linux systems when your GLFW version supports the native Wayland backend. This generally improves performance as it doesn't have to go through XWayland compatibility layer. Does nothing in Windows or macOS, or when running a X11 only session/old GLFW without native Wayland support.",
+                config.preferWayland, newValue -> config.preferWayland = newValue);
     }
 
     private static final void addBugfixes(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
@@ -440,6 +444,14 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Cursor Pos Wayland GL Error Fix",
                 "Fixes a bug where Minecraft tries to call glfwSetCursorPos in Wayland desktop environment, where setting the cursor position is not supported, by cancelling the call. This prevents the GL error while preserving behaviour, as setting the position fails with the GL error anyways.",
                 config.cursorPosWaylandGLErrorFix, newValue -> config.cursorPosWaylandGLErrorFix = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix CTRL and ALT on Wayland",
+                "Fixes a bug where CTRL and ALT is inserted as a character in chat when trying to for example select all text with CTRL + A. This not needed if running through XWayland, X11, or in Windows/macOS, or with a patched GLFW in Linux. Does nothing if Prefer wayland is not enabled or if you do not have this issue already.",
+                config.fixCtrlAndAltOnWayland, newValue -> config.fixCtrlAndAltOnWayland = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix Game Icon on Wayland",
+                "Fixes a bug where Minecraft does not properly set the game icon on modern desktop environments expecting a .desktop file and an icon at ~/.local/share/applications while running on Linux Wayland environment. Does nothing if Prefer Wayland is not enabled or when running through XWayland/X11.",
+                config.fixGameIconOnWayland, newValue -> config.fixGameIconOnWayland = newValue);
     }
 
     private static final void addDevelopment(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

@@ -63,6 +63,7 @@ import com.mojang.blaze3d.platform.Window;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.CommonColors;
+import org.lwjgl.glfw.GLFW;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -123,6 +124,18 @@ public final class DarkUtils implements ClientModInitializer {
     private static final @NotNull Supplier<String> WINDOW_PLATFORM = LazyConstants.lazyConstantOf(Window::getPlatform);
 
     /**
+     * Holds the lazy-initialized non-changing constant-foldable value of the boolean representing
+     * whether current window platform is Wayland or not.
+     */
+    private static final @NotNull Supplier<Boolean> IS_WINDOW_PLATFORM_WAYLAND = LazyConstants.lazyConstantOf(() -> "wayland".equals(DarkUtils.WINDOW_PLATFORM.get()));
+
+    /**
+     * Holds the lazy-initialized non-changing constant-foldable value of the boolean representing
+     * whether we should prefer to use Wayland or not.
+     */
+    private static final @NotNull Supplier<Boolean> SHOULD_PREFER_WAYLAND = LazyConstants.lazyConstantOf(() -> GLFW.glfwPlatformSupported(GLFW.GLFW_PLATFORM_WAYLAND) && "wayland".equals(System.getenv("XDG_SESSION_TYPE")));
+
+    /**
      * Used for rate-limiting the update checker command so that user can't spam the GH API.
      * <p>
      * Not a definitive solution to server-side rate limit, just a safety against spamming.
@@ -165,8 +178,12 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.shuttingDown = true;
     }
 
+    public static final boolean shouldPreferWayland() {
+        return DarkUtils.SHOULD_PREFER_WAYLAND.get();
+    }
+
     public static final boolean isWindowPlatformWayland() {
-        return "wayland".equals(DarkUtils.WINDOW_PLATFORM.get());
+        return DarkUtils.IS_WINDOW_PLATFORM_WAYLAND.get();
     }
 
     public static final void info(@NotNull final Class<?> source, @NotNull final String message) {
