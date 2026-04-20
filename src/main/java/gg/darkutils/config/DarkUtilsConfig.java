@@ -130,6 +130,7 @@ public final class DarkUtilsConfig {
     public boolean disableSignatureVerification;
     public boolean blockEntityUnloadLagFix;
     public boolean viewportCache;
+    public boolean preferWayland;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;
@@ -138,6 +139,8 @@ public final class DarkUtilsConfig {
     public boolean cursorFix;
     public boolean middleClickFix;
     public boolean cursorPosWaylandGLErrorFix;
+    public boolean fixCtrlAndAltOnWayland;
+    public boolean fixGameIconOnWayland;
 
     // === Development ===
     @NotNull

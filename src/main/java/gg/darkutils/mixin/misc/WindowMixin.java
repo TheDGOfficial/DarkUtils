@@ -3,8 +3,11 @@ package gg.darkutils.mixin.misc;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
+import gg.darkutils.feat.bugfixes.WaylandGameIconFix;
 import net.minecraft.client.Minecraft;
+import net.minecraft.server.packs.PackResources;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.platform.IconSet;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
@@ -15,6 +18,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.io.IOException;
 
 @Mixin(Window.class)
 final class WindowMixin {
@@ -31,6 +36,8 @@ final class WindowMixin {
     private int x;
     @Shadow
     private int y;
+    @Unique
+    private boolean desktopFileFailure;
 
     private WindowMixin() {
         super();
@@ -67,5 +74,35 @@ final class WindowMixin {
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwWindowHint(II)V", remap = false), remap = false)
     private final void darkutils$modifyOpenGLVersion(final int hint, final int value) {
         GLFW.glfwWindowHint(hint, GLFW.GLFW_CONTEXT_VERSION_MAJOR == hint ? OpenGLVersionOverride.getGLMajorVersion(value) : GLFW.GLFW_CONTEXT_VERSION_MINOR == hint ? OpenGLVersionOverride.getGLMinorVersion(value) : value);
+    }
+
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwDefaultWindowHints()V", shift = At.Shift.AFTER))
+    private final void darkutils$afterDefaultWindowHints$fixGameIconOnWaylandIfEnabled(@NotNull final CallbackInfo ci) {
+        if (DarkUtilsConfig.INSTANCE.preferWayland && DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.shouldPreferWayland() && DarkUtils.isWindowPlatformWayland()) {
+            try {
+                WaylandGameIconFix.generateDesktopFile();
+            } catch (final IOException ioe) {
+                this.desktopFileFailure = true;
+                DarkUtils.error("@fileName@", "Error generating desktop file to filesystem for use with wayland icon fix, fallbacking to vanilla logic", ioe);
+
+                return;
+            }
+
+            GLFW.glfwWindowHintString(GLFW.GLFW_WAYLAND_APP_ID, WaylandGameIconFix.WAYLAND_APP_ID);
+        }
+    }
+
+    @Inject(method = "setIcon", at = @At("HEAD"), cancellable = true)
+    private final void darkutils$onSetGameIcon$fixGameIconOnWaylandIfEnabled(@NotNull final PackResources packResources, @NotNull final IconSet iconSet, @NotNull final CallbackInfo ci) {
+        if (DarkUtilsConfig.INSTANCE.preferWayland && DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.shouldPreferWayland() && DarkUtils.isWindowPlatformWayland() && !this.desktopFileFailure) {
+            try {
+                WaylandGameIconFix.setIcon(iconSet.getStandardIcons(packResources));
+            } catch (final IOException ioe) {
+                DarkUtils.error("@fileName@", "Error getting standard icons from pack resources for use with wayland icon fix, fallbacking to vanilla logic", ioe);
+                return;
+            }
+
+            ci.cancel();
+        }
     }
 }
