@@ -2,7 +2,6 @@ package gg.darkutils.mixin.misc;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import gg.darkutils.feat.bugfixes.WaylandGameIconFix;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.PackResources;
