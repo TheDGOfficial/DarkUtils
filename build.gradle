@@ -24,7 +24,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.javassist:javassist:3.30.2-GA'
+        classpath 'org.javassist:javassist:3.31.0-GA'
 
         classpath 'org.ow2.asm:asm:9.9.1'
         classpath 'org.ow2.asm:asm-tree:9.9.1'
