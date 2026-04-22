@@ -37,7 +37,7 @@ final class WindowMixin {
     @Shadow
     private int y;
     @Unique
-    private boolean desktopFileFailure;
+    private boolean darkutils$desktopFileFailure;
 
     private WindowMixin() {
         super();
@@ -82,7 +82,7 @@ final class WindowMixin {
             try {
                 WaylandGameIconFix.generateDesktopFile();
             } catch (final IOException ioe) {
-                this.desktopFileFailure = true;
+                this.darkutils$desktopFileFailure = true;
                 DarkUtils.error("@fileName@", "Error generating desktop file to filesystem for use with wayland icon fix, fallbacking to vanilla logic", ioe);
 
                 return;
@@ -94,7 +94,7 @@ final class WindowMixin {
 
     @Inject(method = "setIcon", at = @At("HEAD"), cancellable = true)
     private final void darkutils$onSetGameIcon$fixGameIconOnWaylandIfEnabled(@NotNull final PackResources packResources, @NotNull final IconSet iconSet, @NotNull final CallbackInfo ci) {
-        if (DarkUtilsConfig.INSTANCE.preferWayland && DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.shouldPreferWayland() && DarkUtils.isWindowPlatformWayland() && !this.desktopFileFailure) {
+        if (DarkUtilsConfig.INSTANCE.preferWayland && DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.shouldPreferWayland() && DarkUtils.isWindowPlatformWayland() && !this.darkutils$desktopFileFailure) {
             try {
                 WaylandGameIconFix.setIcon(iconSet.getStandardIcons(packResources));
             } catch (final IOException ioe) {

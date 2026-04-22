@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "net.minecraft.network.PacketProcessor$ListenerAndPacket")
 final class PacketApplyBatcherEntryMixin<T extends PacketListener> {
     @Unique
-    private static int lastId;
+    private static int darkutils$lastId;
     @Shadow
     @Final
     @NotNull
@@ -53,8 +53,8 @@ final class PacketApplyBatcherEntryMixin<T extends PacketListener> {
         if (packet instanceof final ClientboundPingPacket p) {
             final var id = p.getId();
 
-            if (0 > id && id != PacketApplyBatcherEntryMixin.lastId) {
-                PacketApplyBatcherEntryMixin.lastId = id;
+            if (0 > id && id != PacketApplyBatcherEntryMixin.darkutils$lastId) {
+                PacketApplyBatcherEntryMixin.darkutils$lastId = id;
 
                 ServerTickEvent.INSTANCE.trigger();
             }

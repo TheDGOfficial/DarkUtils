@@ -612,15 +612,15 @@ public final class DarkUtils implements ClientModInitializer {
         // If welcome message is enabled, we embed the update result into it, otherwise send a separate (simple) message.
         final Runnable feedback = switch (result) {
             case UP_TO_DATE_STABLE ->
-                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This the latest stable version.") : () -> user.accept("You are using the latest version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
+                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This the latest stable version.") : () -> user.sendUserMessage("You are using the latest version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
             case UP_TO_DATE_PRE ->
-                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This the latest pre-release version.") : () -> user.accept("You are using the latest pre-release version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
+                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("This the latest pre-release version.") : () -> user.sendUserMessage("You are using the latest pre-release version of the mod.", DarkUtils.UserMessageLevel.USER_INFO);
             case OUT_OF_DATE ->
-                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("!! This an outdated version !!", latestReleaseLink) : () -> userWithLink.accept("You are using an !! outdated !! version of the mod - please update!", DarkUtils.UserMessageLevel.USER_WARN, latestReleaseLink);
+                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("!! This an outdated version !!", latestReleaseLink) : () -> userWithLink.sendUserMessageWithLink("You are using an !! outdated !! version of the mod - please update!", DarkUtils.UserMessageLevel.USER_WARN, latestReleaseLink);
             case IN_DEVELOPMENT_VERSION ->
-                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("In-development version - Update frequently!") : () -> user.accept("You are using an in-development version of the mod! Expect bugs and update frequently!", DarkUtils.UserMessageLevel.USER_WARN);
+                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("In-development version - Update frequently!") : () -> user.sendUserMessage("You are using an in-development version of the mod! Expect bugs and update frequently!", DarkUtils.UserMessageLevel.USER_WARN);
             case COULD_NOT_CHECK ->
-                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("We couldn't check if this the latest version, please see if there is any errors above!") : () -> user.accept("Could not check for mod updates!", DarkUtils.UserMessageLevel.USER_ERROR);
+                    fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("We couldn't check if this the latest version, please see if there is any errors above!") : () -> user.sendUserMessage("Could not check for mod updates!", DarkUtils.UserMessageLevel.USER_ERROR);
         };
 
         feedback.run();
@@ -906,11 +906,11 @@ public final class DarkUtils implements ClientModInitializer {
 
     @FunctionalInterface
     private interface UserMessageMethod {
-        void accept(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level);
+        void sendUserMessage(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level);
     }
 
     @FunctionalInterface
     private interface UserMessageMethodWithLink {
-        void accept(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level, @Nullable final LinkData link);
+        void sendUserMessageWithLink(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level, @Nullable final LinkData link);
     }
 }

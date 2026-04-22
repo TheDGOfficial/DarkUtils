@@ -74,11 +74,11 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
     boolean receiveCancelled();
 
     /**
-     * Accepts the given event, running this listener.
+     * Runs this listener.
      *
      * @param event The event.
      */
-    void accept(@NotNull final T event);
+    void onEvent(@NotNull final T event);
 
     /**
      * An event listener implementation that delegates to a consumer with custom priority and receiveCancelled behavior.
@@ -91,8 +91,8 @@ public sealed interface EventListener<T extends Event> permits EventListener.Imp
     public record Impl<T extends Event>(@NotNull EventConsumer<T> listener, @NotNull EventPriority priority,
                                         boolean receiveCancelled) implements EventListener<T> {
         @Override
-        public final void accept(@NotNull final T event) {
-            this.listener.accept(event);
+        public final void onEvent(@NotNull final T event) {
+            this.listener.onEvent(event);
         }
     }
 }

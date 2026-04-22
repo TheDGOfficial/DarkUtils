@@ -10,13 +10,13 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(GlStateManager.class)
 final class GlStateManagerMixin {
     @Unique
-    private static int viewportX = -1;
+    private static int darkutils$viewportX = -1;
     @Unique
-    private static int viewportY = -1;
+    private static int darkutils$viewportY = -1;
     @Unique
-    private static int viewportWidth = -1;
+    private static int darkutils$viewportWidth = -1;
     @Unique
-    private static int viewportHeight = -1;
+    private static int darkutils$viewportHeight = -1;
 
     private GlStateManagerMixin() {
         super();
@@ -26,10 +26,10 @@ final class GlStateManagerMixin {
 
     @Overwrite
     public static final void _viewport(final int x, final int y, final int width, final int height) {
-        final var cachedX = GlStateManagerMixin.viewportX;
-        final var cachedY = GlStateManagerMixin.viewportY;
-        final var cachedWidth = GlStateManagerMixin.viewportWidth;
-        final var cachedHeight = GlStateManagerMixin.viewportHeight;
+        final var cachedX = GlStateManagerMixin.darkutils$viewportX;
+        final var cachedY = GlStateManagerMixin.darkutils$viewportY;
+        final var cachedWidth = GlStateManagerMixin.darkutils$viewportWidth;
+        final var cachedHeight = GlStateManagerMixin.darkutils$viewportHeight;
 
         final var changed = -1 == cachedX || -1 == cachedY || -1 == cachedWidth || -1 == cachedHeight || x != cachedX || y != cachedY || width != cachedWidth || height != cachedHeight;
 
@@ -38,10 +38,10 @@ final class GlStateManagerMixin {
         }
 
         // Still update the tracked last viewport values in case user enables the feature in runtime to not cause undefined behavior
-        GlStateManagerMixin.viewportX = x;
-        GlStateManagerMixin.viewportY = y;
-        GlStateManagerMixin.viewportWidth = width;
-        GlStateManagerMixin.viewportHeight = height;
+        GlStateManagerMixin.darkutils$viewportX = x;
+        GlStateManagerMixin.darkutils$viewportY = y;
+        GlStateManagerMixin.darkutils$viewportWidth = width;
+        GlStateManagerMixin.darkutils$viewportHeight = height;
     }
 }
 
