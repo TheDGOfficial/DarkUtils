@@ -1,17 +1,23 @@
 # DarkUtils
-DarkUtils is a mod focused around quality of life, visual tweaks and performance for Hypixel SkyBlock in modern versions of Minecraft. 
 
-Most of those features were ported from [DarkAddons](https://github.com/TheDGOfficial/DarkAddons) that was coded for 1.8.9, but some are specific to DarkUtils and MC 1.21.8.
+DarkUtils is a mod focused around quality of life, visual tweaks and performance for Hypixel SkyBlock in modern versions
+of Minecraft.
+
+Most of those features were ported from [DarkAddons](https://github.com/TheDGOfficial/DarkAddons) that was coded for
+1.8.9, but some are specific to DarkUtils and MC 1.21.8.
 
 All features are disabled by default, you must enable any features manually from the settings menu.
 
 # Runtime Dependencies
 
-You need all of the Required Runtime Dependency criterias met to launch the game succesfully with DarkUtils, otherwise Fabric Loader will complain. If the game launches fine, it means you already have all the dependencies.
+You need all the Required Runtime Dependency criteria met to launch the game successfully with DarkUtils, otherwise
+Fabric Loader will complain. If the game launches fine, it means you already have all the dependencies.
 
-The versions listed are the ones the mod was tested and developed against, not necessarily what you should use. Forward compatibility is often the case so latest versions are recommended.
+The versions listed are the ones the mod was tested and developed against, not necessarily what you should use. Forward
+compatibility is often the case so latest versions are recommended.
 
 Required Dependencies:
+
 - Minecraft 1.21.11 or later.
 - Fabric Loader 0.19.2 or later.
 - Fabric API 0.141.3 or later.
@@ -19,153 +25,362 @@ Required Dependencies:
 - Hypixel Mod API 1.0.1 or later.
 
 Optional Dependencies:
+
 - Mod Menu 17.0.0 or later.
 
 # Quality of Life
+
 ## Never Reset Cursor Position
- Prevents mouse cursor from resetting to the middle of screen when a screen (menu/container) is opened, either from stratch or replacing the previous (e.g navigating through menus).
+
+Prevents mouse cursor from resetting to the middle of screen when a screen (menu/container) is opened, either from
+scratch or replacing the previous (e.g. navigating through menus).
+
 ## Always Sprint
- Always acts as if sprinting was toggled, persisting between deaths, world changes, server changes and game restarts, as long as you have this feature enabled.
+
+Always acts as if sprinting was toggled, persisting between deaths, world changes, server changes and game restarts, as
+long as you have this feature enabled.
+
 ## Auto Tip
- Automatically run /tip all every 15 minutes taking into account command throttling if you entered a command before it would trigger, and automatically hiding no boosters available to tip responses from the server. This is a very simplified version of the AutoTip mod from 1.8.9 that does not connect to an external server and save/send statistics, everything is done locally and no network connections are made.
+
+Automatically run /tip all every 15 minutes taking into account command throttling if you entered a command before it
+would trigger, and automatically hiding no boosters available to tip responses from the server. This is a very
+simplified version of the AutoTip mod from 1.8.9 that does not connect to an external server and save/send statistics,
+everything is done locally and no network connections are made.
+
 ## Welcome Message
- Sends a cool welcome message when you first join a world confirming the mod has been loaded, welcoming you, showing the mod version and providing a quick button in chat to open the mod's settings menu.
+
+Sends a cool welcome message when you first join a world confirming the mod has been loaded, welcoming you, showing the
+mod version and providing a quick button in chat to open the mod's settings menu.
+
 ## Update Checker
- Checks mod updates once at startup and asynchronously (e.g., does not affect startup performance) and notifies you in-game on chat if any updates are available. You can disable this from settings easily, it is completely optional. The updates are NOT downloaded or installed automatically, it merely checks for them and only notifies you.
+
+Checks mod updates once at startup and asynchronously (e.g., does not affect startup performance) and notifies you
+in-game on chat if any updates are available. You can disable this from settings easily, it is completely optional. The
+updates are NOT downloaded or installed automatically, it merely checks for them and only notifies you.
+
 ## Disable Useless Block-Hit
- Disables useless block-hit when you are holding a sword without an ability. If you right-click on air or on a block that's not an interaction like opening a chest, the right click is handled to simulate the 1.8 blockhit slowdown in Hypixel and can even lag you back. This feature prevents you from rightclicking with a sword that doesn't have an ability and if the click was not on a interaction block or entity/NPC.
+
+Disables useless block-hit when you are holding a sword without an ability. If you right-click on air or on a block
+that's not an interaction like opening a chest, the right click is handled to simulate the 1.8 block hit slowdown in
+Hypixel and can even lag you back. This feature prevents you from right-clicking with a sword that doesn't have an
+ability and if the click was not on an interaction block or entity/NPC.
+
 ## Disable Cells Alignment
- Disables using the Cells Alignment ability when right-clicking looking at air or an uninteractable block. The click will still go through but not activate the ability when looking at interactable blocks such as chest, lever, beacon, command block (terminal), etc. The click will also go through when looking at an entity/NPC, which still does not activate the ability.
+
+Disables using the Cells Alignment ability when right-clicking looking at air or a not interactable block. The click
+will still go through but not activate the ability when looking at interactable blocks such as chest, lever, beacon,
+command block (terminal), etc. The click will also go through when looking at an entity/NPC, which still does not
+activate the ability.
+
 ## Disable Command Confirmation
- Disables Command Confirmation menu that opens when you click on chat to run a command but the command is invalid or unrecognized client-side. This happens when servers forget to send the client all the commands they handle or have registered server-side, or if they use dynamic commands. This does not disable the Command Confirmation menu entirely, notably the confirmation menu when running elevated operator commands still appears.
+
+Disables Command Confirmation menu that opens when you click on chat to run a command but the command is invalid or
+unrecognized client-side. This happens when servers forget to send the client all the commands they handle or have
+registered server-side, or if they use dynamic commands. This does not disable the Command Confirmation menu entirely,
+notably the confirmation menu when running elevated operator commands still appears.
+
 ## Vanilla Mode
- Automatically and temporarily overrides to disable some of the Visual Tweaks like hiding armor and food bars when you join a Singleplayer world.
+
+Automatically and temporarily overrides to disable some of the Visual Tweaks like hiding armor and food bars when you
+join a Singleplayer world.
+
 ## Laggy Server Detector
- Shows 30 second TPS Average 30 seconds after joining/changing servers.
+
+Shows 30-second TPS Average 30 seconds after joining/changing servers.
+
 ## Rejoin Cooldown Display
- Displays the time you have to wait until you can rejoin SkyBlock after getting kicked while joining a server (changing island).
+
+Displays the time you have to wait until you can rejoin SkyBlock after getting kicked while joining a server (changing
+island).
+
 ## Middle Click Fix
- Enables use of middle click for example to disable Witherborn armor ability, just like in 1.8.
+
+Enables use of middle click for example to disable Witherborn armor ability, just like in 1.8.
+
 ## Disable Mod Announcer
- Disables Firmament's mod stitch feature which sends the list of mods you have to Hypixel automatically to increase your privacy.
+
+Disables Firmament's mod stitch feature which sends the list of mods you have to Hypixel automatically to increase your
+privacy.
 
 # Foraging
+
 ## Tree Gift Confirmation
- Plays a sound and displays an on-screen message whenever you get a Tree Gift to confirm that the current tree is finished breaking fully. Also displays if a mob spawned from the tree (such as Phanpyre, Phanflare or Dreadwing), helpful for the David's Cloak Foraging Fortune (Forest Hunts) milestones.
+
+Plays a sound and displays an on-screen message whenever you get a Tree Gift to confirm that the current tree is
+finished breaking fully. Also displays if a mob spawned from the tree (such as Phanpyre, Phanflare or Dreadwing),
+helpful for the David's Cloak Foraging Fortune (Forest Hunts) milestones.
+
 ## Tree Gifts Per Hour
- Displays a HUD element with Tree Gifts/Hour rate.
+
+Displays a HUD element with Tree Gifts/Hour rate.
 
 # Farming
+
 ## Pest Cooldown Display
- Shows a display with remaining pest cooldown, e.g., time until you can spawn your next pests.
+
+Shows a display with remaining pest cooldown, e.g., time until you can spawn your next pests.
+
 ## Persistent Tablist while Farming
- Always shows tablist while you are actively farming. Tablist shows useful info while farming in Garden, such as the percentage to the next crop milestone for the crop you are farming, the visitors in your garden, and more.
+
+Always shows tablist while you are actively farming. Tablist shows useful info while farming in Garden, such as the
+percentage to the next crop milestone for the crop you are farming, the visitors in your garden, and more.
+
 ## Sticky Farming Keys
- Turns the keys to move forward, back, left, right and the key to attack into toggle instead of hold whilst you are farming. Note: Only one sticky movement key is active at a time. You must enable them indiviually below. Pressing any movement key will disable other sticky keys even if that movement key's sticky setting is disabled.
+
+Turns the keys to move forward, back, left, right and the key to attack into toggle instead of hold whilst you are
+farming. Note: Only one sticky movement key is active at a time. You must enable them individually below. Pressing any
+movement key will disable other sticky keys even if that movement key's sticky setting is disabled.
+
 ## Enforce Zorro's Cape
- Enforces having Zorro's Cape equipped before claiming any contest. You might need to open your equipment menu the first time to let the mod know you have it equipped, but after that the mod will remember your last equipped cloak.
+
+Enforces having Zorro's Cape equipped before claiming any contest. You might need to open your equipment menu the first
+time to let the mod know you have it equipped, but after that the mod will remember your last equipped cloak.
 
 # Dungeons
+
 ## Dialogue Skip Timer
- Shows a timer for when to start killing blood mobs to perform a Watcher Dialogue Skip for faster Blood Camp times.
+
+Shows a timer for when to start killing blood mobs to perform a Watcher Dialogue Skip for faster Blood Camp times.
+
 ## Solo Crush Timer
- Shows a timer for when to move the crusher in the Purple Pad to perform a Solo Crush.
+
+Shows a timer for when to move the crusher in the Purple Pad to perform a Solo Crush.
+
 ## Arrow Alignment Device Solver
- Solver for the third device in Goldor terminals phase, with block incorrect clicks and pre-dev support. Compatible with the AutoClicker so you can finish it fast by holding down right click (block incorrect clicks will automatically stop once an arrow is rotated enough times). Uses vanilla item label rendering - you need to hover over the item frame to see how many clicks is needed, but this a non-issue since you need to hover over to rotate the arrow anyways.
+
+Solver for the third device in Goldor terminals phase, with block incorrect clicks and pre-dev support. Compatible with
+the AutoClicker so you can finish it fast by holding down right click (block incorrect clicks will automatically stop
+once an arrow is rotated enough times). Uses vanilla item label rendering - you need to hover over the item frame to see
+how many clicks is needed, but this a non-issue since you need to hover over to rotate the arrow anyway.
+
 ## Arrow Stack Waypoints
- Displays arrow stack waypoints in the Wither King dragon fight showing where to shoot your Last Breath arrows for optimal stacking.
+
+Displays arrow stack waypoints in the Wither King dragon fight showing where to shoot your Last Breath arrows for
+optimal stacking.
+
 ## Blood Cleared Notification
- Shows a message on screen when the blood room is cleared with how much time it took for it.
+
+Shows a message on screen when the blood room is cleared with how much time it took for it.
+
 ## Dungeon Timer HUD
- Displays dungeon timer on left side of the screen, showing time took to finish each phase. Shows live time if not finished yet, and shows how much time is lost to server lag, with fancy item icons, seperate colors, and non-phase informational splits, like Boss Total. Includes sub-options: Dungeon Timer Scale, Dungeon Timer Offset X, Dungeon Timer Offset Y, Dungeon Timer No Item Icon.
+
+Displays dungeon timer on left side of the screen, showing time took to finish each phase. Shows live time if not
+finished yet, and shows how much time is lost to server lag, with fancy item icons, separate colors, and non-phase
+informational splits, like Boss Total. Includes sub-options: Dungeon Timer Scale, Dungeon Timer Offset X, Dungeon Timer
+Offset Y, Dungeon Timer No Item Icon.
+
 ## Solo Crush Waypoint
- Renders a waypoint for the block you need to lower the purple crusher into so that it can crush Storm the next time you lower it.
+
+Renders a waypoint for the block you need to lower the purple crusher into so that it can crush Storm the next time you
+lower it.
 
 # Visual Tweaks
+
 ## Hide Effects HUD
- Hides the annoying Effects HUD in the top right of the screen.
+
+Hides the annoying Effects HUD in the top right of the screen.
+
 ## Hide Effects In Inventory
- Additionally hides effects in left and right sides of the inventory as well.
+
+Additionally, hides effects in left and right sides of the inventory as well.
+
 ## Transparent Scoreboard
- Makes the Scoreboard fully transparent for better visuals.
+
+Makes the Scoreboard fully transparent for better visuals.
+
 ## Transparent Nametags
- Makes the Nametags (Player Names, Armor Stand Nametags, etc.) fully transparent.
+
+Makes the Nametags (Player Names, Armor Stand Nametags, etc.) fully transparent.
+
 ## Transparent Player List
- Makes the Player List (Tab List) fully transparent.
+
+Makes the Player List (Tab List) fully transparent.
+
 ## Remove Chat Scrollbar
- Removes the Chat Scrollbar from the right side of the chat.
+
+Removes the Chat Scrollbar from the right side of the chat.
+
 ## Fullbright
- Makes your game look as if everything had the Light Level of 15.
+
+Makes your game look as if everything had the Light Level of 15.
+
 ## Night Vision
- Acts as if you had permanent client-side Night Vision effect.
+
+Acts as if you had permanent client-side Night Vision effect.
+
 ## Hide Fire Overlay
- Hides the annoying Fire Overlay when you are burning that makes half of the screen invisible.
+
+Hides the annoying Fire Overlay when you are burning that makes half of the screen invisible.
+
 ## No Burning Entities
- Additionally hides the burning effect rendered on yourself and on entities (e.g a zombie burning under the sun).
+
+Additionally, hides the burning effect rendered on yourself and on entities (e.g a zombie burning under the sun).
+
 ## Hide Armor and Food
- Hides Armor and Food bars since they are irrelevant in Hypixel SkyBlock.
+
+Hides Armor and Food bars since they are irrelevant in Hypixel SkyBlock.
+
 ## Hide Mount Health
- Hides Mount Health that appears when you are mounted to a mount. Servers usually mount you to an invisible mob to create animations such as moving you to another island smoothly, so it's often irrelevant, especially in Hypixel.
+
+Hides Mount Health that appears when you are mounted to a mount. Servers usually mount you to an invisible mob to create
+animations such as moving you to another island smoothly, so it's often irrelevant, especially in Hypixel.
+
 ## No Lightning Bolts
- Hides Lightning Bolts from rendering, mainly useful for Storm phase of Floor 7 and Master Floor 7 of The Catacombs.
+
+Hides Lightning Bolts from rendering, mainly useful for Storm phase of Floor 7 and Master Floor 7 of The Catacombs.
+
 ## No Wither Hearts
- Hides the black overlay rendered on top of your hearts when you have the Wither Status Effect, allowing you to see your health clearly even with Wither Status Effect.
+
+Hides the black overlay rendered on top of your hearts when you have the Wither Status Effect, allowing you to see your
+health clearly even with Wither Status Effect.
 
 # Performance
+
 ## Armor Stand Optimizer
- Only renders the configured amount of closest Armor Stands and their labels to you and hides the rest. Improves FPS drastically when a lot of Furniture has been used in your Private Island for example.
+
+Only renders the configured amount of closest Armor Stands and their labels to you and hides the rest. Improves FPS
+drastically when a lot of Furniture has been used on your Private island for example.
+
 ## Disable Yield
- Disables a Thread.yield() call in Render thread to improve FPS. Yielding is a mechanism used to signal to the CPU that you are done with your task for now and that you advise the CPU to run another task instead. Vanilla calls yield after each rendered frame to let other threads or apps run in the CPU. It often reduces FPS anywhere from 1% on high-end systems to, upto 10% in lower end systems. This feature disables calling yield entirely. In modern operating systems and processors, yield essentially is useless as your operating system will automatically fairly share CPU time between all tasks. Moreover, with a multi-core processor yielding is even more useless as the CPU can run the Render thread in parallel with other tasks easily.
+
+Disables a Thread.yield() call in Render thread to improve FPS. Yielding is a mechanism used to signal to the CPU that
+you are done with your task for now and that you advise the CPU to run another task instead. Vanilla calls yield after
+each rendered frame to let other threads or apps run in the CPU. It often reduces FPS anywhere from 1% on high-end
+systems to, up to 10% in lower end systems. This feature disables calling yield entirely. In modern operating systems
+and
+processors, yield essentially is useless as your operating system will automatically fairly share CPU time between all
+tasks. Moreover, with a multicore processor yielding is even more useless as the CPU can run the Render thread in
+parallel with other tasks easily.
+
 ## Always Prioritize Render Thread
- Always prioritizes render thread by assigning it the Thread.MAX_PRIORITY. This done by vanilla on systems with 4 or more CPU cores available automatically, but this feature ensures it always gets the maximum priority no matter the amount of CPU cores available.
+
+Always prioritizes render thread by assigning it the Thread.MAX_PRIORITY. This done by vanilla on systems with 4 or more
+CPU cores available automatically, but this feature ensures it always gets the maximum priority no matter the amount of
+CPU cores available.
+
 ## Optimize Exceptions
- Optimizes Exceptions when playing on non-vanilla servers such as Hypixel, which are actually on 1.8 and use a translation layer and non-vanilla server software, therefore sometimes send packets that cause errors to be logged. This feature currently only optimizes Signature Errors. It will still log the exception the first time it happens to not make it a silent failure, but repeated errors will not be logged for optimization.
+
+Optimizes Exceptions when playing on non-vanilla servers such as Hypixel, which are actually on 1.8 and use a
+translation layer and non-vanilla server software, therefore sometimes send packets that cause errors to be logged. This
+feature currently only optimizes Signature Errors. It will still log the exception the first time it happens to not make
+it a silent failure, but repeated errors will not be logged for optimization.
+
 ## Always Use No Error Context
- Always uses No Error Context to improve performance. Sodium has a workaround for a bug that no longer occurs that disables No Error Context feature if it detects X11/Wayland. This feature forces Sodium to skip doing the workaround as the bug no longer occurs and performance is precious.
+
+Always uses No Error Context to improve performance. Sodium has a workaround for a bug that no longer occurs that
+disables No Error Context feature if it detects X11/Wayland. This feature forces Sodium to skip doing the workaround as
+the bug no longer occurs and performance is precious.
+
 ## Disable Error Checking Entirely
- Overrides glGetError to always return no error to disable error checking completely.
+
+Overrides glGetError to always return no error to disable error checking completely.
+
 ## Disable Campfire Smoke Particles
- Disables Campfire Smoke Particles which trigger unoptimized repeating collideMovement calls in Galatea to reduce memory allocation pressure.
+
+Disables Campfire Smoke Particles which trigger unoptimized repeating collideMovement calls in Galatea to reduce memory
+allocation pressure.
+
 ## Remove Main Menu Frame Limit
- Removes the hardcoded 60 FPS limit in Main Menu to look better in modern high refresh-rate systems.
+
+Removes the hardcoded 60 FPS limit in Main Menu to look better in modern high refresh-rate systems.
+
 ## Log Cleaner
- Cleans old log files automatically to not clutter the filesystem.
+
+Cleans old log files automatically to not clutter the filesystem.
+
 ## Stop Light Updates
- Stops light updates entirely to improve performance even further after Fullbright, which is visual-only.
+
+Stops light updates entirely to improve performance even further after Fullbright, which is visual-only.
+
 ## No Memory Reserve
- Removes a 10 MB safety memory reserve in vanilla code. The game normally allocates 10 MB at startup and frees it when you run out of memory to make headroom to display a out of memory screen. However, if you never run out of memory, this 10 MB is wasted. This feature always frees the memory reserve so it can be utilized by other apps or the Operating System for File System Caches. Unused memory is wasted memory!
+
+Removes a 10 MB safety memory reserve in vanilla code. The game normally allocates 10 MB at startup and frees it when
+you run out of memory to make headroom to display an out of memory screen. However, if you never run out of memory, this
+10 MB is wasted. This feature always frees the memory reserve so it can be utilized by other apps or the Operating
+System for File System Caches. Unused memory is wasted memory!
+
 ## Open GL Version Override
- Overrides OpenGL Version hinted to the GLFW during Window context initialization to a higher value than the default of OpenGL 3.3. This does not magically make Minecraft take advantage of features from OpenGL 4.6 specification, but it does ensure forward compatibility and a stricter standard, which might or might not change anything at all.
+
+Overrides OpenGL Version hinted to the GLFW during Window context initialization to a higher value than the default of
+OpenGL 3.3. This does not magically make Minecraft take advantage of features from OpenGL 4.6 specification, but it does
+ensure forward compatibility and a stricter standard, which might or might not change anything at all.
+
 ## Use Virtual Threads for Texture Downloading
- Makes Minecraft use Java's new (Lightweight) Virtual Threads over Platform (OS) Threads. Normally, Minecraft uses a Cached Thread Pool which ends up creating hundreds of texture downloading threads in texture-heavy game-modes like Hypixel SkyBlock where items have a player skull model. Those hundreds of texture downloading threads all have their separate stack, and there is a limit to how many platform threads you can create in the OS level at which point it will crash. Virtual Threads are a lightweight new technology replacement that only creates threads when tasks are blocked and this also made texture loading speedier during tests due to creating a new (platform/OS) thread not being a free operation.
+
+Makes Minecraft use Java's new (Lightweight) Virtual Threads over Platform (OS) Threads. Normally, Minecraft uses a
+Cached Thread Pool which ends up creating hundreds of texture downloading threads in texture-heavy game-modes like
+Hypixel SkyBlock where items have a player skull model. Those hundreds of texture downloading threads all have their
+separate stack, and there is a limit to how many platform threads you can create in the OS level at which point it will
+crash. Virtual Threads are a lightweight new technology replacement that only creates threads when tasks are blocked and
+this also made texture loading speedier during tests due to creating a new (platform/OS) thread not being a free
+operation.
+
 ## Disable Glowing
- Disables the glowing effect Hypixel renders on certain entities to improve performance at the cost of no longer being able to see the outline through walls on those entities. Those include:
- - Dungeon temmate glow (Hypixel adds rank based glow in Dungeons, for example VIP will be green, MVP will be blue. With this feature it will be turned off)
- - Frogs in Galatea (Hypixel glows Frogs white in the galatea. This disables it)
- - Dropped items (Hypixel renders dropped items with their rarity color, e.g an epic item in the floor renders as purple. This will disable it.)
+
+Disables the glowing effect Hypixel renders on certain entities to improve performance at the cost of no longer being
+able to see the outline through walls on those entities. Those include:
+
+- Dungeon teammate glow (Hypixel adds rank based glow in Dungeons, for example VIP will be green, MVP will be blue. With
+  this feature it will be turned off)
+- Frogs in Galatea (Hypixel glows Frogs white in the galatea. This disables it)
+- Dropped items (Hypixel renders dropped items with their rarity color, e.g. an epic item in the floor renders as
+  purple.
+  This will disable it.)
+
 ## Sound Lag Fix
- Prevents duplicate sounds from being played on the same tick by misbehaving or lagging servers. Only the duplicate sounds are prevented meaning you will still hear all sounds, but without it affecting your performance.
+
+Prevents duplicate sounds from being played on the same tick by misbehaving or lagging servers. Only the duplicate
+sounds are prevented meaning you will still hear all sounds, but without it affecting your performance.
+
 ## Thread Priority Tweaker
- Improves performance by tweaking priorities of all threads in the background regularly.
+
+Improves performance by tweaking priorities of all threads in the background regularly.
+
 ## Block Entity Unload Lag Fix
- Fixes vanilla Minecraft bug, where lag occurs when unloading large amount of block entities.
+
+Fixes vanilla Minecraft bug, where lag occurs when unloading large amount of block entities.
+
 ## Disable Signature Verification
- Disables signature verification to improve performance by skipping the verification step, also possibly fixing missing textures in certain servers.
+
+Disables signature verification to improve performance by skipping the verification step, also possibly fixing missing
+textures in certain servers.
+
 ## Optimize Enum Values
- Optimizes memory allocation rate by eliminating enum values array copying in some places, currently only a single place.
+
+Optimizes memory allocation rate by eliminating enum values array copying in some places, currently only a single place.
+
 ## Viewport Cache
- Caches viewport GL calls if the viewport did not change, improving performance.
+
+Caches viewport GL calls if the viewport did not change, improving performance.
+
 ## Re-Enable AMD Game Optimizations
- Sodium disables some of the AMD driver's game optimizations for Minecraft due to bugs with a workaround. This option re-enables it. It is not guaranteed this would do anything as it depends on driver. Additionally, the workaround was not supposed to be applied in Linux systems, but is bugged, enabling this will fix it.
+
+Sodium disables some of the AMD driver's game optimizations for Minecraft due to bugs with a workaround. This option
+re-enables it. It is not guaranteed this would do anything as it depends on driver. Additionally, the workaround was not
+supposed to be applied in Linux systems, but is bugged, enabling this will fix it.
 
 # Bugfixes
+
 ## Fix GUI Scale After Toggling Out Fullscreen
- Fixes two different bugs depending on Window manager. X11: Fixes the window height getting smaller everytime when going out of Fullscreen. Wayland: Fixes the window height getting bigger everytime when going out of Fullscreen.
+
+Fixes two different bugs depending on Window manager. X11: Fixes the window height getting smaller everytime when going
+out of Fullscreen. Wayland: Fixes the window height getting bigger everytime when going out of Fullscreen.
+
 ## Fix Inactivity FPS Limiter
- Fixes the Inactivity FPS Limiter from limiting the FPS to 10 whilst the game is loading by making the last input time start with an initial value of current time instead of zero.
+
+Fixes the Inactivity FPS Limiter from limiting the FPS to 10 whilst the game is loading by making the last input time
+start with an initial value of current time instead of zero.
+
 ## Item Frame Sound Fix
- Fixes vanilla Minecraft bug, where sounds are played when they shouldn't in certain cases near item frames.
+
+Fixes vanilla Minecraft bug, where sounds are played when they shouldn't in certain cases near item frames.
+
 ## Cursor Fix
- Fixes mouse cursor staying on screen after closing a menu.
+
+Fixes mouse cursor staying on screen after closing a menu.
+
 ## Cursor Pos Wayland GL Error Fix
- Fixes a bug where Minecraft tries to call glfwSetCursorPos in Wayland desktop environment, where setting the cursor position is not supported, by cancelling the call. This prevents the GL error while preserving behaviour, as setting the position fails with the GL error anyways.
+
+Fixes a bug where Minecraft tries to call glfwSetCursorPos in Wayland desktop environment, where setting the cursor
+position is not supported, by cancelling the call. This prevents the GL error while preserving behavior, as setting the
+position fails with the GL error anyway.
