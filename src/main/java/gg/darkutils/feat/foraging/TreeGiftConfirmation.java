@@ -4,8 +4,8 @@ import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.ObtainTreeGiftEvent;
 import gg.darkutils.events.base.EventRegistry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;

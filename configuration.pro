@@ -6,7 +6,7 @@
 
 # We don't want obfuscation as it complicates error stacktraces, heapdumps, profilers, etc.,
 # and makes the mod look way more shady. While obfuscation can unlock some optimizations
-# for shrinking (e.g by repackaging everythinig to the root package it can turn access levels to package-private and merge classes aggressively),
+# for shrinking (e.g by repackaging everything to the root package it can turn access levels to package-private and merge classes aggressively),
 # it does not unlock any relevant optimization on the actual bytecode that I am aware of.
 # Besides, even vanilla Minecraft is going to be not obfuscated starting from 26.1.
 -dontobfuscate
@@ -62,7 +62,7 @@
 
 # These methods simply get a StackWalker instance. While they might
 # initialize some VM state about stack walking earlier, it is of no big signifiance
-# for us, thus eliminating it if unused is benefitical.
+# for us, thus eliminating it if unused is beneficial.
 -assumenosideeffects class java.lang.StackWalker {
     public static java.lang.StackWalker getInstance(java.lang.StackWalker$Option);
     public static java.lang.StackWalker getInstance(java.util.Set);

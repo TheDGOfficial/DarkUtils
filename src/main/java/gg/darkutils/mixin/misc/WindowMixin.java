@@ -1,13 +1,13 @@
 package gg.darkutils.mixin.misc;
 
+import com.mojang.blaze3d.platform.IconSet;
+import com.mojang.blaze3d.platform.Window;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import gg.darkutils.feat.bugfixes.WaylandGameIconFix;
+import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.PackResources;
-import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.platform.IconSet;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
@@ -83,7 +83,7 @@ final class WindowMixin {
                 WaylandGameIconFix.generateDesktopFile();
             } catch (final IOException ioe) {
                 this.darkutils$desktopFileFailure = true;
-                DarkUtils.error("@fileName@", "Error generating desktop file to filesystem for use with wayland icon fix, fallbacking to vanilla logic", ioe);
+                DarkUtils.error("@fileName@", "Error generating desktop file to filesystem for use with wayland icon fix, fall backing to vanilla logic", ioe);
 
                 return;
             }
@@ -98,7 +98,7 @@ final class WindowMixin {
             try {
                 WaylandGameIconFix.setIcon(iconSet.getStandardIcons(packResources));
             } catch (final IOException ioe) {
-                DarkUtils.error("@fileName@", "Error getting standard icons from pack resources for use with wayland icon fix, fallbacking to vanilla logic", ioe);
+                DarkUtils.error("@fileName@", "Error getting standard icons from pack resources for use with wayland icon fix, fall backing to vanilla logic", ioe);
                 return;
             }
 

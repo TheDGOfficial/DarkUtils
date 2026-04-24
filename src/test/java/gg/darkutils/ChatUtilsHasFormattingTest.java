@@ -17,7 +17,7 @@ final class ChatUtilsHasFormattingTest {
 
         final var result = ChatUtils.hasFormatting(text, SimpleColor.RED);
 
-        Assertions.assertTrue(result);
+        Assertions.assertTrue(result, "Should detect RED formatting");
     }
 
     @Test
@@ -28,13 +28,13 @@ final class ChatUtilsHasFormattingTest {
 
         final var result = ChatUtils.hasFormatting(text, SimpleColor.RED);
 
-        Assertions.assertFalse(result);
+        Assertions.assertFalse(result, "Should not detect RED when BLUE is applied");
     }
 
     @Test
     final void shouldDetectColorAndBoldFormattingInsideComponent() {
         final var style = SimpleStyle.colored(SimpleColor.GOLD).also(SimpleStyle.formatted(SimpleFormatting.BOLD));
-        Assertions.assertTrue(ChatUtils.hasFormatting(TextBuilder.withInitial("Hello", style).build(), SimpleColor.GOLD,SimpleFormatting.BOLD));
+        Assertions.assertTrue(ChatUtils.hasFormatting(TextBuilder.withInitial("Hello", style).build(), SimpleColor.GOLD, SimpleFormatting.BOLD), "Text should have had gold and bold formatting");
     }
 
     @Test
@@ -49,7 +49,7 @@ final class ChatUtilsHasFormattingTest {
                 SimpleFormatting.BOLD
         );
 
-        Assertions.assertFalse(result);
+        Assertions.assertFalse(result, "Should not detect bold when it is missing");
     }
 
     @Test
@@ -63,7 +63,7 @@ final class ChatUtilsHasFormattingTest {
 
         final var result = ChatUtils.hasFormatting(text, SimpleColor.GREEN);
 
-        Assertions.assertTrue(result);
+        Assertions.assertTrue(result, "Should detect formatting from legacy codes");
     }
 
     @Test
@@ -77,7 +77,7 @@ final class ChatUtilsHasFormattingTest {
                 SimpleColor.YELLOW
         );
 
-        Assertions.assertFalse(result);
+        Assertions.assertFalse(result, "Plain text should not report formatting");
     }
 
     @Test
@@ -97,7 +97,7 @@ final class ChatUtilsHasFormattingTest {
                 SimpleFormatting.BOLD
         );
 
-        Assertions.assertTrue(result);
+        Assertions.assertTrue(result, "Should detect formatting in child component");
     }
 
     @Test
@@ -114,7 +114,7 @@ final class ChatUtilsHasFormattingTest {
                 SimpleFormatting.ITALIC
         );
 
-        Assertions.assertTrue(result);
+        Assertions.assertTrue(result, "Should detect italic formatting");
     }
 
     @Test
@@ -131,7 +131,7 @@ final class ChatUtilsHasFormattingTest {
                 SimpleFormatting.UNDERLINE
         );
 
-        Assertions.assertTrue(result);
+        Assertions.assertTrue(result, "Should detect underline formatting");
     }
 
     @Test
@@ -148,7 +148,7 @@ final class ChatUtilsHasFormattingTest {
                 SimpleFormatting.STRIKETHROUGH
         );
 
-        Assertions.assertTrue(result);
+        Assertions.assertTrue(result, "Should detect strikethrough formatting");
     }
 
     @Test
@@ -165,7 +165,7 @@ final class ChatUtilsHasFormattingTest {
                 SimpleFormatting.OBFUSCATED
         );
 
-        Assertions.assertTrue(result);
+        Assertions.assertTrue(result, "Should detect obfuscated formatting");
     }
 
     @Test
@@ -180,7 +180,7 @@ final class ChatUtilsHasFormattingTest {
                 SimpleFormatting.ITALIC
         );
 
-        Assertions.assertFalse(result);
+        Assertions.assertFalse(result, "Should not detect italic when missing");
     }
 
     @Test
@@ -192,7 +192,6 @@ final class ChatUtilsHasFormattingTest {
                 SimpleStyle.colored(SimpleColor.GREEN)
         );
 
-        Assertions.assertTrue(result);
+        Assertions.assertTrue(result, "Should detect equivalent color formatting");
     }
 }
-

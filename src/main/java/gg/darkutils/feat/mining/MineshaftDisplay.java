@@ -3,23 +3,22 @@ package gg.darkutils.feat.mining;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.ActivityState;
+import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.PrettyUtils;
 import gg.darkutils.utils.RenderUtils;
-import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.TabListUtil;
-import gg.darkutils.utils.Helpers;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.world.item.Items;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public final class MineshaftDisplay {
@@ -49,7 +48,7 @@ public final class MineshaftDisplay {
     public static final void init() {
         ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(MineshaftDisplay::onWorldChange);
 
-        TickUtils.queueRepeatingTickTask(MineshaftDisplay::updateTabData, 60); // tab updates every 3s server-side anyways, no need to update more frequently
+        TickUtils.queueRepeatingTickTask(MineshaftDisplay::updateTabData, 60); // tab updates every 3s server-side anyway, no need to update more frequently
 
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "mineshaft_display"), (context, tickCounter) -> MineshaftDisplay.renderMineshaftDisplay(context));
     }
@@ -57,7 +56,7 @@ public final class MineshaftDisplay {
     private static final void onWorldChange(@NotNull final Minecraft client, @NotNull final ClientLevel world) {
         MineshaftDisplay.shownWarpClose = false;
     }
-    
+
     private static final void updateTabData() {
         if (!LocationUtils.isInDwarvenMines()) {
             return;
@@ -70,9 +69,8 @@ public final class MineshaftDisplay {
             if (line.startsWith(" Glacite Mineshafts: ")) {
                 final var cleaned = line.replace(" Glacite Mineshafts: ", "");
                 final var split = cleaned.split("/");
-                final var pity = split[0];
-                final var pityRequired = split[1];
 
+                final var pity = split[0];
                 final int parsedPity;
 
                 try {
@@ -82,6 +80,7 @@ public final class MineshaftDisplay {
                     return;
                 }
 
+                final var pityRequired = split[1];
                 final int parsedPityRequired;
 
                 try {
@@ -181,12 +180,13 @@ public final class MineshaftDisplay {
         final var pity = MineshaftDisplay.mineShaftPity;
         final var required = MineshaftDisplay.mineShaftPityRequired;
 
-        final var Y_OFFSET = 20; // offset a bit so that it shows under mineshaft display
-
         final var pityText = MineshaftDisplay.PITY_TEXT;
         final var known = -1 != pity && -1 != required;
 
-        pityText.setText(known ? "Mineshaft Pity: " + pity + "/" + required : "Please enable the pity widget!");
+        pityText.setText(known ? "Mineshaft Pity: " + pity + '/' + required : "Please enable the pity widget!");
+
+        // offset a bit so that it shows under mineshaft display
+        final var Y_OFFSET = 20;
 
         RenderUtils.renderItem(
                 context,

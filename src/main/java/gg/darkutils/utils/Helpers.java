@@ -1,19 +1,19 @@
 package gg.darkutils.utils;
 
 import gg.darkutils.utils.chat.ChatUtils;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import org.jetbrains.annotations.NotNull;
@@ -246,7 +246,7 @@ public final class Helpers {
         return Helpers.extractNumbers(input, false);
     }
 
-    public static final @Nullable String extractNumbers(@NotNull final String input, final boolean includeSuffix) {
+    private static final @Nullable String extractNumbers(@NotNull final String input, final boolean includeSuffix) {
         final var length = input.length();
 
         var start = -1;
@@ -273,10 +273,6 @@ public final class Helpers {
         return -1 == start ? null : input.substring(start, end);
     }
 
-    public static final void displayCountdownTitles(@NotNull final String color, @NotNull final String finalText, final int seconds) {
-        Helpers.displayCountdownTitles(color, finalText, seconds, () -> true);
-    }
-
     public static final void displayCountdownTitles(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final BooleanSupplier precondition) {
         Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueTickTask, precondition);
     }
@@ -285,7 +281,7 @@ public final class Helpers {
         Helpers.displayCountdownTitlesInServerTicks(color, finalText, seconds, () -> true);
     }
 
-    public static final void displayCountdownTitlesInServerTicks(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final BooleanSupplier precondition) {
+    private static final void displayCountdownTitlesInServerTicks(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final BooleanSupplier precondition) {
         Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueServerTickTask, precondition);
     }
 
@@ -350,10 +346,7 @@ public final class Helpers {
     }
 
     private static final void clearTitle() {
-        final var client = Minecraft.getInstance();
-
-        client.gui.setTitle(null);
-        client.gui.setTimes(0, Integer.MAX_VALUE, 0);
+        Minecraft.getInstance().gui.clearTitles();
     }
 
     private static final void playSound(@NotNull final SoundEvent sound, final float volume, final float pitch) {

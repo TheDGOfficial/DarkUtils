@@ -1,7 +1,7 @@
 package gg.darkutils.mixin.bugfixes;
 
-import gg.darkutils.config.DarkUtilsConfig;
 import com.mojang.blaze3d.platform.FramerateLimitTracker;
+import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;

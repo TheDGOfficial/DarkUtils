@@ -1,8 +1,6 @@
 package gg.darkutils;
 
 import gg.darkutils.events.ReceiveGameMessageEvent;
-import gg.darkutils.events.base.Event;
-import gg.darkutils.events.base.EventListener;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.chat.SimpleColor;
 import gg.darkutils.utils.chat.SimpleFormatting;
@@ -18,14 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 final class ReceiveGameMessageEventTest {
     @BeforeEach
     final void resetRegistry() {
-        clearListeners(ReceiveGameMessageEvent.class);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static final <T extends Event> void clearListeners(final Class<T> event) {
-        final var handler = EventRegistry.centralRegistry().getEventHandler(event);
-
-        handler.getListeners().forEach((l) -> handler.removeListener((EventListener<T>) (Object) l));
+        EventRegistry.centralRegistry().getEventHandler(ReceiveGameMessageEvent.class).clearListeners();
     }
 
     @Test
@@ -36,20 +27,20 @@ final class ReceiveGameMessageEventTest {
 
         new ReceiveGameMessageEvent(TextBuilder.empty().append("Hello").build()).trigger();
 
-        Assertions.assertEquals(counter.get(), 1);
+        Assertions.assertEquals(1, counter.get(), "Listener should be invoked exactly once");
     }
 
     @Test
     final void testContentAndRawContent() {
-        EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
-            Assertions.assertEquals(e.content(), "Hello");
-            Assertions.assertEquals(e.rawContent(), "Hello");
+        EventRegistry.centralRegistry().addListener((final ReceiveGameMessageEvent e) -> {
+            Assertions.assertEquals("Hello", e.content(), "Content should match plain text");
+            Assertions.assertEquals("Hello", e.rawContent(), "Raw content should match plain text");
 
-            Assertions.assertTrue(e.matches("Hello"));
+            Assertions.assertTrue(e.matches("Hello"), "Event should match 'Hello'");
 
-            Assertions.assertFalse(e.isStyledWith(SimpleColor.RED));
-            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE));
-            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE, SimpleFormatting.BOLD));
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.RED), "Should not be styled with RED");
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE), "Should not be styled with WHITE");
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE, SimpleFormatting.BOLD), "Should not be styled with WHITE and BOLD");
         });
 
         new ReceiveGameMessageEvent(TextBuilder.empty().append("Hello").build()).trigger();
@@ -57,15 +48,15 @@ final class ReceiveGameMessageEventTest {
 
     @Test
     void testContentAndRawContentFormatted() {
-        EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
-            Assertions.assertEquals(e.content(), "Hello");
-            Assertions.assertEquals(e.rawContent(), "Hello");
+        EventRegistry.centralRegistry().addListener((final ReceiveGameMessageEvent e) -> {
+            Assertions.assertEquals("Hello", e.content(), "Formatted content should strip styling");
+            Assertions.assertEquals("Hello", e.rawContent(), "Raw content should not include legacy codes");
 
-            Assertions.assertTrue(e.matches("Hello"));
+            Assertions.assertTrue(e.matches("Hello"), "Event should match 'Hello'");
 
-            Assertions.assertTrue(e.isStyledWith(SimpleColor.RED));
-            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE));
-            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE, SimpleFormatting.BOLD));
+            Assertions.assertTrue(e.isStyledWith(SimpleColor.RED), "Should be styled with RED");
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE), "Should not be styled with WHITE");
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE, SimpleFormatting.BOLD), "Should not be styled with WHITE and BOLD");
         });
 
         new ReceiveGameMessageEvent(TextBuilder
@@ -76,15 +67,15 @@ final class ReceiveGameMessageEventTest {
 
     @Test
     final void testContentAndRawContentLegacyFormatted() {
-        EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
-            Assertions.assertEquals(e.content(), "Hello");
-            Assertions.assertEquals(e.rawContent(), "§cHello");
+        EventRegistry.centralRegistry().addListener((final ReceiveGameMessageEvent e) -> {
+            Assertions.assertEquals("Hello", e.content(), "Content should strip legacy formatting");
+            Assertions.assertEquals("§cHello", e.rawContent(), "Raw content should retain legacy formatting");
 
-            Assertions.assertTrue(e.matches("Hello"));
+            Assertions.assertTrue(e.matches("Hello"), "Event should match 'Hello'");
 
-            Assertions.assertTrue(e.isStyledWith(SimpleColor.RED));
-            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE));
-            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE, SimpleFormatting.BOLD));
+            Assertions.assertTrue(e.isStyledWith(SimpleColor.RED), "Should detect RED styling from legacy code");
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE), "Should not be styled with WHITE");
+            Assertions.assertFalse(e.isStyledWith(SimpleColor.WHITE, SimpleFormatting.BOLD), "Should not be styled with WHITE and BOLD");
         });
 
         new ReceiveGameMessageEvent(TextBuilder.empty().append("§cHello").build()).trigger();
@@ -92,9 +83,8 @@ final class ReceiveGameMessageEventTest {
 
     @Test
     final void testExtractPart() {
-        EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
-            Assertions.assertEquals(e.extractPart("[Player] ", ':'), "John Doe");
-        });
+        EventRegistry.centralRegistry().addListener((final ReceiveGameMessageEvent e) ->
+                Assertions.assertEquals("John Doe", e.extractPart("[Player] ", ':'), "Extracted player name should match"));
 
         new ReceiveGameMessageEvent(TextBuilder.empty().append("[Player] John Doe: Hello").build()).trigger();
     }
@@ -103,16 +93,13 @@ final class ReceiveGameMessageEventTest {
     final void testMatch() {
         final var counter = new AtomicInteger(0);
 
-        EventRegistry.centralRegistry().addListener((ReceiveGameMessageEvent e) -> {
-            e.match(Map.of(
-                    "Lorem ipsum dolor sit amet",
-                    (ev) -> counter.incrementAndGet()
-            ));
-        });
+        EventRegistry.centralRegistry().addListener((final ReceiveGameMessageEvent e) -> e.match(Map.of(
+                "Lorem ipsum dolor sit amet",
+                ev -> counter.incrementAndGet()
+        )));
 
         new ReceiveGameMessageEvent(TextBuilder.empty().append("Lorem ipsum dolor sit amet").build()).trigger();
 
-        Assertions.assertEquals(counter.get(), 1);
+        Assertions.assertEquals(1, counter.get(), "Match handler should be invoked exactly once");
     }
 }
-

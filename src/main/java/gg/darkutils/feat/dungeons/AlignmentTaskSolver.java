@@ -13,20 +13,20 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.Items;
-import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
-import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.core.Direction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
@@ -273,7 +273,7 @@ public final class AlignmentTaskSolver {
         for (final var space : AlignmentTaskSolver.grid) {
             final var framePos = space.framePos();
             final var frameBox = space.frameBox();
-            if (AlignmentTaskSolver.SpaceType.PATH != space.type() || null == framePos) {
+            if (AlignmentTaskSolver.SpaceType.PATH != space.type() || null == framePos || null == frameBox) {
                 continue;
             }
             ItemFrame frame = null;
@@ -454,7 +454,8 @@ public final class AlignmentTaskSolver {
 
     private static final @Nullable AlignmentTaskSolver.MazeSpace findGridSpace(@NotNull final BlockPos pos) {
         for (final var gridSpace : AlignmentTaskSolver.grid) {
-            if (pos.equals(gridSpace.framePos())) {
+            final var framePos = gridSpace.framePos();
+            if (null != framePos && pos.equals(framePos)) {
                 return gridSpace;
             }
         }

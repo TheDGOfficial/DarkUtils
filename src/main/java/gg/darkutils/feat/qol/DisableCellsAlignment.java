@@ -5,8 +5,8 @@ import gg.darkutils.events.UseItemEvent;
 import gg.darkutils.events.base.EventPriority;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.Helpers;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 
 public final class DisableCellsAlignment {

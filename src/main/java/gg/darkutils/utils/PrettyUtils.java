@@ -20,42 +20,6 @@ public final class PrettyUtils {
     }
 
     @NotNull
-    public static final String formatDouble(final double value, final int decimals) {
-        if (0 >= decimals) {
-            return Long.toString((long) value);
-        }
-
-        final var scale = Math.pow(10.0, decimals);
-
-        // truncate instead of round (monotonic-safe)
-        final var truncated = Math.floor(value * scale) / scale;
-
-        final var whole = (long) truncated;
-
-        if (MathUtils.isNearEqual(truncated, whole)) {
-            return Long.toString(whole);
-        }
-
-        final var builder = new StringBuilder(16);
-
-        builder.append(whole).append('.');
-
-        var fractional = (long) ((truncated - whole) * scale);
-
-        // pad leading zeros if necessary
-        var divisor = (long) (scale / 10);
-
-        while (0 < divisor && fractional < divisor) {
-            builder.append('0');
-            divisor /= 10;
-        }
-
-        builder.append(fractional);
-
-        return builder.toString();
-    }
-
-    @NotNull
     public static final String formatPercentage(final double value) {
         // truncate to 1 decimal place without rounding
         final var scaled = Math.floor(value * 10.0) / 10.0;

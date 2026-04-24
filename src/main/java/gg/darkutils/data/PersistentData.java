@@ -3,7 +3,6 @@ package gg.darkutils.data;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import gg.darkutils.DarkUtils;
-import gg.darkutils.utils.JavaUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -18,9 +17,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 public final class PersistentData {
@@ -36,7 +35,6 @@ public final class PersistentData {
     );
     private static final @NotNull Path TEMP_FILE =
             PersistentData.FILE.toPath().resolveSibling(PersistentData.FILE.getName() + ".tmp");
-    private static volatile @Nullable String lastSavedJson;
     private static final @NotNull ReentrantLock SAVE_LOCK = new ReentrantLock();
     private static final @NotNull ScheduledExecutorService SAVE_EXECUTOR =
             Executors.newSingleThreadScheduledExecutor(
@@ -45,6 +43,7 @@ public final class PersistentData {
                             .name("DarkUtils PersistentData Autosave")
                             .factory()
             );
+    private static volatile @Nullable String lastSavedJson;
 
     static {
         PersistentData.cleanupTempFile();
@@ -58,7 +57,7 @@ public final class PersistentData {
                         .unstarted(() -> {
                             DarkUtils.setShuttingDown();
                             try {
-                                PersistentData.saveAtomicIfDirtyThreadSafe(true);
+                                PersistentData.saveAtomicIfDirtyThreadSafeBlocking();
                                 PersistentData.SAVE_EXECUTOR.shutdownNow();
                             } catch (final Throwable error) {
                                 DarkUtils.error(PersistentData.class, "Shutdown save failed", error);
@@ -71,7 +70,7 @@ public final class PersistentData {
                     if (PersistentData.SAVE_EXECUTOR.isShutdown()) {
                         return;
                     }
-                    PersistentData.saveAtomicIfDirtyThreadSafe(false);
+                    PersistentData.saveAtomicIfDirtyThreadSafeNonBlocking();
                 },
                 30L,
                 30L,
@@ -130,52 +129,25 @@ public final class PersistentData {
         return new PersistentData();
     }
 
-    public static final void save() {
-        PersistentData.save(PersistentData.FILE.toPath());
-    }
-
-    private static final void save(@NotNull final Path path) {
+    public static final void saveAtomicIfDirtyThreadSafeBlocking() {
+        PersistentData.SAVE_LOCK.lock();
         try {
-            Files.createDirectories(path.getParent());
-
-            final var json = PersistentData.GSON.toJson(PersistentData.INSTANCE);
-
-            Files.writeString(
-                    path,
-                    json,
-                    StandardCharsets.UTF_8
-            );
-
-            PersistentData.lastSavedJson = json;
-        } catch (final IOException e) {
-            DarkUtils.error(PersistentData.class, "Unable to save persistent data", e);
+            PersistentData.saveAtomicIfDirty();
+        } finally {
+            PersistentData.SAVE_LOCK.unlock();
         }
     }
 
-    public static final void saveAtomicIfDirtyThreadSafe(final boolean block) {
-        if (block) {
-            PersistentData.lockForSaving();
-        } else if (!PersistentData.tryLockForSaving()) {
+    private static final void saveAtomicIfDirtyThreadSafeNonBlocking() {
+        if (!PersistentData.SAVE_LOCK.tryLock()) {
             return;
         }
 
         try {
             PersistentData.saveAtomicIfDirty();
         } finally {
-            PersistentData.unlockForSaving();
+            PersistentData.SAVE_LOCK.unlock();
         }
-    }
-
-    private static final boolean tryLockForSaving() {
-        return PersistentData.SAVE_LOCK.tryLock();
-    }
-
-    private static final void lockForSaving() {
-        PersistentData.SAVE_LOCK.lock();
-    }
-
-    private static final void unlockForSaving() {
-        PersistentData.SAVE_LOCK.unlock();
     }
 
     private static final boolean isDirty(@NotNull final String json) {
@@ -188,14 +160,6 @@ public final class PersistentData {
         if (PersistentData.isDirty(json)) {
             PersistentData.saveAtomic(json);
         }
-    }
-
-    public static final void saveAtomic() {
-        PersistentData.saveAtomic(PersistentData.FILE.toPath());
-    }
-
-    private static final void saveAtomic(@NotNull final Path path) {
-        PersistentData.saveAtomic(path, PersistentData.GSON.toJson(PersistentData.INSTANCE));
     }
 
     private static final void saveAtomic(@NotNull final String json) {

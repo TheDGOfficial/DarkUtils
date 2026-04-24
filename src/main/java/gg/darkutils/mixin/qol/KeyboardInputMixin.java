@@ -1,8 +1,8 @@
 package gg.darkutils.mixin.qol;
 
 import gg.darkutils.feat.farming.StickyFarmingKeys;
-import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.player.KeyboardInput;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

@@ -7,9 +7,9 @@ import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.ActivityState;
 import gg.darkutils.utils.LocationUtils;
+import gg.darkutils.utils.PrettyUtils;
 import gg.darkutils.utils.ScoreboardUtil;
 import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.PrettyUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -22,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
-import java.util.function.IntSupplier;
 
 public final class MineshaftFeatures {
     private static final long MINESHAFT_DESPAWN_TIME = TimeUnit.SECONDS.toNanos(30L);
@@ -32,8 +31,10 @@ public final class MineshaftFeatures {
     private static final BooleanSupplier IN_GLACITE_TUNNELS =
             TickUtils.queueUpdatingCondition(MineshaftFeatures::isInGlaciteTunnels);
 
-    public static long mineshaftDespawnsAt;
-
+    static long mineshaftDespawnsAt;
+    static long mineshaftEnter;
+    static long activeMiningTimeSinceLastShaftSpawn;
+    static double averageSpawnTime;
     @NotNull
     private static final Map<String, Consumer<ReceiveGameMessageEvent>> MESSAGE_HANDLERS = Map.of(
             "  LAPIS CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.LAPIS),
@@ -42,14 +43,8 @@ public final class MineshaftFeatures {
             "  VANGUARD CORPSE LOOT! ", e -> MineshaftFeatures.CorpseDataHolder.incrementFound(MineshaftFeatures.CorpseType.VANGUARD),
             "WOW! You found a Glacite Mineshaft portal!", e -> MineshaftFeatures.onShaftSpawn()
     );
-
-    public static long mineshaftEnter;
-
-    public static long activeMiningTimeSinceLastShaftSpawn;
-    public static long timeSinceShaftEnter;
-
-    public static double averageSpawnTime;
-    public static double averageTimeInShaft;
+    static double averageTimeInShaft;
+    private static long timeSinceShaftEnter;
 
     private MineshaftFeatures() {
         super();
@@ -143,7 +138,7 @@ public final class MineshaftFeatures {
         final var times = PersistentData.INSTANCE.timeTookForShafts;
 
         if (null == times) {
-            MineshaftFeatures.averageSpawnTime = 0L;
+            MineshaftFeatures.averageSpawnTime = 0.0D;
             return;
         }
 
@@ -176,7 +171,7 @@ public final class MineshaftFeatures {
         final var times = PersistentData.INSTANCE.timeSpentInShafts;
 
         if (null == times) {
-            MineshaftFeatures.averageTimeInShaft = 0L;
+            MineshaftFeatures.averageTimeInShaft = 0.0D;
             return;
         }
 

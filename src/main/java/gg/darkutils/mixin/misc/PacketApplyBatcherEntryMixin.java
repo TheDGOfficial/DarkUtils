@@ -2,9 +2,9 @@ package gg.darkutils.mixin.misc;
 
 import gg.darkutils.events.ReceiveMainThreadPacketEvent;
 import gg.darkutils.events.ServerTickEvent;
-import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.common.ClientboundPingPacket;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;

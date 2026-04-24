@@ -2,8 +2,6 @@ package gg.darkutils;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
-import gg.darkutils.events.base.Event;
-import gg.darkutils.events.base.EventListener;
 import gg.darkutils.events.base.EventPriority;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.events.base.NonCancellableEvent;
@@ -20,15 +18,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 final class EventSystemTest {
     @BeforeEach
     final void resetRegistry() {
-        clearListeners(TestEvent.class);
-        clearListeners(TestCancellableEvent.class);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static final <T extends Event> void clearListeners(final Class<T> event) {
-        final var handler = EventRegistry.centralRegistry().getEventHandler(event);
-
-        handler.getListeners().forEach((l) -> handler.removeListener((EventListener<T>) (Object) l));
+        EventRegistry.centralRegistry().getEventHandler(EventSystemTest.TestEvent.class).clearListeners();
+        EventRegistry.centralRegistry().getEventHandler(EventSystemTest.TestCancellableEvent.class).clearListeners();
     }
 
     @Test
@@ -37,104 +28,101 @@ final class EventSystemTest {
 
         final var counter = new AtomicInteger(0);
 
-        registry.addListener((TestEvent e) -> counter.incrementAndGet());
+        registry.addListener((EventSystemTest.TestEvent e) -> counter.incrementAndGet());
 
-        new TestEvent(1).trigger();
+        new EventSystemTest.TestEvent(1).trigger();
 
-        Assertions.assertEquals(1, counter.get());
+        Assertions.assertEquals(1, counter.get(), "Listener should be invoked once");
     }
 
     @Test
     final void testPriorityOrdering() {
         final var registry = EventRegistry.centralRegistry();
 
-        final var order = new ArrayList<Integer>();
+        final var order = new ArrayList<Integer>(3);
 
-        registry.addListener((TestEvent e) -> order.add(3), EventPriority.LOW);
-        registry.addListener((TestEvent e) -> order.add(1), EventPriority.HIGHEST);
-        registry.addListener((TestEvent e) -> order.add(2), EventPriority.NORMAL);
+        registry.addListener((EventSystemTest.TestEvent e) -> order.add(3), EventPriority.LOW);
+        registry.addListener((EventSystemTest.TestEvent e) -> order.add(1), EventPriority.HIGHEST);
+        registry.addListener((EventSystemTest.TestEvent e) -> order.add(2), EventPriority.NORMAL);
 
-        new TestEvent(0).trigger();
+        new EventSystemTest.TestEvent(0).trigger();
 
-        Assertions.assertEquals(List.of(1, 2, 3), order);
+        Assertions.assertEquals(List.of(1, 2, 3), order, "Listeners should execute in priority order");
     }
 
     @Test
     final void testStableRegistrationOrder() {
         final var registry = EventRegistry.centralRegistry();
 
-        final var order = new ArrayList<Integer>();
+        final var order = new ArrayList<Integer>(3);
 
-        registry.addListener((TestEvent e) -> order.add(1), EventPriority.NORMAL);
-        registry.addListener((TestEvent e) -> order.add(2), EventPriority.NORMAL);
-        registry.addListener((TestEvent e) -> order.add(3), EventPriority.NORMAL);
+        registry.addListener((EventSystemTest.TestEvent e) -> order.add(1), EventPriority.NORMAL);
+        registry.addListener((EventSystemTest.TestEvent e) -> order.add(2), EventPriority.NORMAL);
+        registry.addListener((EventSystemTest.TestEvent e) -> order.add(3), EventPriority.NORMAL);
 
-        new TestEvent(0).trigger();
+        new EventSystemTest.TestEvent(0).trigger();
 
-        Assertions.assertEquals(List.of(1, 2, 3), order);
+        Assertions.assertEquals(List.of(1, 2, 3), order, "Listeners with same priority should preserve registration order");
     }
 
     @Test
     final void testCancellationStopsListeners() {
         final var registry = EventRegistry.centralRegistry();
 
+        registry.addListener((EventSystemTest.TestCancellableEvent e) -> e.cancellationState().cancel());
         final var counter = new AtomicInteger(0);
+        registry.addListener((EventSystemTest.TestCancellableEvent e) -> counter.incrementAndGet());
 
-        registry.addListener((TestCancellableEvent e) -> e.cancellationState().cancel());
-        registry.addListener((TestCancellableEvent e) -> counter.incrementAndGet());
+        new EventSystemTest.TestCancellableEvent().trigger();
 
-        new TestCancellableEvent().trigger();
-
-        Assertions.assertEquals(0, counter.get());
+        Assertions.assertEquals(0, counter.get(), "Cancelled event should stop downstream listeners");
     }
 
     @Test
     final void testReceiveCancelled() {
         final var registry = EventRegistry.centralRegistry();
 
+        registry.addListener((EventSystemTest.TestCancellableEvent e) -> e.cancellationState().cancel());
         final var counter = new AtomicInteger(0);
-
-        registry.addListener((TestCancellableEvent e) -> e.cancellationState().cancel());
-        registry.addListener((TestCancellableEvent e) -> counter.incrementAndGet(),
+        registry.addListener((EventSystemTest.TestCancellableEvent e) -> counter.incrementAndGet(),
                 EventPriority.NORMAL,
                 true);
 
-        new TestCancellableEvent().trigger();
+        new EventSystemTest.TestCancellableEvent().trigger();
 
-        Assertions.assertEquals(1, counter.get());
+        Assertions.assertEquals(1, counter.get(), "Listener with receiveCancelled=true should be invoked");
     }
 
     @Test
     final void testUncancelRestoresDownstreamPropagation() {
         final var registry = EventRegistry.centralRegistry();
 
-        final var counter = new AtomicInteger(0);
-
-        registry.addListener((TestCancellableEvent e) -> e.cancellationState().cancel(),
+        registry.addListener((EventSystemTest.TestCancellableEvent e) -> e.cancellationState().cancel(),
                 EventPriority.HIGHEST);
 
-        registry.addListener((TestCancellableEvent e) -> e.cancellationState().uncancel(),
+        registry.addListener((EventSystemTest.TestCancellableEvent e) -> e.cancellationState().uncancel(),
                 EventPriority.ABOVE_NORMAL,
                 true);
 
-        registry.addListener((TestCancellableEvent e) -> counter.incrementAndGet(),
+        final var counter = new AtomicInteger(0);
+        registry.addListener((EventSystemTest.TestCancellableEvent e) -> counter.incrementAndGet(),
                 EventPriority.NORMAL,
                 false);
 
-        new TestCancellableEvent().trigger();
+        new EventSystemTest.TestCancellableEvent().trigger();
 
-        Assertions.assertEquals(1, counter.get());
+        Assertions.assertEquals(1, counter.get(), "Uncancel should allow downstream listeners to run");
     }
 
     @Test
     final void testTriggerAndNotCancelledContract() {
         final var registry = EventRegistry.centralRegistry();
 
-        registry.addListener((TestCancellableEvent e) -> e.cancellationState().cancel());
+        registry.addListener((EventSystemTest.TestCancellableEvent e) -> e.cancellationState().cancel());
 
-        final var result = new TestCancellableEvent().triggerAndNotCancelled();
+        final var result = new EventSystemTest.TestCancellableEvent().triggerAndNotCancelled();
 
-        Assertions.assertFalse(result);
+        Assertions.assertFalse(result, "triggerAndNotCancelled should return false when cancelled");
     }
 
     @Test
@@ -143,16 +131,16 @@ final class EventSystemTest {
 
         final var counter = new AtomicInteger(0);
 
-        registry.addListener((TestEvent e) -> {
-            if (e.value() < 3) {
+        registry.addListener((final EventSystemTest.TestEvent e) -> {
+            if (3 > e.value()) {
                 counter.incrementAndGet();
-                new TestEvent(e.value() + 1).trigger();
+                new EventSystemTest.TestEvent(e.value() + 1).trigger();
             }
         });
 
-        new TestEvent(0).trigger();
+        new EventSystemTest.TestEvent(0).trigger();
 
-        Assertions.assertEquals(3, counter.get());
+        Assertions.assertEquals(3, counter.get(), "Reentrant dispatch should increment counter 3 times");
     }
 
     @Test
@@ -161,53 +149,54 @@ final class EventSystemTest {
 
         final var counter = new AtomicInteger(0);
 
-        registry.addListener((TestEvent e) -> {
-            new TestCancellableEvent().trigger();
+        registry.addListener((final EventSystemTest.TestEvent e) -> {
+            new EventSystemTest.TestCancellableEvent().trigger();
             counter.incrementAndGet();
         });
 
-        registry.addListener((TestCancellableEvent e) ->
+        registry.addListener((EventSystemTest.TestCancellableEvent e) ->
                 e.cancellationState().cancel());
 
-        new TestEvent(0).trigger();
+        new EventSystemTest.TestEvent(0).trigger();
 
-        Assertions.assertEquals(1, counter.get());
+        Assertions.assertEquals(1, counter.get(), "Nested dispatch should not interfere with outer event");
     }
 
     @Test
     final void testThreadSafety() throws InterruptedException {
         final var registry = EventRegistry.centralRegistry();
 
-        final int threads = 8;
-        final int iterations = 10_000;
+        final var threads = Runtime.getRuntime().availableProcessors();
 
         final var counter = new AtomicInteger(0);
+
+        registry.addListener((EventSystemTest.TestEvent e) -> counter.incrementAndGet());
+
         final var latch = new CountDownLatch(threads);
+        final var iterations = 10_000;
+        final Runnable task = () -> {
+            for (var j = 0; iterations > j; ++j) {
+                new EventSystemTest.TestEvent(0).trigger();
+            }
+            latch.countDown();
+        };
 
-        registry.addListener((TestEvent e) -> counter.incrementAndGet());
-
-        for (var i = 0; i < threads; i++) {
-            new Thread(() -> {
-                for (var j = 0; j < iterations; j++) {
-                    new TestEvent(0).trigger();
-                }
-                latch.countDown();
-            }).start();
+        for (var i = 0; threads > i; ++i) {
+            Thread.startVirtualThread(task);
         }
 
         latch.await();
 
-        Assertions.assertEquals(threads * iterations, counter.get());
+        Assertions.assertEquals(threads * iterations, counter.get(), "All threads should increment counter correctly");
     }
 
-    record TestEvent(int value) implements NonCancellableEvent {
+    private record TestEvent(int value) implements NonCancellableEvent {
     }
 
-    record TestCancellableEvent(@NotNull CancellationState cancellationState)
+    private record TestCancellableEvent(@NotNull CancellationState cancellationState)
             implements CancellableEvent {
-        TestCancellableEvent() {
+        private TestCancellableEvent() {
             this(CancellationState.ofFresh());
         }
     }
 }
-

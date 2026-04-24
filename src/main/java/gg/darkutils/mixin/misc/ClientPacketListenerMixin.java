@@ -7,12 +7,12 @@ import gg.darkutils.events.SentMessageEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl;
-import net.minecraft.client.multiplayer.CommonListenerCookie;
 import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.CommonListenerCookie;
 import net.minecraft.network.Connection;
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
-import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket;
+import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,8 +24,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientPacketListener.class)
 abstract class ClientPacketListenerMixin extends ClientCommonPacketListenerImpl {
-    private ClientPacketListenerMixin(@NotNull final Minecraft client, @NotNull final Connection connection, @NotNull final CommonListenerCookie connectionState) {
-        super(client, connection, connectionState);
+    private ClientPacketListenerMixin(@NotNull final Minecraft minecraft, @NotNull final Connection connection, @NotNull final CommonListenerCookie commonListenerCookie) {
+        super(minecraft, connection, commonListenerCookie);
 
         throw new UnsupportedOperationException("mixin class");
     }

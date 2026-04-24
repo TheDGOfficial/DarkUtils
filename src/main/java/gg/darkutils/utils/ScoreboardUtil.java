@@ -1,18 +1,17 @@
 package gg.darkutils.utils;
 
 import gg.darkutils.utils.chat.ChatUtils;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.scores.DisplaySlot;
-import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.ScoreHolder;
-
+import net.minecraft.world.scores.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 public final class ScoreboardUtil {
     private ScoreboardUtil() {
@@ -32,11 +31,7 @@ public final class ScoreboardUtil {
         final var scoreboard = player.connection.scoreboard();
         final var objective = scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR);
 
-        if (null == objective) {
-            return Collections::emptyIterator;
-        }
-
-        return () -> new ScoreboardUtil.ScoreboardIterator(scoreboard);
+        return null == objective ? Collections::emptyIterator : () -> new ScoreboardUtil.ScoreboardIterator(scoreboard);
     }
 
     private static final class ScoreboardIterator implements Iterator<String> {
@@ -46,6 +41,8 @@ public final class ScoreboardUtil {
         private @Nullable String nextLine;
 
         private ScoreboardIterator(final @NotNull Scoreboard scoreboard) {
+            super();
+
             this.scoreboard = scoreboard;
             this.trackedPlayers = scoreboard.getTrackedPlayers().iterator();
         }
@@ -77,13 +74,24 @@ public final class ScoreboardUtil {
         @Override
         public final @NotNull String next() {
             if (!this.hasNext()) {
-                throw new NoSuchElementException();
+                throw new NoSuchElementException("scoreboard next line");
             }
 
             final var result = this.nextLine;
+            Objects.requireNonNull(result, "scoreboard next line result");
+
             this.nextLine = null;
 
             return result;
+        }
+
+        @Override
+        public final String toString() {
+            return "ScoreboardIterator{" +
+                    "trackedPlayers=" + this.trackedPlayers +
+                    ", scoreboardObjectiveNames={" + String.join(", ", this.scoreboard.getObjectiveNames()) + '}' +
+                    ", nextLine='" + this.nextLine + '\'' +
+                    '}';
         }
     }
 }

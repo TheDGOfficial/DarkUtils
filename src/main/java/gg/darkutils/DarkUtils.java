@@ -1,5 +1,6 @@
 package gg.darkutils;
 
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -23,11 +24,11 @@ import gg.darkutils.feat.foraging.TreeGiftConfirmation;
 import gg.darkutils.feat.foraging.TreeGiftFeatures;
 import gg.darkutils.feat.foraging.TreeGiftsPerHour;
 import gg.darkutils.feat.mining.CorpsesPerShaftDisplay;
+import gg.darkutils.feat.mining.LittlefootDisplay;
 import gg.darkutils.feat.mining.MineshaftDisplay;
 import gg.darkutils.feat.mining.MineshaftFeatures;
-import gg.darkutils.feat.mining.WillOWispDisplay;
-import gg.darkutils.feat.mining.LittlefootDisplay;
 import gg.darkutils.feat.mining.PickaxeAbilityDisplay;
+import gg.darkutils.feat.mining.WillOWispDisplay;
 import gg.darkutils.feat.performance.LogCleaner;
 import gg.darkutils.feat.performance.SoundLagFix;
 import gg.darkutils.feat.performance.ThreadPriorityTweaker;
@@ -45,6 +46,7 @@ import gg.darkutils.utils.ActivityState;
 import gg.darkutils.utils.LazyConstants;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.LogLevel;
+import gg.darkutils.utils.OSUtils;
 import gg.darkutils.utils.Pair;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.ButtonData;
@@ -59,13 +61,12 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
-import com.mojang.blaze3d.platform.Window;
-import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.CommonColors;
-import org.lwjgl.glfw.GLFW;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
@@ -133,7 +134,7 @@ public final class DarkUtils implements ClientModInitializer {
      * Holds the lazy-initialized non-changing constant-foldable value of the boolean representing
      * whether we should prefer to use Wayland or not.
      */
-    private static final @NotNull Supplier<Boolean> SHOULD_PREFER_WAYLAND = LazyConstants.lazyConstantOf(() -> GLFW.glfwPlatformSupported(GLFW.GLFW_PLATFORM_WAYLAND) && "wayland".equals(System.getenv("XDG_SESSION_TYPE")));
+    private static final @NotNull Supplier<Boolean> SHOULD_PREFER_WAYLAND = LazyConstants.lazyConstantOf(() -> GLFW.glfwPlatformSupported(GLFW.GLFW_PLATFORM_WAYLAND) && OSUtils.environmentVariableEquals("XDG_SESSION_TYPE", "wayland"));
 
     /**
      * Used for rate-limiting the update checker command so that user can't spam the GH API.
@@ -566,9 +567,17 @@ public final class DarkUtils implements ClientModInitializer {
 
     @NotNull
     public static final Pair<String, String> getModAndMcVersion() {
-        final var split = DarkUtils.getVersion().split("\\+");
+        final var version = DarkUtils.getVersion();
+        final var separatorIndex = version.indexOf('+');
 
-        return new Pair<>(split[0], split[1]); // 0 = mod version, 1 = mc version
+        if (-1 == separatorIndex) {
+            throw new IllegalStateException("Version string does not contain '+' separator: " + version);
+        }
+
+        final var modVersion = version.substring(0, separatorIndex);
+        final var mcVersion = version.substring(separatorIndex + 1);
+
+        return new Pair<>(modVersion, mcVersion);
     }
 
     @NotNull

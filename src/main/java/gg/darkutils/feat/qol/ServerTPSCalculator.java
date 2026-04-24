@@ -58,14 +58,6 @@ public final class ServerTPSCalculator {
         EventRegistry.centralRegistry().addListener(ServerTPSCalculator::onServerTick);
     }
 
-    /**
-     * Gets TPS from the last second.
-     * Returns -1 if not measured yet.
-     */
-    public static final int getLastTPS() {
-        return ServerTPSCalculator.initialized ? ServerTPSCalculator.lastTPS : -1;
-    }
-
     private static final void resetState() {
         ServerTPSCalculator.initialized = false;
         ServerTPSCalculator.lastTPS = 0;

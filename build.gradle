@@ -9,9 +9,9 @@ import org.objectweb.asm.tree.*
 import org.objectweb.asm.util.CheckClassAdapter
 import proguard.gradle.ProGuardTask
 
-import java.nio.file.Path as NioPath
 import java.nio.file.FileSystems
 import java.nio.file.Files
+import java.nio.file.Path as NioPath
 import java.nio.file.StandardCopyOption
 import java.util.concurrent.TimeUnit
 import java.util.jar.JarEntry
@@ -36,7 +36,7 @@ buildscript {
 }
 
 plugins {
-    id 'net.fabricmc.fabric-loom-remap' version "1.16.1"
+    id 'net.fabricmc.fabric-loom-remap' version '1.16.1'
 }
 
 version = project.mod_version
@@ -87,7 +87,7 @@ loom {
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:1.21.11") {
+    minecraft('com.mojang:minecraft:1.21.11') {
         transitive = false
     }
 
@@ -95,34 +95,34 @@ dependencies {
         transitive = false
     }
 
-    modImplementation("net.fabricmc:fabric-loader:0.19.2") {
+    modImplementation('net.fabricmc:fabric-loader:0.19.2') {
         transitive = false
     }
 
-    final def fabricApiVersion = "0.141.3+1.21.11"
+    final def fabricApiVersion = '0.141.3+1.21.11'
 
     // Pulls in all Fabric API modules, may uncomment during development. Explicitly declare below and comment it again after.
     //modImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
 
-    modImplementation(fabricApi.module("fabric-api-base", fabricApiVersion)) {
+    modImplementation(fabricApi.module('fabric-api-base', fabricApiVersion)) {
         transitive = false
     }
-    modImplementation(fabricApi.module("fabric-lifecycle-events-v1", fabricApiVersion)) {
+    modImplementation(fabricApi.module('fabric-lifecycle-events-v1', fabricApiVersion)) {
         transitive = false
     }
-    modImplementation(fabricApi.module("fabric-command-api-v2", fabricApiVersion)) {
+    modImplementation(fabricApi.module('fabric-command-api-v2', fabricApiVersion)) {
         transitive = false
     }
-    modImplementation(fabricApi.module("fabric-message-api-v1", fabricApiVersion)) {
+    modImplementation(fabricApi.module('fabric-message-api-v1', fabricApiVersion)) {
         transitive = false
     }
-    modImplementation(fabricApi.module("fabric-rendering-v1", fabricApiVersion)) {
+    modImplementation(fabricApi.module('fabric-rendering-v1', fabricApiVersion)) {
         transitive = false
     }
-    modImplementation(fabricApi.module("fabric-key-binding-api-v1", fabricApiVersion)) {
+    modImplementation(fabricApi.module('fabric-key-binding-api-v1', fabricApiVersion)) {
         transitive = false
     }
-    modImplementation(fabricApi.module("fabric-networking-api-v1", fabricApiVersion)) {
+    modImplementation(fabricApi.module('fabric-networking-api-v1', fabricApiVersion)) {
         transitive = false
     }
 
@@ -171,10 +171,8 @@ tasks.withType(Test).configureEach {
 }
 
 processResources {
-    // Capture version at configuration time
     final def modVersion = project.version
 
-    // Declare version for incremental builds
     inputs.property('version', modVersion)
 
     filesMatching('fabric.mod.json') {
@@ -306,33 +304,33 @@ final class JrtIndexHolder {
 
         try (final def stream = Files.walk(modules)) {
             stream
-                .filter { Files.isRegularFile(it) }
-                .filter { it.toString().endsWith('.class') }
-                .forEach { final def path ->
-                    final def relative = modules.relativize(path).toString().replace('\\', '/')
-                    final def className = relative.substring(relative.indexOf('/') + 1)
-                    index.putIfAbsent(className, path)
-                }
+                    .filter { Files.isRegularFile(it) }
+                    .filter { it.toString().endsWith('.class') }
+                    .forEach { final def path ->
+                        final def relative = modules.relativize(path).toString().replace('\\', '/')
+                        final def className = relative.substring(relative.indexOf('/') + 1)
+                        index.putIfAbsent(className, path)
+                    }
         }
 
         return Map.copyOf(index)
     }
 
     static final NioPath lookup(final String entry) {
-        return JrtIndexHolder.CLASS_INDEX.get(entry)
+        return JrtIndexHolder.CLASS_INDEX[entry]
     }
 }
 
 @CacheableTask
 abstract class AsmPreprocessTask extends DefaultTask {
-    private static final def NAME_DESC               = 'Lgg/darkutils/annotations/Name;'
-    private static final def SYNTHETIC_DESC          = 'Lgg/darkutils/annotations/Synthetic;'
-    private static final def BRIDGE_DESC             = 'Lgg/darkutils/annotations/Bridge;'
-    private static final def PRIVATE_DESC            = 'Lgg/darkutils/annotations/Private;'
-    private static final def PACKAGE_PRIVATE_DESC    = 'Lgg/darkutils/annotations/PackagePrivate;'
-    private static final def PRIVATE_FIELDS_DESC     = 'Lgg/darkutils/annotations/PrivateFields;'
+    private static final def NAME_DESC = 'Lgg/darkutils/annotations/Name;'
+    private static final def SYNTHETIC_DESC = 'Lgg/darkutils/annotations/Synthetic;'
+    private static final def BRIDGE_DESC = 'Lgg/darkutils/annotations/Bridge;'
+    private static final def PRIVATE_DESC = 'Lgg/darkutils/annotations/Private;'
+    private static final def PACKAGE_PRIVATE_DESC = 'Lgg/darkutils/annotations/PackagePrivate;'
+    private static final def PRIVATE_FIELDS_DESC = 'Lgg/darkutils/annotations/PrivateFields;'
 
-    private static final def MIXIN_OVERWRITE_DESC    = 'Lorg/spongepowered/asm/mixin/Overwrite;'
+    private static final def MIXIN_OVERWRITE_DESC = 'Lorg/spongepowered/asm/mixin/Overwrite;'
 
     @InputDirectory
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -364,7 +362,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
     }
 
     protected final boolean hierarchyHasMethod(final ClassNode owner, final String name, final String desc, final Set<File> classpath, final HashMap<String, ClassNode> classNodeCache) {
-        final def queue   = new ArrayDeque<String>()
+        final def queue = new ArrayDeque<String>()
         final def visited = new HashSet<String>()
 
         if (null != owner.superName) {
@@ -403,7 +401,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
         return false
     }
 
-    protected final ClassNode loadClassNode(final String internalName, final Set<File> classpath, final HashMap<String, ClassNode> classNodeCache) {
+    private static final ClassNode loadClassNode(final String internalName, final Set<File> classpath, final HashMap<String, ClassNode> classNodeCache) {
         return classNodeCache.computeIfAbsent(internalName, { final def name -> AsmPreprocessTask.loadClassNode0(name, classpath) })
     }
 
@@ -485,7 +483,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
         def renamed = false
 
         if (constantFold) {
-            final def fieldsBySig = HashMap.<String, FieldNode>newHashMap(cn.fields.size())
+            final def fieldsBySig = HashMap.<String, FieldNode> newHashMap(cn.fields.size())
 
             for (final def fn : cn.fields) {
                 fieldsBySig[fn.name + fn.desc] = fn
@@ -494,7 +492,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
             for (final def mn : cn.methods) {
                 if ('<clinit>' != mn.name || null == mn.instructions) continue
 
-                for (def insn = mn.instructions.first; insn != null; ) {
+                for (def insn = mn.instructions.first; insn != null;) {
                     final def next = insn.next
 
                     /*
@@ -510,7 +508,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
                                 && mInsn.name.startsWith('to')) {
 
                             final def constNode = insn.previous
-                            final def enumNode  = constNode?.previous
+                            final def enumNode = constNode?.previous
 
                             if (enumNode instanceof FieldInsnNode
                                     && Opcodes.GETSTATIC == enumNode.opcode
@@ -535,13 +533,13 @@ abstract class AsmPreprocessTask extends DefaultTask {
                                 long result
 
                                 switch (mInsn.name) {
-                                    case 'toNanos':   result = timeUnit.toNanos(value); break
-                                    case 'toMicros':  result = timeUnit.toMicros(value); break
-                                    case 'toMillis':  result = timeUnit.toMillis(value); break
+                                    case 'toNanos': result = timeUnit.toNanos(value); break
+                                    case 'toMicros': result = timeUnit.toMicros(value); break
+                                    case 'toMillis': result = timeUnit.toMillis(value); break
                                     case 'toSeconds': result = timeUnit.toSeconds(value); break
                                     case 'toMinutes': result = timeUnit.toMinutes(value); break
-                                    case 'toHours':   result = timeUnit.toHours(value); break
-                                    case 'toDays':    result = timeUnit.toDays(value); break
+                                    case 'toHours': result = timeUnit.toHours(value); break
+                                    case 'toDays': result = timeUnit.toDays(value); break
                                     default:
                                         logger.warn("unsupported TimeUnit method for compile-time evaluation used: ${mInsn.name}"); insn = next; continue
                                 }
@@ -587,7 +585,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
             }
         }
 
-        for (final def it = cn.fields.iterator(); it.hasNext(); ) {
+        for (final def it = cn.fields.iterator(); it.hasNext();) {
             final def f = it.next()
             final def key = cn.name + f.name + f.desc
 
@@ -679,10 +677,6 @@ abstract class AsmPreprocessTask extends DefaultTask {
                 }
             }
 
-            /*if (0 != (fn.access & Opcodes.ACC_STATIC) && 0 != (fn.access & Opcodes.ACC_FINAL) && 1 != fn.desc.length() && 'Ljava/util/function/Supplier;' != fn.desc && 'Ljava/lang/String;' != fn.desc && 'Ljava/util/Map;' != fn.desc && '$VALUES' != fn.name && 'INSTANCE' != fn.name && (0 == (fn.access & Opcodes.ACC_ENUM) || ('L' + cn.name + ';') != fn.desc)) {
-                logger.lifecycle("Possible lazy initialization of ${cn.name}#${fn.name} via LazyConstants")
-            }*/
-
             final def anns = fn.invisibleAnnotations
 
             if (null != anns) {
@@ -755,7 +749,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
          */
         final def isRecord = 0 != (cn.access & Opcodes.ACC_RECORD)
 
-        final def methodsBySig = HashMap.<String, MethodNode>newHashMap(cn.methods.size())
+        final def methodsBySig = HashMap.<String, MethodNode> newHashMap(cn.methods.size())
 
         for (final def mn : cn.methods) {
             /*
@@ -988,13 +982,10 @@ abstract class AsmPreprocessTask extends DefaultTask {
 
             cr.accept(cn, ClassReader.EXPAND_FRAMES)
 
-            def changed = false
-            def renamed = false
-
             final def result = this.process(privatizedMethodsByClass, constantFields, classNodeCache, verbose, constantFold, cn)
 
-            changed = result.first
-            renamed = result.last
+            final def changed = result.first
+            final def renamed = result.last
 
             def output = bytes
             def cw = new ClassWriter(0)
@@ -1033,7 +1024,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
                 return
             }
 
-            outputFile.parentFile.mkdirs() // allowed here: we're writing declared @OutputDirectory
+            outputFile.parentFile.mkdirs()
 
             outputFile.newOutputStream().withCloseable {
                 it.write(output)
@@ -1142,10 +1133,8 @@ final def asmOutputProvider = tasks.named('asmPreprocess').flatMap(AsmPreprocess
 tasks.named('jar', Jar).configure { final def jarTask ->
     dependsOn(tasks.named('asmPreprocess'))
 
-    // include ASM-processed classes
     from(asmOutputProvider)
 
-    // exclude ORIGINAL compiled classes from jar
     exclude { final def details ->
         final def compileDir = compileOutputDirProvider.get().asFile.toPath()
         final def filePath = details.file.toPath()
@@ -1154,7 +1143,6 @@ tasks.named('jar', Jar).configure { final def jarTask ->
     }
 }
 
-// Task class for full configuration-cache compatibility
 @CacheableTask
 abstract class CheckMethodSizesTask extends DefaultTask {
     @InputFiles
@@ -1205,22 +1193,19 @@ abstract class CheckMethodSizesTask extends DefaultTask {
     }
 }
 
-// Register the task in a configuration-cache-safe way
 tasks.register('checkMethodSizes', CheckMethodSizesTask) {
     group = 'verification'
     description = 'Checks bytecode sizes of compiled methods.'
 
-    // Use a FileCollection as input (lazy, configuration-cache safe)
     classesDirectories.from(
-        tasks.named('asmPreprocess').flatMap { it.outputClassesDir }
+            tasks.named('asmPreprocess').flatMap { it.outputClassesDir }
     )
 
     reportFile.set(
-        layout.buildDirectory.file('reports/methodSizes.txt')
+            layout.buildDirectory.file('reports/methodSizes.txt')
     )
 }
 
-// Make it run after asmPreprocess
 tasks.named('asmPreprocess') {
     finalizedBy tasks.named('checkMethodSizes')
 }
@@ -1390,12 +1375,12 @@ abstract class InstallToModFolderTask extends DefaultTask {
 
         // Delete previous versions of the mod
         try (final def files = Files.list(modsDir)) {
-                files.filter { it.fileName.toString().startsWith(baseName + '-') }
-                     .filter { it.fileName.toString().endsWith('.jar') }
-                     .forEach {
-                         logger.lifecycle("Removing old mod jar: ${it.fileName}")
-                         Files.deleteIfExists(it)
-                     }
+            files.filter { it.fileName.toString().startsWith(baseName + '-') }
+                    .filter { it.fileName.toString().endsWith('.jar') }
+                    .forEach {
+                        logger.lifecycle("Removing old mod jar: ${it.fileName}")
+                        Files.deleteIfExists(it)
+                    }
         }
 
         final def target = modsDir.resolve(fileName)
@@ -1417,7 +1402,7 @@ tasks.register('installToModFolder', InstallToModFolderTask) {
     dependsOn tasks.named('remapJar')
 
     inputJar.set(
-        tasks.named('remapJar').flatMap { it.archiveFile }
+            tasks.named('remapJar').flatMap { it.archiveFile }
     )
 
     modVersion.set(project.version.toString())
@@ -1437,13 +1422,13 @@ tasks.named('checkMethodSizes') {
 tasks.named('installToModFolder', InstallToModFolderTask).configure {
     onlyIf(new Spec<Task>() {
         @Override
-        final boolean isSatisfiedBy(final Task t) {
-            final def dir = ((InstallToModFolderTask) t)
+        final boolean isSatisfiedBy(final Task task) {
+            final def dir = ((InstallToModFolderTask) task)
                     .targetModsDir
                     .orNull
 
             return null == System.getenv('CI') &&
-                   null != dir &&
+                    null != dir &&
                     dir.asFile.exists()
         }
     })

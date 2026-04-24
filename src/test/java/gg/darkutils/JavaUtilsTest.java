@@ -27,25 +27,24 @@ final class JavaUtilsTest {
     final void getImmediateCaller_returnsCallerOfCaller() {
         final var frame = JavaUtilsTest.level1();
 
-        Assertions.assertTrue(frame.isPresent());
-        Assertions.assertEquals(JavaUtilsTest.class, frame.get().getDeclaringClass());
-        Assertions.assertEquals("level1", frame.get().getMethodName());
+        Assertions.assertTrue(frame.isPresent(), "Frame should be present");
+        Assertions.assertEquals(JavaUtilsTest.class, frame.get().getDeclaringClass(), "Declaring class should be JavaUtilsTest");
+        Assertions.assertEquals("level1", frame.get().getMethodName(), "Method name should be level1");
     }
 
     @Test
     final void getImmediateCallerClass_returnsCorrectClass() {
         final var clazz = JavaUtilsTest.level1Class();
 
-        Assertions.assertTrue(clazz.isPresent());
-        Assertions.assertEquals(JavaUtilsTest.class, clazz.get());
+        Assertions.assertTrue(clazz.isPresent(), "Class should be present");
+        Assertions.assertEquals(JavaUtilsTest.class, clazz.get(), "Class should be JavaUtilsTest");
     }
 
     @Test
     final void getExternalCaller_returnsExternalFrame() {
         final var frame = JavaUtils.getExternalCaller();
 
-        Assertions.assertTrue(frame.isPresent());
-        Assertions.assertFalse(frame.get().getClassName().startsWith("gg.darkutils."));
+        Assertions.assertTrue(frame.isPresent(), "External frame should be present");
+        Assertions.assertFalse(frame.get().getClassName().startsWith("gg.darkutils."), "External caller should not be from internal package");
     }
 }
-

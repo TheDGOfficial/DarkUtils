@@ -5,8 +5,8 @@ import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
-import net.minecraft.client.Minecraft;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
@@ -66,6 +66,6 @@ public final class ArrowStackWaypoints {
             return;
         }
 
-        ArrowStackWaypoints.STACK_BLOCK_POSITIONS.forEach((color, pos) -> RenderUtils.drawBlockOutline(context, pos, color));
+        ArrowStackWaypoints.STACK_BLOCK_POSITIONS.forEach((color, pos) -> RenderUtils.drawBlockOutline(pos, color));
     }
 }

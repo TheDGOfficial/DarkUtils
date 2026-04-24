@@ -4,14 +4,12 @@ import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import org.jetbrains.annotations.NotNull;
 
 @Mixin(KeyboardHandler.class)
 final class KeyboardHandlerMixin {
