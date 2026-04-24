@@ -90,11 +90,11 @@ public final class PickaxeAbilityDisplay {
         final var at = PickaxeAbilityDisplay.expiresAt;
         if (-1L == at) {
             text.setText("Pickaxe Ability: READY");
-        } else if (0 == at) {
+        } else if (0L == at) {
             text.setText("Pickaxe Ability: Could not detect");
         } else {
             final var remaining = PickaxeAbilityDisplay.expiresAt - System.nanoTime();
-            if (remaining <= 0) {
+            if (0L >= remaining) {
                 text.setText("Pickaxe Ability: READY");
             } else {
                 text.setText("Pickaxe Ability: " + PrettyUtils.prettifyNanosToSeconds(remaining));
