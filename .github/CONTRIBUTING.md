@@ -4,7 +4,8 @@ Step by step:
 
 * First, fork and clone this project.
     * Second, create a branch for your changes. (e.g: "fix-null-pointer-exception")
-      This can be done easily using "git switch -c fix-null-pointer-exception". It will create a new branch based on the current branch
+      This can be done easily using "git switch -c fix-null-pointer-exception". It will create a new branch based on the
+      current branch
       and
       switch to it. If you are not on the main branch, you can switch to it using "git checkout main".
 
@@ -33,5 +34,8 @@ Step by step:
 
 * Clone this (or your fork's) repository via your IDE or command-line. (git clone https://github.com/<organization or
   user\>/\<repository/project name\>.git)
-* Run ./gradlew build from your terminal to build the JAR for the project. Copy the generated JAR file at build/libs/DarkUtils-version.jar to your mods folder (make sure to get the jar that **does not** end with -sources.jar - that's the source code, not the binary). You should be able to run your game normally afterwards to test your changes in the mod.
+* Run ./gradlew build from your terminal to build the JAR for the project. Copy the generated JAR file at
+  build/libs/DarkUtils-version.jar to your mods folder (make sure to get the jar that **does not** end with
+  -sources.jar - that's the source code, not the binary). You should be able to run your game normally afterwards to
+  test your changes in the mod.
 
