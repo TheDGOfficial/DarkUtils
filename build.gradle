@@ -130,7 +130,7 @@ dependencies {
         transitive = false
     }
 
-    modImplementation('com.terraformersmc:modmenu:17.0.0') {
+    implementation('com.terraformersmc:modmenu:18.0.0-alpha.6') {
         transitive = false
     }
 
