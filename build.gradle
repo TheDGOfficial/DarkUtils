@@ -138,10 +138,10 @@ dependencies {
         transitive = false
     }
 
-    testImplementation('org.junit.jupiter:junit-jupiter:6.1.0-M1')
-    testImplementation('org.junit.jupiter:junit-jupiter-api:6.1.0-M1')
+    testImplementation('org.junit.jupiter:junit-jupiter:6.1.0-RC1')
+    testImplementation('org.junit.jupiter:junit-jupiter-api:6.1.0-RC1')
 
-    testRuntimeOnly('org.junit.platform:junit-platform-launcher:6.1.0-M1')
+    testRuntimeOnly('org.junit.platform:junit-platform-launcher:6.1.0-RC1')
 
     compileOnly('com.google.errorprone:error_prone_annotations:2.49.0')
 }

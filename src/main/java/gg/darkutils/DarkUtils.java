@@ -810,6 +810,7 @@ public final class DarkUtils implements ClientModInitializer {
         DarkUtils.lastManualUpdateCheckTimeNs = now;
 
         // Will still check even if disabled on config since user explicitly entered the command.
+        DarkUtils.user("Checking for mod updates, this might take a slight time...", DarkUtils.UserMessageLevel.USER_INFO);
         DarkUtils.checkUpdates();
     }
 
