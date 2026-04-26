@@ -36,7 +36,7 @@ buildscript {
 }
 
 plugins {
-    id 'net.fabricmc.fabric-loom-remap' version '1.16.1'
+    alias(libs.plugins.loom)
 }
 
 version = project.mod_version
@@ -87,7 +87,7 @@ loom {
 }
 
 dependencies {
-    minecraft('com.mojang:minecraft:1.21.11') {
+    minecraft(libs.minecraft) {
         transitive = false
     }
 
@@ -95,11 +95,11 @@ dependencies {
         transitive = false
     }
 
-    modImplementation('net.fabricmc:fabric-loader:0.19.2') {
+    modImplementation(libs.fabric.loader) {
         transitive = false
     }
 
-    final def fabricApiVersion = '0.141.3+1.21.11'
+    final def fabricApiVersion = libs.versions.fabric.api.get()
 
     // Pulls in all Fabric API modules, may uncomment during development. Explicitly declare below and comment it again after.
     //modImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
@@ -126,24 +126,22 @@ dependencies {
         transitive = false
     }
 
-    modImplementation('me.shedaniel.cloth:cloth-config-fabric:21.11.153') {
+    modImplementation(libs.cloth.config) {
         transitive = false
     }
 
-    modImplementation('com.terraformersmc:modmenu:17.0.0') {
+    modImplementation(libs.mod.menu) {
         transitive = false
     }
 
-    modImplementation('net.hypixel:mod-api:1.0.2') {
+    modImplementation(libs.hypixel.mod.api) {
         transitive = false
     }
 
-    testImplementation('org.junit.jupiter:junit-jupiter:6.1.0-RC1')
-    testImplementation('org.junit.jupiter:junit-jupiter-api:6.1.0-RC1')
+    testImplementation(libs.bundles.junit)
+    testRuntimeOnly(libs.junit.platform.launcher)
 
-    testRuntimeOnly('org.junit.platform:junit-platform-launcher:6.1.0-RC1')
-
-    compileOnly('com.google.errorprone:error_prone_annotations:2.49.0')
+    compileOnly(libs.errorprone)
 }
 
 tasks {
@@ -231,7 +229,8 @@ tasks.named('compileJava', JavaCompile).configure {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 21
+    it.options.release = libs.versions.java.get().toInteger()
+
     it.options.compilerArgs += '-Xlint:all'
 
     it.options.compilerArgs += '-g'
