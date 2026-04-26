@@ -1268,7 +1268,7 @@ abstract class CreateJrtModulesLibraryJarTask extends DefaultTask {
     }
 }
 
-final def jdk = layout.buildDirectory.file('proguard/java-base-from-jrt.jar')
+final def jdk = layout.buildDirectory.file('proguard/required-modules-from-jrt.jar')
 
 tasks.register('createJrtModulesLibraryJar', CreateJrtModulesLibraryJarTask) {
     javaVendor.set(System.getProperty('java.vendor'))
