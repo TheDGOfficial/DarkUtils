@@ -46,10 +46,9 @@
 }
 
 # Disable some of the possibly problematic optimizations.
-# One of these causes a crash of loom's jar remap task (code/allocation/variable)
-# While others end up widening accessibility instead of lowering to private because ProGuard does not understand
+# These end up widening accessibility instead of lowering to private because ProGuard does not understand
 # the concept of nestmates added in modern java that allows private members to be accessed from outer class without synthetic accessors.
--optimizations !code/allocation/variable,!method/marking/static,!method/marking/private,!field/marking/private
+-optimizations !method/marking/static,!method/marking/private,!field/marking/private
 
 # ProGuard removes the $VALUES field and the public values() method,
 # but it does not remove the private synthetic method $values(), which
