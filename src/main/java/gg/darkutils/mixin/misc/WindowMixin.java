@@ -35,8 +35,6 @@ final class WindowMixin {
     private int x;
     @Shadow
     private int y;
-    @Unique
-    private boolean darkutils$desktopFileFailure;
 
     private WindowMixin() {
         super();
@@ -70,25 +68,9 @@ final class WindowMixin {
         Minecraft.getInstance().resizeGui();
     }
 
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwDefaultWindowHints()V", shift = At.Shift.AFTER))
-    private final void darkutils$afterDefaultWindowHints$fixGameIconOnWaylandIfEnabled(@NotNull final CallbackInfo ci) {
-        if (DarkUtilsConfig.INSTANCE.preferWayland && DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.shouldPreferWayland() && DarkUtils.isWindowPlatformWayland()) {
-            try {
-                WaylandGameIconFix.generateDesktopFile();
-            } catch (final IOException ioe) {
-                this.darkutils$desktopFileFailure = true;
-                DarkUtils.error("@fileName@", "Error generating desktop file to filesystem for use with wayland icon fix, fall backing to vanilla logic", ioe);
-
-                return;
-            }
-
-            GLFW.glfwWindowHintString(GLFW.GLFW_WAYLAND_APP_ID, WaylandGameIconFix.WAYLAND_APP_ID);
-        }
-    }
-
     @Inject(method = "setIcon", at = @At("HEAD"), cancellable = true)
     private final void darkutils$onSetGameIcon$fixGameIconOnWaylandIfEnabled(@NotNull final PackResources packResources, @NotNull final IconSet iconSet, @NotNull final CallbackInfo ci) {
-        if (DarkUtilsConfig.INSTANCE.preferWayland && DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.shouldPreferWayland() && DarkUtils.isWindowPlatformWayland() && !this.darkutils$desktopFileFailure) {
+        if (DarkUtilsConfig.INSTANCE.preferWayland && DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.shouldPreferWayland() && DarkUtils.isWindowPlatformWayland() && !WaylandGameIconFix.desktopFileFailure) {
             try {
                 WaylandGameIconFix.setIcon(iconSet.getStandardIcons(packResources));
             } catch (final IOException ioe) {
