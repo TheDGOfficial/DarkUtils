@@ -11,7 +11,7 @@ junit = "6.1.0-RC1"
 errorprone = "2.49.0"
 
 [plugins]
-loom = { id = "net.fabricmc.fabric-loom-remap", version.ref = "loom" }
+loom = { id = "net.fabricmc.fabric-loom", version.ref = "loom" }
 
 [libraries]
 minecraft = { group = "com.mojang", name = "minecraft", version.ref = "minecraft" }
