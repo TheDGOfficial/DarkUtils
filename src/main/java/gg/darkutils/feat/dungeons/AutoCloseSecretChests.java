@@ -4,8 +4,8 @@ import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.OpenScreenEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.world.inventory.MenuType;
 import org.jetbrains.annotations.NotNull;
 
 public final class AutoCloseSecretChests {

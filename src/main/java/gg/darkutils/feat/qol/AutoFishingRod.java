@@ -10,25 +10,21 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.item.Items;
-import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.security.SecureRandom;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public final class AutoFishingRod {
     private static final @NotNull String READY = "!!!";
-    private static final @NotNull Matcher COUNTDOWN_MATCHER =
-            Pattern.compile("(\\d+(\\.\\d+)?)").matcher("");
     private static final @NotNull SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private static @Nullable WeakReference<ArmorStand> countdownArmorStand;
@@ -68,8 +64,35 @@ public final class AutoFishingRod {
         }
     }
 
+    private static final boolean isNumericCountdown(@NotNull final String text) {
+        final var len = text.length();
+        if (0 == len) {
+            return false;
+        }
+
+        var seenDot = false;
+
+        for (var i = 0; i < len; ++i) {
+            final var character = text.charAt(i);
+
+            if ('0' <= character && '9' >= character) {
+                continue;
+            }
+
+            if ('.' == character && !seenDot) {
+                seenDot = true;
+                continue;
+            }
+
+            return false;
+        }
+
+        // disallow "." only
+        return !(1 == len && seenDot);
+    }
+
     private static final boolean isCountdownArmorStand(@Nullable final Component customName) {
-        return null != customName && AutoFishingRod.COUNTDOWN_MATCHER.reset(customName.getString()).matches() && ChatUtils.hasFormatting(customName, SimpleColor.YELLOW, SimpleFormatting.BOLD);
+        return null != customName && AutoFishingRod.isNumericCountdown(customName.getString()) && ChatUtils.hasFormatting(customName, SimpleColor.YELLOW, SimpleFormatting.BOLD);
     }
 
     private static final boolean isNotHoldingRod(@Nullable final LocalPlayer player) {

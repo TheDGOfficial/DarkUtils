@@ -7,11 +7,11 @@ import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.PrettyUtils;
 import gg.darkutils.utils.RenderUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.world.item.Items;
-import net.minecraft.ChatFormatting;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 
 public final class CorpsesPerShaftDisplay {

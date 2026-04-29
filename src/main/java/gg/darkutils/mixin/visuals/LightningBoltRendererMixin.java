@@ -1,11 +1,11 @@
 package gg.darkutils.mixin.visuals;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.LightningBoltRenderer;
 import net.minecraft.client.renderer.entity.state.LightningBoltRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-import com.mojang.blaze3d.vertex.PoseStack;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

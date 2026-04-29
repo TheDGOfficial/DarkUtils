@@ -8,13 +8,14 @@ import gg.darkutils.events.InteractEntityEvent;
 import gg.darkutils.feat.farming.StickyFarmingKeys;
 import gg.darkutils.feat.qol.AutoClicker;
 import gg.darkutils.utils.Helpers;
+import gg.darkutils.utils.JavaUtils;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
-import net.minecraft.client.KeyMapping;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.phys.EntityHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -36,7 +37,7 @@ final class MinecraftMixin {
     private final void darkutils$adjustPriorityIfEnabled(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.alwaysPrioritizeRenderThread) {
             // vanilla game only sets priority to max for processors with 4 or more cores, but it is best to have max priority no matter the core count.
-            Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+            JavaUtils.setThreadPriority(Thread.currentThread(), Thread.MAX_PRIORITY);
         }
     }
 
@@ -76,6 +77,6 @@ final class MinecraftMixin {
 
     @Inject(method = "destroy", at = @At("HEAD"))
     private final void darkutils$onQuitGame(@NotNull final CallbackInfo ci) {
-        PersistentData.saveAtomicIfDirtyThreadSafe(true);
+        PersistentData.saveAtomicIfDirtyThreadSafeBlocking();
     }
 }

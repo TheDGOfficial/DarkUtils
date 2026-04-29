@@ -50,6 +50,6 @@ public final class SoloCrushWaypoint {
             return;
         }
 
-        RenderUtils.drawBlockOutline(context, SoloCrushWaypoint.SOLO_CRUSH_WAYPOINT_POS, SoloCrushWaypoint.SOLO_CRUSH_WAYPOINT_COLOR);
+        RenderUtils.drawBlockOutline(SoloCrushWaypoint.SOLO_CRUSH_WAYPOINT_POS, SoloCrushWaypoint.SOLO_CRUSH_WAYPOINT_COLOR);
     }
 }

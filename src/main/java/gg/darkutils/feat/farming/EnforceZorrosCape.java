@@ -5,16 +5,16 @@ import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.data.PersistentData;
 import gg.darkutils.events.SlotClickEvent;
 import gg.darkutils.events.base.EventRegistry;
-import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.LocationUtils;
+import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.ChatUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 
 public final class EnforceZorrosCape {

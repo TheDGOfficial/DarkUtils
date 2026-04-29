@@ -6,9 +6,9 @@ import gg.darkutils.events.base.CancellationState;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.TickUtils;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -79,21 +79,14 @@ public final class SoundLagFix {
         @NotNull
         private static SoundLagFix.SoundData from(@NotNull final ClientboundSoundPacket packet) {
             // Intentionally does not capture .getSeed() to the record as it's a random 64-bit long created for every packet, would make all sound data objects return a different hashCode and equals and our rate-limit would never work with it.
-            return /*SoundLagFix.SoundData.debug(*/new SoundLagFix.LocationOriginatingSoundData(packet.getX(), packet.getY(), packet.getZ(), packet.getVolume(), packet.getPitch(), packet.getSource(), BuiltInRegistries.SOUND_EVENT.getId(packet.getSound().value()))/*)*/;
+            return new SoundLagFix.LocationOriginatingSoundData(packet.getX(), packet.getY(), packet.getZ(), packet.getVolume(), packet.getPitch(), packet.getSource(), BuiltInRegistries.SOUND_EVENT.getId(packet.getSound().value()));
         }
 
         @NotNull
         private static SoundLagFix.SoundData from(@NotNull final ClientboundSoundEntityPacket packet) {
             // Intentionally does not capture .getSeed() to the record as it's a random 64-bit long created for every packet, would make all sound data objects return a different hashCode and equals and our rate-limit would never work with it.
-            return /*SoundLagFix.SoundData.debug(*/new SoundLagFix.EntityOriginatingSoundData(packet.getId(), packet.getVolume(), packet.getPitch(), packet.getSource(), BuiltInRegistries.SOUND_EVENT.getId(packet.getSound().value()))/*)*/;
+            return new SoundLagFix.EntityOriginatingSoundData(packet.getId(), packet.getVolume(), packet.getPitch(), packet.getSource(), BuiltInRegistries.SOUND_EVENT.getId(packet.getSound().value()));
         }
-
-        /*@NotNull
-        private static SoundLagFix.SoundData debug(@NotNull final SoundLagFix.SoundData soundData) {
-            DarkUtils.info(SoundLagFix.class, "Received a sound. Sound data: {}", soundData);
-
-            return soundData;
-        }*/
     }
 
     private record LocationOriginatingSoundData(double x, double y, double z, float volume, float pitch,

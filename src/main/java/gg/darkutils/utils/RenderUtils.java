@@ -1,20 +1,19 @@
 package gg.darkutils.utils;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.gizmos.GizmoStyle;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.gizmos.GizmoStyle;
+import net.minecraft.gizmos.Gizmos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.gizmos.Gizmos;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -66,11 +65,6 @@ public final class RenderUtils {
         return new RenderUtils.RenderingText();
     }
 
-    @NotNull
-    public static final RenderUtils.RenderingText createRenderingText(@NotNull final String initial) {
-        return new RenderUtils.RenderingText(initial);
-    }
-
     private static final int getMiddleOfScreenYCoordinate() {
         final var client = Minecraft.getInstance();
         return (client.getWindow().getGuiScaledHeight() >> 1) - (client.font.lineHeight >> 1);
@@ -110,10 +104,6 @@ public final class RenderUtils {
         return (Minecraft.getInstance().getWindow().getGuiScaledWidth() >> 1) - (text.getWidth() >> 1);
     }
 
-    public static final void renderCenteredText(@NotNull final GuiGraphicsExtractor context, @NotNull final RenderUtils.RenderingText text, @NotNull final IntSupplier y, @NotNull final ChatFormatting color) {
-        context.text(Minecraft.getInstance().font, text.orderedText, RenderUtils.middleAlignedXForText(text), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
-    }
-
     public static final void renderItem(@NotNull final GuiGraphicsExtractor context, @NotNull final Item item, final int x, final int y) {
         RenderUtils.renderItem(context, item, x, () -> y);
     }
@@ -126,8 +116,7 @@ public final class RenderUtils {
         context.fakeItem(RenderUtils.ITEM_TO_ITEM_STACK.get().get(item), x.getAsInt(), y.getAsInt(), 0);
     }
 
-    public static final void drawBlockOutline(@NotNull final LevelRenderContext context,
-                                              @NotNull final BlockPos pos,
+    public static final void drawBlockOutline(@NotNull final BlockPos pos,
                                               @NotNull final ChatFormatting color) {
         // Convert Formatting to RGBA floats
         final var rgb = RenderUtils.convertFormattingToRGBA(color);
@@ -177,10 +166,6 @@ public final class RenderUtils {
 
         private RenderingText() {
             this("", RenderUtils.EMPTY_ORDERED_TEXT.get());
-        }
-
-        private RenderingText(@NotNull final String text) {
-            this(text, Component.nullToEmpty(text).getVisualOrderText());
         }
 
         private RenderingText(@NotNull final String text, @NotNull final FormattedCharSequence orderedText) {

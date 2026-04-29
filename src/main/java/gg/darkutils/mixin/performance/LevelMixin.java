@@ -27,7 +27,7 @@ final class LevelMixin {
     private List<TickingBlockEntity> blockEntityTickers;
     @Unique
     @Nullable
-    private ReferenceOpenHashSet<TickingBlockEntity> toRemove;
+    private ReferenceOpenHashSet<TickingBlockEntity> darkutils$toRemove;
 
     private LevelMixin() {
         super();
@@ -35,32 +35,32 @@ final class LevelMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(at = @At(target = "Ljava/util/List;iterator()Ljava/util/Iterator;", value = "INVOKE"), method = "tickBlockEntities")
+    @Inject(method = "tickBlockEntities", at = @At(value = "INVOKE", target = "Ljava/util/List;iterator()Ljava/util/Iterator;"))
     private final void darkutils$instantiateToRemove(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.blockEntityUnloadLagFix) {
-            final var toRemoveLocal = this.toRemove = new ReferenceOpenHashSet<>();
+            final var toRemoveLocal = this.darkutils$toRemove = new ReferenceOpenHashSet<>();
             toRemoveLocal.add(null);
         }
     }
 
-    @Redirect(at = @At(target = "Ljava/util/Iterator;remove()V", value = "INVOKE"), method = "tickBlockEntities")
+    @Redirect(method = "tickBlockEntities", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;remove()V"))
     private final void darkutils$addToRemove(@NotNull final Iterator<TickingBlockEntity> instance, @Local @NotNull final TickingBlockEntity blockEntityTickInvoker) {
         if (DarkUtilsConfig.INSTANCE.blockEntityUnloadLagFix) {
-            final var toRemoveLocal = this.toRemove;
+            final var toRemoveLocal = this.darkutils$toRemove;
             if (null != toRemoveLocal) { // may happen if feature is toggled in between calls
                 toRemoveLocal.add(blockEntityTickInvoker);
             }
         }
     }
 
-    @Inject(at = @At("TAIL"), method = "tickBlockEntities")
+    @Inject(method = "tickBlockEntities", at = @At("TAIL"))
     private final void darkutils$removeAll(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.blockEntityUnloadLagFix) {
-            final var toRemoveLocal = this.toRemove;
+            final var toRemoveLocal = this.darkutils$toRemove;
             if (null != toRemoveLocal && !toRemoveLocal.isEmpty()) { // may happen if feature is toggled in between calls
                 this.blockEntityTickers.removeAll(toRemoveLocal);
             }
         }
-        this.toRemove = null; // always null-out even if feature not enabled to not create memory leaks under race conditions
+        this.darkutils$toRemove = null; // always null-out even if feature not enabled to not create memory leaks under race conditions
     }
 }

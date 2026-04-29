@@ -1,16 +1,16 @@
 package gg.darkutils.feat.qol;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.Identifier;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.KeyMapping;
-import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;

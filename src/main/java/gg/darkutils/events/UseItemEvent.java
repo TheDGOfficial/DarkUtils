@@ -2,8 +2,8 @@ package gg.darkutils.events;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 /**

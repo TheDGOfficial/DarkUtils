@@ -6,13 +6,13 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import org.jetbrains.annotations.NotNull;
 

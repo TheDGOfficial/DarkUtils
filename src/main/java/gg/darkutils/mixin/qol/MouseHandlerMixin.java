@@ -1,9 +1,9 @@
 package gg.darkutils.mixin.qol;
 
-import gg.darkutils.config.DarkUtilsConfig;
-import net.minecraft.client.MouseHandler;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
+import gg.darkutils.config.DarkUtilsConfig;
+import net.minecraft.client.MouseHandler;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;

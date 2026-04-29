@@ -2,8 +2,8 @@ package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.Helpers;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 
 public final class AutoClicker {

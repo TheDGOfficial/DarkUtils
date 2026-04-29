@@ -6,13 +6,13 @@ import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.ChatUtils;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
@@ -27,10 +27,10 @@ import java.util.List;
 
 public final class LittlefootDisplay {
     @NotNull
-    private static RenderUtils.RenderingText NO_LITTLEFOOTS = RenderUtils.createRenderingText();
+    private static final RenderUtils.RenderingText NO_LITTLEFOOTS = RenderUtils.createRenderingText();
 
     @Nullable
-    private static RenderUtils.RenderingText @Nullable [] LINES;
+    private static RenderUtils.RenderingText @Nullable [] lines;
 
     @Nullable
     private static List<FormattedCharSequence> littlefoots;
@@ -64,7 +64,7 @@ public final class LittlefootDisplay {
         final var player = mc.player;
 
         if (null != world && null != player) {
-            final var littlefoots = new ArrayList<FormattedCharSequence>();
+            final var littlefoots = new ArrayList<FormattedCharSequence>(2);
 
             for (final var entity : world.entitiesForRendering()) {
                 if (entity instanceof final ArmorStand stand) {
@@ -83,7 +83,7 @@ public final class LittlefootDisplay {
                 newArray[i] = RenderUtils.createRenderingText();
             }
 
-            LittlefootDisplay.LINES = newArray;
+            LittlefootDisplay.lines = newArray;
             LittlefootDisplay.littlefoots = littlefoots;
         }
     }
@@ -93,8 +93,8 @@ public final class LittlefootDisplay {
     }
 
     private static final void sendLittlefootToast(@NotNull final Minecraft client) {
-        if (!notified) {
-            notified = true;
+        if (!LittlefootDisplay.notified) {
+            LittlefootDisplay.notified = true;
 
             client.getToastManager().addToast(SystemToast.multiline(client, SystemToast.SystemToastId.PERIODIC_NOTIFICATION, Component.literal("Littlefoot").setStyle(Style.EMPTY.withColor(ChatFormatting.DARK_PURPLE)), Component.literal("Littlefoot(s) found!").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD))));
         }
@@ -106,17 +106,15 @@ public final class LittlefootDisplay {
         }
 
         final var client = Minecraft.getInstance();
-        final var mineshaft = LocationUtils.isInMineshaft();
 
-        if (null == client.player || !mineshaft) {
+        if (null == client.player || !LocationUtils.isInMineshaft()) {
             return;
         }
 
-        final var Y_OFFSET = mineshaft ? 80 : 100; // offset a bit so that it shows under will o wisp display if enabled
-        final var Y_OFFSET_PER_LITTLEFOOT = 20; // offset each line a bit
+        final var Y_OFFSET = 80; // offset a bit so that it shows under will o wisp display if enabled
 
         final var littlefoots = LittlefootDisplay.littlefoots;
-        final var lines = LittlefootDisplay.LINES;
+        final var lines = LittlefootDisplay.lines;
 
         if (null == littlefoots || null == lines || littlefoots.isEmpty() || 0 == lines.length) {
             RenderUtils.renderItem(
@@ -147,6 +145,9 @@ public final class LittlefootDisplay {
         }
 
         var currentOffset = 0;
+
+        // offset each line a bit
+        final var Y_OFFSET_PER_LITTLEFOOT = 20;
 
         for (int i = 0, len = littlefoots.size(); i < len; ++i) {
             final var littlefoot = littlefoots.get(i);

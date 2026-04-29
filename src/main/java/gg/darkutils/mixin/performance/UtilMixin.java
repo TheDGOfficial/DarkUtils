@@ -20,7 +20,7 @@ import java.util.concurrent.ThreadFactory;
 @Mixin(Util.class)
 final class UtilMixin {
     @Unique
-    private static boolean overrideSuccessful;
+    private static boolean darkutils$overrideSuccessful;
 
     private UtilMixin() {
         super();
@@ -32,7 +32,7 @@ final class UtilMixin {
     private static final void darkutils$postclinit(@NotNull final CallbackInfo ci) {
         try {
             TickUtils.awaitLocalPlayer(player -> { // Player will only be available after all Mixins are applied and executors are created.
-                if (DarkUtilsConfig.INSTANCE.useVirtualThreadsForTextureDownloading && !UtilMixin.overrideSuccessful) {
+                if (DarkUtilsConfig.INSTANCE.useVirtualThreadsForTextureDownloading && !UtilMixin.darkutils$overrideSuccessful) {
                     DarkUtils.warn("@fileName@", "Overriding texture downloading executor from cached thread pool to virtual thread per task executor failed. Please notify developers to update the necessary mixin(s).");
                 }
             });
@@ -62,7 +62,7 @@ final class UtilMixin {
             final var vtExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
             DarkUtils.info("@fileName@", "Overriding texture downloading executor from cached thread pool to virtual thread per task executor");
-            UtilMixin.overrideSuccessful = true;
+            UtilMixin.darkutils$overrideSuccessful = true;
 
             return vtExecutor;
         }

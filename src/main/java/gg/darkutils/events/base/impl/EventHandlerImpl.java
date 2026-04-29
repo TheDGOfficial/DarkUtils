@@ -119,7 +119,7 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                 // We don't need to check isCancelled or receiveCancelled here as the event shouldn't be canceled yet.
                 final var listener = localListeners.getFirst();
                 try {
-                    listener.accept(event);
+                    listener.onEvent(event);
                 } catch (final Throwable error) {
                     EventHandlerImpl.handleListenerError(listener, event, error);
                 }
@@ -131,7 +131,7 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                 final var listener1 = localListeners.getFirst();
                 final var listener2 = localListeners.getLast();
                 try {
-                    listener1.accept(event);
+                    listener1.onEvent(event);
                 } catch (final Throwable error) {
                     EventHandlerImpl.handleListenerError(listener1, event, error);
                 }
@@ -139,7 +139,7 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                 var cancelled = cancellationState.isCancelled();
                 if (!cancelled || listener2.receiveCancelled()) { // Need to check if listener2 wants to receiveCancelled
                     try {
-                        listener2.accept(event);
+                        listener2.onEvent(event);
                     } catch (final Throwable error) {
                         EventHandlerImpl.handleListenerError(listener2, event, error);
                     }
@@ -160,7 +160,7 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                     }
 
                     try {
-                        listener.accept(event);
+                        listener.onEvent(event);
                     } catch (final Throwable error) {
                         EventHandlerImpl.handleListenerError(listener, event, error);
                     }
@@ -185,7 +185,7 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                 // Only one listener - fast path
                 final var listener = localListeners.getFirst();
                 try {
-                    listener.accept(event);
+                    listener.onEvent(event);
                 } catch (final Throwable error) {
                     EventHandlerImpl.handleListenerError(listener, event, error);
                 }
@@ -195,12 +195,12 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                 final var listener1 = localListeners.getFirst();
                 final var listener2 = localListeners.getLast();
                 try {
-                    listener1.accept(event);
+                    listener1.onEvent(event);
                 } catch (final Throwable error) {
                     EventHandlerImpl.handleListenerError(listener1, event, error);
                 }
                 try {
-                    listener2.accept(event);
+                    listener2.onEvent(event);
                 } catch (final Throwable error) {
                     EventHandlerImpl.handleListenerError(listener2, event, error);
                 }
@@ -212,7 +212,7 @@ public final class EventHandlerImpl<T extends Event> implements EventHandler<T> 
                 for (var i = 0; size > i; ++i) {
                     final var listener = localListeners.get(i);
                     try {
-                        listener.accept(event);
+                        listener.onEvent(event);
                     } catch (final Throwable error) {
                         EventHandlerImpl.handleListenerError(listener, event, error);
                     }

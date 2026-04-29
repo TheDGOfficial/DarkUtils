@@ -39,7 +39,7 @@ public final class WillOWispDisplay {
     private static final void update() {
         final var mineshaft = LocationUtils.isInMineshaft();
 
-        if (!WillOWispDisplay.isEnabled() || (!mineshaft && !LocationUtils.isInDwarvenMines())) {
+        if (!WillOWispDisplay.isEnabled() || !mineshaft && !LocationUtils.isInDwarvenMines()) {
             return;
         }
 
@@ -89,7 +89,7 @@ public final class WillOWispDisplay {
         final var client = Minecraft.getInstance();
         final var mineshaft = LocationUtils.isInMineshaft();
 
-        if (null == client.player || (!LocationUtils.isInDwarvenMines() && !mineshaft)) {
+        if (null == client.player || !LocationUtils.isInDwarvenMines() && !mineshaft) {
             return;
         }
 

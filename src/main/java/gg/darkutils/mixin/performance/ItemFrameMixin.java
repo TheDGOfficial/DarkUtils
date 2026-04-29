@@ -17,7 +17,7 @@ final class ItemFrameMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Redirect(at = @At(target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", value = "INVOKE", ordinal = 1), method = "setItem(Lnet/minecraft/world/item/ItemStack;Z)V")
+    @Redirect(method = "setItem(Lnet/minecraft/world/item/ItemStack;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", ordinal = 1))
     private final boolean darkutils$shouldPlaySound(@NotNull final ItemStack value, @Local(argsOnly = true) final boolean update) {
         return value.isEmpty() || !update && !DarkUtilsConfig.INSTANCE.itemFrameSoundFix;
     }

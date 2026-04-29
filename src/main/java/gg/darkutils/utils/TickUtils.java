@@ -95,7 +95,7 @@ public final class TickUtils {
         RenderUtils.validateRenderThread();
 
         if (condition.getAsBoolean()) {
-            action.runCatching();
+            action.runTaskActionCatching();
         } else {
             TickUtils.tasks.add(new TickUtils.Task(condition, action));
         }
@@ -251,7 +251,7 @@ public final class TickUtils {
             return;
         }
 
-        task.runCatching();
+        task.runTaskActionCatching();
     }
 
     /**
@@ -288,7 +288,7 @@ public final class TickUtils {
         Objects.requireNonNull(task, "task");
         if (0 == delay) {
             RenderUtils.validateRenderThread();
-            task.runCatching();
+            task.runTaskActionCatching();
         } else {
             (client ? TickUtils.tasks : TickUtils.serverTasks).add(new TickUtils.Task(task, delay, false));
         }
@@ -300,11 +300,11 @@ public final class TickUtils {
 
     @FunctionalInterface
     public interface TaskAction {
-        abstract void run();
+        abstract void runTaskAction();
 
-        default void runCatching() {
+        default void runTaskActionCatching() {
             try {
-                this.run();
+                this.runTaskAction();
             } catch (final Throwable error) {
                 DarkUtils.error(TickUtils.TaskAction.class, "Unexpected error whilst running task action", error);
             }
@@ -356,7 +356,7 @@ public final class TickUtils {
         private final boolean tick() {
             if (null != this.condition) {
                 if (this.condition.getAsBoolean()) {
-                    this.action.runCatching();
+                    this.action.runTaskActionCatching();
                     return true; // remove once condition passes
                 }
 
@@ -364,7 +364,7 @@ public final class TickUtils {
             }
 
             if (1 >= this.ticks) {
-                this.action.runCatching();
+                this.action.runTaskActionCatching();
 
                 if (this.repeats) {
                     this.ticks = this.initialTicks;

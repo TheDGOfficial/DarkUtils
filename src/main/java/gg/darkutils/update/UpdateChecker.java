@@ -99,11 +99,7 @@ public final class UpdateChecker {
         try {
             final var release = UpdateChecker.fetchLatestRelease();
 
-            if (null == release) {
-                return new Pair<>(UpdateChecker.UpdateCheckerResult.COULD_NOT_CHECK, Optional.empty());
-            }
-
-            return new Pair<>(null == release.tag_name ? UpdateCheckerResult.COULD_NOT_CHECK : UpdateChecker.evaluateReleaseAgainstCurrent(currentVersion, release).first(), Optional.of(release));
+            return null == release ? new Pair<>(UpdateChecker.UpdateCheckerResult.COULD_NOT_CHECK, Optional.empty()) : new Pair<>(null == release.tag_name ? UpdateChecker.UpdateCheckerResult.COULD_NOT_CHECK : UpdateChecker.evaluateReleaseAgainstCurrent(currentVersion, release).first(), Optional.of(release));
         } catch (final InterruptedException ie) {
             Thread.currentThread().interrupt();
 

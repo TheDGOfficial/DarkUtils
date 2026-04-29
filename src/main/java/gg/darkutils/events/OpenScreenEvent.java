@@ -2,8 +2,8 @@ package gg.darkutils.events;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.MenuType;
 import org.jetbrains.annotations.NotNull;
 
 /**

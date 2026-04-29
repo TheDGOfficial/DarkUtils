@@ -2,20 +2,19 @@ package gg.darkutils.feat.mining;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
-import gg.darkutils.utils.LocationUtils;
-import gg.darkutils.utils.RenderUtils;
-import gg.darkutils.utils.TickUtils;
-import gg.darkutils.utils.TabListUtil;
-import gg.darkutils.utils.PrettyUtils;
 import gg.darkutils.utils.Helpers;
+import gg.darkutils.utils.LocationUtils;
+import gg.darkutils.utils.PrettyUtils;
+import gg.darkutils.utils.RenderUtils;
+import gg.darkutils.utils.TabListUtil;
+import gg.darkutils.utils.TickUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.world.item.Items;
-import net.minecraft.ChatFormatting;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
 
@@ -24,7 +23,6 @@ public final class PickaxeAbilityDisplay {
     private static final RenderUtils.RenderingText TEXT =
             RenderUtils.createRenderingText();
 
-    @Nullable
     private static long expiresAt;
 
     private PickaxeAbilityDisplay() {
@@ -34,7 +32,7 @@ public final class PickaxeAbilityDisplay {
     }
 
     public static final void init() {
-        TickUtils.queueRepeatingTickTask(PickaxeAbilityDisplay::update, 60); // tab updates every 3s server-side anyways, no need to update more frequently
+        TickUtils.queueRepeatingTickTask(PickaxeAbilityDisplay::update, 60); // tab updates every 3s server-side anyway, no need to update more frequently
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "pickaxe_ability_display"), (context, tickCounter) -> PickaxeAbilityDisplay.renderPickaxeAbilityDisplay(context));
     }
 
@@ -82,7 +80,7 @@ public final class PickaxeAbilityDisplay {
         final var client = Minecraft.getInstance();
         final var mineshaft = LocationUtils.isInMineshaft();
 
-        if (null == client.player || (!LocationUtils.isInDwarvenMines() && !mineshaft)) {
+        if (null == client.player || !LocationUtils.isInDwarvenMines() && !mineshaft) {
             return;
         }
 
@@ -92,11 +90,11 @@ public final class PickaxeAbilityDisplay {
         final var at = PickaxeAbilityDisplay.expiresAt;
         if (-1L == at) {
             text.setText("Pickaxe Ability: READY");
-        } else if (0 == at) {
+        } else if (0L == at) {
             text.setText("Pickaxe Ability: Could not detect");
         } else {
             final var remaining = PickaxeAbilityDisplay.expiresAt - System.nanoTime();
-            if (remaining <= 0) {
+            if (0L >= remaining) {
                 text.setText("Pickaxe Ability: READY");
             } else {
                 text.setText("Pickaxe Ability: " + PrettyUtils.prettifyNanosToSeconds(remaining));

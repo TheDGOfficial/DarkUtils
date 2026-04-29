@@ -1,11 +1,11 @@
 package gg.darkutils.mixin.visuals;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.feature.FlameFeatureRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.feature.FlameFeatureRenderer;
 import net.minecraft.client.resources.model.sprite.AtlasManager;
-import com.mojang.blaze3d.vertex.PoseStack;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Mixin;

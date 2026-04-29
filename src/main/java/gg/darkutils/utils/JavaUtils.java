@@ -42,21 +42,6 @@ public final class JavaUtils {
     }
 
     /**
-     * Creates a generic array instance. Those are normally not possible, but
-     * with the help of the varargs feature, we can accomplish it with a small wrapper method.
-     *
-     * @param values The values to create a generic array of.
-     * @param <T>    The type of the generic array.
-     * @return A generic array from the given values, created by the compiler at call site.
-     */
-    @SuppressWarnings("varargs")
-    @SafeVarargs
-    @NotNull
-    public static final <T> T @NotNull [] createGenericArray(@NotNull final T @NotNull ... values) {
-        return values;
-    }
-
-    /**
      * Sneakily throws the given exception. Normally, checked exceptions must be wrapped in, for example,
      * a {@link RuntimeException} or {@link java.io.UncheckedIOException}, but abusing generics and using
      * a small utility method, we can directly throw any exception, even if it's a checked exception.
@@ -76,21 +61,17 @@ public final class JavaUtils {
     }
 
     /**
-     * Gets the class of the given type parameter. This method only shows this possible, and for testing,
-     * you should not call this method passing type parameter from another method as compiler will just make
-     * this method receive the type parameter as {@link Object}, instead you should copy what trick this
-     * method does into your own method.
+     * Checks if the thread's priority is not already set to the given value, then calls the native {@link Thread#setPriority(int)} method.
+     * Checking before if priority is already set makes 1 less JNI native method call since {@link Thread#getPriority()} is not a native method,
+     * and returns the last-changed priority.
      *
-     * @param doNotPassThisParameter Do not pass this parameter. It will be passed by compiler.
-     *                               The compiler creates an empty array at call site with the inferred type.
-     * @param <T>                    The type to get the class of.
-     * @return The class of the given type parameter.
+     * @param thread   The thread to perform the priority check/change on.
+     * @param priority The priority the thread should already have or will be set to.
      */
-    @SuppressWarnings("unchecked")
-    @SafeVarargs
-    @NotNull
-    public static final <T> Class<T> getReifiedType(@NotNull final T... doNotPassThisParameter) {
-        return (Class<T>) doNotPassThisParameter.getClass().getComponentType();
+    public static final void setThreadPriority(@NotNull final Thread thread, final int priority) {
+        if (priority != thread.getPriority()) {
+            thread.setPriority(priority);
+        }
     }
 }
 

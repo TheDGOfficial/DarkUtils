@@ -1,12 +1,13 @@
 package gg.darkutils.mixin.misc;
 
+import com.mojang.blaze3d.platform.IconSet;
+import com.mojang.blaze3d.platform.Window;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.feat.bugfixes.WaylandGameIconFix;
+import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.PackResources;
-import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.platform.IconSet;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
@@ -35,7 +36,7 @@ final class WindowMixin {
     @Shadow
     private int y;
     @Unique
-    private boolean desktopFileFailure;
+    private boolean darkutils$desktopFileFailure;
 
     private WindowMixin() {
         super();
@@ -75,8 +76,8 @@ final class WindowMixin {
             try {
                 WaylandGameIconFix.generateDesktopFile();
             } catch (final IOException ioe) {
-                this.desktopFileFailure = true;
-                DarkUtils.error("@fileName@", "Error generating desktop file to filesystem for use with wayland icon fix, fallbacking to vanilla logic", ioe);
+                this.darkutils$desktopFileFailure = true;
+                DarkUtils.error("@fileName@", "Error generating desktop file to filesystem for use with wayland icon fix, fall backing to vanilla logic", ioe);
 
                 return;
             }
@@ -87,11 +88,11 @@ final class WindowMixin {
 
     @Inject(method = "setIcon", at = @At("HEAD"), cancellable = true)
     private final void darkutils$onSetGameIcon$fixGameIconOnWaylandIfEnabled(@NotNull final PackResources packResources, @NotNull final IconSet iconSet, @NotNull final CallbackInfo ci) {
-        if (DarkUtilsConfig.INSTANCE.preferWayland && DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.shouldPreferWayland() && DarkUtils.isWindowPlatformWayland() && !this.desktopFileFailure) {
+        if (DarkUtilsConfig.INSTANCE.preferWayland && DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.shouldPreferWayland() && DarkUtils.isWindowPlatformWayland() && !this.darkutils$desktopFileFailure) {
             try {
                 WaylandGameIconFix.setIcon(iconSet.getStandardIcons(packResources));
             } catch (final IOException ioe) {
-                DarkUtils.error("@fileName@", "Error getting standard icons from pack resources for use with wayland icon fix, fallbacking to vanilla logic", ioe);
+                DarkUtils.error("@fileName@", "Error getting standard icons from pack resources for use with wayland icon fix, fall backing to vanilla logic", ioe);
                 return;
             }
 

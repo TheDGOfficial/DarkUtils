@@ -2,6 +2,7 @@ package gg.darkutils.feat.performance;
 
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.utils.JavaUtils;
 import gg.darkutils.utils.LazyConstants;
 import org.jetbrains.annotations.NotNull;
 
@@ -202,11 +203,7 @@ public final class ThreadPriorityTweaker {
     }
 
     private static final void tweakPriority(@NotNull final Thread thread, final int priority) {
-        final var oldPriority = thread.getPriority();
-
-        if (oldPriority != priority) {
-            thread.setPriority(priority);
-        }
+        JavaUtils.setThreadPriority(thread, priority);
     }
 
     @NotNull

@@ -1,7 +1,7 @@
 package gg.darkutils.mixin.bugfixes;
 
-import gg.darkutils.config.DarkUtilsConfig;
 import com.mojang.blaze3d.platform.FramerateLimitTracker;
+import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,7 +17,7 @@ final class FramerateLimitTrackerMixin {
     @Shadow
     private long latestInputTime;
     @Unique
-    private boolean uninitialized;
+    private boolean darkutils$uninitialized;
 
     private FramerateLimitTrackerMixin() {
         super();
@@ -27,13 +27,13 @@ final class FramerateLimitTrackerMixin {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private final void darkutils$init(@NotNull final CallbackInfo ci) {
-        this.uninitialized = true;
+        this.darkutils$uninitialized = true;
     }
 
     @Inject(method = "getThrottleReason", at = @At("HEAD"), cancellable = true)
     private final void darkutils$fixInactivityFpsLimiterIfEnabled(@NotNull final CallbackInfoReturnable<FramerateLimitTracker.FramerateThrottleReason> cir) {
-        if (DarkUtilsConfig.INSTANCE.fixInactivityFpsLimiter && this.uninitialized && 0L == this.latestInputTime) {
-            this.uninitialized = false;
+        if (DarkUtilsConfig.INSTANCE.fixInactivityFpsLimiter && this.darkutils$uninitialized && 0L == this.latestInputTime) {
+            this.darkutils$uninitialized = false;
             this.latestInputTime = Util.getMillis();
         }
     }
