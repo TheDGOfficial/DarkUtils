@@ -3,7 +3,7 @@ package gg.darkutils.utils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gizmos.GizmoStyle;
@@ -88,32 +88,32 @@ public final class RenderUtils {
         return roundedAlpha << 24 | roundedRed << 16 | roundedGreen << 8 | roundedBlue;
     }
 
-    public static final void renderText(@NotNull final GuiGraphics context, @NotNull final RenderUtils.RenderingText text, final int x, final int y, @NotNull final ChatFormatting color) {
+    public static final void renderText(@NotNull final GuiGraphicsExtractor context, @NotNull final RenderUtils.RenderingText text, final int x, final int y, @NotNull final ChatFormatting color) {
         RenderUtils.renderText(context, text, x, () -> y, color);
     }
 
-    public static final void renderText(@NotNull final GuiGraphics context, @NotNull final RenderUtils.RenderingText text, final int x, @NotNull final IntSupplier y, @NotNull final ChatFormatting color) {
+    public static final void renderText(@NotNull final GuiGraphicsExtractor context, @NotNull final RenderUtils.RenderingText text, final int x, @NotNull final IntSupplier y, @NotNull final ChatFormatting color) {
         RenderUtils.renderText(context, text, () -> x, y, color);
     }
 
-    private static final void renderText(@NotNull final GuiGraphics context, @NotNull final RenderUtils.RenderingText text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final ChatFormatting color) {
-        context.drawString(Minecraft.getInstance().font, text.orderedText, x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
+    private static final void renderText(@NotNull final GuiGraphicsExtractor context, @NotNull final RenderUtils.RenderingText text, final IntSupplier x, @NotNull final IntSupplier y, @NotNull final ChatFormatting color) {
+        context.text(Minecraft.getInstance().font, text.orderedText, x.getAsInt(), y.getAsInt(), RenderUtils.convertFormattingToOpaqueColor(color), false);
     }
 
     public static final int middleAlignedXForText(@NotNull final RenderUtils.RenderingText text) {
         return (Minecraft.getInstance().getWindow().getGuiScaledWidth() >> 1) - (text.getWidth() >> 1);
     }
 
-    public static final void renderItem(@NotNull final GuiGraphics context, @NotNull final Item item, final int x, final int y) {
+    public static final void renderItem(@NotNull final GuiGraphicsExtractor context, @NotNull final Item item, final int x, final int y) {
         RenderUtils.renderItem(context, item, x, () -> y);
     }
 
-    private static final void renderItem(@NotNull final GuiGraphics context, @NotNull final Item item, final int x, @NotNull final IntSupplier y) {
+    private static final void renderItem(@NotNull final GuiGraphicsExtractor context, @NotNull final Item item, final int x, @NotNull final IntSupplier y) {
         RenderUtils.renderItem(context, item, () -> x, y);
     }
 
-    private static final void renderItem(@NotNull final GuiGraphics context, @NotNull final Item item, final IntSupplier x, @NotNull final IntSupplier y) {
-        context.renderFakeItem(RenderUtils.ITEM_TO_ITEM_STACK.get().get(item), x.getAsInt(), y.getAsInt(), 0);
+    private static final void renderItem(@NotNull final GuiGraphicsExtractor context, @NotNull final Item item, final IntSupplier x, @NotNull final IntSupplier y) {
+        context.fakeItem(RenderUtils.ITEM_TO_ITEM_STACK.get().get(item), x.getAsInt(), y.getAsInt(), 0);
     }
 
     public static final void drawBlockOutline(@NotNull final BlockPos pos,

@@ -12,11 +12,11 @@ import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.ScoreboardUtil;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.chat.SimpleColor;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
@@ -158,7 +158,7 @@ public final class DungeonTimer {
 
     public static final void init() {
         EventRegistry.centralRegistry().addListener(DungeonTimer::onChat);
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(DungeonTimer::reset);
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(DungeonTimer::reset);
 
         TickUtils.queueRepeatingServerTickTask(DungeonTimer::onServerTick, 1);
 
@@ -490,7 +490,7 @@ public final class DungeonTimer {
         DungeonTimer.line(DungeonTimer.DungeonPhase.DUNGEON_START, DungeonTimer.DungeonPhase.BOSS_CLEAR, "Total", ChatFormatting.GREEN, Items.CLOCK); // TODO add DUNGEON_END phase for clarity (semantically same as BOSS_CLEAR, as that's where dungeon ends)
     }
 
-    private static final void renderDungeonTimer(@NotNull final GuiGraphics context) {
+    private static final void renderDungeonTimer(@NotNull final GuiGraphicsExtractor context) {
         if (DungeonTimer.skipRender) {
             return;
         }

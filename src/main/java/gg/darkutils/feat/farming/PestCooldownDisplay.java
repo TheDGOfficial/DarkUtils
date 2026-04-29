@@ -6,11 +6,11 @@ import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.RenderUtils;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Items;
@@ -34,7 +34,7 @@ public final class PestCooldownDisplay {
 
     public static final void init() {
         EventRegistry.centralRegistry().addListener(PestCooldownDisplay::onChat);
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(PestCooldownDisplay::onWorldChange);
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(PestCooldownDisplay::onWorldChange);
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "pest_cooldown_display"), (context, tickCounter) -> PestCooldownDisplay.renderPestCooldownDisplay(context));
     }
 
@@ -63,7 +63,7 @@ public final class PestCooldownDisplay {
         }
     }
 
-    private static final void renderPestCooldownDisplay(@NotNull final GuiGraphics context) {
+    private static final void renderPestCooldownDisplay(@NotNull final GuiGraphicsExtractor context) {
         if (!PestCooldownDisplay.isEnabled()) {
             PestCooldownDisplay.reset();
             return;

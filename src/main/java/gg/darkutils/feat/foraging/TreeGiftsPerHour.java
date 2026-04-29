@@ -11,7 +11,7 @@ import gg.darkutils.utils.RoundingMode;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
@@ -79,7 +79,7 @@ public final class TreeGiftsPerHour {
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "tree_gifts_per_hour"), (context, tickCounter) -> TreeGiftsPerHour.renderTreeGifts(context));
     }
 
-    private static final void renderTreeGifts(@NotNull final GuiGraphics context) {
+    private static final void renderTreeGifts(@NotNull final GuiGraphicsExtractor context) {
         if (!DarkUtilsConfig.INSTANCE.treeGiftsPerHour) {
             // Prevent leaking samples if feature is turned off after using it
             TreeGiftsPerHour.reset();
