@@ -229,8 +229,8 @@ public final class Helpers {
         return Helpers.doesHeldItemMatch(stack -> (stack.is(ItemTags.SWORDS) && !Helpers.doesHeldItemNameMatch(stack, name -> name.contains("Cactus Knife"))) || Helpers.doesHeldItemNameMatch(stack, name -> name.contains("Huntaxe") || name.contains("Spade")));
     }
 
-    public static final boolean isHoldingARCMWeaponOrMatches(@NotNull final Predicate<String> matcher) {
-        return Helpers.doesHeldItemNameMatch(name -> name.contains("Hyperion") || name.contains("Astraea") || matcher.test(name));
+    public static final boolean isHoldingARCMWeaponWateringCanOrMatches(@NotNull final Predicate<String> matcher) {
+        return Helpers.doesHeldItemNameMatch(name -> name.contains("Hyperion") || name.contains("Astraea") || matcher.test(name) || name.contains("AquaMaster"));
     }
 
     public static final boolean isHoldingAGyrokineticWand() {

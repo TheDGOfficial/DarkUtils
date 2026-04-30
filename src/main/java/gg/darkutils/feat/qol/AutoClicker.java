@@ -67,7 +67,7 @@ public final class AutoClicker {
         }
 
         private static final boolean isAutoClickNotAllowedForHeldItemRc() {
-            return !Helpers.isHoldingARCMWeaponOrMatches(
+            return !Helpers.isHoldingARCMWeaponWateringCanOrMatches(
                     name -> DarkUtilsConfig.INSTANCE.autoClickerWorkWithAOTV
                             && Helpers.matchHoldingAOTV().test(name)
             );
