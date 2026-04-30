@@ -222,11 +222,11 @@ public final class Helpers {
     }
 
     public static final boolean isHoldingADiamondHoeAxeOrSword() {
-        return Helpers.doesHeldItemMatch(stack -> stack.is(Items.DIAMOND_HOE) || stack.is(Items.DIAMOND_AXE) || stack.is(Items.DIAMOND_SWORD));
+        return Helpers.doesHeldItemMatch(stack -> (stack.is(Items.DIAMOND_HOE) || stack.is(Items.DIAMOND_AXE)) || (stack.is(ItemTags.SWORDS) && Helpers.doesHeldItemNameMatch(stack, name -> name.contains("Cactus Knife"))));
     }
 
     public static final boolean isHoldingASwordHuntaxeOrSpade() {
-        return Helpers.doesHeldItemMatch(stack -> stack.is(ItemTags.SWORDS) || Helpers.doesHeldItemNameMatch(stack, name -> name.contains("Huntaxe") || name.contains("Spade")));
+        return Helpers.doesHeldItemMatch(stack -> (stack.is(ItemTags.SWORDS) && !Helpers.doesHeldItemNameMatch(stack, name -> name.contains("Cactus Knife"))) || Helpers.doesHeldItemNameMatch(stack, name -> name.contains("Huntaxe") || name.contains("Spade")));
     }
 
     public static final boolean isHoldingARCMWeaponOrMatches(@NotNull final Predicate<String> matcher) {
