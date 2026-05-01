@@ -4,6 +4,7 @@ import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.UseItemEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.ItemUtils;
+import gg.darkutils.utils.chat.ChatUtils;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +28,12 @@ public final class PreventUselessBlockHit {
         final var itemStack = event.itemStack();
 
         if (itemStack.is(ItemTags.SWORDS) && !ItemUtils.hasRightClickAbility(itemStack)) {
-            event.cancellationState().cancel();
+            final var name = itemStack.getCustomName();
+            if (null != name) {
+                if (!ChatUtils.removeControlCodes(name.getString()).contains("Cactus Knife")) { // When in Farming Toolkit we need an exception to prevent being locked out of Shift+RC to open the menu.
+                    event.cancellationState().cancel();
+                }
+            }
         }
     }
 }
