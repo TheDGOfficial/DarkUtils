@@ -417,6 +417,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Prefer Wayland",
                 "Prefers Wayland over XWayland when running a Wayland session in Linux systems when your GLFW version supports the native Wayland backend. This generally improves performance as it doesn't have to go through XWayland compatibility layer. Does nothing in Windows or macOS, or when running a X11 only session/old GLFW without native Wayland support.",
                 config.preferWayland, newValue -> config.preferWayland = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Nearest Filtering Mode",
+                "Makes the game use GL11.GL_NEAREST instead of GL11.GL_LINEAR for filtering mode. This is both faster and visually better.",
+                config.nearestFilteringMode, newValue -> config.nearestFilteringMode = newValue);
     }
 
     private static final void addBugfixes(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
