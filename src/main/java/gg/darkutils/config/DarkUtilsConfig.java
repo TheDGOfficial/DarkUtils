@@ -131,6 +131,7 @@ public final class DarkUtilsConfig {
     public boolean blockEntityUnloadLagFix;
     public boolean viewportCache;
     public boolean preferWayland;
+    public boolean nearestFilteringMode;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;
