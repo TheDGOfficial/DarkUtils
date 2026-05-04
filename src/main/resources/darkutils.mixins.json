@@ -6,7 +6,7 @@
   },
   "package": "gg.darkutils.mixin",
   "compatibilityLevel": "JAVA_25",
-  "mixins": [
+  "client": [
     "bugfixes.AbstractContainerScreenMixin",
     "bugfixes.FramerateLimitTrackerMixin",
     "bugfixes.GLFWMixin",
