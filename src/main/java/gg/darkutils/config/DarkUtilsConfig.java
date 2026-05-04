@@ -128,9 +128,7 @@ public final class DarkUtilsConfig {
     public boolean threadPriorityTweaker;
     public boolean disableSignatureVerification;
     public boolean blockEntityUnloadLagFix;
-    public boolean viewportCache;
     public boolean preferWayland;
-    public boolean nearestFilteringMode;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;
