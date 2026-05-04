@@ -33,16 +33,6 @@ final class MinecraftMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Redirect(at = @At(value = "INVOKE", target = "Ljava/lang/Thread;yield()V", remap = false), method = "runTick")
-    private final void darkutils$skipYieldIfEnabled() {
-        if (!DarkUtilsConfig.INSTANCE.disableYield) {
-            Thread.yield();
-        }
-        // skip a yield call that reduces fps
-        // the call was put to make sure rendering does not stall other threads such as chunk loading, but that's OS scheduler's job to handle,
-        // the code should utilize maximum resources so this yield call is unnecessary.
-    }
-
     @Inject(at = @At("HEAD"), method = "run")
     private final void darkutils$adjustPriorityIfEnabled(@NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.alwaysPrioritizeRenderThread) {
@@ -54,10 +44,6 @@ final class MinecraftMixin {
     @Inject(method = "tick", at = @At("HEAD"))
     private final void darkutils$onStartTick(@NotNull final CallbackInfo ci) {
         Helpers.resetHeldItemCache();
-    }
-
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;pick(F)V", shift = At.Shift.AFTER))
-    private final void darkutils$afterCrosshairTargetUpdate(@NotNull final CallbackInfo ci) {
         Helpers.resetTargetCache();
     }
 
@@ -77,7 +63,7 @@ final class MinecraftMixin {
         return AutoClicker.isPressed(keyBinding, StickyFarmingKeys.isPressed(keyBinding, false));
     }
 
-    @WrapOperation(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;interactAt(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/EntityHitResult;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
+    @WrapOperation(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;interact(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/EntityHitResult;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
     private final @NotNull InteractionResult darkutils$onEntityInteract(@NotNull final MultiPlayerGameMode instance, @NotNull final Player player, @NotNull final Entity entity, @NotNull final EntityHitResult hitResult, @NotNull final InteractionHand hand, @NotNull final Operation<InteractionResult> original) {
         return new InteractEntityEvent(entity).triggerAndCancelled() ? InteractionResult.CONSUME : original.call(instance, player, entity, hitResult, hand);
     }

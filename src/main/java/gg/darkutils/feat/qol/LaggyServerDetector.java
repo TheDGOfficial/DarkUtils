@@ -2,7 +2,7 @@ package gg.darkutils.feat.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.LocationUtils;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
@@ -22,7 +22,7 @@ public final class LaggyServerDetector {
     }
 
     public static final void init() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(LaggyServerDetector::onWorldChange);
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(LaggyServerDetector::onWorldChange);
     }
 
     private static final boolean isNotEnabled() {

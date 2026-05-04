@@ -9,11 +9,11 @@ import gg.darkutils.utils.PrettyUtils;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TabListUtil;
 import gg.darkutils.utils.TickUtils;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Items;
@@ -46,7 +46,7 @@ public final class MineshaftDisplay {
     }
 
     public static final void init() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(MineshaftDisplay::onWorldChange);
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(MineshaftDisplay::onWorldChange);
 
         TickUtils.queueRepeatingTickTask(MineshaftDisplay::updateTabData, 60); // tab updates every 3s server-side anyway, no need to update more frequently
 
@@ -140,7 +140,7 @@ public final class MineshaftDisplay {
         return "Mineshaft: ".equals(t.trim()) ? "No shafts yet" : t;
     }
 
-    private static final void renderMineshaftDisplay(@NotNull final GuiGraphics context) {
+    private static final void renderMineshaftDisplay(@NotNull final GuiGraphicsExtractor context) {
         if (!MineshaftDisplay.isEnabled()) {
             return;
         }
@@ -176,7 +176,7 @@ public final class MineshaftDisplay {
         }
     }
 
-    private static final void renderPity(@NotNull final GuiGraphics context) {
+    private static final void renderPity(@NotNull final GuiGraphicsExtractor context) {
         final var pity = MineshaftDisplay.mineShaftPity;
         final var required = MineshaftDisplay.mineShaftPityRequired;
 

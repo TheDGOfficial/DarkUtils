@@ -18,15 +18,15 @@ compatibility is often the case so latest versions are recommended.
 
 Required Dependencies:
 
-- Minecraft 1.21.11 or later.
+- Minecraft 26.1.2 or later.
 - Fabric Loader 0.19.2 or later.
-- Fabric API 0.141.3 or later.
-- Cloth Config API 21.11.153 or later.
-- Hypixel Mod API 1.0.1 or later.
+- Fabric API 0.148.0 or later.
+- Cloth Config API 26.1.154 or later.
+- Hypixel Mod API 1.0.2 or later.
 
 Optional Dependencies:
 
-- Mod Menu 17.0.0 or later.
+- Mod Menu 18.0.0-alpha.6 or later.
 
 # Quality of Life
 

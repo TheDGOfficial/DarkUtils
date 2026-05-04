@@ -6,7 +6,7 @@ import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.chat.SimpleColor;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +23,7 @@ public final class SoloCrushTimer {
 
     public static final void init() {
         EventRegistry.centralRegistry().addListener(SoloCrushTimer::onChat);
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(SoloCrushTimer::reset);
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(SoloCrushTimer::reset);
     }
 
     private static final void reset(@NotNull final Minecraft client, @NotNull final ClientLevel world) {

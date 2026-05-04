@@ -5,7 +5,7 @@
     "minVersion": "0.5.4"
   },
   "package": "gg.darkutils.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "client": [
     "bugfixes.AbstractContainerScreenMixin",
     "bugfixes.FramerateLimitTrackerMixin",
@@ -17,6 +17,7 @@
     "misc.MinecraftMixin",
     "misc.PacketApplyBatcherEntryMixin",
     "misc.WindowMixin",
+    "misc.GlBackendMixin",
     "performance.MemoryReserveMixin",
     "performance.EntityMixin",
     "performance.ChatFormattingMixin",
@@ -41,10 +42,11 @@
     "visuals.HeartTypeMixin",
     "visuals.GuiMixin",
     "visuals.ScreenEffectRendererMixin",
-    "visuals.LightTextureMixin",
+    "visuals.LightmapRenderStateExtractorMixin",
     "visuals.LightningBoltRendererMixin",
     "visuals.PlayerTabOverlayMixin",
-    "visuals.EffectsInInventoryMixin"
+    "visuals.EffectsInInventoryMixin",
+    "visuals.LightmapMixin"
   ],
   "injectors": {
     "defaultRequire": 1

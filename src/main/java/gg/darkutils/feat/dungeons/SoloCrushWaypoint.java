@@ -3,8 +3,8 @@ package gg.darkutils.feat.dungeons;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ public final class SoloCrushWaypoint {
     }
 
     public static final void init() {
-        WorldRenderEvents.END_MAIN.register(SoloCrushWaypoint::renderSoloCrushWaypoint);
+        LevelRenderEvents.END_MAIN.register(SoloCrushWaypoint::renderSoloCrushWaypoint);
     }
 
     private static final boolean isEnabled() {
@@ -45,7 +45,7 @@ public final class SoloCrushWaypoint {
         return SoloCrushWaypoint.isEnabled() && SoloCrushWaypoint.isInF7OrM7() && SoloCrushWaypoint.isP1FinishedWhileP2IsNot();
     }
 
-    private static final void renderSoloCrushWaypoint(@NotNull final WorldRenderContext context) {
+    private static final void renderSoloCrushWaypoint(@NotNull final LevelRenderContext context) {
         if (!SoloCrushWaypoint.SHOULD_RENDER.getAsBoolean()) {
             return;
         }

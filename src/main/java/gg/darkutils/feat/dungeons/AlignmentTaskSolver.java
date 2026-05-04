@@ -12,7 +12,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -296,7 +296,7 @@ public final class AlignmentTaskSolver {
     }
 
     public static final void init() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(AlignmentTaskSolver::onWorldUnload);
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(AlignmentTaskSolver::onWorldUnload);
 
         EventRegistry.centralRegistry().addListener(AlignmentTaskSolver::onRenderWorld);
         EventRegistry.centralRegistry().addListener(AlignmentTaskSolver::onInteractEntity);
