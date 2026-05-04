@@ -30,7 +30,6 @@
     "performance.LevelMixin",
     "performance.YggdrasilServicesKeyInfoMixin",
     "performance.LevelRendererMixin",
-    "performance.GlStateManagerMixin",
     "performance.GLXMixin",
     "qol.LocalPlayerMixin",
     "qol.MultiPlayerGameModeMixin",
