@@ -25,10 +25,4 @@ final class LevelRendererMixin {
             ci.cancel();
         }
     }
-
-    @Redirect(method = "lambda$addMainPass$0", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/textures/FilterMode;LINEAR:Lcom/mojang/blaze3d/textures/FilterMode;", opcode = Opcodes.GETSTATIC))
-    @NotNull
-    private final FilterMode darkutils$getFilterMode() {
-        return DarkUtilsConfig.INSTANCE.nearestFilteringMode ? FilterMode.NEAREST : FilterMode.LINEAR;
-    }
 }
