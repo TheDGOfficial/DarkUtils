@@ -26,7 +26,7 @@ Required Dependencies:
 
 Optional Dependencies:
 
-- Mod Menu 18.0.0-alpha.6 or later.
+- Mod Menu 18.0.0-beta.1 or later.
 
 # Quality of Life
 
