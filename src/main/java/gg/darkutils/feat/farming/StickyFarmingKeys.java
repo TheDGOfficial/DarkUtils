@@ -36,31 +36,15 @@ public final class StickyFarmingKeys {
 
     private static final void onTick() {
         final var mc = Minecraft.getInstance();
-
-        final var screen = mc.screen;
-        final var previousScreen = StickyFarmingKeys.previousScreen;
-
-        var reset = false;
-
-        if ((null != screen) == (null == previousScreen)) {
-            // A screen was opened or closed. Reset toggled state.
-            StickyFarmingKeys.resetToggledState();
-            reset = true;
-        }
-
-        StickyFarmingKeys.previousScreen = screen;
-
         final var player = mc.player;
 
         if (null == player) {
-            if (!reset) {
-                StickyFarmingKeys.resetToggledState();
-            }
+            StickyFarmingKeys.resetToggledState();
         } else {
             final var currentSlot = player.getInventory().getSelectedSlot();
             final var previousSlot = StickyFarmingKeys.previousSelectedSlot;
 
-            if (!reset && -1 != previousSlot && previousSlot != currentSlot) {
+            if (-1 != previousSlot && previousSlot != currentSlot) {
                 StickyFarmingKeys.resetToggledState();
             }
 
