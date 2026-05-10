@@ -284,6 +284,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Blood Cleared Notification",
                 "Shows a message on screen when the blood room is cleared with how much time it took for it.",
                 config.bloodClearedNotification, newValue -> config.bloodClearedNotification = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Ragnarock Helper",
+                "Shows a message on screen when you need to use Ragnarock to get extra strength when killing Livid in M5/F5 and the first dragon in your split in M7. Based on the meta dialogues for when to use it.",
+                config.ragnarockHelper, newValue -> config.ragnarockHelper = newValue);
     }
 
     private static final void addVisualTweaks(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
