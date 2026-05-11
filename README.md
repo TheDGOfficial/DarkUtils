@@ -20,7 +20,7 @@ Required Dependencies:
 
 - Minecraft 1.21.11 or later.
 - Fabric Loader 0.19.2 or later.
-- Fabric API 0.141.3 or later.
+- Fabric API 0.141.4 or later.
 - Cloth Config API 21.11.153 or later.
 - Hypixel Mod API 1.0.1 or later.
 
