@@ -57,13 +57,14 @@ public final class AutoClicker {
         private final KeyMapping keyBinding;
         private boolean clicking;
 
+        private boolean prevResult;
+
         private Key(@NotNull final KeyMapping keyBinding) {
             this.keyBinding = keyBinding;
         }
 
         private static final boolean isAutoClickNotAllowedForHeldItem(final boolean right) {
             return right ? AutoClicker.Key.isAutoClickNotAllowedForHeldItemRc() : AutoClicker.Key.isAutoClickNotAllowedForHeldItemLc();
-
         }
 
         private static final boolean isAutoClickNotAllowedForHeldItemRc() {
@@ -116,9 +117,21 @@ public final class AutoClicker {
                 combined = combined.or(Helpers.isLever());
             }
 
-            return !right
+            final var result = !right
                     || !(Helpers.doesTargetedBlockMatch(combined)
                     || Helpers.isLookingAtATerminalEntity());
+
+            if (DarkUtilsConfig.INSTANCE.autoClickerHalfAOTVCps && DarkUtilsConfig.INSTANCE.autoClickerWorkWithAOTV && right && result && Helpers.isHoldingAOTV()) {
+                if (this.prevResult) {
+                    this.prevResult = false;
+                    return false;
+                }
+
+                this.prevResult = true;
+                return true;
+            }
+
+            return result;
         }
     }
 }

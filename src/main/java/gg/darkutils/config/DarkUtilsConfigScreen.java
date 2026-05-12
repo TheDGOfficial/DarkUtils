@@ -121,6 +121,10 @@ public final class DarkUtilsConfigScreen {
                 "Makes Auto Clicker work when holding AOTV, causing you to teleport rapidly/faster. Might make you teleport more than you intended to even if you click a single time, even when ether warping, but it usually makes you teleport through longer distances much, much faster.",
                 config.autoClickerWorkWithAOTV, newValue -> config.autoClickerWorkWithAOTV = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker Half AOTV CPS",
+                "Makes Auto Clicker work at half its normal click rate when holding AOTV when Auto Clicker Work With AOTV is enabled. It will click with 10 CPS instead of the normal 20.",
+                config.autoClickerHalfAOTVCps, newValue -> config.autoClickerHalfAOTVCps = newValue);
+
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Disable Cells Alignment",
                 "Disables using the Cells Alignment ability of the Gyrokinetic Wand when you are holding it and right-click. The click will still go through if it would interact with an entity or block instead of using the item.",
                 config.disableCellsAlignment, newValue -> config.disableCellsAlignment = newValue);

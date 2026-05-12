@@ -47,6 +47,7 @@ public final class DarkUtilsConfig {
     public boolean autoClicker;
     public boolean autoClickerWorkInLevers;
     public boolean autoClickerWorkWithAOTV;
+    public boolean autoClickerHalfAOTVCps;
     public boolean disableCellsAlignment;
     public boolean preventUselessBlockHit;
     public boolean disableCommandConfirmation;
