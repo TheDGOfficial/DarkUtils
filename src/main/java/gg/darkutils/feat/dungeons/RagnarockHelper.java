@@ -21,7 +21,7 @@ public final class RagnarockHelper {
                 }
             },
             "[BOSS] Livid: I can now turn those Spirits into shadows of myself, identical to their creator.", event -> {
-                if (event.isStyledWith(SimpleColor.DARK_RED)) {
+                if (event.isStyledWith(SimpleColor.RED)) {
                     RagnarockHelper.notifyUseRagnarock();
                 }
             }

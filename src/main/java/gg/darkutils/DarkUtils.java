@@ -8,7 +8,6 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.config.DarkUtilsConfigScreen;
 import gg.darkutils.events.ReceiveGameMessageEvent;
-import gg.darkutils.feat.bugfixes.CursorFix;
 import gg.darkutils.feat.dungeons.AlignmentTaskSolver;
 import gg.darkutils.feat.dungeons.ArrowStackWaypoints;
 import gg.darkutils.feat.dungeons.AutoCloseSecretChests;
@@ -31,7 +30,6 @@ import gg.darkutils.feat.mining.MineshaftFeatures;
 import gg.darkutils.feat.mining.PickaxeAbilityDisplay;
 import gg.darkutils.feat.mining.WillOWispDisplay;
 import gg.darkutils.feat.performance.LogCleaner;
-import gg.darkutils.feat.performance.SoundLagFix;
 import gg.darkutils.feat.performance.ThreadPriorityTweaker;
 import gg.darkutils.feat.qol.AutoFishingRod;
 import gg.darkutils.feat.qol.AutoTip;
@@ -747,11 +745,9 @@ public final class DarkUtils implements ClientModInitializer {
                 PreventUselessBlockHit::init,
                 RejoinCooldownDisplay::init,
                 LaggyServerDetector::init,
-                SoundLagFix::init,
                 ThreadPriorityTweaker::init,
                 ArrowStackWaypoints::init,
                 VanillaMode::init,
-                CursorFix::init,
                 RagnarockHelper::init
         );
     }
