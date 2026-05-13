@@ -47,6 +47,7 @@ public final class DarkUtilsConfig {
     public boolean autoClicker;
     public boolean autoClickerWorkInLevers;
     public boolean autoClickerWorkWithAOTV;
+    public boolean autoClickerHalfAOTVCps;
     public boolean disableCellsAlignment;
     public boolean preventUselessBlockHit;
     public boolean disableCommandConfirmation;
@@ -125,7 +126,6 @@ public final class DarkUtilsConfig {
     public OpenGLVersionOverride openGLVersionOverride = OpenGLVersionOverride.NO_OVERRIDE;
     public boolean useVirtualThreadsForTextureDownloading;
     public boolean disableGlowing;
-    public boolean soundLagFix;
     public boolean threadPriorityTweaker;
     public boolean disableSignatureVerification;
     public boolean blockEntityUnloadLagFix;
@@ -135,7 +135,6 @@ public final class DarkUtilsConfig {
     public boolean fixGuiScaleAfterFullscreen;
     public boolean fixInactivityFpsLimiter;
     public boolean itemFrameSoundFix;
-    public boolean cursorFix;
     public boolean middleClickFix;
     public boolean cursorPosWaylandGLErrorFix;
     public boolean fixCtrlAndAltOnWayland;

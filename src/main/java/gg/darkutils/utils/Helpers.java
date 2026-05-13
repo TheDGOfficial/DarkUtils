@@ -237,6 +237,10 @@ public final class Helpers {
         return Helpers.doesHeldItemNameMatch("Gyrokinetic Wand"::equals);
     }
 
+    public static final boolean isHoldingAOTV() {
+        return Helpers.doesHeldItemNameMatch(Helpers.matchHoldingAOTV());
+    }
+
     @NotNull
     public static final Predicate<String> matchHoldingAOTV() {
         return name -> name.contains("Aspect of the Void");

@@ -184,21 +184,9 @@ Hides the annoying Effects HUD in the top right of the screen.
 
 Additionally, hides effects in left and right sides of the inventory as well.
 
-## Transparent Scoreboard
-
-Makes the Scoreboard fully transparent for better visuals.
-
-## Transparent Nametags
-
-Makes the Nametags (Player Names, Armor Stand Nametags, etc.) fully transparent.
-
 ## Transparent Player List
 
 Makes the Player List (Tab List) fully transparent.
-
-## Remove Chat Scrollbar
-
-Removes the Chat Scrollbar from the right side of the chat.
 
 ## Fullbright
 
@@ -235,22 +223,6 @@ Hides the black overlay rendered on top of your hearts when you have the Wither 
 health clearly even with Wither Status Effect.
 
 # Performance
-
-## Armor Stand Optimizer
-
-Only renders the configured amount of closest Armor Stands and their labels to you and hides the rest. Improves FPS
-drastically when a lot of Furniture has been used on your Private island for example.
-
-## Disable Yield
-
-Disables a Thread.yield() call in Render thread to improve FPS. Yielding is a mechanism used to signal to the CPU that
-you are done with your task for now and that you advise the CPU to run another task instead. Vanilla calls yield after
-each rendered frame to let other threads or apps run in the CPU. It often reduces FPS anywhere from 1% on high-end
-systems to, up to 10% in lower end systems. This feature disables calling yield entirely. In modern operating systems
-and
-processors, yield essentially is useless as your operating system will automatically fairly share CPU time between all
-tasks. Moreover, with a multicore processor yielding is even more useless as the CPU can run the Render thread in
-parallel with other tasks easily.
 
 ## Always Prioritize Render Thread
 
@@ -327,11 +299,6 @@ able to see the outline through walls on those entities. Those include:
   purple.
   This will disable it.)
 
-## Sound Lag Fix
-
-Prevents duplicate sounds from being played on the same tick by misbehaving or lagging servers. Only the duplicate
-sounds are prevented meaning you will still hear all sounds, but without it affecting your performance.
-
 ## Thread Priority Tweaker
 
 Improves performance by tweaking priorities of all threads in the background regularly.
@@ -348,10 +315,6 @@ textures in certain servers.
 ## Optimize Enum Values
 
 Optimizes memory allocation rate by eliminating enum values array copying in some places, currently only a single place.
-
-## Viewport Cache
-
-Caches viewport GL calls if the viewport did not change, improving performance.
 
 ## Re-Enable AMD Game Optimizations
 
@@ -374,10 +337,6 @@ start with an initial value of current time instead of zero.
 ## Item Frame Sound Fix
 
 Fixes vanilla Minecraft bug, where sounds are played when they shouldn't in certain cases near item frames.
-
-## Cursor Fix
-
-Fixes mouse cursor staying on screen after closing a menu.
 
 ## Cursor Pos Wayland GL Error Fix
 

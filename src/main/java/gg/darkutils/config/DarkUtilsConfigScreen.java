@@ -121,6 +121,10 @@ public final class DarkUtilsConfigScreen {
                 "Makes Auto Clicker work when holding AOTV, causing you to teleport rapidly/faster. Might make you teleport more than you intended to even if you click a single time, even when ether warping, but it usually makes you teleport through longer distances much, much faster.",
                 config.autoClickerWorkWithAOTV, newValue -> config.autoClickerWorkWithAOTV = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto Clicker Half AOTV CPS",
+                "Makes Auto Clicker work at half its normal click rate when holding AOTV when Auto Clicker Work With AOTV is enabled. It will click with 10 CPS instead of the normal 20.",
+                config.autoClickerHalfAOTVCps, newValue -> config.autoClickerHalfAOTVCps = newValue);
+
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Disable Cells Alignment",
                 "Disables using the Cells Alignment ability of the Gyrokinetic Wand when you are holding it and right-click. The click will still go through if it would interact with an entity or block instead of using the item.",
                 config.disableCellsAlignment, newValue -> config.disableCellsAlignment = newValue);
@@ -398,10 +402,6 @@ public final class DarkUtilsConfigScreen {
                 "Disables all glowing, which reduce FPS a lot if your graphics card is not capable. Glowed entities are rendered behind walls, so no culling of them which reduces performance. Only enable if you do not care about: seeing your teammates glow with Hypixel rank color (e.g. green for VIP, blue for MVP+) in Dungeons, dropped items glowing with their rarity color (e.g. orange for legendary items), frogs in galatea glowing white, and possibly more glowing effects will be disabled for performance.",
                 config.disableGlowing, newValue -> config.disableGlowing = newValue);
 
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Sound Lag Fix",
-                "Skips playing duplicate sounds received on the same tick from misbehaving or lagging servers from causing lag in your system, preventing the audio engine from being overloaded/sound pool getting full. Only identical sounds are prevented so you can still hear everything perfectly.",
-                config.soundLagFix, newValue -> config.soundLagFix = newValue);
-
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Thread Priority Tweaker",
                 "Improves performance by tweaking priorities of all threads in the background regularly.",
                 config.threadPriorityTweaker, newValue -> config.threadPriorityTweaker = newValue);
@@ -432,10 +432,6 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Item Frame Sound Fix",
                 "Fixes a bug in Minecraft's bug tracker causing item frames to play a sound when they should not in some cases.",
                 config.itemFrameSoundFix, newValue -> config.itemFrameSoundFix = newValue);
-
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Cursor Fix",
-                "Fixes a bug where the mouse cursor stays on screen after closing a menu that set a custom cursor but forgot to revert it.",
-                config.cursorFix, newValue -> config.cursorFix = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Middle Click Fix",
                 "Allows you to middle click when hovering over items like in 1.8, such as to disable Witherborn ability of your armor.",
