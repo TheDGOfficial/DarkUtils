@@ -1,6 +1,9 @@
 package gg.darkutils.mixin.qol;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.utils.Helpers;
+import gg.darkutils.utils.LocationUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Input;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +27,15 @@ final class LocalPlayerMixin {
             )
     )
     private final boolean darkutils$alwaysSprintIfEnabled(@NotNull final Input input) {
-        return DarkUtilsConfig.INSTANCE.alwaysSprint || input.sprint();
+        if (DarkUtilsConfig.INSTANCE.alwaysSprint) {
+            final var player = Minecraft.getInstance().player;
+
+            final var water = null != player && player.isInWater();
+            final var beans = Helpers.doesTargetedBlockMatch(Helpers.isCocoaBeans());
+
+            return !water && (!beans || !LocationUtils.isInGarden());
+        }
+
+        return input.sprint();
     }
 }

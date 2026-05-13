@@ -113,6 +113,11 @@ public final class Helpers {
         return state -> state.is(BlockTags.WOODEN_DOORS);
     }
 
+    @NotNull
+    public static final Predicate<BlockState> isCocoaBeans() {
+        return state -> state.is(Blocks.COCOA)/* || state.is(BlockTags.SUPPORTS_COCOA)*/;
+    }
+
     private static final boolean doesTargetedEntityMatch(@NotNull final Predicate<Entity> matcher) {
         final var cached = Helpers.targetedEntity;
 

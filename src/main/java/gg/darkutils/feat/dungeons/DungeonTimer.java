@@ -788,7 +788,9 @@ public final class DungeonTimer {
             final var ordinal = phase.ordinal();
 
             if (null != timings[ordinal]) {
-                DarkUtils.warn(DungeonTimer.DungeonTimingState.class, "Phase " + phase.name() + " was finished multiple times");
+                if (DungeonTimer.DungeonPhase.PHASE_5_CLEAR != phase) { // finishAllOpenApplicablePhases() is called when Defeated is received, which can finish the phase before wither king dialogue is received, causing it to finish 2 times
+                    DarkUtils.warn(DungeonTimer.DungeonTimingState.class, "Phase " + phase.name() + " was finished multiple times");
+                }
                 return;
             }
 
