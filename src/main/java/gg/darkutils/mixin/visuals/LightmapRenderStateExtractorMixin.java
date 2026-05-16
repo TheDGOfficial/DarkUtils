@@ -19,6 +19,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import org.joml.Vector3f;
 
 @Mixin(LightmapRenderStateExtractor.class)
 final class LightmapRenderStateExtractorMixin {
@@ -30,6 +32,8 @@ final class LightmapRenderStateExtractorMixin {
     @Unique
     @Nullable
     private BasicTriState darkutils$nightVisionAtLastUpdate;
+    @Unique
+    private static final Vector3f AMBIENT_LIGHT_COLOR = new Vector3f(1.0f, 1.0f, 1.0f);
 
     private LightmapRenderStateExtractorMixin() {
         super();
@@ -90,6 +94,11 @@ final class LightmapRenderStateExtractorMixin {
             this.darkutils$fullbrightAtLastUpdate = BasicTriState.of(DarkUtilsConfig.INSTANCE.fullbright);
             this.darkutils$nightVisionAtLastUpdate = BasicTriState.of(DarkUtilsConfig.INSTANCE.nightVision);
         }
+    }
+
+    @ModifyExpressionValue(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/ARGB;vector3fFromRGB24(I)Lorg/joml/Vector3f;", ordinal = 2))
+    private static final Vector3f darkutils$getAmbientLight(@NotNull final Vector3f original) {
+        return DarkUtilsConfig.INSTANCE.fullbright ? LightmapRenderStateExtractorMixin.AMBIENT_LIGHT_COLOR : original;
     }
 
     @Redirect(method = "extract", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F", ordinal = 0))
