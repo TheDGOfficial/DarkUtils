@@ -88,17 +88,17 @@ public final class PickaxeAbilityDisplay {
         var onCooldown = false;
 
         final var at = PickaxeAbilityDisplay.expiresAt;
-        switch (at) {
-            case -1L -> text.setText("Pickaxe Ability: READY");
-            case 0L -> text.setText("Pickaxe Ability: Could not detect");
-            default -> {
-                final var remaining = PickaxeAbilityDisplay.expiresAt - System.nanoTime();
-                if (0L >= remaining) {
-                    text.setText("Pickaxe Ability: READY");
-                } else {
-                    text.setText("Pickaxe Ability: " + PrettyUtils.prettifyNanosToSeconds(remaining));
-                    onCooldown = true;
-                }
+        if (-1L == at) {
+            text.setText("Pickaxe Ability: READY");
+        } else if (0L == at) {
+            text.setText("Pickaxe Ability: Could not detect");
+        } else {
+            final var remaining = PickaxeAbilityDisplay.expiresAt - System.nanoTime();
+            if (0L >= remaining) {
+                text.setText("Pickaxe Ability: READY");
+            } else {
+                text.setText("Pickaxe Ability: " + PrettyUtils.prettifyNanosToSeconds(remaining));
+                onCooldown = true;
             }
         }
 
