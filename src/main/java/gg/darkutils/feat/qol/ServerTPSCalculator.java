@@ -3,7 +3,7 @@ package gg.darkutils.feat.qol;
 import gg.darkutils.events.ServerTickEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.TickUtils;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +54,7 @@ public final class ServerTPSCalculator {
     public static final void init() {
         TickUtils.queueRepeatingTickTask(ServerTPSCalculator::calculateTPS, 20);
 
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(ServerTPSCalculator::onWorldUnload);
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(ServerTPSCalculator::onWorldUnload);
         EventRegistry.centralRegistry().addListener(ServerTPSCalculator::onServerTick);
     }
 

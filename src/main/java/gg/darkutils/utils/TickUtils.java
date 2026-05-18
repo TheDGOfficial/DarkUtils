@@ -335,11 +335,11 @@ public final class TickUtils {
          * Time-based constructor.
          */
         private Task(@NotNull final TickUtils.TaskAction action, final int initialTicks, final boolean repeats) {
-            super();
-
             if (0 >= initialTicks) {
                 throw new IllegalArgumentException("Task interval must be greater than zero");
             }
+
+            super();
 
             this.condition = null;
             this.action = action;

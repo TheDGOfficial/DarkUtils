@@ -115,7 +115,7 @@ public final class Helpers {
 
     @NotNull
     public static final Predicate<BlockState> isCocoaBeans() {
-        return state -> state.is(Blocks.COCOA)/* || state.is(BlockTags.SUPPORTS_COCOA)*/;
+        return state -> state.is(Blocks.COCOA) || state.is(BlockTags.SUPPORTS_COCOA);
     }
 
     private static final boolean doesTargetedEntityMatch(@NotNull final Predicate<Entity> matcher) {

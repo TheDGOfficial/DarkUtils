@@ -4,7 +4,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.SlotClickEvent;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,8 +28,8 @@ final class AbstractContainerScreenMixin {
         return DarkUtilsConfig.INSTANCE.middleClickFix || original;
     }
 
-    @Inject(method = "slotClicked(Lnet/minecraft/world/inventory/Slot;IILnet/minecraft/world/inventory/ClickType;)V", at = @At("HEAD"), cancellable = true)
-    private final void darkutils$cancelClickSlotIfApplicable(@Nullable final Slot slot, final int slotId, final int button, @NotNull final ClickType actionType, @NotNull final CallbackInfo ci) {
+    @Inject(method = "slotClicked(Lnet/minecraft/world/inventory/Slot;IILnet/minecraft/world/inventory/ContainerInput;)V", at = @At("HEAD"), cancellable = true)
+    private final void darkutils$cancelClickSlotIfApplicable(@Nullable final Slot slot, final int slotId, final int button, @NotNull final ContainerInput actionType, @NotNull final CallbackInfo ci) {
         if (null != slot && new SlotClickEvent((AbstractContainerScreen<?>) (Object) this, slotId, slot).triggerAndCancelled()) {
             ci.cancel();
         }

@@ -5,7 +5,7 @@ import gg.darkutils.utils.ActivityState;
 import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.TickUtils;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -26,7 +26,7 @@ public final class StickyFarmingKeys {
     }
 
     public static final void init() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(StickyFarmingKeys::onWorldChange);
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(StickyFarmingKeys::onWorldChange);
         TickUtils.queueRepeatingTickTask(StickyFarmingKeys::onTick, 1);
     }
 

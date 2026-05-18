@@ -3,8 +3,8 @@ package gg.darkutils.feat.dungeons;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.utils.RenderUtils;
 import gg.darkutils.utils.TickUtils;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -37,7 +37,7 @@ public final class ArrowStackWaypoints {
     }
 
     public static final void init() {
-        WorldRenderEvents.END_MAIN.register(ArrowStackWaypoints::renderArrowStackWaypoints);
+        LevelRenderEvents.END_MAIN.register(ArrowStackWaypoints::renderArrowStackWaypoints);
     }
 
     private static final boolean isEnabled() {
@@ -61,7 +61,7 @@ public final class ArrowStackWaypoints {
         return ArrowStackWaypoints.isEnabled() && ArrowStackWaypoints.isInM7() && ArrowStackWaypoints.isP3FinishedWhileP5IsNot() && ArrowStackWaypoints.isPlayerBelowNecronPlatformHeight();
     }
 
-    private static final void renderArrowStackWaypoints(@NotNull final WorldRenderContext context) {
+    private static final void renderArrowStackWaypoints(@NotNull final LevelRenderContext context) {
         if (!ArrowStackWaypoints.SHOULD_RENDER.getAsBoolean()) {
             return;
         }

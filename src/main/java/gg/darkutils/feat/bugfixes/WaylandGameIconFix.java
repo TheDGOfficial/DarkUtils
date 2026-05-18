@@ -19,6 +19,7 @@ import java.util.List;
 
 public final class WaylandGameIconFix {
     public static final @NotNull String WAYLAND_APP_ID = "com.mojang.minecraft.java-edition";
+    public static boolean desktopFileFailure;
     private static final @NotNull String DESKTOP_FILE_NAME = WaylandGameIconFix.WAYLAND_APP_ID + ".desktop";
     private static final @NotNull String ICON_FILE_NAME = "minecraft.png";
 

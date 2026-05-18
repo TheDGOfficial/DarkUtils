@@ -111,7 +111,6 @@ public final class DarkUtilsConfig {
     public boolean noWitherHearts;
 
     // === Performance ===
-    public boolean disableYield;
     public boolean alwaysPrioritizeRenderThread;
     public boolean optimizeExceptions;
     public boolean alwaysUseNoErrorContext;

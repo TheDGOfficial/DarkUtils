@@ -9,7 +9,7 @@ import gg.darkutils.utils.RenderUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +33,7 @@ public final class CorpsesPerShaftDisplay {
         return DarkUtilsConfig.INSTANCE.corpsesPerShaftDisplay;
     }
 
-    private static final void renderCorpsesPerShaftDisplay(@NotNull final GuiGraphics context) {
+    private static final void renderCorpsesPerShaftDisplay(@NotNull final GuiGraphicsExtractor context) {
         if (!CorpsesPerShaftDisplay.isEnabled()) {
             return;
         }
