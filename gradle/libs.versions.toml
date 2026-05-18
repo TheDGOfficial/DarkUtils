@@ -1,5 +1,5 @@
 [versions]
-loom = "1.16.1"
+loom = "1.16.2"
 java = "25"
 minecraft = "26.1.2"
 fabric-loader = "0.19.2"
