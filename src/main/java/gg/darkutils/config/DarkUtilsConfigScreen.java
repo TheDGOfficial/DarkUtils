@@ -441,10 +441,6 @@ public final class DarkUtilsConfigScreen {
                 "Fixes a bug where Minecraft tries to call glfwSetCursorPos in Wayland desktop environment, where setting the cursor position is not supported, by cancelling the call. This prevents the GL error while preserving behaviour, as setting the position fails with the GL error anyways.",
                 config.cursorPosWaylandGLErrorFix, newValue -> config.cursorPosWaylandGLErrorFix = newValue);
 
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix CTRL and ALT on Wayland",
-                "Fixes a bug where CTRL and ALT is inserted as a character in chat when trying to for example select all text with CTRL + A. This not needed if running through XWayland, X11, or in Windows/macOS, or with a patched GLFW in Linux. Does nothing if Prefer wayland is not enabled or if you do not have this issue already.",
-                config.fixCtrlAndAltOnWayland, newValue -> config.fixCtrlAndAltOnWayland = newValue);
-
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix Game Icon on Wayland",
                 "Fixes a bug where Minecraft does not properly set the game icon on modern desktop environments expecting a .desktop file and an icon at ~/.local/share/applications while running on Linux Wayland environment. Does nothing if Prefer Wayland is not enabled or when running through XWayland/X11.",
                 config.fixGameIconOnWayland, newValue -> config.fixGameIconOnWayland = newValue);

@@ -137,7 +137,6 @@ public final class DarkUtilsConfig {
     public boolean itemFrameSoundFix;
     public boolean middleClickFix;
     public boolean cursorPosWaylandGLErrorFix;
-    public boolean fixCtrlAndAltOnWayland;
     public boolean fixGameIconOnWayland;
 
     // === Development ===

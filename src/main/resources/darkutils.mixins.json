@@ -11,7 +11,6 @@
     "bugfixes.FramerateLimitTrackerMixin",
     "bugfixes.GLFWMixin",
     "bugfixes.InputConstantsMixin",
-    "bugfixes.KeyboardHandlerMixin",
     "misc.ClientPacketListenerMixin",
     "misc.GameRendererMixin",
     "misc.MinecraftMixin",
