@@ -82,6 +82,10 @@ public final class ThreadPriorityTweaker {
                 // Keep important I/O at the top to not cause unexpected latency increase after turning on the tweaker.
                 ThreadPriorityTweaker.startsWith("Netty ", crit),
                 ThreadPriorityTweaker.startsWith("Ixeris ", crit),
+                ThreadPriorityTweaker.startsWith("ALSoft", crit),
+                ThreadPriorityTweaker.exactMatch("PWEventThread", crit),
+                ThreadPriorityTweaker.exactMatch("Sound engine", crit),
+                ThreadPriorityTweaker.exactMatch("RSLS Scheduler", crit),
                 ThreadPriorityTweaker.exactMatch("Render thread", highest),
                 ThreadPriorityTweaker.startsWith("Chunk Render ", veryHigh),
                 ThreadPriorityTweaker.startsWith("c2me", veryHigh),
@@ -90,10 +94,6 @@ public final class ThreadPriorityTweaker {
                 ThreadPriorityTweaker.startsWith("scalablelux", high),
                 ThreadPriorityTweaker.startsWith("AsyncParticle", high),
                 ThreadPriorityTweaker.exactMatch("Server thread", aboveNormal),
-                ThreadPriorityTweaker.startsWith("ALSoft", aboveNormal),
-                ThreadPriorityTweaker.exactMatch("PWEventThread", aboveNormal),
-                ThreadPriorityTweaker.exactMatch("Sound engine", aboveNormal),
-                ThreadPriorityTweaker.exactMatch("RSLS Scheduler", aboveNormal),
                 ThreadPriorityTweaker.startsWith("Server Pinger #", aboveNormal),
                 ThreadPriorityTweaker.startsWith("LanServerDetector #", aboveNormal)
         );
