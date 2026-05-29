@@ -273,7 +273,7 @@ public final class ChatUtils {
 
         ChatUtils.validateAvailable("inGameHud", inGameHud);
 
-        return inGameHud.getChat().getWidth();
+        return inGameHud.getChat().getWidth(mc.options.chatWidth().get());
     }
 
     @NotNull
