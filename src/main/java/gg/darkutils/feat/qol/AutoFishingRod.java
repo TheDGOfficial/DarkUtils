@@ -23,12 +23,19 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.ref.WeakReference;
 import java.security.SecureRandom;
 
+import java.util.concurrent.TimeUnit;
+
 public final class AutoFishingRod {
     private static final @NotNull String READY = "!!!";
     private static final @NotNull SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private static @Nullable WeakReference<ArmorStand> countdownArmorStand;
     private static boolean hooking;
+
+    private static final long TICK_NANOS = TimeUnit.MILLISECONDS.toNanos(50L);
+
+    private static long lastHookNanos;
+    private static long lastRecastNanos;
 
     private AutoFishingRod() {
         super();
@@ -122,19 +129,24 @@ public final class AutoFishingRod {
         return null == cached ? AutoFishingRod.findAndAssignCountdownArmorStand(client) : cached;
     }
 
-    private static final boolean hasActiveBobber(final Minecraft client) {
+    private static final boolean hasActiveBobber(@NotNull final Minecraft client) {
+        return null != AutoFishingRod.getActiveBobber(client);
+    }
+
+    @Nullable
+    private static final FishingHook getActiveBobber(@NotNull final Minecraft client) {
         final var player = client.player;
         final var world = client.level;
         if (null == world || AutoFishingRod.isNotHoldingRod(player)) {
-            return false;
+            return null;
         }
 
         for (final var entity : world.entitiesForRendering()) {
             if (entity instanceof final FishingHook bobber && bobber.getOwner() == player) {
-                return true;
+                return bobber;
             }
         }
-        return false;
+        return null;
     }
 
     private static final void hook(@NotNull final Minecraft client) {
@@ -149,14 +161,37 @@ public final class AutoFishingRod {
     private static final void hookAndReThrow() {
         AutoFishingRod.useRod(() -> {
             if (DarkUtilsConfig.INSTANCE.autoFishingRecast) {
-                AutoFishingRod.useRod(AutoFishingRod::resetState);
+                AutoFishingRod.useRod(AutoFishingRod::resetState, true);
             } else {
                 AutoFishingRod.resetState();
             }
-        });
+        }, false);
     }
 
-    private static final void useRod(@NotNull final Runnable continuation) {
+    private static final void useRod(@NotNull final Runnable continuation, final boolean toRecast) {
+        final var mc = Minecraft.getInstance();
+
+        if (!toRecast) {
+            final var now = System.nanoTime();
+
+            final var bobber = AutoFishingRod.getActiveBobber(mc);
+            final var stand = AutoFishingRod.getOrFindCountdownArmorStand(mc);
+
+            if (null == bobber || null == stand || now - AutoFishingRod.lastHookNanos < AutoFishingRod.TICK_NANOS || stand.distanceToSqr(bobber) >= 4.0D) {
+                return;
+            }
+
+            AutoFishingRod.lastHookNanos = now;
+        } else {
+            final var now = System.nanoTime();
+
+            if (AutoFishingRod.isNotHoldingRod(mc.player) || now - AutoFishingRod.lastRecastNanos < AutoFishingRod.TICK_NANOS) {
+                return;
+            }
+
+            AutoFishingRod.lastRecastNanos = now;
+        }
+
         final var min = DarkUtilsConfig.INSTANCE.autoFishingStartingDelay;
         final var max = DarkUtilsConfig.INSTANCE.autoFishingMaximumDelay;
 
@@ -165,9 +200,9 @@ public final class AutoFishingRod {
                 : min;
 
         TickUtils.queueTickTask(() -> {
-            final var mc = Minecraft.getInstance();
-            if (DarkUtilsConfig.INSTANCE.autoFishingWorkThroughMenus || null == mc.screen) {
+            if (!mc.player.isUsingItem() && !mc.options.keyAttack.isDown() && !mc.options.keyUse.isDown() && (DarkUtilsConfig.INSTANCE.autoFishingWorkThroughMenus || null == mc.screen)) {
                 mc.startUseItem();
+
                 continuation.run();
             }
         }, Math.max(1, delay));
