@@ -10,6 +10,7 @@ import gg.darkutils.utils.TickUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -273,7 +274,7 @@ public final class ChatUtils {
 
         ChatUtils.validateAvailable("inGameHud", inGameHud);
 
-        return inGameHud.getChat().getWidth(mc.options.chatWidth().get());
+        return ChatComponent.getWidth(mc.options.chatWidth().get());
     }
 
     @NotNull
