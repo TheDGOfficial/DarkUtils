@@ -130,6 +130,7 @@ public final class DarkUtilsConfig {
     public boolean disableSignatureVerification;
     public boolean blockEntityUnloadLagFix;
     public boolean preferWayland;
+    public boolean disableGlDebug;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;

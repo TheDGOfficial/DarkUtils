@@ -417,6 +417,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Prefer Wayland",
                 "Prefers Wayland over XWayland when running a Wayland session in Linux systems when your GLFW version supports the native Wayland backend. This generally improves performance as it doesn't have to go through XWayland compatibility layer. Does nothing in Windows or macOS, or when running a X11 only session/old GLFW without native Wayland support.",
                 config.preferWayland, newValue -> config.preferWayland = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable GL Debug",
+                "Disables GL debug when creating GL device in GlBackend codepath, the parameter passed to GpuDebugOption. This usually removes the debug error messages if any error happens and thus might improve performance.",
+                config.disableGlDebug, newValue -> config.disableGlDebug = newValue);
     }
 
     private static final void addBugfixes(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
