@@ -54,11 +54,11 @@ public final class StickyFarmingKeys {
 
     private static final void resetToggledState() {
         for (final var key : StickyFarmingKeys.Key.VALUES) {
-            key.setToggled(false);
+            key.resetState();
         }
 
         for (final var key : StickyFarmingKeys.MovementKey.VALUES) {
-            key.setToggled(false);
+            key.resetState();
         }
     }
 
