@@ -29,11 +29,7 @@ final class LocalPlayerMixin {
     private final boolean darkutils$alwaysSprintIfEnabled(@NotNull final Input input) {
         if (DarkUtilsConfig.INSTANCE.alwaysSprint) {
             final var player = Minecraft.getInstance().player;
-
-            final var water = null != player && player.isInWater();
-            final var beans = Helpers.doesTargetedBlockMatch(Helpers.isCocoaBeans());
-
-            return !water && (!beans || !LocationUtils.isInGarden());
+            return null == player || !player.isInWater();
         }
 
         return input.sprint();
