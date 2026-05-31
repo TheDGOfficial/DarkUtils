@@ -64,6 +64,7 @@ public final class DarkUtilsConfig {
     // === Farming ===
     public boolean pestCooldownDisplay;
     public int pestCooldown = 135;
+    public boolean openEquipmentMenuWhenOverOrSpawn;
     public boolean persistentTabListWhileFarming;
     public boolean stickyFarmingKeys;
     public boolean stickyForward;

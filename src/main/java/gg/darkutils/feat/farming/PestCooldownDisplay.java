@@ -6,6 +6,8 @@ import gg.darkutils.events.ReceiveGameMessageEvent;
 import gg.darkutils.events.base.EventRegistry;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.RenderUtils;
+import gg.darkutils.utils.ActivityState;
+import gg.darkutils.utils.chat.ChatUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
@@ -25,6 +27,8 @@ public final class PestCooldownDisplay {
             RenderUtils.createRenderingText();
 
     private static long lastPestSpawnTime;
+
+    private static boolean wasReady;
 
     private PestCooldownDisplay() {
         super();
@@ -60,7 +64,15 @@ public final class PestCooldownDisplay {
 
         if (content.contains("ൠ Pest") && (content.contains("have spawned in") || content.contains("has appeared in"))) {
             PestCooldownDisplay.lastPestSpawnTime = System.nanoTime();
+            if (DarkUtilsConfig.INSTANCE.openEquipmentMenuWhenOverOrSpawn && ActivityState.isActivelyFarming()) { // The message procs when pests spawn from you joining Garden after being offline for a while as well, so we need the isActivelyFarming check here.
+                PestCooldownDisplay.wasReady = false;
+                PestCooldownDisplay.openEquipmentMenu();
+            }
         }
+    }
+
+    private static final void openEquipmentMenu() {
+        ChatUtils.addToSendMessageQueue("/eq");
     }
 
     private static final void renderPestCooldownDisplay(@NotNull final GuiGraphicsExtractor context) {
@@ -78,11 +90,18 @@ public final class PestCooldownDisplay {
         final var spawnCd = DarkUtilsConfig.INSTANCE.pestCooldown;
         final var lastSpawn = PestCooldownDisplay.lastPestSpawnTime;
 
+        final var unknownLastSpawn = 0L == lastSpawn;
+
         final var now = System.nanoTime();
-        final var cooldownEnd = 0L == lastSpawn ? now : lastSpawn + TimeUnit.SECONDS.toNanos(spawnCd);
+        final var cooldownEnd = unknownLastSpawn ? now : lastSpawn + TimeUnit.SECONDS.toNanos(spawnCd);
 
         final var remainingNs = cooldownEnd - now;
         final var ready = 0L >= remainingNs;
+
+        if (DarkUtilsConfig.INSTANCE.openEquipmentMenuWhenOverOrSpawn && ready && !unknownLastSpawn && !wasReady && ActivityState.isActivelyFarming()) {
+            PestCooldownDisplay.wasReady = true;
+            PestCooldownDisplay.openEquipmentMenu();
+        }
 
         final var remainingSeconds = TimeUnit.NANOSECONDS.toSeconds(Math.max(remainingNs, 0L));
 
