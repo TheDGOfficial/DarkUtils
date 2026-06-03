@@ -59,7 +59,9 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.CommonColors;
@@ -246,6 +248,11 @@ public final class DarkUtils implements ClientModInitializer {
         if (DarkUtilsConfig.INSTANCE.debugMode) {
             DarkUtils.user(message.get(), DarkUtils.UserMessageLevel.USER_INFO);
         }
+    }
+
+    public static final void toast(@NotNull final Component title, @NotNull final Component message) {
+        final var mc = Minecraft.getInstance();
+        mc.getToastManager().addToast(SystemToast.multiline(mc, SystemToast.SystemToastId.PERIODIC_NOTIFICATION, title, message));
     }
 
     public static final void user(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level) {
@@ -630,6 +637,14 @@ public final class DarkUtils implements ClientModInitializer {
             case COULD_NOT_CHECK ->
                     fancyGreet ? () -> DarkUtils.queueWelcomeMessageIfEnabled("We couldn't check if this the latest version, please see if there is any errors above!") : () -> user.sendUserMessage("Could not check for mod updates!", DarkUtils.UserMessageLevel.USER_ERROR);
         };
+
+        if (UpdateChecker.UpdateCheckerResult.OUT_OF_DATE == result) {
+            // Additionally show a toast to the user
+            final var title = Component.literal("DarkUtils").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD));
+            final var message = Component.literal("Outdated version, please update!").setStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW));
+
+            DarkUtils.toast(title, message);
+        }
 
         feedback.run();
     }

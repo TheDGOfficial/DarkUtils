@@ -11,7 +11,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -96,7 +95,10 @@ public final class LittlefootDisplay {
         if (!LittlefootDisplay.notified) {
             LittlefootDisplay.notified = true;
 
-            client.getToastManager().addToast(SystemToast.multiline(client, SystemToast.SystemToastId.PERIODIC_NOTIFICATION, Component.literal("Littlefoot").setStyle(Style.EMPTY.withColor(ChatFormatting.DARK_PURPLE)), Component.literal("Littlefoot(s) found!").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD))));
+            final var title = Component.literal("Littlefoot").setStyle(Style.EMPTY.withColor(ChatFormatting.DARK_PURPLE));
+            final var message = Component.literal("Littlefoot(s) found!").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD));
+
+            DarkUtils.toast(title, message);
         }
     }
 
