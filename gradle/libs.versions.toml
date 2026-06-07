@@ -1,9 +1,9 @@
 [versions]
-loom = "1.16.2"
+loom = "1.17.1"
 java = "25"
 minecraft = "26.1.2"
 fabric-loader = "0.19.3"
-fabric-api = "0.150.0+26.1.2"
+fabric-api = "0.151.0+26.1.2"
 cloth-config = "26.1.154"
 mod-menu = "20.0.0-alpha.1"
 hypixel-mod-api = "1.0.2"
