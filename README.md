@@ -19,7 +19,7 @@ compatibility is often the case so latest versions are recommended.
 Required Dependencies:
 
 - Minecraft 26.1.2 or later.
-- Fabric Loader 0.19.2 or later.
+- Fabric Loader 0.19.3 or later.
 - Fabric API 0.150.0 or later.
 - Cloth Config API 26.1.154 or later.
 - Hypixel Mod API 1.0.2 or later.

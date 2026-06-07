@@ -2,7 +2,7 @@
 loom = "1.16.2"
 java = "25"
 minecraft = "26.1.2"
-fabric-loader = "0.19.2"
+fabric-loader = "0.19.3"
 fabric-api = "0.150.0+26.1.2"
 cloth-config = "26.1.154"
 mod-menu = "20.0.0-alpha.1"
