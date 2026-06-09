@@ -237,6 +237,10 @@ public final class Helpers {
         return Helpers.doesHeldItemNameMatch("Gyrokinetic Wand"::equals);
     }
 
+    public static final boolean isHoldingALastBreath() {
+        return Helpers.doesHeldItemNameMatch(name -> name.contains("Last Breath"));
+    }
+
     public static final boolean isHoldingAOTV() {
         return Helpers.doesHeldItemNameMatch(Helpers.matchHoldingAOTV());
     }

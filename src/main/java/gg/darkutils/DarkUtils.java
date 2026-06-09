@@ -40,6 +40,7 @@ import gg.darkutils.feat.qol.PreventUselessBlockHit;
 import gg.darkutils.feat.qol.RejoinCooldownDisplay;
 import gg.darkutils.feat.qol.ServerTPSCalculator;
 import gg.darkutils.feat.qol.VanillaMode;
+import gg.darkutils.feat.qol.AutoLBRelease;
 import gg.darkutils.update.UpdateChecker;
 import gg.darkutils.utils.ActivityState;
 import gg.darkutils.utils.LazyConstants;
@@ -763,7 +764,8 @@ public final class DarkUtils implements ClientModInitializer {
                 ThreadPriorityTweaker::init,
                 ArrowStackWaypoints::init,
                 VanillaMode::init,
-                RagnarockHelper::init
+                RagnarockHelper::init,
+                AutoLBRelease::init
         );
     }
 

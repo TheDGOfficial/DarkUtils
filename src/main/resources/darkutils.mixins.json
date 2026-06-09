@@ -30,6 +30,7 @@
     "performance.YggdrasilServicesKeyInfoMixin",
     "performance.LevelRendererMixin",
     "performance.GLXMixin",
+    "performance.GlCommandEncoderMixin",
     "qol.LocalPlayerMixin",
     "qol.MultiPlayerGameModeMixin",
     "qol.MouseHandlerMixin",

@@ -14,9 +14,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class StickyFarmingKeys {
-    @Nullable
-    private static Screen previousScreen;
-
     private static int previousSelectedSlot = -1;
 
     private StickyFarmingKeys() {

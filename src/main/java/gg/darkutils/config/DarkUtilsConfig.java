@@ -48,6 +48,7 @@ public final class DarkUtilsConfig {
     public boolean autoClickerWorkInLevers;
     public boolean autoClickerWorkWithAOTV;
     public boolean autoClickerHalfAOTVCps;
+    public boolean autoLBRelease;
     public boolean disableCellsAlignment;
     public boolean preventUselessBlockHit;
     public boolean disableCommandConfirmation;
@@ -110,6 +111,7 @@ public final class DarkUtilsConfig {
     public boolean hideMountHealth;
     public boolean noLightningBolts;
     public boolean noWitherHearts;
+    public boolean noExplosionParticles;
 
     // === Performance ===
     public boolean alwaysPrioritizeRenderThread;
@@ -132,6 +134,7 @@ public final class DarkUtilsConfig {
     public boolean blockEntityUnloadLagFix;
     public boolean preferWayland;
     public boolean disableGlDebug;
+    public boolean cacheGLCalls;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;

@@ -29,9 +29,11 @@ final class ParticleEngineMixin {
             final double velocityX, final double velocityY, final double velocityZ,
             @NotNull final CallbackInfoReturnable<Particle> cir
     ) {
-        if (DarkUtilsConfig.INSTANCE.disableCampfireSmokeParticles) {
+        final var explosion = DarkUtilsConfig.INSTANCE.noExplosionParticles;
+        final var campfire = DarkUtilsConfig.INSTANCE.disableCampfireSmokeParticles;
+        if (explosion || campfire) {
             final var type = effect.getType();
-            if (ParticleTypes.CAMPFIRE_COSY_SMOKE == type || ParticleTypes.CAMPFIRE_SIGNAL_SMOKE == type) {
+            if ((explosion && ParticleTypes.EXPLOSION == type) || (campfire && (ParticleTypes.CAMPFIRE_COSY_SMOKE == type || ParticleTypes.CAMPFIRE_SIGNAL_SMOKE == type))) {
                 // cancel creation
                 cir.setReturnValue(null);
             }

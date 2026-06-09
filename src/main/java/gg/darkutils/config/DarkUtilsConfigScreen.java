@@ -125,6 +125,10 @@ public final class DarkUtilsConfigScreen {
                 "Makes Auto Clicker work at half its normal click rate when holding AOTV when Auto Clicker Work With AOTV is enabled. It will click with 10 CPS instead of the normal 20.",
                 config.autoClickerHalfAOTVCps, newValue -> config.autoClickerHalfAOTVCps = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Auto LB Release",
+                "Releases right click automatically every 400 milliseconds when you are holding it down when using a Last Breath for optimal arrow stack when debuffing.",
+                config.autoLBRelease, newValue -> config.autoLBRelease = newValue);
+
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Disable Cells Alignment",
                 "Disables using the Cells Alignment ability of the Gyrokinetic Wand when you are holding it and right-click. The click will still go through if it would interact with an entity or block instead of using the item.",
                 config.disableCellsAlignment, newValue -> config.disableCellsAlignment = newValue);
@@ -343,6 +347,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "No Wither Hearts",
                 "Skips making your hearts black when you have the Wither status effect, allowing you to always be able to see your Health clearly.",
                 config.noWitherHearts, newValue -> config.noWitherHearts = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "No Explosion Particles",
+                "Removes explosion particles fully, preventing them from spawning at all. This does not only hide them but also removes them, which should also improve performance a bit if lot of explosions are happening.",
+                config.noExplosionParticles, newValue -> config.noExplosionParticles = newValue);
     }
 
     private static final void addPerformance(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
@@ -425,6 +433,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable GL Debug",
                 "Disables GL debug when creating GL device in GlBackend codepath, the parameter passed to GpuDebugOption. This usually removes the debug error messages if any error happens and thus might improve performance.",
                 config.disableGlDebug, newValue -> config.disableGlDebug = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Cache GL Calls",
+                "Caches a few GL calls such as glScissor and glPolygonMode if the parameters have not been changed since last frame to improve performance slightly by saving a JNI call and a GL call.",
+                config.cacheGLCalls, newValue -> config.cacheGLCalls = newValue);
     }
 
     private static final void addBugfixes(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

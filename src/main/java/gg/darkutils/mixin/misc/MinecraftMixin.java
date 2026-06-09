@@ -7,6 +7,7 @@ import gg.darkutils.data.PersistentData;
 import gg.darkutils.events.InteractEntityEvent;
 import gg.darkutils.feat.farming.StickyFarmingKeys;
 import gg.darkutils.feat.qol.AutoClicker;
+import gg.darkutils.feat.qol.AutoLBRelease;
 import gg.darkutils.utils.Helpers;
 import gg.darkutils.utils.JavaUtils;
 import net.minecraft.client.KeyMapping;
@@ -60,7 +61,7 @@ final class MinecraftMixin {
 
     @Redirect(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;isDown()Z"))
     private final boolean darkutils$isPressed$modifyReturnValueIfApplicable(@NotNull final KeyMapping keyBinding) {
-        return AutoClicker.isPressed(keyBinding, StickyFarmingKeys.isPressed(keyBinding, false));
+        return AutoLBRelease.isDown(keyBinding, AutoClicker.isPressed(keyBinding, StickyFarmingKeys.isPressed(keyBinding, false)));
     }
 
     @WrapOperation(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;interact(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/EntityHitResult;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
