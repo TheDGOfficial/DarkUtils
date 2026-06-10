@@ -8,7 +8,7 @@ cloth-config = "26.1.154"
 mod-menu = "20.0.0-alpha.1"
 hypixel-mod-api = "1.0.2"
 junit = "6.1.0"
-errorprone = "2.49.0"
+errorprone = "2.50.0"
 
 [plugins]
 loom = { id = "net.fabricmc.fabric-loom", version.ref = "loom" }
