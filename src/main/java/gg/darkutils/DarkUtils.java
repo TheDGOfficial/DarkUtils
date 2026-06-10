@@ -17,6 +17,7 @@ import gg.darkutils.feat.dungeons.RagnarockHelper;
 import gg.darkutils.feat.dungeons.ReplaceDiorite;
 import gg.darkutils.feat.dungeons.SoloCrushTimer;
 import gg.darkutils.feat.dungeons.SoloCrushWaypoint;
+import gg.darkutils.feat.dungeons.SectionDoneDisplay;
 import gg.darkutils.feat.farming.EnforceZorrosCape;
 import gg.darkutils.feat.farming.PestCooldownDisplay;
 import gg.darkutils.feat.farming.StickyFarmingKeys;
@@ -765,7 +766,8 @@ public final class DarkUtils implements ClientModInitializer {
                 ArrowStackWaypoints::init,
                 VanillaMode::init,
                 RagnarockHelper::init,
-                AutoLBRelease::init
+                AutoLBRelease::init,
+                SectionDoneDisplay::init
         );
     }
 

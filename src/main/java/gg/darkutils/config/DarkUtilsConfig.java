@@ -98,6 +98,7 @@ public final class DarkUtilsConfig {
     public boolean dungeonTimerNoItemIcon;
     public boolean bloodClearedNotification;
     public boolean ragnarockHelper;
+    public boolean sectionDoneDisplay;
 
     // === Visual Tweaks ===
     public boolean hideEffectsHud;

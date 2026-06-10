@@ -139,21 +139,21 @@ public final class DungeonTimer {
         return null == DungeonTimer.DungeonTimingState.getPhase(phase);
     }
 
-    public static final boolean isInBetweenPhases(@NotNull final DungeonTimer.DungeonPhase started, @NotNull final DungeonTimer.DungeonPhase notYetFinished) {
-        if (notYetFinished.ordinal() <= started.ordinal()) {
+    public static final boolean isInBetweenPhases(@NotNull final DungeonTimer.DungeonPhase finished, @NotNull final DungeonTimer.DungeonPhase notYetFinished) {
+        if (notYetFinished.ordinal() <= finished.ordinal()) {
             throw new IllegalArgumentException(
-                    "notYetFinished (" + notYetFinished + ") must come after started (" + started + ')'
+                    "notYetFinished (" + notYetFinished + ") must come after finished (" + finished + ')'
             );
         }
 
-        if (null != started.floor && null != notYetFinished.floor && started.floor.floor != notYetFinished.floor.floor) {
+        if (null != finished.floor && null != notYetFinished.floor && finished.floor.floor != notYetFinished.floor.floor) {
             throw new IllegalArgumentException(
                     "Incompatible phase pair: "
-                            + started + " <-> " + notYetFinished
+                            + finished + " <-> " + notYetFinished
             );
         }
 
-        return DungeonTimer.isPhaseFinished(started) && DungeonTimer.isPhaseNotFinished(notYetFinished);
+        return DungeonTimer.isPhaseFinished(finished) && DungeonTimer.isPhaseNotFinished(notYetFinished);
     }
 
     public static final void init() {

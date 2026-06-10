@@ -300,6 +300,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Ragnarock Helper",
                 "Shows a message on screen when you need to use Ragnarock to get extra strength when killing Livid in M5/F5 and the first dragon in your split in M7. Based on the meta dialogues for when to use it.",
                 config.ragnarockHelper, newValue -> config.ragnarockHelper = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Section Done Display",
+                "Shows on screen how many sections of Phase 3 has been done so far, shows yellow for first 2, green when section 3 is done so that you can re-core safely when it turns green and people leap.",
+                config.sectionDoneDisplay, newValue -> config.sectionDoneDisplay = newValue);
     }
 
     private static final void addVisualTweaks(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

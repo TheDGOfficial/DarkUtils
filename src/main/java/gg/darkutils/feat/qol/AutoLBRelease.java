@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.multiplayer.ClientLevel;
 
+import gg.darkutils.feat.dungeons.DungeonTimer;
 import gg.darkutils.utils.TickUtils;
 import gg.darkutils.utils.Helpers;
 import gg.darkutils.config.DarkUtilsConfig;
@@ -55,7 +56,7 @@ public final class AutoLBRelease {
             return actual;
         }
 
-        if (!AutoLBRelease.isEnabled() || !actual || !Helpers.isHoldingALastBreath()) {
+        if (!AutoLBRelease.isEnabled() || !actual || !Helpers.isHoldingALastBreath() || !DungeonTimer.isInBetweenPhases(DungeonTimer.DungeonPhase.PHASE_4_CLEAR, DungeonTimer.DungeonPhase.PHASE_5_CLEAR)) {
             AutoLBRelease.resetState();
             return actual;
         }

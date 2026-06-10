@@ -7,6 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.fabricmc.loader.api.FabricLoader;
+
 /**
  * This class allows us to hold our fields outside the mixin injected class.
  * It is particularly relevant after fabric mixin 0.17.1, where static blocks are not converted to clinit injections anymore (when not using a lower compatibility mode).
@@ -47,6 +49,16 @@ public final class HolderFields {
         public static final @NotNull Set<@NotNull String> WARNED_SERVERS = ConcurrentHashMap.newKeySet(1);
 
         private ServerValues() {
+            super();
+
+            throw new UnsupportedOperationException("static holder class");
+        }
+    }
+
+    public static final class ScalableLuxValues {
+        public static final boolean HAS_SCALABLE_LUX = FabricLoader.getInstance().isModLoaded("scalablelux");
+
+        private ScalableLuxValues() {
             super();
 
             throw new UnsupportedOperationException("static holder class");
