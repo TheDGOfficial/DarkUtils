@@ -33,7 +33,7 @@ public final class TreeGiftConfirmation {
             client.player.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.0F);
 
             // Show title/subtitle
-            client.gui.setTitle(Component.nullToEmpty("§2Tree Gift!"));
+            client.gui.hud.setTitle(Component.nullToEmpty("§2Tree Gift!"));
             var subtitle = "§7You received the rewards!";
 
             final var mobSpawned = event.treeMobSpawned();
@@ -45,8 +45,8 @@ public final class TreeGiftConfirmation {
                 subtitle = "§7A §d" + prettyName + " §7has spawned!";
             }
 
-            client.gui.setSubtitle(Component.nullToEmpty(subtitle));
-            client.gui.setTimes(10, 70, 20);
+            client.gui.hud.setSubtitle(Component.nullToEmpty(subtitle));
+            client.gui.hud.setTimes(10, 70, 20);
         }
     }
 }
