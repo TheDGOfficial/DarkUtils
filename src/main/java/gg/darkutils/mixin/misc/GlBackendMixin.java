@@ -28,7 +28,7 @@ final class GlBackendMixin {
     @ModifyArgs(method = "createDevice(JLcom/mojang/blaze3d/shaders/ShaderSource;Lcom/mojang/blaze3d/shaders/GpuDebugOptions;)Lcom/mojang/blaze3d/systems/GpuDevice;", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/opengl/GlDevice;<init>(JLcom/mojang/blaze3d/shaders/ShaderSource;Lcom/mojang/blaze3d/shaders/GpuDebugOptions;)V"))
     private static final void darkutils$disableGlDebugIfEnabled(@NotNull final Args args) {
         if (DarkUtilsConfig.INSTANCE.disableGlDebug) {
-            args.set(2, new GpuDebugOptions(0, false, false));
+            args.set(2, new GpuDebugOptions(0, false, false, false));
         }
     }
 }

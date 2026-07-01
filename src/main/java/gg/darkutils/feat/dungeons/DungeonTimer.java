@@ -22,6 +22,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.DyeColor;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -124,6 +125,8 @@ public final class DungeonTimer {
             Map.entry("[BOSS] Wither King: Incredible. You did what I couldn't do myself.", DungeonTimer.PHASE_5_FINISH),
             Map.entry("[BOSS] Wither King: Thank you for coming all the way here.", DungeonTimer.PHASE_5_FINISH)
     );
+    @NotNull
+    private static final Item BROWN_TERRACOTTA = Items.DYED_TERRACOTTA.pick(DyeColor.BROWN);
 
     private DungeonTimer() {
         super();
@@ -467,7 +470,7 @@ public final class DungeonTimer {
 
         // Floor 6
         if (6 == floor.floor) {
-            DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.TERRAS_CLEAR, "Terracottas", ChatFormatting.GOLD, Items.BROWN_TERRACOTTA);
+            DungeonTimer.line(DungeonTimer.DungeonPhase.BOSS_ENTRY, DungeonTimer.DungeonPhase.TERRAS_CLEAR, "Terracottas", ChatFormatting.GOLD, DungeonTimer.BROWN_TERRACOTTA);
             DungeonTimer.line(DungeonTimer.DungeonPhase.TERRAS_CLEAR, DungeonTimer.DungeonPhase.GIANTS_CLEAR, "Giants", ChatFormatting.AQUA, Items.DIAMOND_SWORD);
         }
 

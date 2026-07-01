@@ -254,7 +254,7 @@ public final class DarkUtils implements ClientModInitializer {
 
     public static final void toast(@NotNull final Component title, @NotNull final Component message) {
         final var mc = Minecraft.getInstance();
-        mc.getToastManager().addToast(SystemToast.multiline(mc, SystemToast.SystemToastId.PERIODIC_NOTIFICATION, title, message));
+        mc.gui.toastManager().addToast(new SystemToast(SystemToast.SystemToastId.PERIODIC_NOTIFICATION, title, message));
     }
 
     public static final void user(@NotNull final String message, @NotNull final DarkUtils.UserMessageLevel level) {
@@ -561,7 +561,7 @@ public final class DarkUtils implements ClientModInitializer {
 
     private static final void openConfig() {
         final var mc = Minecraft.getInstance();
-        mc.schedule(() -> mc.setScreen(DarkUtilsConfigScreen.create(null)));
+        mc.schedule(() -> mc.gui.setScreen(DarkUtilsConfigScreen.create(null)));
     }
 
     public static final @NotNull String getVersion() {

@@ -69,7 +69,7 @@ public final class LocationUtils {
     }
 
     public static final boolean isInSingleplayer() {
-        return Minecraft.getInstance().isSingleplayer();
+        return null != Minecraft.getInstance().getSingleplayerServer();
     }
 
     private enum SkyblockIsland {
