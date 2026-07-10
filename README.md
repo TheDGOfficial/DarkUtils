@@ -18,6 +18,8 @@ compatibility is often the case so latest versions are recommended.
 
 Required Dependencies:
 
+Note: A release might target both these, and an older MC version. In addition, older releases can support older MC versions. For example, if you want to use 1.21.11; use the v1.4.0 release; as v1.5.0 is only for MC 26.1.2.
+
 - Minecraft 26.1.2 or later.
 - Fabric Loader 0.19.3 or later.
 - Fabric API 0.154.2 or later.
@@ -26,7 +28,7 @@ Required Dependencies:
 
 Optional Dependencies:
 
-- Mod Menu 18.0.0-beta.1 or later.
+- Mod Menu 18.0.0 or later.
 
 # Quality of Life
 
