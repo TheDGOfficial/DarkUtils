@@ -7,7 +7,7 @@ fabric-api = "0.154.2+26.1.2"
 cloth-config = "26.2.155"
 mod-menu = "20.0.1"
 hypixel-mod-api = "1.0.2"
-junit = "6.1.1"
+junit = "6.1.2"
 errorprone = "2.50.0"
 
 [plugins]
