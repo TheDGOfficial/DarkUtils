@@ -6,7 +6,7 @@ import gg.darkutils.utils.ActivityState;
 import gg.darkutils.utils.LocationUtils;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.Hud;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
@@ -16,9 +16,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(Gui.class)
-final class GuiMixin {
-    private GuiMixin() {
+@Mixin(Hud.class)
+final class HudMixin {
+    private HudMixin() {
         super();
 
         throw new UnsupportedOperationException("mixin class");

@@ -330,8 +330,8 @@ public final class Helpers {
         final var client = Minecraft.getInstance();
 
         Helpers.playSound(sound, 1.0F, 1.0F);
-        client.gui.setTitle(Component.nullToEmpty(text));
-        client.gui.setTimes(0, ticks, 0);
+        client.gui.hud.setTitle(Component.nullToEmpty(text));
+        client.gui.hud.setTimes(0, ticks, 0);
     }
 
     public static final void notifyForServerTicks(@NotNull final SoundEvent sound, @NotNull final String text, final int serverTicks) {
@@ -343,10 +343,10 @@ public final class Helpers {
         final var client = Minecraft.getInstance();
 
         Helpers.playSound(sound, 1.0F, 1.0F);
-        client.gui.setTitle(Component.nullToEmpty(text));
+        client.gui.hud.setTitle(Component.nullToEmpty(text));
 
         // Hacky way to simulate server tick dismissal of the title
-        client.gui.setTimes(0, Integer.MAX_VALUE, 0);
+        client.gui.hud.setTimes(0, Integer.MAX_VALUE, 0);
         TickUtils.queueServerTickTask(() -> {
             Helpers.clearTitle();
             afterDismissHook.run();
@@ -354,7 +354,7 @@ public final class Helpers {
     }
 
     private static final void clearTitle() {
-        Minecraft.getInstance().gui.clearTitles();
+        Minecraft.getInstance().gui.hud.clearTitles();
     }
 
     private static final void playSound(@NotNull final SoundEvent sound, final float volume, final float pitch) {

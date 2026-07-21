@@ -20,15 +20,15 @@ Required Dependencies:
 
 Note: A release might target both these, and an older MC version. In addition, older releases can support older MC versions. For example, if you want to use 1.21.11; use the v1.4.0 release; as v1.5.0 is only for MC 26.1.2.
 
-- Minecraft 26.1.2 or later.
+- Minecraft 26.2 or later.
 - Fabric Loader 0.19.3 or later.
 - Fabric API 0.155.2 or later.
-- Cloth Config API 26.1.154 or later.
+- Cloth Config API 26.2.155 or later.
 - Hypixel Mod API 1.0.2 or later.
 
 Optional Dependencies:
 
-- Mod Menu 18.0.0 or later.
+- Mod Menu 20.0.1 or later.
 
 # Quality of Life
 

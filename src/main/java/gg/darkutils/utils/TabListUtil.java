@@ -22,7 +22,7 @@ public final class TabListUtil {
     public static final @NotNull Iterator<String> tabListLinesIterator() {
         final var mc = Minecraft.getInstance();
 
-        return null == mc.player || null == mc.level ? Collections.emptyIterator() : new TabListUtil.TabListIterator(mc.gui.getTabList());
+        return null == mc.player || null == mc.level ? Collections.emptyIterator() : new TabListUtil.TabListIterator(mc.gui.hud.getTabList());
     }
 
     public static final @NotNull Iterable<String> tabListLines() {
