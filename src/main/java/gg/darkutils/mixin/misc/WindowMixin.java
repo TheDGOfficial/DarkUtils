@@ -2,6 +2,7 @@ package gg.darkutils.mixin.misc;
 
 import com.mojang.blaze3d.platform.IconSet;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.GpuBackend;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.feat.bugfixes.WaylandGameIconFix;
