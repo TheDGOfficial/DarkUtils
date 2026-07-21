@@ -40,7 +40,7 @@
     "visuals.FlameFeatureRendererMixin",
     "visuals.FogRendererMixin",
     "visuals.HeartTypeMixin",
-    "visuals.GuiMixin",
+    "visuals.HudMixin",
     "visuals.ScreenEffectRendererMixin",
     "visuals.LightmapRenderStateExtractorMixin",
     "visuals.LightningBoltRendererMixin",
