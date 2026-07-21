@@ -55,6 +55,56 @@ public final class AlignmentTaskSolver {
     private static final @NotNull Item LIME_WOOL = Items.WOOL.pick(DyeColor.LIME);
 
     static {
+        box = AlignmentTaskSolver.generateSortedBox();
+        boxSet = Set.copyOf(AlignmentTaskSolver.box);
+
+        boxAABB = AlignmentTaskSolver.adjustedAabbOf(
+                AlignmentTaskSolver.topLeft,
+                AlignmentTaskSolver.bottomRight,
+                1.0D,
+                2.0D
+        );
+
+        AlignmentTaskSolver.sanityCheckBoxes(AlignmentTaskSolver.box);
+        AlignmentTaskSolver.initRepeatingComputeTasks();
+    }
+
+    private AlignmentTaskSolver() {
+        super();
+
+        throw new UnsupportedOperationException("static-only class");
+    }
+
+    private static final void initRepeatingComputeTasks() {
+        TickUtils.queueRepeatingTickTask(() -> {
+            AlignmentTaskSolver.computeLayout();
+            AlignmentTaskSolver.computeTurns();
+        }, 20);
+    }
+
+    @NotNull
+    private static final AABB adjustedAabbOf(@NotNull final BlockPos left, @NotNull final BlockPos right, final double minOffset, final double maxOffset) {
+        var leftX = left.getX();
+        var leftY = left.getY();
+        var leftZ = left.getZ();
+
+        var rightX = right.getX();
+        var rightY = right.getY();
+        var rightZ = right.getZ();
+
+        return new AABB(
+                Math.min(leftX, rightX) - minOffset,
+                Math.min(leftY, rightY) - minOffset,
+                Math.min(leftZ, rightZ) - minOffset,
+
+                Math.max(leftX, rightX) + maxOffset,
+                Math.max(leftY, rightY) + maxOffset,
+                Math.max(leftZ, rightZ) + maxOffset
+        );
+    }
+
+    @NotNull
+    private static final List<BlockPos> generateSortedBox() {
         // Sort the box
         final var temp = new ObjectArrayList<BlockPos>();
 
@@ -72,32 +122,7 @@ public final class AlignmentTaskSolver {
             return first.getY() > second.getY() ? -1 : 0;
         });
 
-        box = List.copyOf(temp);
-        boxSet = Set.copyOf(AlignmentTaskSolver.box);
-
-        boxAABB = new AABB(
-                Math.min(AlignmentTaskSolver.topLeft.getX(), AlignmentTaskSolver.bottomRight.getX()) - 1.0D,
-                Math.min(AlignmentTaskSolver.topLeft.getY(), AlignmentTaskSolver.bottomRight.getY()) - 1.0D,
-                Math.min(AlignmentTaskSolver.topLeft.getZ(), AlignmentTaskSolver.bottomRight.getZ()) - 1.0D,
-
-                Math.max(AlignmentTaskSolver.topLeft.getX(), AlignmentTaskSolver.bottomRight.getX()) + 2.0D,
-                Math.max(AlignmentTaskSolver.topLeft.getY(), AlignmentTaskSolver.bottomRight.getY()) + 2.0D,
-                Math.max(AlignmentTaskSolver.topLeft.getZ(), AlignmentTaskSolver.bottomRight.getZ()) + 2.0D
-        );
-
-        AlignmentTaskSolver.sanityCheckBoxes(AlignmentTaskSolver.box);
-
-        // Start the tick timer
-        TickUtils.queueRepeatingTickTask(() -> {
-            AlignmentTaskSolver.computeLayout();
-            AlignmentTaskSolver.computeTurns();
-        }, 20);
-    }
-
-    private AlignmentTaskSolver() {
-        super();
-
-        throw new UnsupportedOperationException("static-only class");
+        return List.copyOf(temp);
     }
 
     private static final void sanityCheckBoxes(final @NotNull List<BlockPos> boxes) {
