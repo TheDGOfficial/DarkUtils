@@ -1,6 +1,7 @@
 package gg.darkutils.utils.chat;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.TextColor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -29,7 +30,7 @@ public enum SimpleColor {
 
     private SimpleColor(@NotNull final ChatFormatting formatting) {
         this.formatting = Objects.requireNonNull(formatting, "SimpleColor formatting value");
-        this.rgb = Objects.requireNonNull(this.formatting.getColor(), "SimpleColor formatting color value");
+        this.rgb = Objects.requireNonNull(TextColor.fromLegacyFormat(this.formatting).getValue(), "SimpleColor formatting color value");
     }
 
     @NotNull

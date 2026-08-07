@@ -76,8 +76,8 @@ public final class LaggyServerDetector {
             final var tpsStatus = LaggyServerDetector.getTpsStatus(tpsAverageOver30Seconds);
             final var client = Minecraft.getInstance();
 
-            client.gui.setTitle(Component.nullToEmpty("§d30s TPS AVG: " + tpsStatus.color() + tpsAverageOver30SecondsFormatted + tpsStatus.comment()));
-            client.gui.setTimes(10, 70, 20);
+            client.gui.hud.setTitle(Component.nullToEmpty("§d30s TPS AVG: " + tpsStatus.color() + tpsAverageOver30SecondsFormatted + tpsStatus.comment()));
+            client.gui.hud.setTimes(10, 70, 20);
         }
     }
 

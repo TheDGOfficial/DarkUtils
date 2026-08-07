@@ -2,7 +2,7 @@ package gg.darkutils.mixin.visuals;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import gg.darkutils.config.DarkUtilsConfig;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.ScreenEffectRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.jetbrains.annotations.NotNull;
@@ -19,8 +19,8 @@ final class ScreenEffectRendererMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "renderFire", at = @At("HEAD"), cancellable = true)
-    private static final void darkutils$skipRenderingFireOverlayIfEnabled(@NotNull final PoseStack matrices, @NotNull final MultiBufferSource vertexConsumers, @NotNull final TextureAtlasSprite sprite, @NotNull final CallbackInfo ci) {
+    @Inject(method = "submitFire", at = @At("HEAD"), cancellable = true)
+    private static final void darkutils$skipRenderingFireOverlayIfEnabled(@NotNull final PoseStack matrices, @NotNull final SubmitNodeCollector vertexConsumers, @NotNull final TextureAtlasSprite sprite, @NotNull final CallbackInfo ci) {
         if (DarkUtilsConfig.INSTANCE.hideFireOverlay) {
             ci.cancel();
         }
