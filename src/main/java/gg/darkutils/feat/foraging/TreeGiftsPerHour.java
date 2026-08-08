@@ -27,7 +27,11 @@ public final class TreeGiftsPerHour {
     private static final long ONE_MILLIS_NANOS = TimeUnit.MILLISECONDS.toNanos(1L);
 
     @NotNull
-    private static final RenderUtils.RenderingText TEXT =
+    private static final RenderUtils.RenderingText PER_HR_TEXT =
+            RenderUtils.createRenderingText();
+
+    @NotNull
+    private static final RenderUtils.RenderingText STREAK_TEXT = 
             RenderUtils.createRenderingText();
 
     private static final long @NotNull [] giftTimes = new long[TreeGiftsPerHour.SAMPLE_SIZE];
@@ -35,6 +39,8 @@ public final class TreeGiftsPerHour {
     private static int giftCount; // how many valid entries
     private static int giftIndex; // next index to write
     private static long lastGiftTime;
+
+    private static int giftsStreak; // gifts streak without 1 minute of downtime
 
     private TreeGiftsPerHour() {
         super();
@@ -47,6 +53,7 @@ public final class TreeGiftsPerHour {
         TreeGiftsPerHour.lastGiftTime = 0L;
         TreeGiftsPerHour.giftCount = 0;
         TreeGiftsPerHour.giftIndex = 0;
+        TreeGiftsPerHour.giftsStreak = 0;
     }
 
     private static final void addGiftDuration(final long durationNanos) {
@@ -93,9 +100,10 @@ public final class TreeGiftsPerHour {
             return;
         }
 
-        // Skip if last gift was more than 1 minute ago
+        // Skip + reset if last gift was more than 1 minute ago
         final var now = System.nanoTime();
         if (now - TreeGiftsPerHour.lastGiftTime > TreeGiftsPerHour.ONE_MINUTE_NANOS) {
+            TreeGiftsPerHour.reset();
             return;
         }
 
@@ -111,8 +119,8 @@ public final class TreeGiftsPerHour {
             return;
         }
 
-        final var text = TreeGiftsPerHour.TEXT;
-        text.setText("Tree Gifts/Hour: " + MathUtils.round(perHour, RoundingMode.HALF_DOWN));
+        final var hrText = TreeGiftsPerHour.PER_HR_TEXT;
+        hrText.setText("Tree Gifts/Hour: " + MathUtils.round(perHour, RoundingMode.HALF_DOWN));
 
         RenderUtils.renderItem(
                 context,
@@ -123,9 +131,29 @@ public final class TreeGiftsPerHour {
 
         RenderUtils.renderText(
                 context,
-                text,
+                hrText,
                 RenderUtils.CHAT_ALIGNED_X + RenderUtils.CHAT_ALIGNED_X * 10, // use chat's x offset to shift x a bit to the right so that there's a bit of a space after the rendered item before the text
                 RenderUtils.MIDDLE_ALIGNED_Y,
+                ChatFormatting.DARK_GREEN
+        );
+
+        final var streakText = TreeGiftsPerHour.STREAK_TEXT;
+        streakText.setText("Streak: " + TreeGiftsPerHour.giftsStreak);
+
+        final var Y_OFFSET = 20; // offset Y a bit so that it shows under per hour text
+
+        RenderUtils.renderItem(
+                context,
+                Items.GOLDEN_AXE,
+                RenderUtils.CHAT_ALIGNED_X,
+                RenderUtils.MIDDLE_ALIGNED_Y.getAsInt() - (RenderUtils.CHAT_ALIGNED_X << 1) + Y_OFFSET // use chat's x offset to shift y a bit upwards so that it doesn't render under the text
+        );
+
+        RenderUtils.renderText(
+                context,
+                streakText,
+                RenderUtils.CHAT_ALIGNED_X + RenderUtils.CHAT_ALIGNED_X * 10, // use chat's x offset to shift x a bit to the right so that there's a bit of a space after the rendered item before the text
+                RenderUtils.MIDDLE_ALIGNED_Y.getAsInt() + Y_OFFSET,
                 ChatFormatting.DARK_GREEN
         );
     }
@@ -136,6 +164,8 @@ public final class TreeGiftsPerHour {
             TreeGiftsPerHour.reset();
             return;
         }
+
+        ++TreeGiftsPerHour.giftsStreak;
 
         final var now = System.nanoTime();
 
