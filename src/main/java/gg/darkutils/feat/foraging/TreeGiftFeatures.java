@@ -44,6 +44,31 @@ public final class TreeGiftFeatures {
                     TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.DREADWING;
                 }
             },
+            "                      A Firefox fell from the Tree!", event -> {
+                if (event.isStyledWith(SimpleColor.GRAY)) {
+                    TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.FIREFOX;
+                }
+            },
+            "                    A Groundhog fell from the Tree!", event -> {
+                if (event.isStyledWith(SimpleColor.GRAY)) {
+                    TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.GROUNDHOG;
+                }
+            },
+            "                      A Drybark fell from the Tree!", event -> {
+                if (event.isStyledWith(SimpleColor.GRAY)) {
+                    TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.DRYBARK;
+                }
+            },
+            "                        A Puck fell from the Tree!", event -> {
+                if (event.isStyledWith(SimpleColor.GRAY)) {
+                    TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.PUCK;
+                }
+            },
+            "                   A Grizzly Bear fell from the Tree!", event -> {
+                if (event.isStyledWith(SimpleColor.GRAY)) {
+                    TreeGiftFeatures.treeMobSpawned = TreeMobSpawned.GRIZZLY_BEAR;
+                }
+            },
             "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", event -> {
                 if (!TreeGiftFeatures.endMessageReceived && event.isStyledWith(SimpleColor.DARK_GREEN, SimpleFormatting.BOLD)) {
                     TreeGiftFeatures.endMessageReceived = true;

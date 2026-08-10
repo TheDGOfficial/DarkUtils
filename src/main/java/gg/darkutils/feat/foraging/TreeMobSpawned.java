@@ -4,5 +4,10 @@ public enum TreeMobSpawned {
     NONE,
     PHANFLARE,
     PHANPYRE,
-    DREADWING
+    DREADWING,
+    FIREFOX,
+    GROUNDHOG,
+    DRYBARK,
+    PUCK,
+    GRIZZLY_BEAR
 }

@@ -9,6 +9,8 @@ import net.minecraft.sounds.SoundEvents;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public final class TreeGiftConfirmation {
     private TreeGiftConfirmation() {
@@ -40,7 +42,9 @@ public final class TreeGiftConfirmation {
 
             if (TreeMobSpawned.NONE != mobSpawned) {
                 final var lowerCaseName = mobSpawned.name().toLowerCase(Locale.ROOT);
-                final var prettyName = Character.toUpperCase(lowerCaseName.charAt(0)) + lowerCaseName.substring(1);
+                final var prettyName = Arrays.stream(mobSpawned.name().split("_"))
+                        .map(part -> part.substring(0, 1) + part.substring(1).toLowerCase(Locale.ROOT))
+                        .collect(Collectors.joining(" "));
 
                 subtitle = "§7A §d" + prettyName + " §7has spawned!";
             }

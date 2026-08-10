@@ -393,7 +393,10 @@ public final class AlignmentTaskSolver {
             final var clickCount = AlignmentTaskSolver.clicks.getInt(pos);
             final var pending = AlignmentTaskSolver.pendingClicks.getOrDefault(pos, 0);
 
-            if (DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolverBlockIncorrectClicks) {
+            final var player = Minecraft.getInstance().player;
+            final var bypassProtection = player != null && player.isShiftKeyDown();
+
+            if (DarkUtilsConfig.INSTANCE.arrowAlignmentDeviceSolverBlockIncorrectClicks && !bypassProtection) {
                 if (clickCount == pending) {
                     event.cancellationState().cancel();
                 } else {

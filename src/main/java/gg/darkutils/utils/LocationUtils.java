@@ -85,9 +85,9 @@ public final class LocationUtils {
         private static final @Nullable LocationUtils.SkyblockIsland fromId(@Nullable final String id) {
             return null == id ? null : switch (id) {
                 case "dungeon" -> LocationUtils.SkyblockIsland.DUNGEONS;
-                case "foraging_2" -> LocationUtils.SkyblockIsland.GALATEA;
+                case "foraging_2", "foraging_3" -> LocationUtils.SkyblockIsland.GALATEA; // moonglade marsh + torrhus canyon
                 case "garden" -> LocationUtils.SkyblockIsland.GARDEN;
-                case "mining_3" -> LocationUtils.SkyblockIsland.DWARVEN_MINES;
+                case "mining_3" -> LocationUtils.SkyblockIsland.DWARVEN_MINES; // includes dwarven base camp/glacite tunnels, but not mineshaft
                 case "mineshaft" -> LocationUtils.SkyblockIsland.MINESHAFT;
                 default -> null;
             };
