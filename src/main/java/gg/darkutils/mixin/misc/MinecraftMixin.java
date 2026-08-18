@@ -76,7 +76,7 @@ final class MinecraftMixin {
         }
     }
 
-    @Inject(method = "destroy", at = @At("HEAD"))
+    @Inject(method = "exitWorldAndClose", at = @At("HEAD"))
     private final void darkutils$onQuitGame(@NotNull final CallbackInfo ci) {
         PersistentData.saveAtomicIfDirtyThreadSafeBlocking();
     }
