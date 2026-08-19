@@ -69,7 +69,7 @@ public final class WumpaSpawnProgress {
 
         final var content = event.content();
 
-        if (!content.contains("CAPTURE!") || !content.contains("You caught a ")) {
+        if (!content.contains("catching") || (!content.contains("CAPTURE!") && !content.contains("LOOT SHARE!")) || (!content.contains("You caught a ") && !content.contains("You received "))) {
             return;
         }
 
