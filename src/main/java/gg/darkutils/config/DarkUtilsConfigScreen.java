@@ -173,6 +173,25 @@ public final class DarkUtilsConfigScreen {
                 config.treeGiftsPerHour, newValue -> config.treeGiftsPerHour = newValue);
     }
 
+    private static final void addSafari(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
+        final var safari = builder.getOrCreateCategory(Component.nullToEmpty("Safari"));
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, safari, "Safari Timer",
+                "Displays a HUD element counting the elapsed time whilst in the Safari.",
+                config.safariTimer, newValue -> config.safariTimer = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, safari, "Wumpa Spawn Progress",
+                "Displays a HUD element showing progress of unique mobs hunted towards spawning the Wumpa boss in the Icy Biome.",
+                config.wumpaSpawnProgress, newValue -> config.wumpaSpawnProgress = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, safari, "Hideon Highlighter",
+                "Renders block outlines around the Hideon type of entities such as Hideonwall, Hideonfloor and Hideonsun whilst in the Safari or Galatea.",
+                config.hideonHighlighter, newValue -> config.hideonHighlighter = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, safari, "Duplico Highlighter",
+                "Renders block outlines around the Duplico entities whilst in the Safari.",
+                config.duplicoHighlighter, newValue -> config.duplicoHighlighter = newValue);
+    }
+
     private static final void addFarming(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var farming = builder.getOrCreateCategory(Component.nullToEmpty("Farming"));
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, farming, "Pest Cooldown Display",
@@ -499,6 +518,9 @@ public final class DarkUtilsConfigScreen {
 
         // === Foraging ===
         DarkUtilsConfigScreen.addForaging(config, builder, entryBuilder);
+
+        // === Safari ===
+        DarkUtilsConfigScreen.addSafari(config, builder, entryBuilder);
 
         // === Farming ===
         DarkUtilsConfigScreen.addFarming(config, builder, entryBuilder);

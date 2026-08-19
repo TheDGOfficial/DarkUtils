@@ -41,7 +41,6 @@ public final class TreeGiftConfirmation {
             final var mobSpawned = event.treeMobSpawned();
 
             if (TreeMobSpawned.NONE != mobSpawned) {
-                final var lowerCaseName = mobSpawned.name().toLowerCase(Locale.ROOT);
                 final var prettyName = Arrays.stream(mobSpawned.name().split("_"))
                         .map(part -> part.substring(0, 1) + part.substring(1).toLowerCase(Locale.ROOT))
                         .collect(Collectors.joining(" "));

@@ -24,6 +24,10 @@ import gg.darkutils.feat.farming.StickyFarmingKeys;
 import gg.darkutils.feat.foraging.TreeGiftConfirmation;
 import gg.darkutils.feat.foraging.TreeGiftFeatures;
 import gg.darkutils.feat.foraging.TreeGiftsPerHour;
+import gg.darkutils.feat.safari.SafariTimer;
+import gg.darkutils.feat.safari.WumpaSpawnProgress;
+import gg.darkutils.feat.safari.HideonHighlighter;
+import gg.darkutils.feat.safari.DuplicoHighlighter;
 import gg.darkutils.feat.mining.CorpsesPerShaftDisplay;
 import gg.darkutils.feat.mining.LittlefootDisplay;
 import gg.darkutils.feat.mining.MineshaftDisplay;
@@ -767,7 +771,11 @@ public final class DarkUtils implements ClientModInitializer {
                 VanillaMode::init,
                 RagnarockHelper::init,
                 AutoLBRelease::init,
-                SectionDoneDisplay::init
+                SectionDoneDisplay::init,
+                SafariTimer::init,
+                WumpaSpawnProgress::init,
+                HideonHighlighter::init,
+                DuplicoHighlighter::init
         );
     }
 

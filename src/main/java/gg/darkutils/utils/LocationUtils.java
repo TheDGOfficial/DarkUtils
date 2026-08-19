@@ -48,6 +48,10 @@ public final class LocationUtils {
         return LocationUtils.SkyblockIsland.GALATEA == LocationUtils.skyblockIsland;
     }
 
+    public static final boolean isInSafari() {
+        return LocationUtils.SkyblockIsland.SAFARI == LocationUtils.skyblockIsland;
+    }
+
     public static final boolean isInGarden() {
         return LocationUtils.SkyblockIsland.GARDEN == LocationUtils.skyblockIsland;
     }
@@ -75,6 +79,7 @@ public final class LocationUtils {
     private enum SkyblockIsland {
         DUNGEONS,
         GALATEA,
+        SAFARI,
         GARDEN,
         DWARVEN_MINES,
         MINESHAFT;
@@ -86,6 +91,7 @@ public final class LocationUtils {
             return null == id ? null : switch (id) {
                 case "dungeon" -> LocationUtils.SkyblockIsland.DUNGEONS;
                 case "foraging_2", "foraging_3" -> LocationUtils.SkyblockIsland.GALATEA; // moonglade marsh + torrhus canyon
+                case "safari" -> LocationUtils.SkyblockIsland.SAFARI;
                 case "garden" -> LocationUtils.SkyblockIsland.GARDEN;
                 case "mining_3" -> LocationUtils.SkyblockIsland.DWARVEN_MINES; // includes dwarven base camp/glacite tunnels, but not mineshaft
                 case "mineshaft" -> LocationUtils.SkyblockIsland.MINESHAFT;
