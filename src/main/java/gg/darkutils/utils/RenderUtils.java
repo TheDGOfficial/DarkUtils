@@ -118,6 +118,17 @@ public final class RenderUtils {
 
     public static final void drawBlockOutline(@NotNull final BlockPos pos,
                                               @NotNull final ChatFormatting color) {
+        RenderUtils.drawBlockOutline(pos, color, false);
+    }
+
+    public static final void drawFilledBlockOutline(@NotNull final BlockPos pos,
+                                                    @NotNull final ChatFormatting color) {
+        RenderUtils.drawBlockOutline(pos, color, true);
+    }
+
+    private static final void drawBlockOutline(@NotNull final BlockPos pos,
+                                               @NotNull final ChatFormatting color,
+                                               @NotNull final boolean filled) {
         // Convert Formatting to RGBA floats
         final var rgb = RenderUtils.convertFormattingToRGBA(color);
 
@@ -128,11 +139,11 @@ public final class RenderUtils {
 
         final var argb = RenderUtils.toARGB(alpha, red, green, blue);
 
-        final var style = GizmoStyle.stroke(argb);
+        final var style = filled ? GizmoStyle.fill(argb) : GizmoStyle.stroke(argb);
 
         final var immutablePos = pos.immutable();
 
-        Gizmos.cuboid(AABB.encapsulatingFullBlocks(immutablePos, immutablePos), style);
+        Gizmos.cuboid(AABB.encapsulatingFullBlocks(immutablePos, immutablePos), style).setAlwaysOnTop();
     }
 
     /**
