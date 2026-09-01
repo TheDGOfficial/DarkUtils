@@ -22,7 +22,7 @@ Note: A release might target both these, and an older MC version. In addition, o
 
 - Minecraft 26.2 or later.
 - Fabric Loader 0.19.3 or later.
-- Fabric API 0.158.0 or later.
+- Fabric API 0.159.0 or later.
 - Cloth Config API 26.2.155 or later.
 - Hypixel Mod API 1.0.2 or later.
 
