@@ -489,6 +489,12 @@ public final class DarkUtilsConfigScreen {
                 config.fixGameIconOnWayland, newValue -> config.fixGameIconOnWayland = newValue);
     }
 
+    private static final void addMisc(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
+        final var misc = builder.getOrCreateCategory(Component.nullToEmpty("Misc"));
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, misc, "Use HTTPS For Skins", "Uses HTTPS transport protocol when downloading Minecraft skin textures. HTTPS is a secure and updated protocol compared to HTTP. HTTP can often only use HTTP/1.1, while HTTPS can take advantage of newer technology such as HTTP/2 and HTTP/3 with QUIC. It can also use TLS 1.3 encryption for security.", config.useHttpsForSkins, newValue -> config.useHttpsForSkins = newValue);
+    }
+
     private static final void addDevelopment(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
         final var development = builder.getOrCreateCategory(Component.nullToEmpty("Development"));
 
@@ -540,6 +546,9 @@ public final class DarkUtilsConfigScreen {
         // === Bugfixes ===
         DarkUtilsConfigScreen.addBugfixes(config, builder, entryBuilder);
 
+        // === Misc ===
+        DarkUtilsConfigScreen.addMisc(config, builder, entryBuilder);
+    
         // === Development ===
         DarkUtilsConfigScreen.addDevelopment(config, builder, entryBuilder);
 

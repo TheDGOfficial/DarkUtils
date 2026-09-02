@@ -17,6 +17,7 @@
     "misc.PacketApplyBatcherEntryMixin",
     "misc.WindowMixin",
     "misc.GlBackendMixin",
+    "misc.SkinTextureDownloaderMixin",
     "performance.MemoryReserveMixin",
     "performance.EntityMixin",
     "performance.ChatFormattingMixin",
