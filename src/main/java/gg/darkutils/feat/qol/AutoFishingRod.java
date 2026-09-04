@@ -200,7 +200,7 @@ public final class AutoFishingRod {
                 : min;
 
         TickUtils.queueTickTask(() -> {
-            if (!mc.player.isUsingItem() && !mc.options.keyAttack.isDown() && !mc.options.keyUse.isDown() && (DarkUtilsConfig.INSTANCE.autoFishingWorkThroughMenus || null == mc.screen)) {
+            if (!mc.player.isUsingItem() && !mc.options.keyAttack.isDown() && !mc.options.keyUse.isDown() && (DarkUtilsConfig.INSTANCE.autoFishingWorkThroughMenus || null == mc.gui.screen())) {
                 mc.startUseItem();
 
                 continuation.run();

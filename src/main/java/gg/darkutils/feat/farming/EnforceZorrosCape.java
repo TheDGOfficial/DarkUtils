@@ -41,7 +41,7 @@ public final class EnforceZorrosCape {
         // No config check, still need to track Zorro's cape equip status in case user enables/disables the feature to not desync the state from the real state.
         final AbstractContainerMenu screenHandler;
 
-        if (!(Minecraft.getInstance().screen instanceof final ContainerScreen container) || MenuType.GENERIC_9x6 != (screenHandler = container.getMenu()).menuType || !"Your Equipment and Stats".equals(ChatUtils.removeControlCodes(container.getTitle().getString()))) {
+        if (!(Minecraft.getInstance().gui.screen() instanceof final ContainerScreen container) || MenuType.GENERIC_9x6 != (screenHandler = container.getMenu()).menuType || !"Your Equipment and Stats".equals(ChatUtils.removeControlCodes(container.getTitle().getString()))) {
             return;
         }
 

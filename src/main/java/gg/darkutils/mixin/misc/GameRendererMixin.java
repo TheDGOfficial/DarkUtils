@@ -20,7 +20,7 @@ final class GameRendererMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "getNightVisionScale", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "nightVisionScale", at = @At("HEAD"), cancellable = true)
     private static final void darkutils$overrideNightVisionIfEnabled(@NotNull final LivingEntity entity, final float tickProgress, @NotNull final CallbackInfoReturnable<Float> cir) {
         if (DarkUtilsConfig.INSTANCE.nightVision) {
             cir.setReturnValue(0.9F);
