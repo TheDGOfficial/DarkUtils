@@ -151,6 +151,9 @@ public final class DarkUtilsConfig {
     public boolean cursorPosWaylandGLErrorFix;
     public boolean fixGameIconOnWayland;
 
+    // === Misc ===
+    public boolean useHttpsForSkins;
+
     // === Development ===
     @NotNull
     public LogLevel ingameLogLevel = LogLevel.WARN;
