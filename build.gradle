@@ -55,6 +55,7 @@ repositories {
 
         filter {
             includeModule('me.shedaniel.cloth', 'cloth-config-fabric')
+            includeModule('me.shedaniel.cloth', 'basic-math')
         }
     }
 
@@ -70,6 +71,18 @@ repositories {
 
         filter {
             includeModule('com.terraformersmc', 'modmenu')
+        }
+    }
+
+    exclusiveContent {
+        forRepository {
+            maven {
+                url = 'https://api.modrinth.com/maven'
+            }
+        }
+
+        filter {
+            includeModule('maven.modrinth', 'hypixel-mod-api')
         }
     }
 
@@ -103,69 +116,71 @@ loom {
     }
 }
 
+final def runDirectory = rootProject.file('run')
+runDirectory.mkdirs()
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    testLogging {
+        showStackTraces = true
+        //showStandardStreams = true // enable if troubleshooting failures
+        exceptionFormat = TestExceptionFormat.FULL
+    }
+    javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+    workingDir(file(runDirectory))
+    systemProperty('junit.jupiter.extensions.autodetection.enabled', 'true')
+    jvmArgs(
+        '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+        '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+        '-XX:+EnableDynamicAgentLoading',
+        // Tests start NPE-ing without this on Java 25
+        '-Dnet.bytebuddy.experimental=true',
+        // Resolves warning: "Final field mappings in class org.spongepowered.asm.mixin.refmap.ReferenceMapper has been mutated reflectively by class org.spongepowered.include.com.google.gson.internal.bind.ReflectiveTypeAdapterFactory$1 in unnamed module"
+        // Ideally Mixin would make the field not final or use a different GSON serilization path, but here we are
+        '--enable-final-field-mutation=ALL-UNNAMED',
+    )
+}
+
+final def mixinTestRuntime = configurations.create('mixinTestRuntime') {
+    canBeConsumed = false
+    extendsFrom(configurations.testRuntimeClasspath)
+}
+
+final def mixinTest = tasks.register('mixinTest', Test) {
+    description = 'Audits mixin application under Fabric Loader.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.output + sourceSets.main.output + mixinTestRuntime
+    filter {
+        includeTestsMatching('gg.darkutils.test.MixinTest')
+    }
+}
+
+tasks.test {
+    dependsOn(mixinTest)
+    exclude('gg/darkutils/test/MixinTest.class')
+}
+
 dependencies {
-    minecraft(libs.minecraft) {
-        transitive = false
-    }
+    minecraft(libs.minecraft)
+    implementation(libs.fabric.loader)
 
-    implementation(libs.fabric.loader) {
-        transitive = false
-    }
-
-    final def fabricApiVersion = libs.versions.fabric.api.get()
-
-    // Pulls in all Fabric API modules, may uncomment during development. Explicitly declare below and comment it again after.
-    //implementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
-
-    implementation(fabricApi.module('fabric-api-base', fabricApiVersion)) {
-        transitive = false
-    }
-    implementation(fabricApi.module('fabric-lifecycle-events-v1', fabricApiVersion)) {
-        transitive = false
-    }
-    implementation(fabricApi.module('fabric-command-api-v2', fabricApiVersion)) {
-        transitive = false
-    }
-    implementation(fabricApi.module('fabric-message-api-v1', fabricApiVersion)) {
-        transitive = false
-    }
-    implementation(fabricApi.module('fabric-rendering-v1', fabricApiVersion)) {
-        transitive = false
-    }
-    implementation(fabricApi.module('fabric-key-mapping-api-v1', fabricApiVersion)) {
-        transitive = false
-    }
-    implementation(fabricApi.module('fabric-networking-api-v1', fabricApiVersion)) {
-        transitive = false
-    }
-
-    implementation(libs.cloth.config) {
-        transitive = false
-    }
-
-    implementation(libs.mod.menu) {
-        transitive = false
-    }
-
-    implementation(libs.hypixel.mod.api) {
-        transitive = false
-    }
-
+    add('mixinTestRuntime', libs.fabric.loader.junit)
     testImplementation(libs.bundles.junit)
     testRuntimeOnly(libs.junit.platform.launcher)
 
+    implementation(libs.fabric.api)
+
+    implementation(libs.cloth.config)
+
+    implementation(libs.hypixel.mod.api)
+
+    // Modrinth version is required for having Hypixel Mod API as a mod in the Fabric Loader JUnit runtime.
+    implementation(libs.hypixel.mod.api.mr)
+
+    compileOnly(libs.mod.menu)
+
     compileOnly(libs.errorprone)
-}
-
-tasks {
-    test {
-        useJUnitPlatform()
-
-        testLogging {
-            exceptionFormat = TestExceptionFormat.FULL
-            showStandardStreams = true
-        }
-    }
 }
 
 configurations {
@@ -749,7 +764,7 @@ abstract class AsmPreprocessTask extends DefaultTask {
         final def isInterface = 0 != (cn.access & Opcodes.ACC_INTERFACE)
 
         if (classPublic) {
-            if (cn.name.contains('mixin') && !cn.name.contains('accessor') && !cn.name.contains('mixinquirks')) {
+            if (cn.name.contains('mixin') && !cn.name.contains('accessor') && !cn.name.contains('mixinquirks') && !cn.name.contains('MixinPlugin')) {
                 logger.warn('Non-accessor mixin class declared public')
             }
         }

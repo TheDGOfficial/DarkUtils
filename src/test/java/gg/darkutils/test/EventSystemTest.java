@@ -1,4 +1,4 @@
-package gg.darkutils;
+package gg.darkutils.test;
 
 import gg.darkutils.events.base.CancellableEvent;
 import gg.darkutils.events.base.CancellationState;

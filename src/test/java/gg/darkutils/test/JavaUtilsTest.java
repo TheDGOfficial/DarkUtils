@@ -1,4 +1,4 @@
-package gg.darkutils;
+package gg.darkutils.test;
 
 import gg.darkutils.utils.JavaUtils;
 import org.junit.jupiter.api.Assertions;

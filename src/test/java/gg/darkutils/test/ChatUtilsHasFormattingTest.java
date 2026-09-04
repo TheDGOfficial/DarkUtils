@@ -1,4 +1,4 @@
-package gg.darkutils;
+package gg.darkutils.test;
 
 import gg.darkutils.utils.chat.ChatUtils;
 import gg.darkutils.utils.chat.SimpleColor;
