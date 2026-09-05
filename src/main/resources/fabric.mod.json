@@ -37,5 +37,8 @@
     "fabric-api": ">=0.155.2+26.1.2",
     "cloth-config": ">=26.1.154",
     "hypixel-mod-api": ">=1.0.2"
+  },
+  "suggests": {
+    "modmenu": "*"
   }
 }
