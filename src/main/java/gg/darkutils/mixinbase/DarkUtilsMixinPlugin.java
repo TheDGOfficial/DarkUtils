@@ -70,7 +70,7 @@ public final class DarkUtilsMixinPlugin implements IMixinConfigPlugin {
                 .map(it -> file.relativize(it).toString())
                 .forEach(it -> DarkUtilsMixinPlugin.tryAddMixinClass(it, mixins));
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -96,7 +96,7 @@ public final class DarkUtilsMixinPlugin implements IMixinConfigPlugin {
         try {
             file = Paths.get(DarkUtilsMixinPlugin.baseUrl(classUrl).toURI());
         } catch (final URISyntaxException e) {
-            throw new UncheckedIOException(e);
+            throw new RuntimeException(e);
         }
         System.out.println("Base directory found at " + file);
         if (Files.isDirectory(file)) {
