@@ -28,7 +28,7 @@ Note: A release might target both these, and an older MC version. In addition, o
 
 Optional Dependencies:
 
-- Mod Menu 20.0.1 or later.
+- Mod Menu 20.0.2 or later.
 
 # Quality of Life
 
