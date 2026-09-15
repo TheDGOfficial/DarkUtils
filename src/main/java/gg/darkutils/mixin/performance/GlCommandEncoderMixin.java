@@ -2,8 +2,10 @@ package gg.darkutils.mixin.performance;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import gg.darkutils.config.DarkUtilsConfig;
 
@@ -31,6 +33,11 @@ final class GlCommandEncoderMixin {
 
     @Unique
     private static int darkutils$lastPolygonMode = -1;
+
+    @ModifyConstant(method = "submit", constant = @Constant(longValue = Long.MAX_VALUE))
+    private static final long darkutils$submit$failedToWaitForFrameCompletionCrashFix(final long constant) {
+        return DarkUtilsConfig.INSTANCE.failedToWaitForFrameCompletionCrashFix ? -1L : constant;
+    }
 
     @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/opengl/GlStateManager;_scissorBox(IIII)V"))
     private static final void darkutils$scissorBox$preventUnnecessaryCallsIfEnabled(final int x, final int y, final int width, final int height) {

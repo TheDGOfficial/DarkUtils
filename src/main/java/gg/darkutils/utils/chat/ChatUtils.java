@@ -90,7 +90,7 @@ public final class ChatUtils {
     public static final void sendMessageToLocalPlayer(@NotNull final Component text) {
         // Ensure player is available and no lost messages
         // The awaitLocalPlayer method ensures correct threading behavior internally.
-        TickUtils.awaitLocalPlayer(player -> Minecraft.getInstance().gui.getChat().addClientSystemMessage(text));
+        TickUtils.awaitLocalPlayer(player -> Minecraft.getInstance().gui.hud.getChat().addClientSystemMessage(text));
     }
 
     public static final boolean hasFormatting(@NotNull final Component text, @NotNull final SimpleColor color) {

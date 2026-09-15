@@ -91,7 +91,7 @@ public final class VanillaMode {
     }
 
     private static final boolean isNoScreenOpen() {
-        return null == Minecraft.getInstance().screen;
+        return null == Minecraft.getInstance().gui.screen();
     }
 
     private static final void onJoinSingleplayer() {

@@ -64,7 +64,7 @@ abstract class ClientPacketListenerMixin extends ClientCommonPacketListenerImpl 
     private final void darkutils$openConfirmCommandScreen$disableIfEnabled(@NotNull final ClientPacketListener handler, @NotNull final String command, @NotNull final String message, @NotNull final Screen afterActionScreen) {
         if (DarkUtilsConfig.INSTANCE.disableCommandConfirmation && message.contains("parse_errors")) {
             handler.send(new ServerboundChatCommandPacket(command));
-            Minecraft.getInstance().setScreen(afterActionScreen);
+            Minecraft.getInstance().gui.setScreen(afterActionScreen);
         } else {
             this.openCommandSendConfirmationWindow(command, message, afterActionScreen);
         }
