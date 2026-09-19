@@ -28,8 +28,8 @@ jobs:
     - name: setup jdk
       uses: actions/setup-java@v6
       with:
-        java-version: '26'
-        distribution: 'temurin'
+        java-version: '27'
+        distribution: 'oracle'
 
     - name: setup gradle
       uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb
