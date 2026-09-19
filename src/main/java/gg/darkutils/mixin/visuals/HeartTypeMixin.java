@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(targets = "net.minecraft.client.gui.Gui$HeartType")
+@Mixin(targets = "net.minecraft.client.gui.Hud$HeartType")
 final class HeartTypeMixin {
     private HeartTypeMixin() {
         super();
@@ -19,7 +19,7 @@ final class HeartTypeMixin {
     }
 
     /**
-     * Redirects the hasStatusEffect call inside HeartType.fromPlayerState.
+     * Redirects the hasStatusEffect call inside HeartType.forPlayer.
      * Returns false when the effect being checked is WITHER and the config option is enabled, otherwise
      * passes the original call through unchanged.
      */

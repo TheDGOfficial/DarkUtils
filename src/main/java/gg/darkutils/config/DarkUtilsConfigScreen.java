@@ -491,6 +491,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix Game Icon on Wayland",
                 "Fixes a bug where Minecraft does not properly set the game icon on modern desktop environments expecting a .desktop file and an icon at ~/.local/share/applications while running on Linux Wayland environment. Does nothing if Prefer Wayland is not enabled or when running through XWayland/X11.",
                 config.fixGameIconOnWayland, newValue -> config.fixGameIconOnWayland = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Failed To Wait For Frame Completion Crash Fix",
+                "Fixes an IllegalStateException crash with the message \"Failed to wait for frame completion\" inside GlCommandEncoder#submit by backporting the fix from 26.3-snapshot-9 into 26.2.",
+                config.failedToWaitForFrameCompletionCrashFix, newValue -> config.failedToWaitForFrameCompletionCrashFix = newValue);
     }
 
     private static final void addMisc(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

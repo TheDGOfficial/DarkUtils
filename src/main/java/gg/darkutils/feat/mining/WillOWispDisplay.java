@@ -11,7 +11,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
@@ -60,7 +60,7 @@ public final class WillOWispDisplay {
                 }
             } else {
                 // 30 block range
-                for (final var stand : world.getEntities(EntityType.ARMOR_STAND, player.getBoundingBox().inflate(30.0D), ignored -> true)) {
+                for (final var stand : world.getEntities(EntityTypes.ARMOR_STAND, player.getBoundingBox().inflate(30.0D), ignored -> true)) {
                     WillOWispDisplay.processPossibleWillOWispTag(stand);
                 }
             }

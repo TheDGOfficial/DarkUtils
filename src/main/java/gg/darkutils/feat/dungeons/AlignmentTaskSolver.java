@@ -22,9 +22,11 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.NotNull;
@@ -48,6 +50,9 @@ public final class AlignmentTaskSolver {
     private static final @NotNull Object2IntOpenHashMap<BlockPos> pendingClicks = new Object2IntOpenHashMap<>();
 
     private static final @NotNull List<@NotNull Direction> directions = AlignmentTaskSolver.getDirections();
+
+    private static final @NotNull Item RED_WOOL = Items.WOOL.pick(DyeColor.RED);
+    private static final @NotNull Item LIME_WOOL = Items.WOOL.pick(DyeColor.LIME);
 
     static {
         box = AlignmentTaskSolver.generateSortedBox();
@@ -226,13 +231,13 @@ public final class AlignmentTaskSolver {
             return frames;
         }
 
-        for (final var frame : world.getEntities(EntityType.ITEM_FRAME, AlignmentTaskSolver.boxAABB, ignored -> true)) {
+        for (final var frame : world.getEntities(EntityTypes.ITEM_FRAME, AlignmentTaskSolver.boxAABB, ignored -> true)) {
             if (!AlignmentTaskSolver.boxSet.contains(frame.blockPosition())) {
                 continue;
             }
 
             final var held = frame.getItem();
-            if (held.is(Items.ARROW) || held.is(Items.RED_WOOL) || held.is(Items.LIME_WOOL)) {
+            if (held.is(Items.ARROW) || held.is(AlignmentTaskSolver.RED_WOOL) || held.is(AlignmentTaskSolver.LIME_WOOL)) {
                 frames.add(frame);
             }
         }
@@ -282,10 +287,10 @@ public final class AlignmentTaskSolver {
             if (held.is(Items.ARROW)) {
                 return AlignmentTaskSolver.SpaceType.PATH;
             }
-            if (held.is(Items.RED_WOOL)) {
+            if (held.is(AlignmentTaskSolver.RED_WOOL)) {
                 return AlignmentTaskSolver.SpaceType.END;
             }
-            return held.is(Items.LIME_WOOL) ? AlignmentTaskSolver.SpaceType.STARTER : AlignmentTaskSolver.SpaceType.EMPTY;
+            return held.is(AlignmentTaskSolver.LIME_WOOL) ? AlignmentTaskSolver.SpaceType.STARTER : AlignmentTaskSolver.SpaceType.EMPTY;
         }
         return AlignmentTaskSolver.SpaceType.EMPTY;
     }
@@ -302,7 +307,7 @@ public final class AlignmentTaskSolver {
                 continue;
             }
             ItemFrame frame = null;
-            for (final var frameEntity : world.getEntities(EntityType.ITEM_FRAME, frameBox, ignored -> true)) {
+            for (final var frameEntity : world.getEntities(EntityTypes.ITEM_FRAME, frameBox, ignored -> true)) {
                 if (framePos.equals(frameEntity.blockPosition())) {
                     frame = frameEntity;
                     break;
@@ -360,7 +365,7 @@ public final class AlignmentTaskSolver {
         }
 
         ItemFrame entity = null;
-        for (final var frame : world.getEntities(EntityType.ITEM_FRAME, box, ignored -> true)) {
+        for (final var frame : world.getEntities(EntityTypes.ITEM_FRAME, box, ignored -> true)) {
             if (pos.equals(frame.blockPosition())) {
                 entity = frame;
                 break;
