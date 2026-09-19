@@ -460,6 +460,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Cache GL Calls",
                 "Caches a few GL calls such as glScissor and glPolygonMode if the parameters have not been changed since last frame to improve performance slightly by saving a JNI call and a GL call.",
                 config.cacheGLCalls, newValue -> config.cacheGLCalls = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Optimize Clocksource",
+                "Turns a FFM API call to JNI call when obtaining time in Minecraft since FFM calls in Java 25 have performance regression.",
+                config.optimizeClocksource, newValue -> config.optimizeClocksource = newValue);
     }
 
     private static final void addBugfixes(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
