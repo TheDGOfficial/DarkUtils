@@ -142,6 +142,7 @@ public final class DarkUtilsConfig {
     public boolean preferWayland;
     public boolean disableGlDebug;
     public boolean cacheGLCalls;
+    public boolean optimizeClocksource;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;
