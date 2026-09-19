@@ -1,6 +1,6 @@
 [versions]
 loom = "1.18.2"
-java = "25"
+java = "27"
 minecraft = "26.2"
 fabric-loader = "0.19.5"
 fabric-api = "0.161.0+26.2"

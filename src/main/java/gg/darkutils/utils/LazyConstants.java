@@ -3,17 +3,16 @@ package gg.darkutils.utils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
-import java.util.AbstractMap;
+//import java.util.AbstractMap;
 import java.util.Set;
-import java.util.Collections;
-import java.util.Objects;
+//import java.util.Collections;
+//import java.util.Objects;
 
-import java.util.concurrent.ConcurrentHashMap;
-
+//import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.google.common.base.Suppliers;
+//import com.google.common.base.Suppliers;
 
 // TODO Remove the --enable-preview when the JEP lands in a Stable JDK version
 // TODO Remove the fallbacks entirely when the JEP lands in a LTS JDK version
@@ -24,7 +23,7 @@ public final class LazyConstants {
         throw new UnsupportedOperationException("static utility class");
     }
 
-    private static final class LazyMap<K, V> extends AbstractMap<K, V> {
+    /*private static final class LazyMap<K, V> extends AbstractMap<K, V> {
         @NotNull
         private final ConcurrentHashMap<K, Supplier<V>> lazyValues;
 
@@ -65,19 +64,19 @@ public final class LazyConstants {
                     "Iteration over lazy map is not supported"
             );
         }
-    }
+    }*/
 
     @NotNull
     @SuppressWarnings("preview")
     public static final <K, V> Map<K, V> lazyMapOf(@NotNull final Set<@NotNull K> allPossibleKeys, @NotNull final Function<? super K, ? extends V> valueMapper) {
         // J26 preview
-        // return Map.ofLazy(allPossibleKeys, valueMapper);
+        return Map.ofLazy(allPossibleKeys, valueMapper);
 
         // J25 preview
         // return StableValue.map(allPossibleKeys, valueMapper);
 
         // non-preview
-        Objects.requireNonNull(allPossibleKeys, "allPossibleKeys");
+        /*Objects.requireNonNull(allPossibleKeys, "allPossibleKeys");
         Objects.requireNonNull(valueMapper, "valueMapper");
 
         final var lazyValues = new ConcurrentHashMap<K, Supplier<V>>(allPossibleKeys.size());
@@ -88,20 +87,20 @@ public final class LazyConstants {
             lazyValues.put(key, LazyConstants.lazyConstantOf(() -> valueMapper.apply(key)));
         }
 
-        return Collections.unmodifiableMap(new LazyMap<>(lazyValues));
+        return Collections.unmodifiableMap(new LazyMap<>(lazyValues));*/
     }
 
     @NotNull
     @SuppressWarnings("preview")
     public static final <T> Supplier<T> lazyConstantOf(@NotNull final Supplier<? extends T> supplier) {
         // J26 preview
-        // return LazyConstant.of(supplier);
+        return LazyConstant.of(supplier);
 
         // J25 preview
         // return StableValue.supplier(supplier);
 
         // non-preview
-        return Suppliers.memoize(supplier::get);
+        // return Suppliers.memoize(supplier::get);
     }
 }
 

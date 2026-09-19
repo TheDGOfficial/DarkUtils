@@ -267,6 +267,16 @@ tasks.withType(JavaCompile).configureEach {
 
     it.options.compilerArgs += '-g'
     it.options.compilerArgs += '-parameters'
+
+    it.options.compilerArgs += '--enable-preview'
+}
+
+tasks.withType(Test).configureEach {
+    jvmArgs += '--enable-preview'
+}
+
+tasks.withType(JavaExec).configureEach {
+    it.jvmArgs += '--enable-preview'
 }
 
 tasks.named('jar', Jar) {
