@@ -39,6 +39,6 @@
     "hypixel-mod-api": ">=1.0.2"
   },
   "suggests": {
-    "modmenu": ">=20.0.2"
+    "modmenu": ">=20.0.3"
   }
 }
