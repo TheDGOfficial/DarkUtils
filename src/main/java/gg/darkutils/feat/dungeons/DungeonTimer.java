@@ -62,6 +62,12 @@ public final class DungeonTimer {
         }
     };
     @NotNull
+    private static final Consumer<ReceiveGameMessageEvent> PHASE_4_FINISH = event -> {
+        if (event.isStyledWith(SimpleColor.DARK_RED)) {
+            DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_4_CLEAR);
+        }
+    };
+    @NotNull
     private static final Map<String, Consumer<ReceiveGameMessageEvent>> MESSAGE_HANDLERS = Map.ofEntries(
             Map.entry("Starting in 1 second.", event -> {
                 if (event.isStyledWith(SimpleColor.GREEN)) {
@@ -117,11 +123,8 @@ public final class DungeonTimer {
                     DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_3_CLEAR);
                 }
             }),
-            Map.entry("[BOSS] Necron: All this, for nothing...", event -> {
-                if (event.isStyledWith(SimpleColor.DARK_RED)) {
-                    DungeonTimer.DungeonTimingState.finishedPhase(DungeonTimer.DungeonPhase.PHASE_4_CLEAR);
-                }
-            }),
+            Map.entry("[BOSS] Wither King: You... again?", DungeonTimer.PHASE_4_FINISH),
+            Map.entry("[BOSS] Wither King: Ohhh?", DungeonTimer.PHASE_4_FINISH),
             Map.entry("[BOSS] Wither King: Incredible. You did what I couldn't do myself.", DungeonTimer.PHASE_5_FINISH),
             Map.entry("[BOSS] Wither King: Thank you for coming all the way here.", DungeonTimer.PHASE_5_FINISH)
     );
