@@ -56,7 +56,7 @@ public final class AutoLBRelease {
             return actual;
         }
 
-        if (!AutoLBRelease.isEnabled() || !actual || !Helpers.isHoldingALastBreath() || !DungeonTimer.isInBetweenPhases(DungeonTimer.DungeonPhase.PHASE_4_CLEAR, DungeonTimer.DungeonPhase.PHASE_5_CLEAR)) {
+        if (!AutoLBRelease.isEnabled() || !actual || !Helpers.isHoldingALastBreath() || !DungeonTimer.isInBetweenPhases(DungeonTimer.DungeonPhase.PHASE_3_CLEAR, DungeonTimer.DungeonPhase.PHASE_5_CLEAR)) {
             AutoLBRelease.resetState();
             return actual;
         }
