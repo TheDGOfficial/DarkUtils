@@ -317,7 +317,7 @@ public final class DarkUtilsConfigScreen {
                 config.bloodClearedNotification, newValue -> config.bloodClearedNotification = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Ragnarock Helper",
-                "Shows a message on screen when you need to use Ragnarock to get extra strength when killing Livid in M5/F5 and the first dragon in your split in M7. Based on the meta dialogues for when to use it.",
+                "Shows a message on screen when you need to use Ragnarock to get extra strength when killing Livid in M5/F5. Based on the meta dialogue for when to use it.",
                 config.ragnarockHelper, newValue -> config.ragnarockHelper = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Section Done Display",
