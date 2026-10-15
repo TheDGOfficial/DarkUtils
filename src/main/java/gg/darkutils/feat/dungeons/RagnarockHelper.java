@@ -15,11 +15,6 @@ import java.util.function.Consumer;
 public final class RagnarockHelper {
     @NotNull
     private static final Map<String, Consumer<ReceiveGameMessageEvent>> MESSAGE_HANDLERS = Map.of(
-            "[BOSS] Wither King: I no longer wish to fight, but I know that will not stop you.", event -> {
-                if (event.isStyledWith(SimpleColor.DARK_RED)) {
-                    RagnarockHelper.notifyUseRagnarock();
-                }
-            },
             "[BOSS] Livid: I can now turn those Spirits into shadows of myself, identical to their creator.", event -> {
                 if (event.isStyledWith(SimpleColor.RED)) {
                     RagnarockHelper.notifyUseRagnarock();
