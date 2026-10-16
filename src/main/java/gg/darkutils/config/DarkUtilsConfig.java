@@ -143,6 +143,7 @@ public final class DarkUtilsConfig {
     public boolean disableGlDebug;
     public boolean cacheGLCalls;
     public boolean optimizeClocksource;
+    public boolean optimizeStripFormatting;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;

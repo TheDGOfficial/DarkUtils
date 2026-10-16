@@ -464,6 +464,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Optimize Clocksource",
                 "Turns a FFM API call to JNI call when obtaining time in Minecraft since FFM calls in Java 25 have performance regression.",
                 config.optimizeClocksource, newValue -> config.optimizeClocksource = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Optimize Strip Formatting",
+                "Optimizes the ChatFormatting's stripFormatting method to use our optimized implementation that avoids Regex and uses direct StringBuilder and String operations.",
+                config.optimizeStripFormatting, newValue -> config.optimizeStripFormatting = newValue);
     }
 
     private static final void addBugfixes(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
