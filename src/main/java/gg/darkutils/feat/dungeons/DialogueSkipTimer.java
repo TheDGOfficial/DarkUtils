@@ -15,7 +15,7 @@ public final class DialogueSkipTimer {
     @NotNull
     private static final Consumer<ReceiveGameMessageEvent> BLOOD_START = event -> {
         if (event.isStyledWith(SimpleColor.RED)) {
-            TickUtils.queueServerTickTask(() -> Helpers.displayCountdownTitlesInServerTicks("§4", "Kill Blood Mobs!", 3), 340);
+            TickUtils.queueServerTickTask(() -> Helpers.displayCountdownTitlesInServerTicks("§4", "Kill Blood Mobs!", 3), 350);
         }
     };
     @NotNull
