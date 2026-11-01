@@ -289,7 +289,7 @@ public final class Helpers {
         Helpers.displayCountdownTitlesInServerTicks(color, finalText, seconds, () -> true);
     }
 
-    private static final void displayCountdownTitlesInServerTicks(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final BooleanSupplier precondition) {
+    public static final void displayCountdownTitlesInServerTicks(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final BooleanSupplier precondition) {
         Helpers.displayCountdownTitlesInternal(color, finalText, seconds, TickUtils::queueServerTickTask, precondition);
     }
 
