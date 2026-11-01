@@ -41,7 +41,7 @@ public final class SoloCrushTimer {
                 SoloCrushTimer.firstLightningReceived = false;
                 SoloCrushTimer.inProgress = false;
 
-                Helpers.displayCountdownTitlesInServerTicks("§5", "Crush!", 3);
+                Helpers.displayCountdownTitlesInServerTicks("§5", "Crush!", 3, LocationUtils::isInDungeons);
             } else {
                 SoloCrushTimer.firstLightningReceived = true;
             }
