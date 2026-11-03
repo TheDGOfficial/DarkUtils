@@ -119,6 +119,7 @@ public final class DarkUtilsConfig {
     public boolean noLightningBolts;
     public boolean noWitherHearts;
     public boolean noExplosionParticles;
+    public boolean noShadowInTextRendering;
 
     // === Performance ===
     public boolean alwaysPrioritizeRenderThread;
