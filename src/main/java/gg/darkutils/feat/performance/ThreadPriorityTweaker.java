@@ -86,7 +86,9 @@ public final class ThreadPriorityTweaker {
                 ThreadPriorityTweaker.exactMatch("PWEventThread", crit),
                 ThreadPriorityTweaker.exactMatch("Sound engine", crit),
                 ThreadPriorityTweaker.exactMatch("RSLS Scheduler", crit),
+                ThreadPriorityTweaker.exactMatch("sbo-audio-thread", crit),
                 ThreadPriorityTweaker.exactMatch("Render thread", highest),
+                ThreadPriorityTweaker.exactMatch("Polydium Present", veryHigh),
                 ThreadPriorityTweaker.startsWith("Chunk Render ", veryHigh),
                 ThreadPriorityTweaker.startsWith("c2me", veryHigh),
                 ThreadPriorityTweaker.exactMatch("CullThread", high),
@@ -95,7 +97,14 @@ public final class ThreadPriorityTweaker {
                 ThreadPriorityTweaker.startsWith("AsyncParticle", high),
                 ThreadPriorityTweaker.exactMatch("Server thread", aboveNormal),
                 ThreadPriorityTweaker.startsWith("Server Pinger #", aboveNormal),
-                ThreadPriorityTweaker.startsWith("LanServerDetector #", aboveNormal)
+                ThreadPriorityTweaker.startsWith("LanServerDetector #", aboveNormal),
+                ThreadPriorityTweaker.exactMatch("SBO Http Request Thread", aboveNormal),
+                ThreadPriorityTweaker.exactMatch("Worker-Main", aboveNormal),
+                ThreadPriorityTweaker.exactMatch("adventure-platform-mod-scheduler0", aboveNormal),
+                ThreadPriorityTweaker.exactMatch("YACL Image Prep", aboveNormal),
+                ThreadPriorityTweaker.exactMatch("Polydium background cleanup", aboveNormal),
+                ThreadPriorityTweaker.exactMatch("GuiLib image worker", aboveNormal),
+                ThreadPriorityTweaker.exactMatch("DFU cleaning thread", aboveNormal)
         );
     }
 
@@ -107,7 +116,6 @@ public final class ThreadPriorityTweaker {
 
         return List.of(
                 ThreadPriorityTweaker.exactMatch("Yggdrasil Key Fetcher", low),
-                ThreadPriorityTweaker.startsWith("Worker", low),
                 ThreadPriorityTweaker.startsWith("IO", low),
                 ThreadPriorityTweaker.startsWith("DefaultDispatcher", veryLow),
                 ThreadPriorityTweaker.startsWith("ForkJoinPool", veryLow),
@@ -118,7 +126,15 @@ public final class ThreadPriorityTweaker {
                 ThreadPriorityTweaker.startsWith("AsyncLog", lowest),
                 ThreadPriorityTweaker.exactMatch("Timer hack thread", idle),
                 ThreadPriorityTweaker.exactMatch("Snooper timer", idle),
-                ThreadPriorityTweaker.startsWith("DarkUtils", idle)
+                ThreadPriorityTweaker.startsWith("DarkUtils", idle),
+                ThreadPriorityTweaker.exactMatch("Odin-WebSocket", idle),
+                ThreadPriorityTweaker.exactMatch("OneConfig-CompatSnapshots", idle),
+                ThreadPriorityTweaker.exactMatch("OneConfig Config Watcher", idle),
+                ThreadPriorityTweaker.exactMatch("JGit-WorkQueue", idle),
+                ThreadPriorityTweaker.exactMatch("Reward Claim", idle),
+                ThreadPriorityTweaker.exactMatch("SBO Cloud Sync", idle),
+                ThreadPriorityTweaker.exactMatch("sbo-data-saver-thread", idle),
+                ThreadPriorityTweaker.exactMatch("SBO Time Synchronization", idle)
         );
     }
 
