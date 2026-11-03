@@ -374,6 +374,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "No Explosion Particles",
                 "Removes explosion particles fully, preventing them from spawning at all. This does not only hide them but also removes them, which should also improve performance a bit if lot of explosions are happening.",
                 config.noExplosionParticles, newValue -> config.noExplosionParticles = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "No Shadow In Text Rendering",
+                "Removes shadows from text rendering by overriding the vanilla shadow parameter in the font render methods.",
+                config.noShadowInTextRendering, newValue -> config.noShadowInTextRendering = newValue);
     }
 
     private static final void addPerformance(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
