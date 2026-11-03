@@ -811,7 +811,7 @@ public final class DungeonTimer {
                 }
 
                 if (null == timings[i]) {
-                    DarkUtils.warn(
+                    DarkUtils.info(
                             DungeonTimer.DungeonTimingState.class,
                             "Phase ordering anomaly: "
                                     + phase.name()
