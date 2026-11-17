@@ -18,11 +18,15 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Adapted from https://raw.githubusercontent.com/hannibal002/SkyHanni/refs/heads/beta/src/main/java/at/hannibal2/skyhanni/mixins/init/SkyHanniMixinPlugin.java
  */
 public final class DarkUtilsMixinPlugin implements IMixinConfigPlugin {
     private static final @NonNull String MIXIN_BASE_DIR = "gg/darkutils/mixin/";
+    private static final @NonNull Logger LOGGER = LoggerFactory.getLogger("darkutils-mixinplugin");
     private static final @NonNull List<@NonNull String> mixins = DarkUtilsMixinPlugin.findMixins();
 
     public DarkUtilsMixinPlugin() {
@@ -64,7 +68,7 @@ public final class DarkUtilsMixinPlugin implements IMixinConfigPlugin {
     }
 
     private static final void walkDir(@NonNull final Path file, @NonNull final List<@NonNull String> mixins) {
-        System.out.println("Trying to find mixins from directory");
+        LOGGER.info("Trying to find mixins from directory");
         try (final var classes = Files.walk(file.resolve(DarkUtilsMixinPlugin.MIXIN_BASE_DIR))) {
             classes.filter(Files::isRegularFile)
                 .map(it -> file.relativize(it).toString())
@@ -75,7 +79,7 @@ public final class DarkUtilsMixinPlugin implements IMixinConfigPlugin {
     }
 
     private static final void walkJar(@NonNull final Path file, @NonNull final List<@NonNull String> mixins) {
-        System.out.println("Trying to find mixins from jar file");
+        LOGGER.info("Trying to find mixins from jar file");
         try (final var zis = new ZipInputStream(Files.newInputStream(file))) {
             ZipEntry next;
             while ((next = zis.getNextEntry()) != null) {
@@ -88,23 +92,23 @@ public final class DarkUtilsMixinPlugin implements IMixinConfigPlugin {
     }
 
     private static final @NonNull List<@NonNull String> findMixins() {
-        System.out.println("Trying to discover mixins");
+        LOGGER.info("Trying to discover mixins");
         final var discoveredMixins = new ArrayList<String>();
         final var classUrl = DarkUtilsMixinPlugin.class.getProtectionDomain().getCodeSource().getLocation();
-        System.out.println("Found classes at " + classUrl);
+        LOGGER.info("Found classes at " + classUrl);
         final Path file;
         try {
             file = Paths.get(DarkUtilsMixinPlugin.baseUrl(classUrl).toURI());
         } catch (final URISyntaxException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Base directory found at " + file);
+        LOGGER.info("Base directory found at " + file);
         if (Files.isDirectory(file)) {
             DarkUtilsMixinPlugin.walkDir(file, discoveredMixins);
         } else {
             DarkUtilsMixinPlugin.walkJar(file, discoveredMixins);
         }
-        System.out.println("Found mixins (" + discoveredMixins.size() + "): " + discoveredMixins);
+        LOGGER.info("Found mixins (" + discoveredMixins.size() + "): " + discoveredMixins);
 
         return List.copyOf(discoveredMixins);
     }
