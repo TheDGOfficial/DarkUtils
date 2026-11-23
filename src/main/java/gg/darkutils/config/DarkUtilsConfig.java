@@ -96,6 +96,7 @@ public final class DarkUtilsConfig {
     public boolean arrowAlignmentDeviceSolver;
     public boolean arrowAlignmentDeviceSolverPredev;
     public boolean arrowAlignmentDeviceSolverBlockIncorrectClicks;
+    public boolean highlightLightsDeviceOptimalFinish;
     public boolean arrowStackWaypoints;
     public boolean dungeonTimer;
     public float dungeonTimerScale = 1.0F;

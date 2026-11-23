@@ -294,6 +294,10 @@ public final class DarkUtilsConfigScreen {
     }
 
     private static final void addDungeonsSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory dungeons) {
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Highlight Lights Device Optimal Finish",
+                "Highlights the unpowered levers to flip for an optimal Lights Device finish on F7 and M7.",
+                config.highlightLightsDeviceOptimalFinish, newValue -> config.highlightLightsDeviceOptimalFinish = newValue);
+
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Arrow Stack Waypoints",
                 "Displays arrow stack waypoints in the Wither King dragon fight showing where to shoot your Last Breath arrows for optimal stacking.",
                 config.arrowStackWaypoints, newValue -> config.arrowStackWaypoints = newValue);
