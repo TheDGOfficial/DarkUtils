@@ -472,7 +472,7 @@ public final class DarkUtilsConfigScreen {
                 config.blockEntityUnloadLagFix, newValue -> config.blockEntityUnloadLagFix = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Prefer Wayland",
-                "Prefers Wayland over XWayland when running a Wayland session in Linux systems when your GLFW version supports the native Wayland backend. This generally improves performance as it doesn't have to go through XWayland compatibility layer. Does nothing in Windows or macOS, or when running a X11 only session/old GLFW without native Wayland support.",
+                "Asks SDL to try native Wayland before X11 when launching in a Wayland session. An explicitly configured SDL video driver takes precedence. Requires a restart.",
                 config.preferWayland, newValue -> config.preferWayland = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable GL Debug",
@@ -484,7 +484,7 @@ public final class DarkUtilsConfigScreen {
                 config.cacheGLCalls, newValue -> config.cacheGLCalls = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Optimize Clocksource",
-                "Turns a FFM API call to JNI call when obtaining time in Minecraft since FFM calls in Java 25 have performance regression.",
+                "Uses the JVM's intrinsic System.nanoTime() for the client clock to avoid calling SDL for each timestamp.",
                 config.optimizeClocksource, newValue -> config.optimizeClocksource = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Optimize Strip Formatting",
@@ -510,17 +510,13 @@ public final class DarkUtilsConfigScreen {
                 "Allows you to middle click when hovering over items like in 1.8, such as to disable Witherborn ability of your armor.",
                 config.middleClickFix, newValue -> config.middleClickFix = newValue);
 
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Cursor Pos Wayland GL Error Fix",
-                "Fixes a bug where Minecraft tries to call glfwSetCursorPos in Wayland desktop environment, where setting the cursor position is not supported, by cancelling the call. This prevents the GL error while preserving behaviour, as setting the position fails with the GL error anyways.",
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Skip Cursor Warps on Wayland",
+                "Skips explicit SDL cursor warps on Wayland, where compositor support for warping varies.",
                 config.cursorPosWaylandGLErrorFix, newValue -> config.cursorPosWaylandGLErrorFix = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Fix Game Icon on Wayland",
-                "Fixes a bug where Minecraft does not properly set the game icon on modern desktop environments expecting a .desktop file and an icon at ~/.local/share/applications while running on Linux Wayland environment. Does nothing if Prefer Wayland is not enabled or when running through XWayland/X11.",
+                "Registers a desktop entry and icons so Wayland compositors can associate the game window with its icon. Requires a restart.",
                 config.fixGameIconOnWayland, newValue -> config.fixGameIconOnWayland = newValue);
-
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, bugfixes, "Failed To Wait For Frame Completion Crash Fix",
-                "Fixes an IllegalStateException crash with the message \"Failed to wait for frame completion\" inside GlCommandEncoder#submit by backporting the fix from 26.3-snapshot-9 into 26.2.",
-                config.failedToWaitForFrameCompletionCrashFix, newValue -> config.failedToWaitForFrameCompletionCrashFix = newValue);
     }
 
     private static final void addMisc(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {

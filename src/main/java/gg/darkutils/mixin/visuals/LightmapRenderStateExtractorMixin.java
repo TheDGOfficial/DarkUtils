@@ -9,9 +9,9 @@ import net.minecraft.client.renderer.LightmapRenderStateExtractor;
 import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import org.joml.Vector3f;
 
 @Mixin(LightmapRenderStateExtractor.class)
@@ -96,9 +95,11 @@ final class LightmapRenderStateExtractorMixin {
         }
     }
 
-    @ModifyExpressionValue(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/ARGB;vector3fFromRGB24(I)Lorg/joml/Vector3f;", ordinal = 2))
-    private static final Vector3f darkutils$getAmbientLight(@NotNull final Vector3f original) {
-        return DarkUtilsConfig.INSTANCE.fullbright ? LightmapRenderStateExtractorMixin.AMBIENT_LIGHT_COLOR : original;
+    @Inject(method = "extract", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/client/renderer/state/LightmapRenderState;ambientColor:Lorg/joml/Vector3fc;", shift = At.Shift.AFTER))
+    private final void darkutils$setAmbientLightIfEnabled(@NotNull final LightmapRenderState state, final float tickProgress, @NotNull final CallbackInfo ci) {
+        if (DarkUtilsConfig.INSTANCE.fullbright) {
+            state.ambientColor = LightmapRenderStateExtractorMixin.AMBIENT_LIGHT_COLOR;
+        }
     }
 
     @Redirect(method = "extract", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F", ordinal = 0))

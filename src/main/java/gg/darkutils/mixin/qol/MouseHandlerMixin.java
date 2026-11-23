@@ -1,17 +1,16 @@
 package gg.darkutils.mixin.qol;
 
-import com.mojang.blaze3d.platform.InputConstants;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.platform.Window;
 import gg.darkutils.config.DarkUtilsConfig;
 import net.minecraft.client.MouseHandler;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MouseHandler.class)
@@ -32,67 +31,24 @@ final class MouseHandlerMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Inject(method = "releaseMouse", at = @At("HEAD"))
-    private final void darkutils$saveUnlockCursorPositionIfEnabled(@NotNull final CallbackInfo ci) {
-        if (DarkUtilsConfig.INSTANCE.neverResetCursorPosition) {
-            this.darkutils$prevX = this.xpos;
-            this.darkutils$prevY = this.ypos;
-        } else {
-            // Reset values when turning the feature off
-            this.darkutils$prevX = 0.0D;
-            this.darkutils$prevY = 0.0D;
-        }
+    @Inject(method = "grabMouse", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;getScreenWidth()I"))
+    private final void darkutils$saveCursorPosition(@NotNull final CallbackInfo ci) {
+        this.darkutils$prevX = this.xpos;
+        this.darkutils$prevY = this.ypos;
     }
 
-    @Inject(method = "grabMouse", at = @At("HEAD"))
-    private final void darkutils$saveLockCursorPositionIfEnabled(@NotNull final CallbackInfo ci) {
+    @WrapOperation(method = {"grabMouse", "releaseMouse"}, at = {
+            @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/InputConstants;grabMouse(Lcom/mojang/blaze3d/platform/Window;DD)V"),
+            @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/InputConstants;releaseMouse(Lcom/mojang/blaze3d/platform/Window;DD)V")
+    }, require = 2)
+    private final void darkutils$restoreCursorPositionIfEnabled(@NotNull final Window window, final double x, final double y, @NotNull final Operation<Void> original) {
         if (DarkUtilsConfig.INSTANCE.neverResetCursorPosition) {
-            this.darkutils$prevX = this.xpos;
-            this.darkutils$prevY = this.ypos;
-        } else {
-            // Reset values when turning the feature off
-            this.darkutils$prevX = 0.0D;
-            this.darkutils$prevY = 0.0D;
-        }
-    }
-
-    @Redirect(
-            method = "releaseMouse",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/mojang/blaze3d/platform/InputConstants;grabOrReleaseMouse(Lcom/mojang/blaze3d/platform/Window;IDD)V"
-            )
-    )
-    private final void darkutils$preventUnlockCursorWarpIfEnabled(@NotNull final Window window, final int inputModeValue, final double x, final double y) {
-        if (DarkUtilsConfig.INSTANCE.neverResetCursorPosition) {
-            // Restore previous x/y to prevent warp
+            // SDL uses the requested coordinates to restore the pointer when relative mode ends.
             this.xpos = this.darkutils$prevX;
             this.ypos = this.darkutils$prevY;
-
-            // Only set input mode so cursor is visible
-            GLFW.glfwSetInputMode(window.handle(), GLFW.GLFW_CURSOR, inputModeValue);
+            original.call(window, this.xpos, this.ypos);
         } else {
-            InputConstants.grabOrReleaseMouse(window, inputModeValue, x, y);
-        }
-    }
-
-    @Redirect(
-            method = "grabMouse",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/mojang/blaze3d/platform/InputConstants;grabOrReleaseMouse(Lcom/mojang/blaze3d/platform/Window;IDD)V"
-            )
-    )
-    private final void darkutils$preventLockCursorWarpIfEnabled(@NotNull final Window window, final int inputModeValue, final double x, final double y) {
-        if (DarkUtilsConfig.INSTANCE.neverResetCursorPosition) {
-            // Restore previous x/y to prevent warp
-            this.xpos = this.darkutils$prevX;
-            this.ypos = this.darkutils$prevY;
-
-            // Only set input mode so cursor is grabbed
-            GLFW.glfwSetInputMode(window.handle(), GLFW.GLFW_CURSOR, inputModeValue);
-        } else {
-            InputConstants.grabOrReleaseMouse(window, inputModeValue, x, y);
+            original.call(window, x, y);
         }
     }
 }

@@ -1,6 +1,5 @@
 package gg.darkutils;
 
-import com.mojang.blaze3d.platform.Window;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -74,7 +73,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.CommonColors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
+import org.lwjgl.sdl.SDLVideo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
@@ -124,25 +123,10 @@ public final class DarkUtils implements ClientModInitializer {
     private static final @NotNull Supplier<Logger> LOGGER = LazyConstants.lazyConstantOf(() -> LoggerFactory.getLogger(DarkUtils.MOD_ID));
 
     /**
-     * Lazy-initialized non-changing constant-foldable (depending on LazyConstants
-     * impl if the JEP is stabilized) value of the current Windowing platform.
-     * <p>
-     * This value will be used for some features like gui scale fix and auto
-     * diagnostic features like disallowing setting cursor position in wayland.
-     */
-    private static final @NotNull Supplier<String> WINDOW_PLATFORM = LazyConstants.lazyConstantOf(Window::getPlatform);
-
-    /**
-     * Holds the lazy-initialized non-changing constant-foldable value of the boolean representing
-     * whether current window platform is Wayland or not.
-     */
-    private static final @NotNull Supplier<Boolean> IS_WINDOW_PLATFORM_WAYLAND = LazyConstants.lazyConstantOf(() -> "wayland".equals(DarkUtils.WINDOW_PLATFORM.get()));
-
-    /**
      * Holds the lazy-initialized non-changing constant-foldable value of the boolean representing
      * whether we should prefer to use Wayland or not.
      */
-    private static final @NotNull Supplier<Boolean> SHOULD_PREFER_WAYLAND = LazyConstants.lazyConstantOf(() -> GLFW.glfwPlatformSupported(GLFW.GLFW_PLATFORM_WAYLAND) && OSUtils.environmentVariableEquals("XDG_SESSION_TYPE", "wayland"));
+    private static final @NotNull Supplier<Boolean> SHOULD_PREFER_WAYLAND = LazyConstants.lazyConstantOf(() -> OSUtils.environmentVariableEquals("XDG_SESSION_TYPE", "wayland"));
 
     /**
      * Used for rate-limiting the update checker command so that user can't spam the GH API.
@@ -192,7 +176,7 @@ public final class DarkUtils implements ClientModInitializer {
     }
 
     public static final boolean isWindowPlatformWayland() {
-        return DarkUtils.IS_WINDOW_PLATFORM_WAYLAND.get();
+        return "wayland".equals(SDLVideo.SDL_GetCurrentVideoDriver());
     }
 
     public static final void info(@NotNull final Class<?> source, @NotNull final String message) {

@@ -2,7 +2,6 @@ package gg.darkutils.mixin.misc;
 
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.RenderWorldEvent;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.NotNull;
@@ -27,8 +26,8 @@ final class GameRendererMixin {
         }
     }
 
-    @Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=hand", shift = At.Shift.BEFORE))
-    private final void darkutils$onRenderWorld(@NotNull final DeltaTracker renderTickCounter, @NotNull final CallbackInfo ci) {
+    @Inject(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/extract/LevelExtractor;extract(Lnet/minecraft/client/DeltaTracker;Lnet/minecraft/client/Camera;F)V"))
+    private final void darkutils$onRenderWorld(@NotNull final CallbackInfo ci) {
         RenderWorldEvent.INSTANCE.trigger();
     }
 }
