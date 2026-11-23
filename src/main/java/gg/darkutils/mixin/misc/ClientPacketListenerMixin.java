@@ -4,13 +4,19 @@ import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.OpenScreenEvent;
 import gg.darkutils.events.SentCommandEvent;
 import gg.darkutils.events.SentMessageEvent;
+import gg.darkutils.feat.qol.BackpackPreview;
+import gg.darkutils.utils.LocationUtils;
+import gg.darkutils.utils.SkyblockProfileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.CommonListenerCookie;
 import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket;
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +46,25 @@ abstract class ClientPacketListenerMixin extends ClientCommonPacketListenerImpl 
         new SentCommandEvent(command).trigger();
     }
 
+    @Inject(method = "handleContainerContent", at = @At("TAIL"))
+    private final void darkutils$onStorageContents(@NotNull final ClientboundContainerSetContentPacket packet, @NotNull final CallbackInfo ci) {
+        if (DarkUtilsConfig.INSTANCE.backpackPreview && LocationUtils.isInSkyblock()
+                && this.minecraft.gui.screen() instanceof final ContainerScreen screen
+                && screen.getMenu().containerId == packet.containerId()
+                && packet.items().size() >= screen.getMenu().getRowCount() * 9) {
+            BackpackPreview.onContents(screen, (ClientPacketListener) (Object) this);
+        }
+    }
+
+    @Inject(method = "handleSystemChat", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/multiplayer/chat/ChatListener;handleSystemMessage(Lnet/minecraft/network/chat/Component;Z)V"), cancellable = true)
+    private final void darkutils$onProfileId(@NotNull final ClientboundSystemChatPacket packet, @NotNull final CallbackInfo ci) {
+        if (DarkUtilsConfig.INSTANCE.backpackPreview && LocationUtils.isInSkyblock()
+                && SkyblockProfileUtils.onSystemChat(packet.content(), (ClientPacketListener) (Object) this)) {
+            ci.cancel();
+        }
+    }
+
     @Inject(
             method = "handleOpenScreen",
             at = @At("HEAD"),
@@ -52,6 +77,15 @@ abstract class ClientPacketListenerMixin extends ClientCommonPacketListenerImpl 
 
             // stop vanilla from opening the screen
             ci.cancel();
+        }
+    }
+
+    @Inject(method = "handleOpenScreen", at = @At("TAIL"))
+    private final void darkutils$onStorageOpen(@NotNull final ClientboundOpenScreenPacket packet, @NotNull final CallbackInfo ci) {
+        if (DarkUtilsConfig.INSTANCE.backpackPreview && LocationUtils.isInSkyblock()
+                && this.minecraft.gui.screen() instanceof final ContainerScreen screen
+                && screen.getMenu().containerId == packet.getContainerId()) {
+            BackpackPreview.onOpen(screen, (ClientPacketListener) (Object) this);
         }
     }
 

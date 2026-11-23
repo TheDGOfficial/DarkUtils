@@ -295,7 +295,9 @@ public final class Helpers {
 
     private static final void displayCountdownTitlesInternal(@NotNull final String color, @NotNull final String finalText, final int seconds, @NotNull final ObjIntConsumer<TickUtils.TaskAction> queueMethod, @NotNull final BooleanSupplier precondition) {
         // Show the first number immediately
-        Helpers.notify(SoundEvents.EXPERIENCE_ORB_PICKUP, color + seconds);
+        if (precondition.getAsBoolean()) {
+            Helpers.notify(SoundEvents.EXPERIENCE_ORB_PICKUP, color + seconds);
+        }
 
         // Queue the rest
         for (var i = seconds - 1; 0 < i; --i) {

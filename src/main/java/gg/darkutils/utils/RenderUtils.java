@@ -10,11 +10,15 @@ import net.minecraft.gizmos.GizmoStyle;
 import net.minecraft.gizmos.Gizmos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -88,6 +92,11 @@ public final class RenderUtils {
         return roundedAlpha << 24 | roundedRed << 16 | roundedGreen << 8 | roundedBlue;
     }
 
+    @NotNull
+    public static final float[] getFloatComponents(final int color) {
+        return new float[]{ARGB.redFloat(color), ARGB.greenFloat(color), ARGB.blueFloat(color)};
+    }
+
     public static final void renderText(@NotNull final GuiGraphicsExtractor context, @NotNull final RenderUtils.RenderingText text, final int x, final int y, @NotNull final ChatFormatting color) {
         RenderUtils.renderText(context, text, x, () -> y, color);
     }
@@ -144,6 +153,17 @@ public final class RenderUtils {
         final var immutablePos = pos.immutable();
 
         Gizmos.cuboid(AABB.encapsulatingFullBlocks(immutablePos, immutablePos), style).setAlwaysOnTop();
+    }
+
+    @Nullable
+    public static final AABB getBlockBoundingBox(@NotNull final BlockGetter level, @NotNull final BlockState state, @NotNull final BlockPos pos) {
+        final var shape = state.getShape(level, pos);
+        return shape.isEmpty() ? null : shape.bounds().move(pos);
+    }
+
+    public static final void drawFilledBox(@NotNull final AABB box, @NotNull final float[] color, final float alpha) {
+        final var argb = RenderUtils.toARGB(alpha, color[0], color[1], color[2]);
+        Gizmos.cuboid(box, GizmoStyle.fill(argb));
     }
 
     /**

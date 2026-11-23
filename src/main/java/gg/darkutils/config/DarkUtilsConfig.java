@@ -54,6 +54,7 @@ public final class DarkUtilsConfig {
     public boolean disableCommandConfirmation;
     public boolean rejoinCooldownDisplay;
     public boolean laggyServerDetector;
+    public boolean backpackPreview;
     public boolean vanillaMode;
     public boolean enableModAnnouncer;
     public boolean disableUpdateChecker;
@@ -96,6 +97,7 @@ public final class DarkUtilsConfig {
     public boolean arrowAlignmentDeviceSolver;
     public boolean arrowAlignmentDeviceSolverPredev;
     public boolean arrowAlignmentDeviceSolverBlockIncorrectClicks;
+    public boolean highlightLightsDeviceOptimalFinish;
     public boolean arrowStackWaypoints;
     public boolean dungeonTimer;
     public float dungeonTimerScale = 1.0F;
@@ -110,6 +112,7 @@ public final class DarkUtilsConfig {
     public boolean hideEffectsHud;
     public boolean hideEffectsInInventory;
     public boolean transparentPlayerList;
+    public boolean hideSkyblockLatencyIcons;
     public boolean fullbright;
     public boolean nightVision;
     public boolean hideFireOverlay;

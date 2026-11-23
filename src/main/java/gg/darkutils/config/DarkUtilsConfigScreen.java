@@ -4,6 +4,7 @@ import gg.darkutils.DarkUtils;
 import gg.darkutils.events.ConfigScreenOpenEvent;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import gg.darkutils.utils.LogLevel;
+import gg.darkutils.utils.SkyblockProfileUtils;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
@@ -148,6 +149,15 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Laggy Server Detector",
                 "Shows 30 second TPS average 30 seconds after you change/join servers, telling you the expected gameplay quality of the server.",
                 config.laggyServerDetector, newValue -> config.laggyServerDetector = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Backpack Preview",
+                "Open a Backpack or Ender Chest page once, then hover over its icon in Storage to preview its saved contents.",
+                config.backpackPreview, newValue -> {
+                    if (config.backpackPreview && !newValue) {
+                        SkyblockProfileUtils.reset();
+                    }
+                    config.backpackPreview = newValue;
+                });
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Vanilla Mode",
                 "Automatically disables certain visual tweaks when playing a singleplayer world, such as hiding the armor and food bars. Your settings will not be actually modified and will revert to default when leaving singleplayer.",
@@ -294,6 +304,10 @@ public final class DarkUtilsConfigScreen {
     }
 
     private static final void addDungeonsSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory dungeons) {
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Highlight Lights Device Optimal Finish",
+                "Highlights the unpowered levers to flip for an optimal Lights Device finish on F7 and M7.",
+                config.highlightLightsDeviceOptimalFinish, newValue -> config.highlightLightsDeviceOptimalFinish = newValue);
+
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, dungeons, "Arrow Stack Waypoints",
                 "Displays arrow stack waypoints in the Wither King dragon fight showing where to shoot your Last Breath arrows for optimal stacking.",
                 config.arrowStackWaypoints, newValue -> config.arrowStackWaypoints = newValue);
@@ -338,6 +352,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Transparent Player List",
                 "Makes Player List (Tab List) transparent for better visuals.",
                 config.transparentPlayerList, newValue -> config.transparentPlayerList = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Hide Skyblock Latency Icons",
+                "Hides latency icons in the Tab List while playing Hypixel Skyblock.",
+                config.hideSkyblockLatencyIcons, newValue -> config.hideSkyblockLatencyIcons = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Fullbright",
                 "Makes the game appear as if everything had the best light level source.",

@@ -13,6 +13,7 @@ import gg.darkutils.feat.dungeons.ArrowStackWaypoints;
 import gg.darkutils.feat.dungeons.AutoCloseSecretChests;
 import gg.darkutils.feat.dungeons.DialogueSkipTimer;
 import gg.darkutils.feat.dungeons.DungeonTimer;
+import gg.darkutils.feat.dungeons.LightsDeviceHighlighter;
 import gg.darkutils.feat.dungeons.RagnarockHelper;
 import gg.darkutils.feat.dungeons.ReplaceDiorite;
 import gg.darkutils.feat.dungeons.SoloCrushTimer;
@@ -762,6 +763,7 @@ public final class DarkUtils implements ClientModInitializer {
                 ReplaceDiorite::init,
                 AutoTip::init,
                 AlignmentTaskSolver::init,
+                LightsDeviceHighlighter::init,
                 DisableCellsAlignment::init,
                 PreventUselessBlockHit::init,
                 RejoinCooldownDisplay::init,
