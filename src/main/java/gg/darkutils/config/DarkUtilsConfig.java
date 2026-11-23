@@ -111,6 +111,7 @@ public final class DarkUtilsConfig {
     public boolean hideEffectsHud;
     public boolean hideEffectsInInventory;
     public boolean transparentPlayerList;
+    public boolean hideSkyblockLatencyIcons;
     public boolean fullbright;
     public boolean nightVision;
     public boolean hideFireOverlay;

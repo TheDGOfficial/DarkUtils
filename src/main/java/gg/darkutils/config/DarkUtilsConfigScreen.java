@@ -343,6 +343,10 @@ public final class DarkUtilsConfigScreen {
                 "Makes Player List (Tab List) transparent for better visuals.",
                 config.transparentPlayerList, newValue -> config.transparentPlayerList = newValue);
 
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Hide Skyblock Latency Icons",
+                "Hides latency icons in the Tab List while playing Hypixel Skyblock.",
+                config.hideSkyblockLatencyIcons, newValue -> config.hideSkyblockLatencyIcons = newValue);
+
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Fullbright",
                 "Makes the game appear as if everything had the best light level source.",
                 config.fullbright, newValue -> config.fullbright = newValue);
