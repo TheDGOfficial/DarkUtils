@@ -1,5 +1,6 @@
 package gg.darkutils.utils;
 
+import gg.darkutils.config.DarkUtilsConfig;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.hypixel.data.type.GameType;
 import net.hypixel.modapi.HypixelModAPI;
@@ -29,15 +30,23 @@ public final class LocationUtils {
     }
 
     private static final void onLocationUpdate(@NotNull final ClientboundLocationPacket packet) {
-        LocationUtils.isInHypixel = null != packet.getServerName();
-        LocationUtils.isInSkyblock = GameType.SKYBLOCK == packet.getServerType().orElse(null);
+        final var serverName = packet.getServerName();
+        LocationUtils.isInHypixel = null != serverName;
+        final var inSkyblock = GameType.SKYBLOCK == packet.getServerType().orElse(null);
+        LocationUtils.isInSkyblock = inSkyblock;
         LocationUtils.skyblockIsland = LocationUtils.SkyblockIsland.fromId(packet.getMode().orElse(null));
+        if (DarkUtilsConfig.INSTANCE.backpackPreview) {
+            SkyblockProfileUtils.onLocationUpdate(inSkyblock ? serverName : null);
+        }
     }
 
     private static final void onQuit(@NotNull final ClientPacketListener handler, @NotNull final Minecraft client) {
         LocationUtils.isInHypixel = false;
         LocationUtils.isInSkyblock = false;
         LocationUtils.skyblockIsland = null;
+        if (DarkUtilsConfig.INSTANCE.backpackPreview) {
+            SkyblockProfileUtils.reset();
+        }
     }
 
     public static final boolean isInDungeons() {

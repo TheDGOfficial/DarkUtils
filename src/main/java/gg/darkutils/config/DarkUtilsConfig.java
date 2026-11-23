@@ -54,6 +54,7 @@ public final class DarkUtilsConfig {
     public boolean disableCommandConfirmation;
     public boolean rejoinCooldownDisplay;
     public boolean laggyServerDetector;
+    public boolean backpackPreview;
     public boolean vanillaMode;
     public boolean enableModAnnouncer;
     public boolean disableUpdateChecker;

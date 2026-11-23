@@ -4,6 +4,7 @@ import gg.darkutils.DarkUtils;
 import gg.darkutils.events.ConfigScreenOpenEvent;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
 import gg.darkutils.utils.LogLevel;
+import gg.darkutils.utils.SkyblockProfileUtils;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
@@ -148,6 +149,15 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Laggy Server Detector",
                 "Shows 30 second TPS average 30 seconds after you change/join servers, telling you the expected gameplay quality of the server.",
                 config.laggyServerDetector, newValue -> config.laggyServerDetector = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Backpack Preview",
+                "Open a Backpack or Ender Chest page once, then hover over its icon in Storage to preview its saved contents.",
+                config.backpackPreview, newValue -> {
+                    if (config.backpackPreview && !newValue) {
+                        SkyblockProfileUtils.reset();
+                    }
+                    config.backpackPreview = newValue;
+                });
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Vanilla Mode",
                 "Automatically disables certain visual tweaks when playing a singleplayer world, such as hiding the armor and food bars. Your settings will not be actually modified and will revert to default when leaving singleplayer.",
