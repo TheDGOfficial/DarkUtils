@@ -55,10 +55,11 @@ public final class HolderFields {
         }
     }
 
-    public static final class ScalableLuxValues {
-        public static final boolean HAS_SCALABLE_LUX = FabricLoader.getInstance().isModLoaded("scalablelux");
+    public static final class StarlightValues {
+        public static final boolean HAS_STARLIGHT = FabricLoader.getInstance().isModLoaded("starlight")
+                || FabricLoader.getInstance().isModLoaded("scalablelux");
 
-        private ScalableLuxValues() {
+        private StarlightValues() {
             super();
 
             throw new UnsupportedOperationException("static holder class");
