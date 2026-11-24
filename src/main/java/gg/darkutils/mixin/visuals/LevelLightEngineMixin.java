@@ -1,9 +1,9 @@
 package gg.darkutils.mixin.visuals;
 
 import gg.darkutils.config.DarkUtilsConfig;
+import gg.darkutils.mixinquirks.HolderFields;
 import gg.darkutils.utils.LocationUtils;
 import gg.darkutils.utils.RenderUtils;
-import gg.darkutils.mixinquirks.HolderFields;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,8 +17,9 @@ import org.jetbrains.annotations.NotNull;
 @Mixin(LevelLightEngine.class)
 final class LevelLightEngineMixin {
     @Inject(method = "runLightUpdates", at = @At("HEAD"), cancellable = true)
-    private final void darkutils$stopLightUpatesIfEnabled(@NotNull final CallbackInfoReturnable<Integer> cir) {
-        if (DarkUtilsConfig.INSTANCE.fullbright && HolderFields.ScalableLuxValues.HAS_SCALABLE_LUX && (!LocationUtils.isInSingleplayer() || !RenderUtils.isNotCallingFromRenderThread())) {
+    private final void darkutils$stopLightUpdatesIfEnabled(@NotNull final CallbackInfoReturnable<Integer> cir) {
+        if (DarkUtilsConfig.INSTANCE.fullbright && HolderFields.StarlightValues.HAS_STARLIGHT
+                && (!LocationUtils.isInSingleplayer() || !RenderUtils.isNotCallingFromRenderThread())) {
             cir.setReturnValue(0);
         }
     }
