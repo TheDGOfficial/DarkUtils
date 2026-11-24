@@ -156,7 +156,6 @@ public final class DarkUtilsConfig {
     public boolean middleClickFix;
     public boolean cursorPosWaylandGLErrorFix;
     public boolean fixGameIconOnWayland;
-    public boolean failedToWaitForFrameCompletionCrashFix;
 
     // === Misc ===
     public boolean useHttpsForSkins;

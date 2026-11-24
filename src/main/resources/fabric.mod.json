@@ -32,13 +32,13 @@
   "accessWidener": "darkutils.classtweaker",
   "depends": {
     "fabricloader": ">=0.20.1",
-    "minecraft": ">=26.2",
+    "minecraft": ">=26.3",
     "java": ">=25",
-    "fabric-api": ">=0.161.0+26.2",
-    "cloth-config": ">=26.2.155",
+    "fabric-api": ">=0.166.2+26.3",
+    "cloth-config": ">=26.3.159",
     "hypixel-mod-api": ">=1.0.2"
   },
   "suggests": {
-    "modmenu": ">=20.0.3"
+    "modmenu": ">=21.0.1"
   }
 }

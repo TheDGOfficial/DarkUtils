@@ -20,15 +20,15 @@ Required Dependencies:
 
 Note: A release might target both these, and an older MC version. In addition, older releases can support older MC versions. For example, if you want to use 1.21.11; use the v1.4.0 release; as v1.5.0 is only for MC 26.1.2.
 
-- Minecraft 26.2 or later.
+- Minecraft 26.3 or later.
 - Fabric Loader 0.20.1 or later.
-- Fabric API 0.161.0 or later.
-- Cloth Config API 26.2.155 or later.
+- Fabric API 0.166.2 or later.
+- Cloth Config API 26.3.159 or later.
 - Hypixel Mod API 1.0.2 or later.
 
 Optional Dependencies:
 
-- Mod Menu 20.0.3 or later.
+- Mod Menu 21.0.1 or later.
 
 # Quality of Life
 
@@ -275,7 +275,7 @@ System for File System Caches. Unused memory is wasted memory!
 
 ## Open GL Version Override
 
-Overrides OpenGL Version hinted to the GLFW during Window context initialization to a higher value than the default of
+Overrides the OpenGL version requested from SDL during window initialization to a higher value than the default of
 OpenGL 3.3. This does not magically make Minecraft take advantage of features from OpenGL 4.6 specification, but it does
 ensure forward compatibility and a stricter standard, which might or might not change anything at all.
 
@@ -340,8 +340,6 @@ start with an initial value of current time instead of zero.
 
 Fixes vanilla Minecraft bug, where sounds are played when they shouldn't in certain cases near item frames.
 
-## Cursor Pos Wayland GL Error Fix
+## Skip Cursor Warps on Wayland
 
-Fixes a bug where Minecraft tries to call glfwSetCursorPos in Wayland desktop environment, where setting the cursor
-position is not supported, by cancelling the call. This prevents the GL error while preserving behavior, as setting the
-position fails with the GL error anyway.
+Skips explicit SDL cursor warps on Wayland, where compositor support for warping varies.

@@ -13,7 +13,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Set;
 
@@ -25,8 +24,8 @@ public final class GhostBlockKey {
     private static final KeyMapping KEYBIND = KeyMappingHelper.registerKeyMapping(
             new KeyMapping(
                     "key.darkutils.createGhostBlock",
-                    InputConstants.Type.KEYSYM,
-                    GLFW.GLFW_KEY_G,
+                    InputConstants.Type.KEYBOARD,
+                    InputConstants.KEY_G,
                     KeyMapping.Category.register(Identifier.fromNamespaceAndPath(DarkUtils.MOD_ID, "main"))
             )
     );

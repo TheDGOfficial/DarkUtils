@@ -1,7 +1,7 @@
 package gg.darkutils.mixin.performance;
 
 import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.yggdrasil.YggdrasilServicesKeyInfo;
+import com.mojang.authlib.services.MinecraftServicesKeyInfo;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.mixinquirks.HolderFields;
 import net.minecraft.client.Minecraft;
@@ -13,9 +13,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(YggdrasilServicesKeyInfo.class)
-final class YggdrasilServicesKeyInfoMixin {
-    private YggdrasilServicesKeyInfoMixin() {
+@Mixin(value = MinecraftServicesKeyInfo.class, remap = false)
+final class MinecraftServicesKeyInfoMixin {
+    private MinecraftServicesKeyInfoMixin() {
         super();
 
         throw new UnsupportedOperationException("mixin class");

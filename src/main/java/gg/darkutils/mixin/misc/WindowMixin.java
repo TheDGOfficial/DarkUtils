@@ -2,20 +2,17 @@ package gg.darkutils.mixin.misc;
 
 import com.mojang.blaze3d.platform.IconSet;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.GpuBackend;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.feat.bugfixes.WaylandGameIconFix;
-import gg.darkutils.feat.performance.OpenGLVersionOverride;
-import gg.darkutils.feat.bugfixes.WaylandGameIconFix;
-import net.minecraft.client.Minecraft;
-import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackMetadataResources;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
+import org.lwjgl.sdl.SDLError;
+import org.lwjgl.sdl.SDLInit;
+import org.lwjgl.sdl.SDLVideo;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -28,9 +25,9 @@ final class WindowMixin {
     @Shadow
     private boolean fullscreen;
     @Shadow
-    private int framebufferWidth;
+    private int width;
     @Shadow
-    private int framebufferHeight;
+    private int height;
     @Shadow
     @Final
     private long handle;
@@ -46,34 +43,23 @@ final class WindowMixin {
     }
 
     @Inject(method = "onFramebufferResize", at = @At("RETURN"))
-    private final void darkutils$fixGuiScaleIfEnabled(@NotNull final CallbackInfo ci) {
-        if (DarkUtilsConfig.INSTANCE.fixGuiScaleAfterFullscreen) {
-            final var wayland = DarkUtils.isWindowPlatformWayland();
-
-            if (!wayland && 480 > this.framebufferHeight) {
-                this.darkutils$fixFramebufferHeight(true);
-            } else if (wayland && !this.fullscreen && 480 < this.framebufferHeight) {
-                this.darkutils$fixFramebufferHeight(false);
+    private final void darkutils$fixGuiScaleIfEnabled(final int framebufferWidth, final int framebufferHeight, @NotNull final CallbackInfo ci) {
+        if (!DarkUtilsConfig.INSTANCE.fixGuiScaleAfterFullscreen || this.fullscreen || 0 >= framebufferWidth || 0 >= framebufferHeight) {
+            return;
+        }
+        final var wayland = DarkUtils.isWindowPlatformWayland();
+        if (wayland ? 480 < framebufferHeight : 480 > framebufferHeight) {
+            // SDL takes window coordinates. The next pixel-size event updates the framebuffer and GUI.
+            final var targetHeight = (int) Math.ceil(480.0D * this.height / framebufferHeight);
+            if (targetHeight != this.height && SDLVideo.SDL_SetWindowSize(this.handle, this.width, targetHeight) && !wayland) {
+                SDLVideo.SDL_SetWindowPosition(this.handle, this.x, this.y);
             }
         }
     }
 
-    @Unique
-    private final void darkutils$fixFramebufferHeight(final boolean setPosSupportedOnPlatform) {
-        this.framebufferHeight = 480;
-
-        GLFW.glfwSetWindowSize(this.handle, this.framebufferWidth, this.framebufferHeight);
-
-        if (setPosSupportedOnPlatform) {
-            GLFW.glfwSetWindowPos(this.handle, this.x, this.y);
-        }
-
-        Minecraft.getInstance().resizeGui();
-    }
-
-    @Inject(method = "createGlfwWindow", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/GpuBackend;setWindowHints()V", shift = At.Shift.AFTER))
-    private static final void darkutils$afterDefaultWindowHints$fixGameIconOnWaylandIfEnabled(final int width, final int height, @NotNull final String title, final long monitor, @NotNull final GpuBackend backend, @NotNull final CallbackInfoReturnable<Long> cir) {
-        if (DarkUtilsConfig.INSTANCE.preferWayland && DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.shouldPreferWayland() && DarkUtils.isWindowPlatformWayland()) {
+    @Inject(method = "createWindow", at = @At("HEAD"))
+    private final void darkutils$setWaylandAppIdIfEnabled(@NotNull final CallbackInfoReturnable<Long> cir) {
+        if (DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.isWindowPlatformWayland()) {
             try {
                 WaylandGameIconFix.generateDesktopFile();
             } catch (final IOException ioe) {
@@ -83,13 +69,16 @@ final class WindowMixin {
                 return;
             }
 
-            GLFW.glfwWindowHintString(GLFW.GLFW_WAYLAND_APP_ID, WaylandGameIconFix.WAYLAND_APP_ID);
+            if (!SDLInit.SDL_SetAppMetadataProperty(SDLInit.SDL_PROP_APP_METADATA_IDENTIFIER_STRING, WaylandGameIconFix.WAYLAND_APP_ID)) {
+                WaylandGameIconFix.desktopFileFailure = true;
+                DarkUtils.warn("@fileName@", "Could not set the Wayland application ID: " + SDLError.SDL_GetError());
+            }
         }
     }
 
-    @Inject(method = "setIcon", at = @At("HEAD"), cancellable = true)
-    private final void darkutils$onSetGameIcon$fixGameIconOnWaylandIfEnabled(@NotNull final PackResources packResources, @NotNull final IconSet iconSet, @NotNull final CallbackInfo ci) {
-        if (DarkUtilsConfig.INSTANCE.preferWayland && DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.shouldPreferWayland() && DarkUtils.isWindowPlatformWayland() && !WaylandGameIconFix.desktopFileFailure) {
+    @Inject(method = "setIcon(Lnet/minecraft/server/packs/PackMetadataResources;Lcom/mojang/blaze3d/platform/IconSet;)V", at = @At("HEAD"), cancellable = true)
+    private final void darkutils$onSetGameIcon$fixGameIconOnWaylandIfEnabled(@NotNull final PackMetadataResources packResources, @NotNull final IconSet iconSet, @NotNull final CallbackInfo ci) {
+        if (DarkUtilsConfig.INSTANCE.fixGameIconOnWayland && DarkUtils.isWindowPlatformWayland() && !WaylandGameIconFix.desktopFileFailure) {
             try {
                 WaylandGameIconFix.setIcon(iconSet.getStandardIcons(packResources));
             } catch (final IOException ioe) {

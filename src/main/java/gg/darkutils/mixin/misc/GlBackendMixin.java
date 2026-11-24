@@ -1,16 +1,15 @@
 package gg.darkutils.mixin.misc;
 
+import com.mojang.renderpearl.api.device.GpuDebugOptions;
+import com.mojang.renderpearl.backend.opengl.GlBackend;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.feat.performance.OpenGLVersionOverride;
-import com.mojang.blaze3d.opengl.GlBackend;
-import com.mojang.blaze3d.shaders.GpuDebugOptions;
-import org.lwjgl.glfw.GLFW;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.sdl.SDLVideo;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.ModifyArgs;
-import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(GlBackend.class)
 final class GlBackendMixin {
@@ -20,15 +19,19 @@ final class GlBackendMixin {
         throw new UnsupportedOperationException("mixin class");
     }
 
-    @Redirect(method = "setWindowHints", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwWindowHint(II)V", remap = false), remap = false)
-    private final void darkutils$modifyOpenGLVersion(final int hint, final int value) {
-        GLFW.glfwWindowHint(hint, GLFW.GLFW_CONTEXT_VERSION_MAJOR == hint ? OpenGLVersionOverride.getGLMajorVersion(value) : GLFW.GLFW_CONTEXT_VERSION_MINOR == hint ? OpenGLVersionOverride.getGLMinorVersion(value) : value);
+    @Redirect(method = "createWindow", at = @At(value = "INVOKE", target = "Lorg/lwjgl/sdl/SDLVideo;SDL_GL_SetAttribute(II)Z", remap = false))
+    private final boolean darkutils$modifyOpenGLVersion(final int attribute, final int value) {
+        final var version = switch (attribute) {
+            case SDLVideo.SDL_GL_CONTEXT_MAJOR_VERSION -> OpenGLVersionOverride.getGLMajorVersion(value);
+            case SDLVideo.SDL_GL_CONTEXT_MINOR_VERSION -> OpenGLVersionOverride.getGLMinorVersion(value);
+            default -> value;
+        };
+        return SDLVideo.SDL_GL_SetAttribute(attribute, version);
     }
 
-    @ModifyArgs(method = "createDevice(JLcom/mojang/blaze3d/shaders/ShaderSource;Lcom/mojang/blaze3d/shaders/GpuDebugOptions;Ljava/lang/Runnable;)Lcom/mojang/blaze3d/systems/GpuDevice;", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/opengl/GlDevice;<init>(JLcom/mojang/blaze3d/shaders/ShaderSource;Lcom/mojang/blaze3d/shaders/GpuDebugOptions;)V"))
-    private static final void darkutils$disableGlDebugIfEnabled(@NotNull final Args args) {
-        if (DarkUtilsConfig.INSTANCE.disableGlDebug) {
-            args.set(2, new GpuDebugOptions(0, false, false, false));
-        }
+    @ModifyVariable(method = "createDevice", at = @At("HEAD"), argsOnly = true)
+    @NotNull
+    private final GpuDebugOptions darkutils$disableGlDebugIfEnabled(@NotNull final GpuDebugOptions options) {
+        return DarkUtilsConfig.INSTANCE.disableGlDebug ? new GpuDebugOptions(0, false, false, false) : options;
     }
 }
