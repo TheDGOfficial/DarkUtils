@@ -199,8 +199,10 @@ public final class BackpackPreview {
         for (var index = 0; index < items.size(); ++index) {
             final var item = items.get(index);
             if (!item.isEmpty()) {
-                final var itemX = x + 8 + index % COLUMNS * 18;
-                final var itemY = y + 18 + index / COLUMNS * 18;
+                final var column = index % COLUMNS;
+                final var row = index / COLUMNS;
+                final var itemX = x + 8 + column * 18;
+                final var itemY = y + 18 + row * 18;
                 graphics.item(item, itemX, itemY);
                 graphics.itemDecorations(font, item, itemX, itemY);
             }
@@ -208,15 +210,19 @@ public final class BackpackPreview {
     }
 
     private static final int pageFromTitle(@NotNull final String title) {
-        final var enderChest = ENDER_CHEST.matcher(title);
-        if (enderChest.find()) {
-            final var number = Integer.parseInt(enderChest.group(1));
-            return number >= 1 && number <= 9 ? number - 1 : STORAGE_MENU;
-        }
-        final var backpack = BACKPACK.matcher(title);
-        if (backpack.find()) {
-            final var number = Integer.parseInt(backpack.group(1));
-            return number >= 1 && number <= 18 ? number + 8 : STORAGE_MENU;
+        try {
+            final var enderChest = ENDER_CHEST.matcher(title);
+            if (enderChest.find()) {
+                final var number = Integer.parseInt(enderChest.group(1));
+                return number >= 1 && number <= 9 ? number - 1 : STORAGE_MENU;
+            }
+            final var backpack = BACKPACK.matcher(title);
+            if (backpack.find()) {
+                final var number = Integer.parseInt(backpack.group(1));
+                return number >= 1 && number <= 18 ? number + 8 : STORAGE_MENU;
+            }
+        } catch (final NumberFormatException ignored) {
+            return STORAGE_MENU;
         }
         return STORAGE_MENU;
     }
