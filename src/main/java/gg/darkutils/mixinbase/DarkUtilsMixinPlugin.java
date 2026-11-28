@@ -1,5 +1,6 @@
 package gg.darkutils.mixinbase;
 
+import gg.darkutils.config.DarkUtilsConfig;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 
 import org.jspecify.annotations.NonNull;
@@ -107,6 +108,13 @@ public final class DarkUtilsMixinPlugin implements IMixinConfigPlugin {
             DarkUtilsMixinPlugin.walkDir(file, discoveredMixins);
         } else {
             DarkUtilsMixinPlugin.walkJar(file, discoveredMixins);
+        }
+        if (!DarkUtilsConfig.Startup.isEnabled("renderFreezeDetector")) {
+            discoveredMixins.remove("performance/RenderFreezeDetectorMixin");
+        }
+        if (!DarkUtilsConfig.Startup.isEnabled("disableNarrator")) {
+            discoveredMixins.remove("performance/GameNarratorMixin");
+            discoveredMixins.remove("performance/ScreenNarrationMixin");
         }
         LOGGER.info("Found mixins (" + discoveredMixins.size() + "): " + discoveredMixins);
 

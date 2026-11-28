@@ -2,6 +2,8 @@ package gg.darkutils.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import gg.darkutils.DarkUtils;
 import gg.darkutils.events.ConfigSaveFinishEvent;
 import gg.darkutils.events.ConfigSaveStartEvent;
@@ -21,16 +23,15 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 public final class DarkUtilsConfig {
+    public static final int DEFAULT_RENDER_FREEZE_POLL_INTERVAL_MS = 4;
+    public static final int DEFAULT_RENDER_FREEZE_THRESHOLD_MS = 500;
+    public static final int MAX_RENDER_FREEZE_POLL_INTERVAL_MS = 1_000;
+    public static final int MAX_RENDER_FREEZE_THRESHOLD_MS = 30_000;
+
     private static final @NotNull Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final @NotNull File CONFIG_DIR = new File(
-            FabricLoader.getInstance().getConfigDir().toFile(),
-            "darkutils"
-    );
-    private static final @NotNull File NEW_FILE = new File(DarkUtilsConfig.CONFIG_DIR, "darkutils.json");
-    private static final @NotNull File OLD_FILE = new File(
-            FabricLoader.getInstance().getConfigDir().toFile(),
-            "darkutils.json"
-    );
+    private static final @NotNull File CONFIG_DIR = Startup.CONFIG_DIR;
+    private static final @NotNull File NEW_FILE = Startup.NEW_FILE;
+    private static final @NotNull File OLD_FILE = Startup.OLD_FILE;
     public static final @NotNull DarkUtilsConfig INSTANCE = DarkUtilsConfig.load();
 
     // === Quality of Life ===
@@ -40,6 +41,7 @@ public final class DarkUtilsConfig {
     public int autoFishingStartingDelay = 4;
     public int autoFishingMaximumDelay = 5;
     public boolean neverResetCursorPosition;
+    public boolean seamlessHypixelTransfers;
     public boolean alwaysSprint;
     public boolean ghostBlockKey;
     public boolean autoTip;
@@ -113,6 +115,9 @@ public final class DarkUtilsConfig {
     public boolean hideEffectsInInventory;
     public boolean transparentPlayerList;
     public boolean hideSkyblockLatencyIcons;
+    public boolean hideFakePlayersInSocialInteractions;
+    public boolean disableSocialInteractions;
+    public boolean hideVanillaEnchantTooltip;
     public boolean fullbright;
     public boolean nightVision;
     public boolean hideFireOverlay;
@@ -127,6 +132,7 @@ public final class DarkUtilsConfig {
     // === Performance ===
     public boolean alwaysPrioritizeRenderThread;
     public boolean optimizeExceptions;
+    public boolean suppressLogspam;
     public boolean alwaysUseNoErrorContext;
     public boolean disableErrorCheckingEntirely;
     public boolean reEnableAmdGameOptimizations;
@@ -140,6 +146,7 @@ public final class DarkUtilsConfig {
     public OpenGLVersionOverride openGLVersionOverride = OpenGLVersionOverride.NO_OVERRIDE;
     public boolean useVirtualThreadsForTextureDownloading;
     public boolean disableGlowing;
+    public boolean disableNarrator;
     public boolean threadPriorityTweaker;
     public boolean disableSignatureVerification;
     public boolean blockEntityUnloadLagFix;
@@ -148,6 +155,10 @@ public final class DarkUtilsConfig {
     public boolean cacheGLCalls;
     public boolean optimizeClocksource;
     public boolean optimizeStripFormatting;
+    public boolean renderFreezeDetector;
+    public int renderFreezePollIntervalMs = DarkUtilsConfig.DEFAULT_RENDER_FREEZE_POLL_INTERVAL_MS;
+    public int renderFreezeThresholdMs = DarkUtilsConfig.DEFAULT_RENDER_FREEZE_THRESHOLD_MS;
+    public boolean haltOnRenderFreeze;
 
     // === Bugfixes ===
     public boolean fixGuiScaleAfterFullscreen;
@@ -168,6 +179,34 @@ public final class DarkUtilsConfig {
 
     private DarkUtilsConfig() {
         super();
+    }
+
+    public static final class Startup {
+        private static final @NotNull File CONFIG_DIR = FabricLoader.getInstance().getConfigDir().resolve("darkutils").toFile();
+        private static final @NotNull File NEW_FILE = new File(Startup.CONFIG_DIR, "darkutils.json");
+        private static final @NotNull File OLD_FILE = new File(Startup.CONFIG_DIR.getParentFile(), "darkutils.json");
+
+        private Startup() {
+        }
+
+        public static final boolean isEnabled(@NotNull final String option) {
+            // Select mixins without running config migration or depending on in-game logging during startup.
+            final var configFile = Startup.NEW_FILE.exists() ? Startup.NEW_FILE : Startup.OLD_FILE;
+            if (!configFile.isFile()) {
+                return false;
+            }
+
+            try (final var reader = Files.newBufferedReader(configFile.toPath(), StandardCharsets.UTF_8)) {
+                final var root = JsonParser.parseReader(reader);
+                if (!root.isJsonObject()) {
+                    return false;
+                }
+                final var enabled = root.getAsJsonObject().get(option);
+                return enabled != null && enabled.isJsonPrimitive() && enabled.getAsBoolean();
+            } catch (final IOException | JsonParseException ignored) {
+                return false;
+            }
+        }
     }
 
     private static final void migrateConfigIfNeeded() {
