@@ -262,6 +262,16 @@ Removes the hardcoded 60 FPS limit in Main Menu to look better in modern high re
 
 Cleans old log files automatically to not clutter the filesystem.
 
+## Render Freeze Detector
+
+Enable it under **Performance** and restart Minecraft. The detector checks for frame progress every 4 ms by default.
+When a frame is pending for at least 500 ms, it samples the Render thread and appends to
+`logs/darkutils-render-freezes.log`. Both timings are configurable. It reports a pending frame once and spaces reports
+at least three seconds apart.
+
+**Exit on 60-Second Render Freeze** is a separate option. It starts JVM shutdown after 60 seconds without frame progress.
+If shutdown is still running 15 seconds later, it forcibly exits Minecraft, which can lose unsaved progress.
+
 ## Stop Light Updates
 
 Stops light updates entirely to improve performance even further after Fullbright, which is visual-only.

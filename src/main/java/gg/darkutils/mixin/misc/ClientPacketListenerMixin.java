@@ -1,5 +1,6 @@
 package gg.darkutils.mixin.misc;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import gg.darkutils.config.DarkUtilsConfig;
 import gg.darkutils.events.OpenScreenEvent;
 import gg.darkutils.events.SentCommandEvent;
@@ -19,8 +20,10 @@ import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -34,6 +37,40 @@ abstract class ClientPacketListenerMixin extends ClientCommonPacketListenerImpl 
         super(minecraft, connection, commonListenerCookie);
 
         throw new UnsupportedOperationException("mixin class");
+    }
+
+    @WrapWithCondition(method = "handleSetEntityPassengersPacket", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;)V"))
+    private final boolean darkutils$logUnknownVehicle(@NotNull final Logger logger, @NotNull final String message) {
+        return !DarkUtilsConfig.INSTANCE.suppressLogspam || !LocationUtils.isInHypixel();
+    }
+
+    // The entity is already spawned. The rest of this branch only records seen-player history.
+    @Inject(method = "handleAddEntity", at = @At(value = "FIELD", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;playerInfoMap:Ljava/util/Map;"), cancellable = true)
+    private final void darkutils$skipSeenPlayerHistory(@NotNull final CallbackInfo ci) {
+        if (DarkUtilsConfig.INSTANCE.disableSocialInteractions) {
+            ci.cancel();
+        }
+    }
+
+    @WrapWithCondition(method = "handlePlayerInfoUpdate", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V"))
+    private final boolean darkutils$logUnknownPlayerInfo(@NotNull final Logger logger, @NotNull final String message, @NotNull final Object player, @NotNull final Object action) {
+        return !DarkUtilsConfig.INSTANCE.suppressLogspam || !LocationUtils.isInHypixel();
+    }
+
+    @WrapWithCondition(method = "handleUnknownCustomPayload", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;)V"))
+    private final boolean darkutils$logUnknownPayload(@NotNull final Logger logger, @NotNull final String message, @NotNull final Object id) {
+        return !(DarkUtilsConfig.INSTANCE.suppressLogspam && LocationUtils.isInHypixel()
+                && id instanceof final Identifier identifier && identifier.getNamespace().equals("badlion"));
+    }
+
+    @WrapWithCondition(method = {"handleSetScore", "handleResetScore"}, at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;)V"), require = 2)
+    private final boolean darkutils$logUnknownScoreboardObjective(@NotNull final Logger logger, @NotNull final String message, @NotNull final Object objective) {
+        return !DarkUtilsConfig.INSTANCE.suppressLogspam || !LocationUtils.isInHypixel();
+    }
+
+    @WrapWithCondition(method = "handleSetPlayerTeamPacket", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;[Ljava/lang/Object;)V"))
+    private final boolean darkutils$logUnknownTeam(@NotNull final Logger logger, @NotNull final String message, @NotNull final Object[] args) {
+        return !DarkUtilsConfig.INSTANCE.suppressLogspam || !LocationUtils.isInHypixel();
     }
 
     @Inject(method = "sendChat", at = @At("HEAD"))

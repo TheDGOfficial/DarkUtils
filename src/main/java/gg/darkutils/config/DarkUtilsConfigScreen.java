@@ -8,6 +8,7 @@ import gg.darkutils.utils.SkyblockProfileUtils;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -89,6 +90,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Never Reset Cursor Position",
                 "Prevents mouse cursor position from resetting to the middle of the screen when opening menus and containers, remembering the last position.",
                 config.neverResetCursorPosition, newValue -> config.neverResetCursorPosition = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Seamless Hypixel Transfers",
+                "Hides transfer screens and keeps the mouse grabbed when switching servers on Hypixel. Losing window focus releases the mouse.",
+                config.seamlessHypixelTransfers, newValue -> config.seamlessHypixelTransfers = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, qol, "Always Sprint",
                 "Always makes you sprint, as if you were holding the button.",
@@ -353,10 +358,6 @@ public final class DarkUtilsConfigScreen {
                 "Makes Player List (Tab List) transparent for better visuals.",
                 config.transparentPlayerList, newValue -> config.transparentPlayerList = newValue);
 
-        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Hide Skyblock Latency Icons",
-                "Hides latency icons in the Tab List while playing Hypixel Skyblock.",
-                config.hideSkyblockLatencyIcons, newValue -> config.hideSkyblockLatencyIcons = newValue);
-
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Fullbright",
                 "Makes the game appear as if everything had the best light level source.",
                 config.fullbright, newValue -> config.fullbright = newValue);
@@ -396,6 +397,36 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "No Shadow In Text Rendering",
                 "Removes shadows from text rendering by overriding the vanilla shadow parameter in the font render methods.",
                 config.noShadowInTextRendering, newValue -> config.noShadowInTextRendering = newValue);
+
+        DarkUtilsConfigScreen.addVisualTweaksSecond(config, entryBuilder, visual);
+    }
+
+    private static final void addVisualTweaksSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory visual) {
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Hide Skyblock Latency Icons",
+                "Hides latency icons in the Tab List while playing Hypixel Skyblock.",
+                config.hideSkyblockLatencyIcons, newValue -> config.hideSkyblockLatencyIcons = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Hide Fake Players in Social Interactions",
+                "Hides entries with invalid Minecraft usernames in the Social Interactions screen while playing Hypixel Skyblock.",
+                config.hideFakePlayersInSocialInteractions, newValue -> config.hideFakePlayersInSocialInteractions = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Disable Social Interactions",
+                "Prevents the Social Interactions screen from opening and stops tracking previously encountered players. This also disables name lookup for disguised chat and seen-player history for reporting.",
+                config.disableSocialInteractions, newValue -> {
+                    if (newValue && !config.disableSocialInteractions) {
+                        final var client = Minecraft.getInstance();
+                        client.getPlayerSocialManager().discoveredNamesToUUID.clear();
+                        final var connection = client.getConnection();
+                        if (connection != null) {
+                            connection.getSeenPlayers().clear();
+                        }
+                    }
+                    config.disableSocialInteractions = newValue;
+                });
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, visual, "Hide Vanilla Enchant Tooltip",
+                "Hides vanilla enchantment lines in item tooltips while playing Hypixel SkyBlock.",
+                config.hideVanillaEnchantTooltip, newValue -> config.hideVanillaEnchantTooltip = newValue);
     }
 
     private static final void addPerformance(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
@@ -408,6 +439,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Optimize Exceptions",
                 "Optimizes exceptions in vanilla Minecraft with non-vanilla servers, when servers send unexpected data, improving performance and preventing log file bloat/writes to disk, which saves SSD lifetime as well.",
                 config.optimizeExceptions, newValue -> config.optimizeExceptions = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Suppress Logspam",
+                "Suppresses recurring packet, scoreboard, fishing hook, and skin warnings on Hypixel and skips invalid entity metadata assignments.",
+                config.suppressLogspam, newValue -> config.suppressLogspam = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Always Use No Error Context",
                 "Makes Sodium always use no error context, even if you are on wayland.",
@@ -442,6 +477,7 @@ public final class DarkUtilsConfigScreen {
                 config.noMemoryReserve, newValue -> config.noMemoryReserve = newValue);
 
         DarkUtilsConfigScreen.addPerformanceSecond(config, entryBuilder, performance);
+        DarkUtilsConfigScreen.addRenderFreezeSettings(config, entryBuilder, performance);
     }
 
     private static final void addPerformanceSecond(@NotNull final DarkUtilsConfig config, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory performance) {
@@ -458,6 +494,10 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable Glowing",
                 "Disables all glowing, which reduce FPS a lot if your graphics card is not capable. Glowed entities are rendered behind walls, so no culling of them which reduces performance. Only enable if you do not care about: seeing your teammates glow with Hypixel rank color (e.g. green for VIP, blue for MVP+) in Dungeons, dropped items glowing with their rarity color (e.g. orange for legendary items), frogs in galatea glowing white, and possibly more glowing effects will be disabled for performance.",
                 config.disableGlowing, newValue -> config.disableGlowing = newValue);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Disable Narrator",
+                "Disables the text-to-speech backend and skips screen narration collection. Requires a restart.",
+                config.disableNarrator, newValue -> config.disableNarrator = newValue);
 
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Thread Priority Tweaker",
                 "Improves performance by tweaking priorities of all threads in the background regularly.",
@@ -490,6 +530,26 @@ public final class DarkUtilsConfigScreen {
         DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Optimize Strip Formatting",
                 "Optimizes the ChatFormatting's stripFormatting method to use our optimized implementation that avoids Regex and uses direct StringBuilder and String operations.",
                 config.optimizeStripFormatting, newValue -> config.optimizeStripFormatting = newValue);
+    }
+
+    private static final void addRenderFreezeSettings(@NotNull final DarkUtilsConfig config, @NotNull final ConfigEntryBuilder entryBuilder, @NotNull final ConfigCategory performance) {
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Render Freeze Detector",
+                "Samples the Render thread during slow frames and writes to logs/darkutils-render-freezes.log. Requires a restart.",
+                config.renderFreezeDetector, newValue -> config.renderFreezeDetector = newValue);
+
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, performance, "Render Freeze Check Interval (ms)",
+                "How often the detector checks for a pending frame. Requires a restart.",
+                config.renderFreezePollIntervalMs, newValue -> config.renderFreezePollIntervalMs = newValue,
+                DarkUtilsConfig.DEFAULT_RENDER_FREEZE_POLL_INTERVAL_MS, 1, DarkUtilsConfig.MAX_RENDER_FREEZE_POLL_INTERVAL_MS);
+
+        DarkUtilsConfigScreen.addSimpleIntegerSetting(entryBuilder, performance, "Render Freeze Threshold (ms)",
+                "How long a frame must be pending before the detector requests a stack trace. Requires a restart.",
+                config.renderFreezeThresholdMs, newValue -> config.renderFreezeThresholdMs = newValue,
+                DarkUtilsConfig.DEFAULT_RENDER_FREEZE_THRESHOLD_MS, 1, DarkUtilsConfig.MAX_RENDER_FREEZE_THRESHOLD_MS);
+
+        DarkUtilsConfigScreen.addSimpleBooleanToggle(entryBuilder, performance, "Exit on 60-Second Render Freeze",
+                "Starts JVM shutdown after 60 seconds without frame progress while the detector is enabled. Forces exit if shutdown takes another 15 seconds. Requires a restart.",
+                config.haltOnRenderFreeze, newValue -> config.haltOnRenderFreeze = newValue);
     }
 
     private static final void addBugfixes(@NotNull final DarkUtilsConfig config, @NotNull final ConfigBuilder builder, @NotNull final ConfigEntryBuilder entryBuilder) {
