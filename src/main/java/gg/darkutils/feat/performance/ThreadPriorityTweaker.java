@@ -88,6 +88,7 @@ public final class ThreadPriorityTweaker {
                 ThreadPriorityTweaker.exactMatch("RSLS Scheduler", crit),
                 ThreadPriorityTweaker.exactMatch("sbo-audio-thread", crit),
                 ThreadPriorityTweaker.exactMatch("Render thread", highest),
+                ThreadPriorityTweaker.exactMatch("Polydium Vertex Copy", veryHigh),
                 ThreadPriorityTweaker.exactMatch("Polydium Present", veryHigh),
                 ThreadPriorityTweaker.startsWith("Chunk Render ", veryHigh),
                 ThreadPriorityTweaker.startsWith("c2me", veryHigh),
@@ -103,6 +104,7 @@ public final class ThreadPriorityTweaker {
                 ThreadPriorityTweaker.exactMatch("adventure-platform-mod-scheduler0", aboveNormal),
                 ThreadPriorityTweaker.exactMatch("YACL Image Prep", aboveNormal),
                 ThreadPriorityTweaker.exactMatch("Polydium background cleanup", aboveNormal),
+                ThreadPriorityTweaker.exactMatch("Polydium GPU destroyer", aboveNormal),
                 ThreadPriorityTweaker.exactMatch("GuiLib image worker", aboveNormal),
                 ThreadPriorityTweaker.exactMatch("DFU cleaning thread", aboveNormal)
         );
